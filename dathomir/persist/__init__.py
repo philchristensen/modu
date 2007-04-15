@@ -10,25 +10,50 @@ def get_store():
 	return _current_store
 
 def build_insert(table, data):
-	cols = data.keys()
-	fields = []
-	for col in cols:
-		fields.append(data[col])
-	query = 'INSERT INTO `%s` (`%s`) VALUES (%s)' % (table, '`, `'.join(cols), ', '.join(['%s'] * len(fields)))
-	return (query, fields)
+	query = 'INSERT INTO `%s` (`%s`) VALUES (%s)' % (table, '`, `'.join(data.keys()), ', '.join(['%s'] * len(data)))
+	return query, data.values()
 
 def build_replace(table, data):
 	query = 'REPLACE INTO `%s` SET ' % table
 	query += ('`%s` = %%s' * len(data)) % tuple(data.keys())
-	return (query, data.values())
+	return query, data.values()
+
+def build_select(table, data):
+	if('__select_keyword' in data):
+		query = "SELECT %s * FROM `%s` " % (data['__select_keyword'], table)
+	else:
+		query = "SELECT * FROM `%s` " % table
+	
+	criteria = []
+	values = []
+	for key in data:
+		if(key.startswith('_')):
+			continue
+		value = data[key]
+		if(isinstance(value, list) or isinstance(value, tuple)):
+			criteria.append('`%s` IN (%s)' % (key, ', '.join(['%s'] * len(value))))
+			values.extend(value)
+		else:
+			criteria.append('`%s` = %%s' % key)
+			values.append(value)
+	
+	if(criteria):
+		query += 'WHERE '
+		query += ' AND '.join(criteria)
+	if('__order_by' in data):
+		query += ' ORDER BY %s' % data['__order_by']
+	if('__limit' in data):
+		query += ' LIMIT %s' % data['__limit']
+	
+	return query, values
 
 class Store(object):
 	_saved_guids = []
 	_factories = {}
 	
 	def __init__(self, guid_table='guid', **kwargs):
-		self.conn = MySQLdb.connect(kwargs['host'], kwargs['user'], kwargs['pass'], kwargs['db'])
-		self.cursor = conn.cursor(cursors.SSDictCursor)
+		self.connection = MySQLdb.connect(kwargs['host'], kwargs['user'], kwargs['pass'], kwargs['db'])
+		self.cursor = self.connection.cursor(cursors.SSDictCursor)
 		self.guid_table = guid_table
 		
 		global _current_store
@@ -60,6 +85,4 @@ class Store(object):
 	
 	def ensure_factory(table, model_class):
 		if(table not in self._factories):
-			self.register_factory(table, storable.DefaultFactory(table, model_class)
-	
-	
+			self.register_factory(table, storable.DefaultFactory(table, model_class))

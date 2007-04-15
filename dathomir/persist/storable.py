@@ -7,7 +7,9 @@
 
 import time, copy
 
-ID_COLUMN = 'guid'
+from dathomir import persist
+
+ID_COLUMN = 'id'
 
 class Storable(object):
 	_id = 0
@@ -82,7 +84,7 @@ class Storable(object):
 	def destroyed(self):
 		object.__setattr__(self, '_id', 0)
 
-class StorableFactory(object):
+class Factory(object):
 	def get_item(id):
 		raise NotImplementedError('%s::get_items()' % self.__class__.__name__)
 	
@@ -103,4 +105,48 @@ class StorableFactory(object):
 	
 	def get_item_records(query):
 		raise NotImplementedError('%s::get_items()' % self.__class__.__name__)
+
+class DefaultFactory(object):
+	table = None
+	model_class = None
 	
+	def __init__(self, table=None, model_class=None):
+		self.table = table
+		self.model_class = model_class
+	
+	def create_item(self, data):
+		if not(self.model_class):
+			raise NotImplementedError('%s::create_item()' % self.__class__.__name__)
+		
+		item = self.model_class()
+		item.load_data(data)
+		return item
+	
+	def create_item_query(self, data):
+		if not(self.table):
+			raise NotImplementedError('%s::create_item_query()' % self.__class__.__name__)
+		return self.create_item_query_for_type(self.table, data)
+	
+	def create_item_query_for_type(self, table, data):
+		return persist.build_select(table, data)
+	
+	def get_item(id):
+		(result) = self.get_items({'id':id})
+		return result
+	
+	def get_items(data):
+		result = self.create_item_query(data)
+		return self.get_items_by_query(*result)
+	
+	def get_items_by_query(query, values):
+		records = self.get_item_records(query, values)
+		if(records):
+			result = map(lambda(data): create_item(data), records)
+		if not(result):
+			return False
+		return result
+	
+	def get_item_records(query, values):
+		store = persist.get_store()
+		store.cursor.execute(query, values)
+		return store.cursor.fetchall()
