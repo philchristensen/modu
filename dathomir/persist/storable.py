@@ -7,8 +7,6 @@
 
 import time, copy
 
-from dathomir import persist
-
 ID_COLUMN = 'id'
 
 class Storable(object):
@@ -128,6 +126,7 @@ class DefaultFactory(object):
 		return self.create_item_query_for_type(self.table, data)
 	
 	def create_item_query_for_type(self, table, data):
+		from dathomir import persist
 		return persist.build_select(table, data)
 	
 	def get_item(id):

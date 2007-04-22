@@ -7,23 +7,13 @@
 
 import unittest
 
-from dathomir.persist import storable
-
+from dathomir import persist
 
 class StorableTestCase(unittest.TestCase):
 	def setUp(self):
+		pass
 	
 	def tearDown(self):
-		self.cursor.close()
-		self.conn.close()
-	
-	def test_insert(self):
-		pass
-	
-	def test_update(self):
-		pass
-		
-	def test_delete(self):
 		pass
 	
 if __name__ == "__main__":

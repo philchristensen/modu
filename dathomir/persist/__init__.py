@@ -33,6 +33,9 @@ def build_select(table, data):
 		if(isinstance(value, list) or isinstance(value, tuple)):
 			criteria.append('`%s` IN (%s)' % (key, ', '.join(['%s'] * len(value))))
 			values.extend(value)
+		elif(value is None):
+			criteria.append('ISNULL(`%s`)' % key)
+			values.append(value)
 		else:
 			criteria.append('`%s` = %%s' % key)
 			values.append(value)
@@ -66,11 +69,11 @@ class Store(object):
 			return None
 		
 		result = self.cursor.execute('LOCK TABLES `%s` WRITE', [self.guid_table])
-		result = self.cursor.execute('SELECT guid FROM `%s`', [self.guid_table])
+		result = self.cursor.execute('SELECT `guid` FROM `%s`', [self.guid_table])
 		
 		guid = self.cursor.fetchone()['guid']
 		
-		result = self.cursor.execute('UPDATE `%s` SET guid = %s', [self.guid_table, guid + increment])
+		result = self.cursor.execute('UPDATE `%s` SET `guid` = %s', [self.guid_table, guid + increment])
 		result = self.cursor.execute('UNLOCK TABLES')
 		
 		return guid
