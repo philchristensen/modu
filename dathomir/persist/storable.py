@@ -41,8 +41,14 @@ class Storable(object):
 			raise RuntimeError("%r already has the id %d, cannot be set to %d" % (self, self.get_id(), id))
 		object.__setattr__(self, '_id', id)
 	
-	def get_id(self):
-		return object.__getattribute__(self, '_id')
+	def get_id(self, fetch=False):
+		id = object.__getattribute__(self, '_id')
+		if(id == 0 and fetch):
+			store = persist.get_store()
+			new_id = store.get_guid()
+			object.__setattr__(self, '_id', new_id)
+			id = new_id
+		return id
 	
 	def touch(self):
 		object.__setattr__(self, '_dirty', True)
@@ -57,6 +63,7 @@ class Storable(object):
 	def load_data(self, data):
 		if(ID_COLUMN in data):
 			self.set_id(data[ID_COLUMN])
+			del data[ID_COLUMN]
 		if('created_date' in data):
 			self.created_date = data['created_date']
 		else:
