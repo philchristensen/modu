@@ -13,26 +13,34 @@ class Storable(object):
 	_id = 0
 	_dirty = True
 	_data = {}
+	_table = None
 	
 	created_date = 0
 	modified_date = 0
 	
+	def __init__(self, table):
+		object.__setattr__(self, '_table', table)
+	
 	def __setattr__(self, key, value):
-		if(key not in self.__dict__):
+		_dict = object.__getattribute__(self, '__dict__')
+		if(key not in _dict):
 			object.__setattr__(self, 'modified_date', time.time())
 			object.__setattr__(self, '_dirty', True)
-			object.__setattr__(self, 'data', value)
+			object.__getattribute__(self, '_data')[key] = value
 		elif not(key.startswith('_')):
 			object.__setattr__(self, key, value)
 	
 	def __getattribute__(self, key):
 		if not(key.startswith('_')):
-			_dict = object.__getattribute__(self, '__dict__')
+			_class = object.__getattribute__(self, '__class__')
+			if(key in _class.__dict__ and callable(_class.__dict__[key])):
+				return object.__getattribute__(self, key)
 			_data = object.__getattribute__(self, '_data')
-			if(key in _dict):
-				return _dict[key]
 			if(key in _data):
 				return _data[key]
+			_dict = object.__getattribute__(self, '__dict__')
+			if(key in _dict):
+				return _dict[key]
 			
 		raise AttributeError('No such attribute "%s" on %r' % (key, self))
 	
@@ -42,6 +50,7 @@ class Storable(object):
 		object.__setattr__(self, '_id', id)
 	
 	def get_id(self, fetch=False):
+		from dathomir import persist
 		id = object.__getattribute__(self, '_id')
 		if(id == 0 and fetch):
 			store = persist.get_store()
@@ -81,7 +90,7 @@ class Storable(object):
 		return result
 	
 	def get_table(self):
-		raise NotImplementedError('%s::get_table()' % self.__class__.__name__)
+		return object.__getattribute__(self, '_table')
 	
 	def get_related_storables(self):
 		return []
@@ -153,6 +162,7 @@ class DefaultFactory(object):
 		return result
 	
 	def get_item_records(query, values):
+		from dathomir import persist
 		store = persist.get_store()
 		store.cursor.execute(query, values)
 		return store.cursor.fetchall()

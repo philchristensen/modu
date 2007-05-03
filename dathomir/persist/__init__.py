@@ -1,5 +1,5 @@
-import MySQLdb
-from MySQLdb import cursors
+import MySQLdb, warnings
+from MySQLdb import cursors, converters
 
 from dathomir.persist import storable
 
@@ -15,7 +15,7 @@ def build_insert(table, data):
 
 def build_replace(table, data):
 	query = 'REPLACE INTO `%s` SET ' % table
-	query += ('`%s` = %%s' * len(data)) % tuple(data.keys())
+	query += ', '.join(['`%s` = %%s'] * len(data)) % tuple(data.keys())
 	return query, data.values()
 
 def build_select(table, data):
@@ -35,7 +35,6 @@ def build_select(table, data):
 			values.extend(value)
 		elif(value is None):
 			criteria.append('ISNULL(`%s`)' % key)
-			values.append(value)
 		else:
 			criteria.append('`%s` = %%s' % key)
 			values.append(value)
@@ -50,14 +49,23 @@ def build_select(table, data):
 	
 	return query, values
 
+class raw(object):
+	def __init__(self, sql):
+		self.sql = sql
+	
+	def __str__(self, sql):
+		return str(sql)
+
 class Store(object):
 	_saved_guids = []
 	_factories = {}
 	_guid_table = None
 	
 	def __init__(self, host='localhost', guid_table='guid', **kwargs):
-		self.connection = MySQLdb.connect(host, kwargs['user'], kwargs['password'], kwargs['db'])
-		self.cursor = self.connection.cursor(cursors.SSDictCursor)
+		conv_dict = converters.conversions.copy()
+		#conv_dict[raw] = str
+		self.connection = MySQLdb.connect(host, kwargs['user'], kwargs['password'], kwargs['db'], conv=conv_dict)
+		
 		self._guid_table = guid_table
 		
 		global _current_store
@@ -69,13 +77,15 @@ class Store(object):
 		if not(self.uses_guids()):
 			return None
 		
-		result = self.cursor.execute('LOCK TABLES `%s` WRITE', [self._guid_table])
-		result = self.cursor.execute('SELECT `guid` FROM `%s`', [self._guid_table])
+		cur = self.connection.cursor(cursors.SSDictCursor)
 		
-		guid = self.cursor.fetchone()['guid']
+		result = cur.execute('LOCK TABLES `%s` WRITE' % self._guid_table)
+		result = cur.execute('SELECT `guid` FROM `%s`' % self._guid_table)
 		
-		result = self.cursor.execute('UPDATE `%s` SET `guid` = %s', [self._guid_table, guid + increment])
-		result = self.cursor.execute('UNLOCK TABLES')
+		guid = cur.fetchall()[0]['guid']
+		
+		result = cur.execute('UPDATE `%s` SET `guid` = %%s' % self._guid_table, [guid + increment])
+		result = cur.execute('UNLOCK TABLES')
 		
 		return guid
 	
@@ -94,9 +104,9 @@ class Store(object):
 		if(table not in self._factories):
 			self.register_factory(table, storable.DefaultFactory(table, model_class))
 	
-	def save(self, storable):
-		_save(storable)
-		child_list = storable.get_related_storables()
+	def save(self, storable_item):
+		self._save(storable_item)
+		child_list = storable_item.get_related_storables()
 		id_list = []
 		while(child_list):
 			child = child_list.pop()
@@ -106,21 +116,23 @@ class Store(object):
 			child_list.extend(child.get_related_storables())
 			id_list.append(child_id)
 	
-	def _save(self, storable):
-		table = storable.get_table()
-		id = storable.get_id(True)
-		data = storable.get_data()
+	def _save(self, storable_item):
+		table = storable_item.get_table()
+		id = storable_item.get_id(True)
+		data = storable_item.get_data()
+		cur = self.connection.cursor(cursors.SSDictCursor)
 		
 		if(id):
 			data[storable.ID_COLUMN] = id
-			query = persist.build_replace(table, data)
+			query = build_replace(table, data)
 		else:
-			query = persist.build_insert(table, data)
-			self.cursor.execute('LOCK TABLES `%s` WRITE' % table)
-		
-		self.cursor.execute(query)
+			query = build_insert(table, data)
+			cur.execute('LOCK TABLES `%s` WRITE' % table)
+		print query
+		cur.execute(*query)
 		
 		if not(id):
-			self.cursor.execute('SELECT MAX(%s) AS id FROM `%s`' % (storable.ID_COLUMN, table))
+			cur.execute('SELECT MAX(%s) AS id FROM `%s`' % (storable.ID_COLUMN, table))
 			storable.set_id(self.cursor.fetchone()['id'])
-			self.cursor.execute('UNLOCK TABLES' % table)
+			cur.execute('UNLOCK TABLES' % table)
+
