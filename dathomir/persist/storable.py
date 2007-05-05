@@ -95,7 +95,7 @@ class Storable(object):
 	def get_related_storables(self):
 		return []
 	
-	def destroyed(self):
+	def reset_id(self):
 		object.__setattr__(self, '_id', 0)
 
 class Factory(object):

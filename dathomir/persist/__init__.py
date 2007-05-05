@@ -59,7 +59,9 @@ class raw(object):
 class Store(object):
 	_saved_guids = []
 	_factories = {}
+	_object_cache = {}
 	_guid_table = None
+	cache = False
 	
 	def __init__(self, host='localhost', guid_table='guid', **kwargs):
 		conv_dict = converters.conversions.copy()
@@ -104,6 +106,32 @@ class Store(object):
 		if(table not in self._factories):
 			self.register_factory(table, storable.DefaultFactory(table, model_class))
 	
+	def load(self, table, data, ignore_cache=False):
+		if(table not in self._factories):
+			raise NotImplementedError('There is no factory registered for the table `%s`' % table)
+		
+		factory = self._factories[table]
+		if(isinstance(data, basestring)):
+			query = data
+		else:
+			query = factory.create_item_query(data)
+		
+		if(query in self._object_cache and self.cache and not ignore_cache):
+			return self._object_cache[query]
+		
+		result = factory.get_items_by_query(query)
+		
+		if(self.cache):
+			self._object_cache[query] = result
+		
+		return result
+	
+	def load_one(self, table, data, ignore_cache=False):
+		result = self.load(table, data, ignore_cache)
+		if(len(result)):
+			return result[0]
+		return None
+	
 	def save(self, storable_item):
 		self._save(storable_item)
 		child_list = storable_item.get_related_storables()
@@ -135,4 +163,23 @@ class Store(object):
 			cur.execute('SELECT MAX(%s) AS id FROM `%s`' % (storable.ID_COLUMN, table))
 			storable.set_id(self.cursor.fetchone()['id'])
 			cur.execute('UNLOCK TABLES' % table)
+	
+	def destroy(self, storable_item, destroy_related_storables=False):
+		self._destroy(storable_item)
+		if(destroy_related_storables):
+			child_list = storable_item.get_related_storables()
+			id_list = []
+			while(child_list):
+				child = child_list.pop()
+				child_id = child.get_id(True)
+				if(child_id not in id_list):
+					_destroy(child)
+					child_list.extend(child.get_related_storables())
+					id_list.append(child_id)
+	
+	def _destroy(self, storable_item):
+		delete_query = "DELETE FROM `%s` WHERE id = %%d" % storable_item.get_table()
+		cur = self.connection.cursor()
+		cur.execute(delete_query, [storable_item.get_id()])
+		storable_item.reset_id()
 
