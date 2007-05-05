@@ -99,28 +99,28 @@ class Storable(object):
 		object.__setattr__(self, '_id', 0)
 
 class Factory(object):
-	def get_item(id):
+	def get_item(self, id):
 		raise NotImplementedError('%s::get_items()' % self.__class__.__name__)
 	
-	def get_items(attribs):
+	def get_items(self, attribs):
 		raise NotImplementedError('%s::get_items()' % self.__class__.__name__)
 	
-	def get_items_by_query(query):
+	def get_items_by_query(self, query):
 		raise NotImplementedError('%s::get_items()' % self.__class__.__name__)
 	
-	def create_item(record):
+	def create_item(self, record):
 		raise NotImplementedError('%s::get_items()' % self.__class__.__name__)
 	
-	def create_item_query_for_type(attribs, type):
+	def create_item_query_for_type(self, attribs, type):
 		raise NotImplementedError('%s::get_items()' % self.__class__.__name__)
 	
-	def create_item_query(attribs):
+	def create_item_query(self, attribs):
 		raise NotImplementedError('%s::get_items()' % self.__class__.__name__)
 	
-	def get_item_records(query):
+	def get_item_records(self, query):
 		raise NotImplementedError('%s::get_items()' % self.__class__.__name__)
 
-class DefaultFactory(object):
+class DefaultFactory(Factory):
 	table = None
 	model_class = None
 	
@@ -132,7 +132,7 @@ class DefaultFactory(object):
 		if not(self.model_class):
 			raise NotImplementedError('%s::create_item()' % self.__class__.__name__)
 		
-		item = self.model_class()
+		item = self.model_class(self.table)
 		item.load_data(data)
 		return item
 	
@@ -145,24 +145,25 @@ class DefaultFactory(object):
 		from dathomir import persist
 		return persist.build_select(table, data)
 	
-	def get_item(id):
+	def get_item(self, id):
 		(result) = self.get_items({'id':id})
 		return result
 	
-	def get_items(data):
-		result = self.create_item_query(data)
-		return self.get_items_by_query(*result)
+	def get_items(self, data):
+		query = self.create_item_query(data)
+		return self.get_items_by_query(query)
 	
-	def get_items_by_query(query, values):
-		records = self.get_item_records(query, values)
+	def get_items_by_query(self, query):
+		records = self.get_item_records(query)
 		if(records):
-			result = map(lambda(data): create_item(data), records)
+			result = map(lambda(data): self.create_item(data), records)
 		if not(result):
 			return False
 		return result
 	
-	def get_item_records(query, values):
+	def get_item_records(self, query):
 		from dathomir import persist
 		store = persist.get_store()
-		store.cursor.execute(query, values)
-		return store.cursor.fetchall()
+		cursor = store.get_cursor()
+		cursor.execute(query)
+		return cursor.fetchall()

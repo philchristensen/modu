@@ -51,6 +51,14 @@ class StorableTestCase(unittest.TestCase):
 		s.title = 'Old School'
 		
 		self.store.save(s)
+		self.store.ensure_factory('page')
+		t = self.store.load_one('page', {'id':s.get_id()});
+		
+		self.failUnlessEqual(t.get_id(), s.get_id(), 'Column `id` changed in save/load cycle')
+		self.failUnlessEqual(t.code, s.code, 'Column `code` changed in save/load cycle')
+		self.failUnlessEqual(t.content, s.content, 'Column `content` changed in save/load cycle')
+		self.failUnlessEqual(t.title, s.title, 'Column `title` changed in save/load cycle')
+		
 	
 	def tearDown(self):
 		pass

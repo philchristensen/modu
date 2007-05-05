@@ -23,23 +23,23 @@ class URLNodeTestCase(unittest.TestCase):
 	
 	def test_one(self):
 		result = self.tree.parse('/one/and/some/extra/crud')
-		assert(result == 'ONE', "Didn't find 'ONE' where I expected")
+		self.failUnlessEqual(result, 'ONE', "Didn't find 'ONE' where I expected")
 		
 	def test_two(self):
 		result = self.tree.parse('/one/two/some/extra/crud')
-		assert(result == 'TWO', "Didn't find 'TWO' where I expected")
+		self.failUnlessEqual(result, 'TWO', "Didn't find 'TWO' where I expected")
 		
 	def test_three(self):
 		result = self.tree.parse('/three')
-		assert(result == 'THREE', "Didn't find 'THREE' where I expected")
+		self.failUnlessEqual(result, 'THREE', "Didn't find 'THREE' where I expected")
 		
 	def test_slash(self):
 		result = self.tree.parse('/something/else')
-		assert(result == 'SLASH', "Didn't find 'SLASH' where I expected")
+		self.failUnlessEqual(result, 'SLASH', "Didn't find 'SLASH' where I expected")
 		
 	def test_long(self):
 		result = self.tree.parse('/this/is/a/long/url')
-		assert(result == 'LONG', "Didn't find 'LONG' where I expected")
+		self.failUnlessEqual(result, 'LONG', "Didn't find 'LONG' where I expected")
 
 if __name__ == "__main__":
 	unittest.main()

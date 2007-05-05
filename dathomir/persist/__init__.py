@@ -11,12 +11,12 @@ def get_store():
 
 def build_insert(table, data):
 	query = 'INSERT INTO `%s` (`%s`) VALUES (%s)' % (table, '`, `'.join(data.keys()), ', '.join(['%s'] * len(data)))
-	return query, data.values()
+	return interp(query, data.values())
 
 def build_replace(table, data):
 	query = 'REPLACE INTO `%s` SET ' % table
 	query += ', '.join(['`%s` = %%s'] * len(data)) % tuple(data.keys())
-	return query, data.values()
+	return interp(query, data.values())
 
 def build_select(table, data):
 	if('__select_keyword' in data):
@@ -47,7 +47,10 @@ def build_select(table, data):
 	if('__limit' in data):
 		query += ' LIMIT %s' % data['__limit']
 	
-	return query, values
+	return interp(query, values)
+
+def interp(query, args):
+	return query % MySQLdb.escape_sequence(args, converters.conversions.copy())
 
 class raw(object):
 	def __init__(self, sql):
@@ -75,11 +78,18 @@ class Store(object):
 			raise RuntimeError("Only one Store instance may be created.")
 		_current_store = self
 	
+	def get_cursor(self, cursor_type=cursors.SSDictCursor):
+		if(cursor_type):
+			cur = self.connection.cursor(cursor_type)
+		else:
+			cur = self.connection.cursor()
+		return cur
+	
 	def get_guid(self, increment=1):
 		if not(self.uses_guids()):
 			return None
 		
-		cur = self.connection.cursor(cursors.SSDictCursor)
+		cur = self.get_cursor()
 		
 		result = cur.execute('LOCK TABLES `%s` WRITE' % self._guid_table)
 		result = cur.execute('SELECT `guid` FROM `%s`' % self._guid_table)
@@ -95,7 +105,7 @@ class Store(object):
 		return self._guid_table != None
 	
 	def register_factory(self, table, factory):
-		if not(isinstance(factory, Factory)):
+		if not(isinstance(factory, storable.Factory)):
 			raise ValueError('%r is not a Factory subclass' % factory)
 		self._factories[table] = factory
 	
@@ -148,7 +158,7 @@ class Store(object):
 		table = storable_item.get_table()
 		id = storable_item.get_id(True)
 		data = storable_item.get_data()
-		cur = self.connection.cursor(cursors.SSDictCursor)
+		cur = self.get_cursor()
 		
 		if(id):
 			data[storable.ID_COLUMN] = id
@@ -156,8 +166,8 @@ class Store(object):
 		else:
 			query = build_insert(table, data)
 			cur.execute('LOCK TABLES `%s` WRITE' % table)
-		print query
-		cur.execute(*query)
+		
+		cur.execute(query)
 		
 		if not(id):
 			cur.execute('SELECT MAX(%s) AS id FROM `%s`' % (storable.ID_COLUMN, table))
@@ -179,7 +189,7 @@ class Store(object):
 	
 	def _destroy(self, storable_item):
 		delete_query = "DELETE FROM `%s` WHERE id = %%d" % storable_item.get_table()
-		cur = self.connection.cursor()
+		cur = self.get_cursor(None)
 		cur.execute(delete_query, [storable_item.get_id()])
 		storable_item.reset_id()
 
