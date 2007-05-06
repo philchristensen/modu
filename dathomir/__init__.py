@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 # dathomir
 # Copyright (C) 2007 Phil Christensen
 #

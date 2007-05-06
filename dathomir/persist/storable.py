@@ -1,7 +1,7 @@
-#!/usr/bin/env python
-
 # dathomir
-# Copyright (C) 1999-2006 Phil Christensen
+# Copyright (C) 2007 Phil Christensen
+#
+# $Id$
 #
 # See LICENSE for details
 
@@ -155,6 +155,7 @@ class DefaultFactory(Factory):
 	
 	def get_items_by_query(self, query):
 		records = self.get_item_records(query)
+		result = None
 		if(records):
 			result = map(lambda(data): self.create_item(data), records)
 		if not(result):

@@ -1,7 +1,7 @@
-#!/usr/bin/env python
-
 # dathomir
-# Copyright (C) 1999-2006 Phil Christensen
+# Copyright (C) 2007 Phil Christensen
+#
+# $Id$
 #
 # See LICENSE for details
 

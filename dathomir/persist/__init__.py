@@ -1,3 +1,10 @@
+# dathomir
+# Copyright (C) 2007 Phil Christensen
+#
+# $Id$
+#
+# See LICENSE for details
+
 import MySQLdb, warnings
 from MySQLdb import cursors, converters
 
@@ -6,10 +13,20 @@ from dathomir.persist import storable
 _current_store = None
 
 def get_store():
+	"""
+	Return the current Store instance, if it exists.
+	"""
 	global _current_store
 	return _current_store
 
 def build_insert(table, data):
+	"""
+	Given a table name and a dictionary, construct an INSERT query. Keys are
+	sorted alphabetically before output, so the result of running a semantically
+	identical dictionary should be the same every time.
+	
+	Use dathomir.persist.RAW to embed SQL directly in the VALUES clause.
+	"""
 	keys = data.keys()
 	keys.sort()
 	values = [data[key] for key in keys]
@@ -17,6 +34,13 @@ def build_insert(table, data):
 	return interp(query, values)
 
 def build_replace(table, data):
+	"""
+	Given a table name and a dictionary, construct an REPLACE INTO query. Keys are
+	sorted alphabetically before output, so the result of running a semantically
+	identical dictionary should be the same every time.
+	
+	Use dathomir.persist.RAW to embed SQL directly in the SET clause.
+	"""
 	keys = data.keys()
 	keys.sort()
 	values = [data[key] for key in keys]
@@ -25,6 +49,26 @@ def build_replace(table, data):
 	return interp(query, values)
 
 def build_select(table, data):
+	"""
+	Given a table name and a dictionary, construct an SELECT query. Keys are
+	sorted alphabetically before output, so the result of running a semantically
+	identical dictionary should be the same every time.
+	
+	These SELECTs always select * from a single table.
+	
+	Special keys can be inserted in the provided dictionary, such that:
+		'__select_keyword'    is inserted between 'SELECT' and '*'
+		'__order_by'          inserts an ORDER BY clause. ASC/DESC must be
+		                      part of the string if you wish to use them
+		'__limit'             add a LIMIT clause to this query
+	
+	Additionally, certain types of values have alternate output:
+		list/tuple types      result in an IN statement
+		None                  results in an ISNULL statement
+		persist.RAW objects   result in directly embedded SQL, such that
+		                      'col1':" = ENCRYPT('whatever')" equals
+		                      `col1` = ENCRYPT('whatever')
+	"""
 	if('__select_keyword' in data):
 		query = "SELECT %s * FROM `%s` " % (data['__select_keyword'], table)
 	else:
@@ -41,7 +85,7 @@ def build_select(table, data):
 		if(isinstance(value, list) or isinstance(value, tuple)):
 			criteria.append('`%s` IN (%s)' % (key, ', '.join(['%s'] * len(value))))
 			values.extend(value)
-		elif(isinstance(value, raw)):
+		elif(isinstance(value, RAW)):
 			criteria.append('`%s`%s' % (key, value.sql))
 		elif(value is None):
 			criteria.append('ISNULL(`%s`)' % key)
@@ -60,25 +104,54 @@ def build_select(table, data):
 	return interp(query, values)
 
 def interp(query, args):
+	"""
+	Interpolate the provided arguments into the provided query, using
+	the DB-API's default conversions, with the additional 'RAW' support
+	from dathomir.persist.Raw2Literal
+	"""
 	conv_dict = converters.conversions.copy()
-	conv_dict[raw] = Raw2Literal
+	conv_dict[RAW] = Raw2Literal
 	return query % MySQLdb.escape_sequence(args, conv_dict)
 
-class raw:
+class RAW:
+	"""
+	Allows RAW SQL to be embedded in constructed queries.
+	"""
 	def __init__(self, sql):
 		self.sql = sql
 
 def Raw2Literal(o, d):
+	"""
+	Provides conversion support for RAW
+	"""
 	return o.sql
 
 class Store(object):
-	_saved_guids = []
+	"""
+	persist.Store is the routing point for most interactions with the Storable
+	persistence layer. You create a single Store object for any given runtime,
+	and load any desired objects through this interface, after registering
+	factories for each table you wish to load objects from.
+	"""
 	_factories = {}
 	_object_cache = {}
 	_guid_table = None
 	cache = False
 	
 	def __init__(self, host='localhost', guid_table='guid', **kwargs):
+		"""
+		Create a Store. Parameters are mostly identical to the DB-API connect()
+		function, but you may also pass in the 'guid_table' parameter, to set
+		the name of your GUID table.
+		
+		If you pass a None value for the 'guid_table' paramter, GUID support is
+		disabled.
+		
+		If you choose not to use GUIDs (say, by having each DB table contain an
+		auto_increment ID column), each INSERT (but not REPLACE, aka update) will
+		LOCK the table, execute the INSERT, read the MAX(id) for that table, and
+		finally UNLOCK the table.
+		"""
 		self.connection = MySQLdb.connect(host, kwargs['user'], kwargs['password'], kwargs['db'])
 		
 		self._guid_table = guid_table
@@ -89,6 +162,12 @@ class Store(object):
 		_current_store = self
 	
 	def get_cursor(self, cursor_type=cursors.SSDictCursor):
+		"""
+		To run queries directly against the Store's DB connection,
+		get a cursor object from this function. The default cursor
+		type is SSDictCursor, but others may be passed in as an
+		optional parameter.
+		"""
 		if(cursor_type):
 			cur = self.connection.cursor(cursor_type)
 		else:
@@ -96,6 +175,13 @@ class Store(object):
 		return cur
 	
 	def get_guid(self, increment=1):
+		"""
+		Get a new GUID. If you pass the optional increment parameter, the next
+		GUID returned by this function will be that much higher, allowing multi-
+		master code to request ranges of IDs in advance, or for efficiency.
+		
+		If GUIDs are disabled for this Store, return None.
+		"""
 		if not(self.uses_guids()):
 			return None
 		
@@ -112,9 +198,15 @@ class Store(object):
 		return guid
 	
 	def uses_guids(self):
+		"""
+		Does this Store use GUIDs?
+		"""
 		return self._guid_table != None
 	
 	def register_factory(self, table, factory):
+		"""
+		Register an object to be the factory for this class.
+		"""
 		if not(isinstance(factory, storable.Factory)):
 			raise ValueError('%r is not a Factory subclass' % factory)
 		self._factories[table] = factory
@@ -148,7 +240,7 @@ class Store(object):
 	
 	def load_one(self, table, data, ignore_cache=False):
 		result = self.load(table, data, ignore_cache)
-		if(len(result)):
+		if(result and len(result)):
 			return result[0]
 		return None
 	
@@ -198,8 +290,8 @@ class Store(object):
 					id_list.append(child_id)
 	
 	def _destroy(self, storable_item):
-		delete_query = "DELETE FROM `%s` WHERE id = %%d" % storable_item.get_table()
+		delete_query = "DELETE FROM `%s` WHERE id = %%s" % storable_item.get_table()
 		cur = self.get_cursor(None)
-		cur.execute(delete_query, [storable_item.get_id()])
+		cur.execute(delete_query, storable_item.get_id())
 		storable_item.reset_id()
 
