@@ -25,6 +25,12 @@ class SQLTestCase(unittest.TestCase):
 		pass
 	
 	def test_build_insert(self):
+		sql = persist.build_insert('table', {'col2':'col2_data', 'col1':persist.raw("ENCRYPT('something')")});
+		expecting = "INSERT INTO `table` (`col1`, `col2`) VALUES (ENCRYPT('something'), 'col2_data')"
+		diff = difflib.SequenceMatcher(None, sql, expecting)
+		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s", ratio %f' % (sql, expecting, diff.ratio()))
+	
+	def test_build_insert_raw(self):
 		sql = persist.build_insert('table', {'col2':'col2_data', 'col1':'col1_data'});
 		expecting = "INSERT INTO `table` (`col1`, `col2`) VALUES ('col1_data', 'col2_data')"
 		diff = difflib.SequenceMatcher(None, sql, expecting)

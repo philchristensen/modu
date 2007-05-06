@@ -42,7 +42,7 @@ def build_select(table, data):
 			criteria.append('`%s` IN (%s)' % (key, ', '.join(['%s'] * len(value))))
 			values.extend(value)
 		elif(isinstance(value, raw)):
-			criteria.append('`%s`%s' % (key, value))
+			criteria.append('`%s`%s' % (key, value.sql))
 		elif(value is None):
 			criteria.append('ISNULL(`%s`)' % key)
 		else:
@@ -60,14 +60,16 @@ def build_select(table, data):
 	return interp(query, values)
 
 def interp(query, args):
-	return query % MySQLdb.escape_sequence(args, converters.conversions.copy())
+	conv_dict = converters.conversions.copy()
+	conv_dict[raw] = Raw2Literal
+	return query % MySQLdb.escape_sequence(args, conv_dict)
 
-class raw(object):
+class raw:
 	def __init__(self, sql):
 		self.sql = sql
-	
-	def __str__(self):
-		return self.sql
+
+def Raw2Literal(o, d):
+	return o.sql
 
 class Store(object):
 	_saved_guids = []
@@ -77,9 +79,7 @@ class Store(object):
 	cache = False
 	
 	def __init__(self, host='localhost', guid_table='guid', **kwargs):
-		conv_dict = converters.conversions.copy()
-		#conv_dict[raw] = str
-		self.connection = MySQLdb.connect(host, kwargs['user'], kwargs['password'], kwargs['db'], conv=conv_dict)
+		self.connection = MySQLdb.connect(host, kwargs['user'], kwargs['password'], kwargs['db'])
 		
 		self._guid_table = guid_table
 		
