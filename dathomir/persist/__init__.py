@@ -10,13 +10,19 @@ def get_store():
 	return _current_store
 
 def build_insert(table, data):
-	query = 'INSERT INTO `%s` (`%s`) VALUES (%s)' % (table, '`, `'.join(data.keys()), ', '.join(['%s'] * len(data)))
-	return interp(query, data.values())
+	keys = data.keys()
+	keys.sort()
+	values = [data[key] for key in keys]
+	query = 'INSERT INTO `%s` (`%s`) VALUES (%s)' % (table, '`, `'.join(keys), ', '.join(['%s'] * len(data)))
+	return interp(query, values)
 
 def build_replace(table, data):
+	keys = data.keys()
+	keys.sort()
+	values = [data[key] for key in keys]
 	query = 'REPLACE INTO `%s` SET ' % table
-	query += ', '.join(['`%s` = %%s'] * len(data)) % tuple(data.keys())
-	return interp(query, data.values())
+	query += ', '.join(['`%s` = %%s'] * len(data)) % tuple(keys)
+	return interp(query, values)
 
 def build_select(table, data):
 	if('__select_keyword' in data):
@@ -26,13 +32,17 @@ def build_select(table, data):
 	
 	criteria = []
 	values = []
-	for key in data:
+	keys = data.keys()
+	keys.sort()
+	for key in keys:
 		if(key.startswith('_')):
 			continue
 		value = data[key]
 		if(isinstance(value, list) or isinstance(value, tuple)):
 			criteria.append('`%s` IN (%s)' % (key, ', '.join(['%s'] * len(value))))
 			values.extend(value)
+		elif(isinstance(value, raw)):
+			criteria.append('`%s`%s' % (key, value))
 		elif(value is None):
 			criteria.append('ISNULL(`%s`)' % key)
 		else:
@@ -56,8 +66,8 @@ class raw(object):
 	def __init__(self, sql):
 		self.sql = sql
 	
-	def __str__(self, sql):
-		return str(sql)
+	def __str__(self):
+		return self.sql
 
 class Store(object):
 	_saved_guids = []
