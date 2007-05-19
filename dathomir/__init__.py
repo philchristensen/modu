@@ -5,12 +5,12 @@
 #
 # See LICENSE for details
 
-try:
-	from mod_python import apache
-
-	def handler(request):
+def handler(request):
+	try:
+		from mod_python import apache
+		
 		request.content_type = "text/plain"
 		request.write("Hello World! Again.")
 		return apache.OK
-except:
-	pass
+	except ImportError, e:
+		pass
