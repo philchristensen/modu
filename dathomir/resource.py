@@ -6,7 +6,7 @@
 # See LICENSE for details
 
 class Controller(object):
-	def get_paths(self, request):
+	def get_paths(self):
 		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
 	
 	def get_response(self, request):
@@ -18,13 +18,16 @@ class Content(object):
 	
 	def get_content(self, request):
 		raise NotImplementedError('%s::get_content()' % self.__class__.__name__)
+	
+	def get_content_type(self, request):
+		raise NotImplementedError('%s::get_content_type()' % self.__class__.__name__)
 
 class Resource(Controller, Content):
 	def get_response(self, request):
 		self.prepare_content(request)
 		return self.get_content(request)
 	
-	def get_paths(self, request):
+	def get_paths(self):
 		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
 	
 	def prepare_content(self, request):
@@ -33,7 +36,7 @@ class Resource(Controller, Content):
 	def get_content(self, request):
 		raise NotImplementedError('%s::get_content()' % self.__class__.__name__)
 	
-	def get_content_type(self):
+	def get_content_type(self, request):
 		raise NotImplementedError('%s::get_content_type()' % self.__class__.__name__)
 
 class TemplateResource(Resource):
@@ -47,10 +50,10 @@ class TemplateResource(Resource):
 		engine = string.Template(self.get_template(request))
 		return engine.safe_substitute(self.data)
 	
-	def get_content_type(self):
+	def get_content_type(self, request):
 		return 'text/html'
 	
-	def get_paths(self, request):
+	def get_paths(self):
 		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
 	
 	def prepare_content(self, request):

@@ -12,7 +12,7 @@ import unittest
 from dathomir import resource
 
 class TestResource(resource.TemplateResource):
-	def get_paths(self, request):
+	def get_paths(self):
 		return ['/test']
 	
 	def prepare_content(self, request):
