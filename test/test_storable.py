@@ -41,48 +41,48 @@ INSERT INTO `guid` VALUES (1);
 """
 
 class StorableTestCase(unittest.TestCase):
-	def setUp(self):
-		self.store = persist.get_store()
-		if not(self.store):
-			self.store = persist.Store(user='dathomir', password='dathomir', db='dathomir')
-		cur = self.store.get_cursor()
-		cur.execute(TEST_TABLES)
-	
-	def test_create(self):
-		s = storable.Storable('page')
-		s.code = 'url-code'
-		s.content = 'The quick brown fox jumps over the lazy dog.'
-		s.title = 'Old School'
-		
-		self.store.save(s)
-		self.failUnless(s.get_id(), 'Storable object has no id after being saved.')
-		self.store.ensure_factory('page')
-		t = self.store.load_one('page', {'id':s.get_id()});
-		
-		self.failUnlessEqual(t.get_id(), s.get_id(), 'Column `id` changed in save/load cycle')
-		self.failUnlessEqual(t.code, s.code, 'Column `code` changed in save/load cycle')
-		self.failUnlessEqual(t.content, s.content, 'Column `content` changed in save/load cycle')
-		self.failUnlessEqual(t.title, s.title, 'Column `title` changed in save/load cycle')
-	
-	def test_destroy(self):
-		s = storable.Storable('page')
-		s.code = 'url-code'
-		s.content = 'The quick brown fox jumps over the lazy dog.'
-		s.title = 'Old School'
-		
-		self.store.save(s)
-		saved_id = s.get_id()
-		self.failUnless(saved_id, 'Storable object has no id after being saved.')
-		
-		self.store.destroy(s)
-		self.store.ensure_factory('page')
-		t = self.store.load_one('page', {'id':saved_id});
-		
-		self.failIf(t, 'Storable object was not properly destroyed.')
-		self.failIf(s.get_id(), 'Storable object still has an id after being destroyed.')
-	
-	def tearDown(self):
-		pass
-	
+    def setUp(self):
+        self.store = persist.get_store()
+        if not(self.store):
+            self.store = persist.Store(user='dathomir', password='dathomir', db='dathomir')
+        cur = self.store.get_cursor()
+        cur.execute(TEST_TABLES)
+    
+    def test_create(self):
+        s = storable.Storable('page')
+        s.code = 'url-code'
+        s.content = 'The quick brown fox jumps over the lazy dog.'
+        s.title = 'Old School'
+        
+        self.store.save(s)
+        self.failUnless(s.get_id(), 'Storable object has no id after being saved.')
+        self.store.ensure_factory('page')
+        t = self.store.load_one('page', {'id':s.get_id()});
+        
+        self.failUnlessEqual(t.get_id(), s.get_id(), 'Column `id` changed in save/load cycle')
+        self.failUnlessEqual(t.code, s.code, 'Column `code` changed in save/load cycle')
+        self.failUnlessEqual(t.content, s.content, 'Column `content` changed in save/load cycle')
+        self.failUnlessEqual(t.title, s.title, 'Column `title` changed in save/load cycle')
+    
+    def test_destroy(self):
+        s = storable.Storable('page')
+        s.code = 'url-code'
+        s.content = 'The quick brown fox jumps over the lazy dog.'
+        s.title = 'Old School'
+        
+        self.store.save(s)
+        saved_id = s.get_id()
+        self.failUnless(saved_id, 'Storable object has no id after being saved.')
+        
+        self.store.destroy(s)
+        self.store.ensure_factory('page')
+        t = self.store.load_one('page', {'id':saved_id});
+        
+        self.failIf(t, 'Storable object was not properly destroyed.')
+        self.failIf(s.get_id(), 'Storable object still has an id after being destroyed.')
+    
+    def tearDown(self):
+        pass
+    
 if __name__ == "__main__":
-	unittest.main()
+    unittest.main()
