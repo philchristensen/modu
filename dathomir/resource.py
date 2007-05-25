@@ -62,3 +62,6 @@ class TemplateResource(Resource):
 	
 	def get_template(self, request):
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
+
+class CheetahTemplateResource(TemplateResource):
+	pass

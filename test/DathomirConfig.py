@@ -1,6 +1,8 @@
 from dathomir.config import handler
 from dathomir import config, resource
 
+import os
+
 class TestResource(resource.TemplateResource):
 	def get_paths(self):
 		return ['/test']
@@ -24,7 +26,9 @@ class RootResource(resource.TemplateResource):
 		return 'text/plain'
 	
 	def get_template(self, request):
-		output = "This is the web root at: " + request.dathomir_path
+		output = "This is the web root at: " + request.dathomir_path + "\n"
+		for key in dir(request):
+			output += key + ': ' + str(getattr(request, key)) + "\n"
 		return output 
 
 config.base_path = '/dathomir/test'
