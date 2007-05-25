@@ -64,4 +64,8 @@ class TemplateResource(Resource):
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 
 class CheetahTemplateResource(TemplateResource):
-	pass
+	def get_content(self, request):
+		from Cheetah.Template import Template
+		template_file = open(request.approot + '/template/' + self.get_template(request))
+		self.template = Template(file=template_file, searchList=[self.data])
+		return str(self.template)

@@ -31,6 +31,6 @@ class RootResource(resource.TemplateResource):
 			output += key + ': ' + str(getattr(request, key)) + "\n"
 		return output 
 
-config.base_path = '/dathomir/test'
+config.base_path = '/dathomir/examples/basic'
 config.activate(RootResource())
 config.activate(TestResource())

@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC 
+	"-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+	<title>Dathomir Cheetah Test Page</title>
+</head>
+<body>
+	<h1>$test</h1>
+
+	<hr/>
+
+	<ul>
+	#for $item in $sample_array
+		<li>$item</li>
+	#end for
+	</ul>
+	
+	<select>
+	#for $item in $sample_hash
+		<option value="$sample_hash[$item]">$item</li>
+	#end for
+	</select>
+</body>
+</html>

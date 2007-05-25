@@ -17,6 +17,8 @@ def handler(req):
 	else:
 		req.dathomir_path = req.uri
 	
+	req.approot = apache.get_handler_root()
+	
 	rsrc = _site_tree.parse(req.dathomir_path)
 	if not(rsrc):
 		return apache.HTTP_NOT_FOUND
