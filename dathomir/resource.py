@@ -69,3 +69,16 @@ class CheetahTemplateResource(TemplateResource):
 		template_file = open(request.approot + '/template/' + self.get_template(request))
 		self.template = Template(file=template_file, searchList=[self.data])
 		return str(self.template)
+
+class ZPTemplateResource(TemplateResource):
+	def get_content(self, request):
+		from ZopePageTemplates import PageTemplate
+		class ZPTDathomirTemplate(PageTemplate):
+			def __call__(self, context={}, *args):
+				if not context.has_key('args'):
+					context['args'] = args
+				return self.pt_render(extra_context=context)
+		template_file = open(request.approot + '/template/' + self.get_template(request))
+		self.template = ZPTDathomirTemplate()
+		self.template.write(template_file.read())
+		return self.template(context={'here':self.data})
