@@ -6,23 +6,53 @@
 # See LICENSE for details
 
 class Controller(object):
+	"""
+	This class defines something that reacts when a path is request.
+	"""
 	def get_paths(self):
+		"""
+		Return all paths that this controller supports.
+		"""
 		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
 	
 	def get_response(self, request):
+		"""
+		Do whatever this thing should do when a path is loaded.
+		"""
 		raise NotImplementedError('%s::get_response()' % self.__class__.__name__)
 
 class Content(object):
+	"""
+	This class represents a piece of content that has a MIME-type of some kind.
+	"""
 	def prepare_content(self, request):
+		"""
+		Run any neccessary code that prepares this content object for display.
+		This method is only called once.
+		"""
 		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
 	
 	def get_content(self, request):
+		"""
+		Return the content for this item. This method can be called multiple times,
+		but is always called **after** prepare_content()
+		"""
 		raise NotImplementedError('%s::get_content()' % self.__class__.__name__)
 	
 	def get_content_type(self, request):
+		"""
+		Return the mime type of this content.
+		"""
 		raise NotImplementedError('%s::get_content_type()' % self.__class__.__name__)
 
 class Resource(Controller, Content):
+	"""
+	A resource is a combination Controller-Content object that returns its
+	content as the result of a request on a particular URL. One should take
+	care if using this class directly; since it breaks the MVC relationship
+	(in a sense), it should only be directly subclassed when Views are
+	implemented by template engines, or when no View is required.
+	"""
 	def get_response(self, request):
 		self.prepare_content(request)
 		return self.get_content(request)
