@@ -64,6 +64,7 @@ class TemplateResource(Resource):
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 
 class CheetahTemplateResource(TemplateResource):
+	"""http://www.cheetahtemplate.org"""
 	def get_content(self, request):
 		from Cheetah.Template import Template
 		template_file = open(request.approot + '/template/' + self.get_template(request))
@@ -71,6 +72,7 @@ class CheetahTemplateResource(TemplateResource):
 		return str(self.template)
 
 class ZPTemplateResource(TemplateResource):
+	"""http://zpt.sourceforge.net"""
 	def get_content(self, request):
 		from ZopePageTemplates import PageTemplate
 		class ZPTDathomirTemplate(PageTemplate):
@@ -82,3 +84,11 @@ class ZPTemplateResource(TemplateResource):
 		self.template = ZPTDathomirTemplate()
 		self.template.write(template_file.read())
 		return self.template(context={'here':self.data})
+
+class CherryTemplateResource(TemplateResource):
+	"""http://cherrytemplate.python-hosting.com"""
+	def get_content(self, request):
+		from cherrytemplate import renderTemplate
+		self.data['_template_path'] = request.approot + '/template/' + self.get_template(request)
+		self.data['_renderTemplate'] = renderTemplate
+		return eval('_renderTemplate(file=_template_path)', self.data)
