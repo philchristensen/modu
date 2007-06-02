@@ -7,7 +7,7 @@
 #
 # See LICENSE for details
 
-import unittest, time
+import MySQLdb, unittest, time
 
 from MySQLdb import cursors
 
@@ -44,7 +44,8 @@ class StorableTestCase(unittest.TestCase):
 	def setUp(self):
 		self.store = persist.get_store()
 		if not(self.store):
-			self.store = persist.Store(user='dathomir', password='dathomir', db='dathomir')
+			self.connection = MySQLdb.connect('localhost', 'dathomir', 'dathomir', 'dathomir')
+			self.store = persist.Store(self.connection)
 		cur = self.store.get_cursor()
 		cur.execute(TEST_TABLES)
 	

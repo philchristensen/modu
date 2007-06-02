@@ -18,6 +18,10 @@ CREATE TABLE session (
 """
 
 class DbSession(BaseSession):
+	def __init__(self, connection, req, sid=None, secret=None, lock=1, timeout=0):
+		super(BaseSession).__init__(req, sid, secret, lock, timeout)
+		self.connection = connection
+	
 	def do_cleanup(self):
 		self._req.register_cleanup(db_cleanup)
 		self._req.log_error("DbSession: registered database cleanup.", apache.APLOG_NOTICE)

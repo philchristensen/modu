@@ -134,7 +134,7 @@ class Store(object):
 	factories for each table you wish to load objects from.
 	"""
 	
-	def __init__(self, host='localhost', guid_table='guid', **kwargs):
+	def __init__(self, connection, guid_table='guid'):
 		"""
 		Create a Store. Parameters are mostly identical to the DB-API connect()
 		function, but you may also pass in the 'guid_table' parameter, to set
@@ -148,12 +148,11 @@ class Store(object):
 		LOCK the table, execute the INSERT, read the MAX(id) for that table, and
 		finally UNLOCK the table.
 		"""
-		self.connection = MySQLdb.connect(host, kwargs['user'], kwargs['password'], kwargs['db'])
+		self.connection = connection
 		
 		self._guid_table = guid_table
 		self._factories = {}
 		self._object_cache = {}
-		self._guid_table = None
 		self.cache = False
 		
 		global _current_store
@@ -262,7 +261,7 @@ class Store(object):
 		data = storable_item.get_data()
 		cur = self.get_cursor()
 		
-		if(id):
+		if(self.uses_guids()):
 			data[storable.ID_COLUMN] = id
 			query = build_replace(table, data)
 		else:
@@ -271,10 +270,11 @@ class Store(object):
 		
 		cur.execute(query)
 		
-		if not(id):
+		if not(self.uses_guids()):
 			cur.execute('SELECT MAX(%s) AS id FROM `%s`' % (storable.ID_COLUMN, table))
-			storable.set_id(self.cursor.fetchone()['id'])
-			cur.execute('UNLOCK TABLES' % table)
+			storable_item.set_id(cur.fetchone()['id'])
+			cur.fetchall()
+			cur.execute('UNLOCK TABLES')
 	
 	def destroy(self, storable_item, destroy_related_storables=False):
 		self._destroy(storable_item)
