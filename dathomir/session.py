@@ -1,3 +1,6 @@
+from dathomir import persist
+from dathomir.persist import storable
+
 from mod_python import Session, apache
 import cPickle, time
 
@@ -23,22 +26,63 @@ class DbSession(BaseSession):
 		self.connection = connection
 	
 	def do_cleanup(self):
-		self._req.register_cleanup(db_cleanup)
+		self._req.register_cleanup(self.db_cleanup)
 		self._req.log_error("DbSession: registered database cleanup.", apache.APLOG_NOTICE)
 	
 	def do_load(self):
-		"SELECT s.* FROM session WHERE id = %s"
-		# return {'_created':time.time(), '_accessed':time.time(), '_timeout':1800, '_data':{}}
+		cur = self.connection.cursor()
+		cur.execute("SELECT s.* FROM session WHERE id = %s", self.id())
+		record = cur.fetchone(cursors.SSDictCursor)
+		if(record):
+			result = {'_created':record['created'], '_accessed':record['_accessed'], '_timeout':record['timeout']}
+			result['_data'] = cPickle.loads(record['data'])
+			self.user_id = record['user_id']
+			return result
+		else:
+			return None
 	
 	def do_save(self, dict):
-		"REPLACE INTO session (id, accessed, timeout, data) VALUES (%s, %s, %s, %s)"
-		# convert dict to the above format
-		#self.id(), self.last_accessed(), self.timeout(), cPickle.dumps(dict)
+		cur = self.connection.cursor()
+		if not(hasattr(self, 'user_id') and self.user_id):
+			self.user_id = 0
+		cur.execute("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s,%s,  %s, %s, %s)",
+						self.id(), self.user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data']))
 	
 	def do_delete(self):
-		"DELETE FROM session s WHERE s.id = %s"
-		# self.id()
+		cur = self.connection.cursor()
+		cur.execute("DELETE FROM session s WHERE s.id = %s", self.id())
+	
+	def db_cleanup(self):
+		cur = self.connection.cursor()
+		cur.execute("DELETE FROM session s WHERE %s - s.accessed > s.timeout", int(time.time()))
+	
+	def get_user(self):
+		raise NotImplementedError('%s::get_user()' % self.__class__.__name__)
+	
+	def set_user(self):
+		raise NotImplementedError('%s::set_user()' % self.__class__.__name__)
 
-def db_cleanup(data):
-	"DELETE FROM session s WHERE %s - s.accessed > s.timeout"
-	# int(time.time())
+
+class UserSession(DbSession):
+	user_class = User
+	
+	def get_user(self):
+		if(hasattr(self, 'user') and self.user):
+			return self.user
+		
+		if(hasattr(self, 'user_id') and self.user_id):
+			store = persist.get_store()
+			if not(store.has_factory('user')):
+				store.ensure_factory('user', user_class)
+			self.user = store.load_once('user', {'id':self.user_id})
+			return self.user
+		
+		return None
+	
+	def set_user(self, user):
+		self.user = user
+		if(self.user):
+			self.user_id = self.user.get_id(True)
+
+class User(storable.Storable):
+	pass

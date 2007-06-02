@@ -49,6 +49,9 @@ class StorableTestCase(unittest.TestCase):
 		cur = self.store.get_cursor()
 		cur.execute(TEST_TABLES)
 	
+	def tearDown(self):
+		pass
+	
 	def test_create(self):
 		s = storable.Storable('page')
 		s.code = 'url-code'
@@ -81,9 +84,6 @@ class StorableTestCase(unittest.TestCase):
 		
 		self.failIf(t, 'Storable object was not properly destroyed.')
 		self.failIf(s.get_id(), 'Storable object still has an id after being destroyed.')
-	
-	def tearDown(self):
-		pass
 	
 if __name__ == "__main__":
 	unittest.main()
