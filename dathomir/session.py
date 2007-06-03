@@ -6,7 +6,7 @@
 # See LICENSE for details
 
 from dathomir import persist
-from dathomir.persist import storable
+from dathomir.persist import storable, interp
 
 from mod_python import Session, apache
 from MySQLdb import cursors
@@ -19,7 +19,7 @@ CREATE TABLE session (
   created int(11) NOT NULL default '0',
   accessed int(11) NOT NULL default '0',
   timeout int(11) NOT NULL default '0',
-  data binary,
+  data BLOB,
   PRIMARY KEY (id),
   KEY user_idx (user_id),
   KEY accessed_idx (accessed),
@@ -30,7 +30,6 @@ CREATE TABLE session (
 
 class DbSession(Session.BaseSession):
 	def __init__(self, req, connection, sid=None, secret=None, lock=0, timeout=0):
-		req.log_error('__init__')
 		self.connection = connection
 		Session.BaseSession.__init__(self, req, sid, secret, lock, timeout)
 	
@@ -39,33 +38,29 @@ class DbSession(Session.BaseSession):
 		self._req.log_error("DbSession: registered database cleanup.", apache.APLOG_NOTICE)
 	
 	def do_load(self):
-		self._req.log_error('do_load')
 		cur = self.connection.cursor(cursors.SSDictCursor)
 		cur.execute("SELECT s.* FROM session s WHERE id = %s", [self.id()])
 		record = cur.fetchone()
 		if(record):
 			result = {'_created':record['created'], '_accessed':record['accessed'], '_timeout':record['timeout']}
-			result['_data'] = cPickle.loads(record['data'])
+			result['_data'] = cPickle.loads(record['data'].tostring())
 			self.user_id = record['user_id']
 			return result
 		else:
 			return None
 	
 	def do_save(self, dict):
-		self._req.log_error('do_save')
 		cur = self.connection.cursor()
 		if not(hasattr(self, 'user_id') and self.user_id):
 			self.user_id = 0
 		cur.execute("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
-						[self.id(), self.user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'])])
+						[self.id(), self.user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'], 1)])
 	
 	def do_delete(self):
-		self._req.log_error('do_delete')
 		cur = self.connection.cursor()
 		cur.execute("DELETE FROM session s WHERE s.id = %s", [self.id()])
 	
 	def db_cleanup(self):
-		self._req.log_error('db_cleanup')
 		cur = self.connection.cursor()
 		cur.execute("DELETE FROM session s WHERE %s - s.accessed > s.timeout", [int(time.time())])
 	

@@ -27,7 +27,7 @@ CREATE TABLE session (
   created int(11) NOT NULL default '0',
   accessed int(11) NOT NULL default '0',
   timeout int(11) NOT NULL default '0',
-  data binary,
+  data BLOB,
   PRIMARY KEY (id),
   KEY user_idx (user_id),
   KEY accessed_idx (accessed),
