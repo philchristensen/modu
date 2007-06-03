@@ -120,6 +120,15 @@ class RAW:
 	def __init__(self, sql):
 		self.sql = sql
 
+class LIKE(RAW):
+	"""
+	Allows LIKE statement to be embedded in constructed queries.
+	"""
+	def __init__(self, match):
+		# This is a tricky one. These strings always go through an
+		# interpolation process, so we have to double up on the %
+		self.sql = " LIKE '%%" + match + "%%'"
+
 def Raw2Literal(o, d):
 	"""
 	Provides conversion support for RAW

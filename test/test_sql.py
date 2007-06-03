@@ -81,5 +81,10 @@ class SQLTestCase(unittest.TestCase):
 		expecting = "SELECT * FROM `table` WHERE `col1`= ENCRYPT('something', SUBSTRING(col1,1,2))"
 		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 
+	def test_build_select_like(self):
+		sql = persist.build_select('table', {'col1':persist.LIKE("somestring")});
+		expecting = "SELECT * FROM `table` WHERE `col1` LIKE '%somestring%'"
+		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+
 if __name__ == "__main__":
 	unittest.main()
