@@ -5,6 +5,19 @@
 #
 # See LICENSE for details
 
+import re
+
+URL_REGEXP = r'(?P<scheme>[+a-z]+)\:(\/\/)?'
+URL_REGEXP += r'((?P<user>\w+?)(\:(?P<password>\w+?))?\@)?'
+URL_REGEXP += r'(?P<host>[\._\-a-z0-9]+)(\:(?P<port>\d+))?'
+URL_REGEXP += r'(?P<path>/[^\s;?#]*)(;(?P<params>[^\s?#]*))?'
+URL_REGEXP += r'(\?(?P<query>[^\s#]*))?(\#(?P<fragment>[^\s]*))?'
+URL_RE = re.compile(URL_REGEXP, re.IGNORECASE)
+
+def urlparse(url):
+	match = URL_RE.match(url)
+	return match.groupdict()
+
 class URLNode(object):
 	def __init__(self, leaf_data=None):
 		self.children = {}

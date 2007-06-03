@@ -9,11 +9,11 @@
 
 import unittest
 
-from dathomir.util import urlnode
+from dathomir.util import url
 
 class URLNodeTestCase(unittest.TestCase):
 	def setUp(self):
-		self.tree = urlnode.URLNode('ROOT')
+		self.tree = url.URLNode('ROOT')
 		self.tree.register('/', 'SLASH')
 		self.tree.register('/one', 'ONE')
 		self.tree.register('/one/two', 'TWO')

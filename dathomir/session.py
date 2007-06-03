@@ -20,9 +20,9 @@ CREATE TABLE session (
 ) DEFAULT CHARACTER SET utf8;
 """
 
-class DbSession(BaseSession):
-	def __init__(self, connection, req, sid=None, secret=None, lock=1, timeout=0):
-		super(BaseSession).__init__(req, sid, secret, lock, timeout)
+class DbSession(Session.BaseSession):
+	def __init__(self, req, connection, sid=None, secret=None, lock=1, timeout=0):
+		Session.BaseSession.__init__(self, req, sid, secret, lock, timeout)
 		self.connection = connection
 	
 	def do_cleanup(self):
@@ -63,6 +63,10 @@ class DbSession(BaseSession):
 		raise NotImplementedError('%s::set_user()' % self.__class__.__name__)
 
 
+class User(storable.Storable):
+	pass
+
+
 class UserSession(DbSession):
 	user_class = User
 	
@@ -83,6 +87,3 @@ class UserSession(DbSession):
 		self.user = user
 		if(self.user):
 			self.user_id = self.user.get_id(True)
-
-class User(storable.Storable):
-	pass

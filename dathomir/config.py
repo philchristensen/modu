@@ -1,8 +1,9 @@
-from dathomir.util import urlnode
+import MySQLdb
+from dathomir.util import url
 from dathomir import session, persist
 from mod_python import apache
 
-_site_tree = urlnode.URLNode()
+_site_tree = url.URLNode()
 
 db_url = 'mysql://dathomir:dathomir@localhost/dathomir'
 base_path = '/'
@@ -25,10 +26,9 @@ def handler(req):
 	
 	req.approot = apache.get_handler_root()
 	
-	req.db = init_database()
+	req.db = init_database(req)
 	req.session = init_session(req, req.db)
-	req.user = req.session.get_user()
-	req.store = init_store(req.db)
+	req.store = init_store(req, req.db)
 	
 	rsrc.prepare_content(req)
 	req.content_type = rsrc.get_content_type(req)
@@ -38,19 +38,19 @@ def handler(req):
 	
 	return apache.OK
 
-def init_database():
-	import urlparse
+def init_database(req):
 	global db_url
 	
-	dsn = urlparse.urlparse(db_url)
-	if(dsn.scheme == 'mysql'):
-		connection = MySQLdb.connect(dsn.netloc, dsn.username, dsn.password, dsn.path)
+	dsn = url.urlparse(db_url)
+	
+	if(dsn['scheme'] == 'mysql'):
+		connection = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
 	else:
-		raise NotImplementedError("Unsupported database driver: '%s'" % dsn.scheme)
+		raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
 	
 	return connection
 
-def init_store(connection):
+def init_store(req, connection):
 	store = persist.Store(connection)
 	return store
 
