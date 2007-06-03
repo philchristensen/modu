@@ -1,3 +1,10 @@
+# dathomir
+# Copyright (C) 2007 Phil Christensen
+#
+# $Id$
+#
+# See LICENSE for details
+
 import MySQLdb
 from dathomir.util import url
 from dathomir import session, persist
@@ -44,16 +51,16 @@ def init_database(req):
 	dsn = url.urlparse(db_url)
 	
 	if(dsn['scheme'] == 'mysql'):
-		connection = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
+		db = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
 	else:
 		raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
 	
-	return connection
+	return db
 
-def init_store(req, connection):
-	store = persist.Store(connection)
+def init_store(req, db):
+	store = persist.Store(db)
 	return store
 
-def init_session(req, connection):
-	sess = session.UserSession(req, connection)
+def init_session(req, db):
+	sess = session.UserSession(req, db)
 	return sess

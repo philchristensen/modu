@@ -1,3 +1,10 @@
+# dathomir
+# Copyright (C) 2007 Phil Christensen
+#
+# $Id$
+#
+# See LICENSE for details
+
 from dathomir import persist
 from dathomir.persist import storable
 
@@ -64,7 +71,8 @@ class DbSession(Session.BaseSession):
 
 
 class User(storable.Storable):
-	pass
+	def __init__(self):
+		storable.Storable.__init__(self, 'user')
 
 
 class UserSession(DbSession):
