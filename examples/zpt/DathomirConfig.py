@@ -7,13 +7,13 @@ class RootResource(resource.ZPTemplateResource):
 	def get_paths(self):
 		return ['/']
 	
-	def prepare_content(self, request):
+	def prepare_content(self, req):
 		self.add_slot('title', 'Dathomir ZPT Test Page')
 	
-	def get_content_type(self, request):
+	def get_content_type(self, req):
 		return 'text/html'
 	
-	def get_template(self, request):
+	def get_template(self, req):
 		return 'page.html.tmpl' 
 
 config.base_path = '/dathomir/examples/zpt'

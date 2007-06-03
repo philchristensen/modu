@@ -15,12 +15,12 @@ class TestResource(resource.TemplateResource):
 	def get_paths(self):
 		return ['/test']
 	
-	def prepare_content(self, request):
+	def prepare_content(self, req):
 		self.add_slot('test', 'This is my test string.')
 		self.add_slot('one', 1)
 		self.add_slot('two', 2)
 	
-	def get_template(self, request):
+	def get_template(self, req):
 		return 'The string is "$test", one is $one, two is $two'
 
 class TemplateResourceTestCase(unittest.TestCase):

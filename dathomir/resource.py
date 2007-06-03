@@ -7,7 +7,7 @@
 
 class Controller(object):
 	"""
-	This class defines something that reacts when a path is request.
+	This class defines something that reacts when a path is req.
 	"""
 	def get_paths(self):
 		"""
@@ -15,7 +15,7 @@ class Controller(object):
 		"""
 		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
 	
-	def get_response(self, request):
+	def get_response(self, req):
 		"""
 		Do whatever this thing should do when a path is loaded.
 		"""
@@ -25,21 +25,21 @@ class Content(object):
 	"""
 	This class represents a piece of content that has a MIME-type of some kind.
 	"""
-	def prepare_content(self, request):
+	def prepare_content(self, req):
 		"""
 		Run any neccessary code that prepares this content object for display.
 		This method is only called once.
 		"""
 		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
 	
-	def get_content(self, request):
+	def get_content(self, req):
 		"""
 		Return the content for this item. This method can be called multiple times,
 		but is always called **after** prepare_content()
 		"""
 		raise NotImplementedError('%s::get_content()' % self.__class__.__name__)
 	
-	def get_content_type(self, request):
+	def get_content_type(self, req):
 		"""
 		Return the mime type of this content.
 		"""
@@ -53,20 +53,20 @@ class Resource(Controller, Content):
 	(in a sense), it should only be directly subclassed when Views are
 	implemented by template engines, or when no View is required.
 	"""
-	def get_response(self, request):
-		self.prepare_content(request)
-		return self.get_content(request)
+	def get_response(self, req):
+		self.prepare_content(req)
+		return self.get_content(req)
 	
 	def get_paths(self):
 		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
 	
-	def prepare_content(self, request):
+	def prepare_content(self, req):
 		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
 	
-	def get_content(self, request):
+	def get_content(self, req):
 		raise NotImplementedError('%s::get_content()' % self.__class__.__name__)
 	
-	def get_content_type(self, request):
+	def get_content_type(self, req):
 		raise NotImplementedError('%s::get_content_type()' % self.__class__.__name__)
 
 class TemplateResource(Resource):
@@ -76,49 +76,49 @@ class TemplateResource(Resource):
 	def add_slot(self, name, value):
 		self.data[name] = value
 	
-	def get_content(self, request):
+	def get_content(self, req):
 		import string
-		engine = string.Template(self.get_template(request))
+		engine = string.Template(self.get_template(req))
 		return engine.safe_substitute(self.data)
 	
-	def get_content_type(self, request):
+	def get_content_type(self, req):
 		return 'text/html'
 	
 	def get_paths(self):
 		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
 	
-	def prepare_content(self, request):
+	def prepare_content(self, req):
 		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
 	
-	def get_template(self, request):
+	def get_template(self, req):
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 
 class CheetahTemplateResource(TemplateResource):
 	"""http://www.cheetahtemplate.org"""
-	def get_content(self, request):
+	def get_content(self, req):
 		from Cheetah.Template import Template
-		template_file = open(request.approot + '/template/' + self.get_template(request))
+		template_file = open(req.approot + '/template/' + self.get_template(req))
 		self.template = Template(file=template_file, searchList=[self.data])
 		return str(self.template)
 
 class ZPTemplateResource(TemplateResource):
 	"""http://zpt.sourceforge.net"""
-	def get_content(self, request):
+	def get_content(self, req):
 		from ZopePageTemplates import PageTemplate
 		class ZPTDathomirTemplate(PageTemplate):
 			def __call__(self, context={}, *args):
 				if not context.has_key('args'):
 					context['args'] = args
 				return self.pt_render(extra_context=context)
-		template_file = open(request.approot + '/template/' + self.get_template(request))
+		template_file = open(req.approot + '/template/' + self.get_template(req))
 		self.template = ZPTDathomirTemplate()
 		self.template.write(template_file.read())
 		return self.template(context={'here':self.data})
 
 class CherryTemplateResource(TemplateResource):
 	"""http://cherrytemplate.python-hosting.com"""
-	def get_content(self, request):
+	def get_content(self, req):
 		from cherrytemplate import renderTemplate
-		self.data['_template_path'] = request.approot + '/template/' + self.get_template(request)
+		self.data['_template_path'] = req.approot + '/template/' + self.get_template(req)
 		self.data['_renderTemplate'] = renderTemplate
 		return eval('_renderTemplate(file=_template_path)', self.data)

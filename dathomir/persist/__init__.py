@@ -123,6 +123,11 @@ class RAW:
 class LIKE(RAW):
 	"""
 	Allows LIKE statement to be embedded in constructed queries.
+	This might not be so safe to use, since it doesn't do any
+	escaping of the match string.
+	
+	The same problem exists with RAW, but at least there it
+	should be obvious that the ball is in your court.
 	"""
 	def __init__(self, match):
 		# This is a tricky one. These strings always go through an

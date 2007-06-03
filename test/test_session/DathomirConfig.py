@@ -12,7 +12,7 @@ from MySQLdb import cursors
 
 from dathomir.persist import storable
 from dathomir.config import handler
-from dathomir import config, resource, persist
+from dathomir import config, resource, persist, session
 
 """
 CREATE DATABASE dathomir;
@@ -37,38 +37,48 @@ CREATE TABLE session (
 """
 
 class DbSessionTestCase(unittest.TestCase):
+	req = None
+	
 	def setUp(self):
-		self.store = persist.get_store()
-		if not(self.store):
-			self.connection = MySQLdb.connect('localhost', 'dathomir', 'dathomir', 'dathomir')
-			self.store = persist.Store(self.connection)
-		cur = self.store.get_cursor()
+		cur = self.req.db.cursor()
 		cur.execute(TEST_TABLES)
 	
 	def tearDown(self):
 		pass
 	
 	def test_create(self):
-		raise RuntimeError('crash.')
+		self.req.log_error('creating session object')
+		sess = session.DbSession(self.req, self.req.db)
+		self.req.log_error('updating session object')
+		sess['test_data'] = 'test'
+		self.req.log_error('saving session object')
+		sess.save()
+		
+		self.req.log_error('loading session object with sess id: ' + sess.id())
+		saved_sess = session.DbSession(self.req, self.req.db, sid=sess.id())
+		self.req.log_error('comparing session object')
+		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
 	
 class SessionTestResource(resource.CheetahTemplateResource):
 	def get_paths(self):
 		return ['/']
 	
-	def prepare_content(self, request):
+	def prepare_content(self, req):
 		stream = cStringIO.StringIO()
 		runner = unittest.TextTestRunner(stream=stream, descriptions=1, verbosity=1)
 		loader = unittest.TestLoader()
+		DbSessionTestCase.req = req
 		test = loader.loadTestsFromTestCase(DbSessionTestCase)
 		runner.run(test)
 		self.add_slot('content', stream.getvalue())
 		stream.close()
 	
-	def get_content_type(self, request):
+	def get_content_type(self, req):
 		return 'text/html'
 	
-	def get_template(self, request):
+	def get_template(self, req):
 		return 'page.html.tmpl' 
 
 config.base_path = '/dathomir/test/test_session'
+config.session_class = None
 config.activate(SessionTestResource())
