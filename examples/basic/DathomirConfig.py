@@ -27,10 +27,17 @@ class RootResource(resource.TemplateResource):
 	
 	def get_template(self, req):
 		output = "This is the web root at: " + req.dathomir_path + "\n"
+		output += "meets_conditions() returns: " + str(req.meets_conditions()) + "\n"
 		for key in dir(req):
 			output += key + ': ' + str(getattr(req, key)) + "\n"
+		from mod_python import apache
+		output += '\n\n'
+		for name in dir(apache):
+			output += name + ': ' + str(getattr(apache, name)) + "\n"
 		return output 
 
 config.base_path = '/dathomir/examples/basic'
+config.session_class = None
+config.initialize_store = False
 config.activate(RootResource())
 config.activate(TestResource())

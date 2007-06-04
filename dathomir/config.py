@@ -5,18 +5,20 @@
 #
 # See LICENSE for details
 
-import MySQLdb
+import MySQLdb, mimetypes
 from dathomir.util import url
 from dathomir import session, persist
 from mod_python import apache
 
 _site_tree = url.URLNode()
+_forbidden_paths = ['DathomirConfig.py']
 _db = None
 
 base_path = '/'
 db_url = 'mysql://dathomir:dathomir@localhost/dathomir'
 session_class = session.UserSession
 initialize_store = True
+webroot = 'webroot'
 
 def activate(rsrc):
 	global _site_tree
@@ -24,27 +26,33 @@ def activate(rsrc):
 		_site_tree.register(path, rsrc)
 
 def handler(req):
-	global base_path, session_class, initialize_store, db_url
-	
+	global base_path	
 	if(req.uri.startswith(base_path)):
 		req.dathomir_path = req.uri[len(base_path):]
 	else:
 		req.dathomir_path = req.uri
 	
+	req.approot = apache.get_handler_root()
+	
+	result = _handle_file(req)
+	if(result is not None):
+		return result
+	
 	rsrc = _site_tree.parse(req.dathomir_path)
 	if not(rsrc):
 		return apache.HTTP_NOT_FOUND
 	
-	req.approot = apache.get_handler_root()
-	
+	global db_url
 	if(db_url):
-		req.db = init_database(req)
+		req.db = _init_database(req)
 	
+	global session_class
 	if(db_url and session_class):
-		req.session = init_session(req, req.db)
+		req.session = _init_session(req, req.db)
 	
+	global initialize_store
 	if(db_url and initialize_store):
-		req.store = init_store(req, req.db)
+		req.store = _init_store(req, req.db)
 	
 	rsrc.prepare_content(req)
 	req.content_type = rsrc.get_content_type(req)
@@ -54,7 +62,35 @@ def handler(req):
 	
 	return apache.OK
 
-def init_database(req):
+def _handle_file(req):
+	global webroot
+	if(webroot.startswith('/')):
+		true_path = webroot
+	else:
+		true_path = req.approot + '/' + webroot
+	
+	true_path += req.dathomir_path
+	req.finfo = apache.stat(true_path, apache.APR_FINFO_MIN)
+	
+	if(req.finfo.filetype == apache.APR_REG):
+		try:
+			content_type = mimetypes.guess_type(req.finfo.fname)[0]
+			if(content_type):
+				req.content_type = content_type
+			else:
+				return apache.HTTP_INTERNAL_SERVER_ERROR
+			
+			req.set_content_length(req.finfo.size)
+			
+			req.sendfile(req.finfo.fname)
+		except IOError:
+			return apache.HTTP_FORBIDDEN
+		else:
+			return apache.OK
+		
+	return None
+
+def _init_database(req):
 	global db_url, _db
 	
 	dsn = url.urlparse(db_url)
@@ -66,12 +102,12 @@ def init_database(req):
 	
 	return _db
 
-def init_store(req, db):
+def _init_store(req, db):
 	store = persist.get_store()
 	if not(store):
 		store = persist.Store(db)
 	return store
 
-def init_session(req, db):
+def _init_session(req, db):
 	sess = session.UserSession(req, db)
 	return sess

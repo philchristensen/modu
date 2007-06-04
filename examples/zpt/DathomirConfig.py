@@ -17,4 +17,6 @@ class RootResource(resource.ZPTemplateResource):
 		return 'page.html.tmpl' 
 
 config.base_path = '/dathomir/examples/zpt'
+config.session_class = None
+config.initialize_store = False
 config.activate(RootResource())

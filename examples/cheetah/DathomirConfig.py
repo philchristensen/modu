@@ -19,4 +19,6 @@ class RootResource(resource.CheetahTemplateResource):
 		return 'page.html.tmpl' 
 
 config.base_path = '/dathomir/examples/cheetah'
+config.session_class = None
+config.initialize_store = False
 config.activate(RootResource())
