@@ -48,6 +48,11 @@ class URLNodeTestCase(unittest.TestCase):
 	def test_long(self):
 		result = self.tree.parse('/this/is/a/long/url')
 		self.failUnlessEqual(result, 'LONG', "Didn't find 'LONG' where I expected")
+	
+	def test_collision(self):
+		tree = url.URLNode()
+		tree.register('/one', 'ONE')
+		self.failUnlessRaises(ValueError, tree.register, '/one', 'TWO')
 
 if __name__ == "__main__":
 	unittest.main()

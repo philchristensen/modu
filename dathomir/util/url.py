@@ -37,25 +37,17 @@ class URLNode(object):
 		node = self
 		for i in range(len(parts)):
 			segment = parts[i]
-			#print 'node.children: ' + str(node.children)
 			if(segment in node.children):
-				if(i < len(parts)):
-					#print 'inspecting child: ' + segment
-					node = node.children[segment]
-					if(i == len(parts) - 1):
+				node = node.children[segment]
+				if(i == len(parts) - 1):
+					if(node.leaf_data is None):
 						node.leaf_data = data
-				else:
-					raise ValueError("There is already a leaf node at %s" % fragment)
+					else:
+						raise ValueError("There is already a leaf node at %s" % fragment)
 			else:
-				if(i < len(parts)):
-					#print 'creating child at: ' + segment
-					node.children[segment] = URLNode()
-					node = node.children[segment]
-					if(i == len(parts) - 1):
-						#print '1-setting leaf data to: ' + str(data)
-						node.leaf_data = data
-				else:
-					#print '2-setting leaf data to: ' + str(data)
+				node.children[segment] = URLNode()
+				node = node.children[segment]
+				if(i == len(parts) - 1):
 					node.leaf_data = data
 	
 	def parse(self, fragment):
