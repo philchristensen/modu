@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC 
+	"-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+	<title>Dathomir File Upload Test Page</title>
+</head>
+
+<script src="/prototype.js"></script>
+<script type="text/javascript">
+var task_id = undefined;
+
+function waitForCompletion(){
+	task_id = setInterval(checkTotal, 500);
+}
+
+function checkTotal(){
+	var ajax = new Ajax.Request('/status', {method:'get', onSuccess:checkTotalCallback, onFailure:checkTotalErrback});
+}
+
+function checkTotalCallback(response){
+	var statusField = $('status-field');
+	statusField.innerHTML = response.responseBody;
+}
+
+function checkTotalErrback(response) {
+	alert('Error ' + response.status + ' -- ' + response.statusText);
+	if(task_id){
+		clearInterval(task_id)
+		task_id = undefined;
+	}
+}
+</script>
+<body>
+
+<form enctype="multipart/form-data" method="post" target="iframe_upload" onSubmit="waitForCompletion();">
+	<input type="file" name="myfile" />
+	<input type="submit" name="submit" value="send file" />
+	<div id="status-field"></div>
+	<iframe name="iframe_upload" style="border: 0;width: 0px;height: 0px;"></iframe>
+</form>
+
+</body>
+</html>

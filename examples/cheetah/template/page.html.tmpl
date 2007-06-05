@@ -10,6 +10,11 @@
 
 	<hr/>
 
+	<form method="post" enctype="multipart/form-data">
+		<input type="file" name="file_upload" />
+		<input type="submit" name="upload" value="upload" />
+	</form>
+
 	<ul>
 	#for $item in $sample_array
 		<li>$item</li>
@@ -21,5 +26,11 @@
 		<option value="$sample_hash[$item]">$item</li>
 	#end for
 	</select>
+	
+	<pre>
+	#filter WebSafe
+	$request_data
+	#end filter
+	</pre>
 </body>
 </html>

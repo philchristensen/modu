@@ -8,7 +8,7 @@
 import MySQLdb, mimetypes
 from dathomir.util import url
 from dathomir import session, persist
-from mod_python import apache
+from mod_python import apache, util
 
 _site_tree = url.URLNode()
 _forbidden_paths = ['DathomirConfig.py']
@@ -41,6 +41,8 @@ def handler(req):
 	rsrc = _site_tree.parse(req.dathomir_path)
 	if not(rsrc):
 		return apache.HTTP_NOT_FOUND
+	
+	req.tree = _site_tree
 	
 	global db_url
 	if(db_url):

@@ -19,6 +19,7 @@ class RootResource(resource.CherryTemplateResource):
 		return 'page.html.tmpl' 
 
 config.base_path = '/dathomir/examples/cherry'
+config.db_url = None
 config.session_class = None
 config.initialize_store = False
 config.activate(RootResource())

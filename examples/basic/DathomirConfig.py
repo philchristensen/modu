@@ -37,6 +37,7 @@ class RootResource(resource.TemplateResource):
 		return output 
 
 config.base_path = '/dathomir/examples/basic'
+config.db_url = None
 config.session_class = None
 config.initialize_store = False
 config.activate(RootResource())
