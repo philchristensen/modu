@@ -6,35 +6,45 @@
 	<title>Dathomir File Upload Test Page</title>
 </head>
 
-<script src="/prototype.js"></script>
+<script src="prototype.js"></script>
 <script type="text/javascript">
+#raw
 var task_id = undefined;
 
-function waitForCompletion(){
-	task_id = setInterval(checkTotal, 500);
+function waitForCompletion(file_element){
+	var statusField = $('status-field');
+	statusField.innerHTML = 'Starting check daemon';
+	setTimeout('task_id = setInterval(checkTotal, 500, myfile.value);', 1000);
 }
 
-function checkTotal(){
-	var ajax = new Ajax.Request('/status', {method:'get', onSuccess:checkTotalCallback, onFailure:checkTotalErrback});
+function checkTotal(filename){
+	filename = filename.split('/').pop();
+	var ajax = new Ajax.Request('status/' + filename, {method:'get', onSuccess:checkTotalCallback, onFailure:checkTotalErrback});
 }
 
 function checkTotalCallback(response){
 	var statusField = $('status-field');
-	statusField.innerHTML = response.responseBody;
+	statusField.innerHTML = response.responseText;
+	if(response.responseText == 'complete'){
+		clearInterval(task_id)
+		task_id = undefined;
+	}
 }
 
 function checkTotalErrback(response) {
-	alert('Error ' + response.status + ' -- ' + response.statusText);
+	var statusField = $('status-field');
+	statusField.innerHTML = 'Error ' + response.status + ' -- ' + response.statusText;
 	if(task_id){
 		clearInterval(task_id)
 		task_id = undefined;
 	}
 }
+#end raw
 </script>
 <body>
 
-<form enctype="multipart/form-data" method="post" target="iframe_upload" onSubmit="waitForCompletion();">
-	<input type="file" name="myfile" />
+<form enctype="multipart/form-data" method="post" target="iframe_upload" onSubmit="waitForCompletion($('myfile'));">
+	<input type="file" id="myfile" name="myfile" />
 	<input type="submit" name="submit" value="send file" />
 	<div id="status-field"></div>
 	<iframe name="iframe_upload" style="border: 0;width: 0px;height: 0px;"></iframe>

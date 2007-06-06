@@ -10,15 +10,15 @@ from dathomir.util import url
 from dathomir import session, persist
 from mod_python import apache, util
 
-_site_tree = url.URLNode()
-_forbidden_paths = ['DathomirConfig.py']
-_db = None
-
 base_path = '/'
 db_url = 'mysql://dathomir:dathomir@localhost/dathomir'
 session_class = session.UserSession
 initialize_store = True
 webroot = 'webroot'
+
+_site_tree = url.URLNode()
+_forbidden_paths = ['DathomirConfig.py']
+_db = None
 
 def activate(rsrc):
 	global _site_tree
@@ -95,8 +95,10 @@ def _handle_file(req):
 def _init_database(req):
 	global db_url, _db
 	
-	dsn = url.urlparse(db_url)
+	if(_db):
+		return _db
 	
+	dsn = url.urlparse(db_url)
 	if(dsn['scheme'] == 'mysql'):
 		_db = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
 	else:
