@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import MySQLdb, mimetypes
+import MySQLdb, mimetypes, os.path
 from dathomir.util import url
 from dathomir import session, persist
 from mod_python import apache, util
@@ -51,6 +51,7 @@ def handler(req):
 	global session_class
 	if(db_url and session_class):
 		req.session = _init_session(req, req.db)
+		req.log_error('session contains: ' + str(req.session))
 	
 	global initialize_store
 	if(db_url and initialize_store):
@@ -62,6 +63,9 @@ def handler(req):
 	req.set_content_length(len(content))
 	req.write(content)
 	
+	if(db_url and session_class):
+		req.session.save()
+
 	return apache.OK
 
 def _handle_file(req):
@@ -69,7 +73,7 @@ def _handle_file(req):
 	if(webroot.startswith('/')):
 		true_path = webroot
 	else:
-		true_path = req.approot + '/' + webroot
+		true_path = os.path.join(req.approot, webroot)
 	
 	true_path += req.dathomir_path
 	req.finfo = apache.stat(true_path, apache.APR_FINFO_MIN)
