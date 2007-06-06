@@ -15,6 +15,7 @@ db_url = 'mysql://dathomir:dathomir@localhost/dathomir'
 session_class = session.UserSession
 initialize_store = True
 webroot = 'webroot'
+debug_session = False
 
 _site_tree = url.URLNode()
 _forbidden_paths = ['DathomirConfig.py']
@@ -52,7 +53,9 @@ def handler(req):
 	if(db_url and session_class):
 		req.session = _init_session(req, req.db)
 	
-	req.log_error('session contains: ' + str(req.session))
+	global debug_session
+	if(debug_session):
+		req.log_error('session contains: ' + str(req.session))
 	
 	global initialize_store
 	if(db_url and initialize_store):

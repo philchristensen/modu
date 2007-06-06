@@ -3,12 +3,12 @@ from dathomir import config, resource
 
 from mod_python import util
 
-import os
+import os, time
 
 class MagicFile(file):
 	def __init__(self, req, filename, mode='r', bufsize=-1):
 		import tempfile, md5, os.path
-		hashed_filename = os.path.join(tempfile.gettempdir(), md5.new(filename).hexdigest())
+		hashed_filename = os.path.join(tempfile.gettempdir(), md5.new(filename + time.ctime()).hexdigest())
 		
 		super(MagicFile, self).__init__(hashed_filename, mode, bufsize)
 		
@@ -17,7 +17,8 @@ class MagicFile(file):
 		if('dathomir.file' not in req.session):
 			self.req.session['dathomir.file'] = {}
 		
-		self.req.session['dathomir.file'][self.client_filename] = {'bytes_written':0, 'total_bytes':int(self.req.headers_in['Content-Length'])}
+		byte_estimate = int(self.req.headers_in['Content-Length'])
+		self.req.session['dathomir.file'][self.client_filename] = {'bytes_written':0, 'total_bytes':byte_estimate}
 		self.req.session.save()
 	
 	def write(self, data):
@@ -27,6 +28,7 @@ class MagicFile(file):
 		super(MagicFile, self).write(data)
 	
 	def seek(self, offset, whence=0):
+		self.req.log_error('file was sought')
 		self.req.session['dathomir.file'][self.client_filename]['complete'] = 1
 		super(MagicFile, self).seek(offset, whence)
 
@@ -40,13 +42,17 @@ class RootResource(resource.CheetahTemplateResource):
 		return ['/']
 	
 	def prepare_content(self, req):
-		if(req.tree.unparsed_path and req.tree.unparsed_path[0] == 'status'):
-			if(len(req.tree.unparsed_path) >= 2):
-				file_state = req.session['dathomir.file'][req.tree.unparsed_path[1]]
+		if(req.tree.unparsed_path and req.tree.unparsed_path[0] == 'status' and len(req.tree.unparsed_path) >= 2):
+				selected_file = req.tree.unparsed_path[1]
+				info_dict = req.session.setdefault('dathomir.file', {})
+				file_state = info_dict.setdefault(selected_file, {})
 				if('complete' in file_state):
 					self.add_slot('status', 'complete')
+					del req.session['dathomir.file'][selected_file]
 				else:
-					self.add_slot('status', '%d/%d' % (file_state['bytes_written'], file_state['total_bytes']))
+					written = file_state.setdefault('bytes_written', 0)
+					total = file_state.setdefault('total_bytes', 0)
+					self.add_slot('status', '%d/%d' % (written, total))
 		else:
 			forms = util.FieldStorage(req, file_callback=magicFileHandler(req))
 	
