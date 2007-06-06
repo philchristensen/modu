@@ -60,7 +60,8 @@ class DbSession(Session.BaseSession):
 		cur = self.connection.cursor()
 		cur.execute("DELETE FROM session s WHERE s.id = %s", [self.id()])
 	
-	def db_cleanup(self):
+	def db_cleanup(self, *args):
+		self._req.log_error('db_cleanup passed extra args: ' + str(args))
 		cur = self.connection.cursor()
 		cur.execute("DELETE FROM session s WHERE %s - s.accessed > s.timeout", [int(time.time())])
 	

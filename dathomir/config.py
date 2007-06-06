@@ -51,7 +51,8 @@ def handler(req):
 	global session_class
 	if(db_url and session_class):
 		req.session = _init_session(req, req.db)
-		req.log_error('session contains: ' + str(req.session))
+	
+	req.log_error('session contains: ' + str(req.session))
 	
 	global initialize_store
 	if(db_url and initialize_store):
