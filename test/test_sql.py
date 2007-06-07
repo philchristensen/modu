@@ -12,14 +12,6 @@ import unittest, difflib
 from dathomir import persist
 
 class SQLTestCase(unittest.TestCase):
-	"""
-	These tests are practically worthless right now, since there really
-	is no predicting what the output order of a hash table is.
-	
-	It might be worth switching to the alternate interpolation mechanism
-	and using %(key) to force positions.
-	"""
-	
 	def setUp(self):
 		pass
 	
