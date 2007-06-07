@@ -1,3 +1,10 @@
+# dathomir
+# Copyright (C) 2007 Phil Christensen
+#
+# $Id$
+#
+# See LICENSE for details
+
 from dathomir.config import handler, accesshandler
 from dathomir import config, resource
 
