@@ -78,6 +78,9 @@ class User(storable.Storable):
 
 
 class UserSession(DbSession):
+	"""
+	This is broken. It's a dict, shouldn't be using attribute access.
+	"""
 	user_class = User
 	
 	def get_user(self):

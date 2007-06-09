@@ -18,7 +18,6 @@ webroot = 'webroot'
 debug_session = False
 
 _site_tree = url.URLNode()
-_forbidden_paths = ['DathomirConfig.py']
 _db = None
 
 def activate(rsrc):
