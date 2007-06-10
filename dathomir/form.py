@@ -5,51 +5,31 @@
 #
 # See LICENSE for details
 
-class Form(object):
+"""
+In an attempt to mimic the Drupal form-building process in a slightly more
+Pythonic way, these classes will allow you to populate a Form object using
+dictionary syntax.
+
+Note that this will simply create a form definition. Separate classes/modules
+will need to be used to render the form.
+"""
+
+from dathomir.util import form
+
+class FormDef(object):
 	def __init__(self, name):
 		self.name = name
-		self.fields = {}
-	
-	def __setitem__(self, key, value):
-		if not(isinstance(value, (dict, Field))):
-			raise ValueError('Form fields must be dictionaries or dathomir.form.Field instances.')
-		
-		if(isinstance(value, dict)):
-			if(value['type'] == 'fieldset'):
-				field = FieldSet(key, value)
-			else:
-				field = Field(key, value)
-		else:
-			field = value
-		
-		self.fields[key] = field
-	
-	def __getitem__(self, key):
-		return self.fields[key]
-
-class Field(object):
-	def __init__(self, name, attribs):
-		self.name = name
 		self.rendered = False
-		for key, value in attribs.iteritems():
-			self.__setitem__(key, value)
+		self.children = {}
+		self.attributes = {}
+		self.submit_hook = None
+		self.validate_hook = None
 	
-	def __setitem__(self, key, value):
-		pass
-
-class FieldSet(Field):
-	def __setitem__(self, key, value):
-		pass
-
-"""
-Should this really work this way? Maybe it would be better to follow the
-Django approach, and allow subclasses of storable to define the fields they
-provide.
-
-OTOH, that doesn't allow us to use the same interface for general form creation,
-which was one of the annoying things about the PHP predecessor to dathomir.
-
-It's important to keep a distinction between a form with fields in it and a
-single database column whose data is represented by several fields in the form,
-such as the timestamp date field (which has select fields for month, day, year)
-"""
+	def __call__(self, *args, **kwargs):
+		for key, value in kwargs.iteritems():
+			self.attributes[key] = value
+	
+	def __getitem__(self, key, value):
+		if(key not in children):
+			self.children[key] = FormDef(key)
+		return self.children[key]
