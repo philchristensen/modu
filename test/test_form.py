@@ -3,7 +3,7 @@
 # dathomir
 # Copyright (C) 2007 Phil Christensen
 #
-# $Id: test_urlnode.py 269 2007-06-07 19:26:34Z phil $
+# $Id$
 #
 # See LICENSE for details
 

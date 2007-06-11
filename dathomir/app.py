@@ -76,27 +76,6 @@ class _dathomir_namespace(dict):
 	def __setattr__(self, key, value):
 		self[key] = value
 
-def _bootstrap(req):
-	result = {}
-	
-	global db_url
-	if(db_url):
-		result['db'] = _init_database(req)
-	
-	global session_class
-	if(db_url and session_class):
-		result['session'] = _init_session(req, result['db'])
-	
-	global debug_session
-	if(debug_session):
-		req.log_error('session contains: ' + str(result['session']))
-	
-	global initialize_store
-	if(db_url and initialize_store):
-		result['store'] = _init_store(req, result['db'])
-	
-	return result
-
 def _handle_file(req):
 	global webroot
 	if(webroot.startswith('/')):
@@ -119,6 +98,27 @@ def _handle_file(req):
 		pass
 	
 	return None
+
+def _bootstrap(req):
+	result = {}
+	
+	global db_url
+	if(db_url):
+		result['db'] = _init_database(req)
+	
+	global session_class
+	if(db_url and session_class):
+		result['session'] = _init_session(req, result['db'])
+	
+	global debug_session
+	if(debug_session):
+		req.log_error('session contains: ' + str(result['session']))
+	
+	global initialize_store
+	if(db_url and initialize_store):
+		result['store'] = _init_store(req, result['db'])
+	
+	return result
 
 def _init_database(req):
 	global db_url, _db
