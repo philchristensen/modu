@@ -40,7 +40,7 @@ class DbSessionTestCase(unittest.TestCase):
 	req = None
 	
 	def setUp(self):
-		cur = self.req.db.cursor()
+		cur = self.req.dathomir.db.cursor()
 		cur.execute(TEST_TABLES)
 	
 	def tearDown(self):
@@ -48,14 +48,14 @@ class DbSessionTestCase(unittest.TestCase):
 	
 	def test_create(self):
 		self.req.log_error('creating session object')
-		sess = session.DbSession(self.req, self.req.db)
+		sess = session.DbSession(self.req, self.req.dathomir.db)
 		self.req.log_error('updating session object')
 		sess['test_data'] = 'test'
 		self.req.log_error('saving session object')
 		sess.save()
 		
 		self.req.log_error('loading session object with sess id: ' + sess.id())
-		saved_sess = session.DbSession(self.req, self.req.db, sid=sess.id())
+		saved_sess = session.DbSession(self.req, self.req.dathomir.db, sid=sess.id())
 		self.req.log_error('comparing session object')
 		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
 	

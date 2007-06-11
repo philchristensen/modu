@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-from dathomir.app import handler, accesshandler
+from dathomir.app import handler
 from dathomir import app, resource
 
 import os
@@ -33,9 +33,8 @@ class RootResource(resource.TemplateResource):
 		return 'text/plain'
 	
 	def get_template(self, req):
-		output = "This is the web root at: " + req.dathomir_path + "\n"
+		output = "This is the web root at: " + req.dathomir.path + "\n"
 		output += "meets_conditions() returns: " + str(req.meets_conditions()) + "\n"
-		output += 'access output: ' + req.debug_output + "\n\n"
 		for key in dir(req):
 			output += key + ': ' + str(getattr(req, key)) + "\n"
 		from mod_python import apache

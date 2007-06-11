@@ -89,7 +89,6 @@ try:
 								raise ValueError('bad naming scheme')
 						else:
 							if(node == self.__nested_table_cache):
-								self.req.log_error(fragment + ' is new')
 								new = True
 							if(tree):
 								node[fragment] = {}

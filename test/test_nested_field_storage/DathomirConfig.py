@@ -23,14 +23,15 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 		pass
 	
 	def test_basic(self):
-		if(self.req.tree.unparsed_path and self.req.tree.unparsed_path[0] == 'test_basic'):
+		tree = self.req.dathomir.tree
+		if(tree.unparsed_path and tree.unparsed_path[0] == 'test_basic'):
 			fields = form.NestedFieldStorage(self.req)
 			self.assertEqual(fields['test']['one']['two']['three'], 'value 3', 'Did not find "value 3" where expected.')
 	
 	def test_broken(self):
-		if(self.req.tree.unparsed_path and self.req.tree.unparsed_path[0] == 'test_broken'):
+		tree = self.req.dathomir.tree
+		if(tree.unparsed_path and tree.unparsed_path[0] == 'test_broken'):
 			fields = form.NestedFieldStorage(self.req)
-			self.req.log_error(repr(fields))
 			self.assertEqual(fields['test']['one'], 'value 1', 'Did not find "value 1" where expected.')
 			self.assertEqual(fields['test[one][two][three]'], 'value 3', 'Did not find "value 3" where expected.')
 	

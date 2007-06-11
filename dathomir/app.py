@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import MySQLdb, mimetypes, os.path
+import MySQLdb, mimetypes, os, stat, os.path
 from dathomir.util import url
 from dathomir import session, persist
 from mod_python import apache, util
@@ -17,86 +17,107 @@ initialize_store = True
 webroot = 'webroot'
 debug_session = False
 
-_site_tree = url.URLNode()
-_db = None
-
 def activate(rsrc):
 	global _site_tree
 	for path in rsrc.get_paths():
 		_site_tree.register(path, rsrc)
 
 def handler(req):
-	global base_path	
-	if(req.uri.startswith(base_path)):
-		req.dathomir_path = req.uri[len(base_path):]
-	else:
-		req.dathomir_path = req.uri
+	req.dathomir = _dathomir_namespace()
 	
-	req.approot = apache.get_handler_root()
+	global base_path
+	if(req.uri.startswith(base_path)):
+		req.dathomir.path = req.uri[len(base_path):]
+	else:
+		req.dathomir.path = req.uri
+	
+	req.dathomir.approot = apache.get_handler_root()
 	
 	result = _handle_file(req)
-	if(result is not None):
-		return result
+	if(result):
+		if(result[1]):
+			req.content_type = result[1]
+			req.set_content_length(result[2])
+			req.sendfile(result[0])
+			return apache.OK
+		else:
+			return apache.HTTP_FORBIDDEN
+	else:
+		rsrc = _site_tree.parse(req.dathomir.path)
+		if not(rsrc):
+			return apache.HTTP_NOT_FOUND
+		
+		req.dathomir.tree = _site_tree
+		
+		for key, value in _bootstrap(req).iteritems():
+			setattr(req.dathomir, key, value)
+		
+		rsrc.prepare_content(req)
+		req.content_type = rsrc.get_content_type(req)
+		content = rsrc.get_content(req)
+		req.set_content_length(len(content))
+		req.write(content)
+		
+		global db_url, session_class
+		if(db_url and session_class):
+			req.session.save()
 	
-	rsrc = _site_tree.parse(req.dathomir_path)
-	if not(rsrc):
-		return apache.HTTP_NOT_FOUND
+	return apache.OK
+
+_site_tree = url.URLNode()
+_db = None
+
+class _dathomir_namespace(dict):
+	def __getattribute__(self, key):
+		if(key in self):
+			return self[key]
+		raise AttributeError(key)
 	
-	req.tree = _site_tree
+	def __setattr__(self, key, value):
+		self[key] = value
+
+def _bootstrap(req):
+	result = {}
 	
 	global db_url
 	if(db_url):
-		req.db = _init_database(req)
+		result['db'] = _init_database(req)
 	
 	global session_class
 	if(db_url and session_class):
-		req.session = _init_session(req, req.db)
+		result['session'] = _init_session(req, result['db'])
 	
 	global debug_session
 	if(debug_session):
-		req.log_error('session contains: ' + str(req.session))
+		req.log_error('session contains: ' + str(result['session']))
 	
 	global initialize_store
 	if(db_url and initialize_store):
-		req.store = _init_store(req, req.db)
+		result['store'] = _init_store(req, result['db'])
 	
-	rsrc.prepare_content(req)
-	req.content_type = rsrc.get_content_type(req)
-	content = rsrc.get_content(req)
-	req.set_content_length(len(content))
-	req.write(content)
-	
-	if(db_url and session_class):
-		req.session.save()
-
-	return apache.OK
+	return result
 
 def _handle_file(req):
 	global webroot
 	if(webroot.startswith('/')):
 		true_path = webroot
 	else:
-		true_path = os.path.join(req.approot, webroot)
+		true_path = os.path.join(req.dathomir.approot, webroot)
 	
-	true_path += req.dathomir_path
-	req.finfo = apache.stat(true_path, apache.APR_FINFO_MIN)
+	true_path = os.path.join(true_path, req.dathomir.path)
+	try:
+		finfo = os.stat(true_path)
 	
-	if(req.finfo.filetype == apache.APR_REG):
-		try:
-			content_type = mimetypes.guess_type(req.finfo.fname)[0]
-			if(content_type):
-				req.content_type = content_type
-			else:
-				return apache.HTTP_INTERNAL_SERVER_ERROR
-			
-			req.set_content_length(req.finfo.size)
-			
-			req.sendfile(req.finfo.fname)
-		except IOError:
-			return apache.HTTP_FORBIDDEN
-		else:
-			return apache.OK
-		
+		if(stat.S_ISREG(finfo.st_mode)):
+			try:
+				content_type = mimetypes.guess_type(true_path)[0]
+				size = finfo.st_size
+				return (true_path, content_type, size)
+			except IOError:
+				return (true_path, None, None)
+	except OSError:
+		pass
+	
 	return None
 
 def _init_database(req):
