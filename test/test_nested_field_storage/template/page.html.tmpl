@@ -1,0 +1,26 @@
+<!DOCTYPE html PUBLIC 
+	"-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+	<title>Dathomir NestedFieldStorage Test Page</title>
+</head>
+<body>
+
+<form method="post" action="test_basic">
+<input type="hidden" name="test[one][two][three]" value="value 3" />
+<input type="submit" name="test_basic" value="test_basic" />
+</form>
+
+<form method="post" action="test_broken">
+<input type="hidden" name="test[one]" value="value 1" />
+<input type="hidden" name="test[one][two][three]" value="value 3" />
+<input type="submit" name="test_broken" value="test_broken" />
+</form>
+
+<pre>
+$content
+</pre>
+
+</body>
+</html>

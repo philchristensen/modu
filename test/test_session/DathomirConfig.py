@@ -7,11 +7,11 @@
 #
 # See LICENSE for details
 
-import MySQLdb, unittest, time, os, cStringIO
-from MySQLdb import cursors
+import unittest
 
 from dathomir.persist import storable
 from dathomir.config import handler
+from dathomir.util import test
 from dathomir import config, resource, persist, session
 
 """
@@ -59,26 +59,6 @@ class DbSessionTestCase(unittest.TestCase):
 		self.req.log_error('comparing session object')
 		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
 	
-class SessionTestResource(resource.CheetahTemplateResource):
-	def get_paths(self):
-		return ['/']
-	
-	def prepare_content(self, req):
-		stream = cStringIO.StringIO()
-		runner = unittest.TextTestRunner(stream=stream, descriptions=1, verbosity=1)
-		loader = unittest.TestLoader()
-		DbSessionTestCase.req = req
-		test = loader.loadTestsFromTestCase(DbSessionTestCase)
-		runner.run(test)
-		self.add_slot('content', stream.getvalue())
-		stream.close()
-	
-	def get_content_type(self, req):
-		return 'text/html'
-	
-	def get_template(self, req):
-		return 'page.html.tmpl' 
-
 config.base_path = '/dathomir/test/test_session'
 config.session_class = None
-config.activate(SessionTestResource())
+config.activate(test.TestResource(DbSessionTestCase))
