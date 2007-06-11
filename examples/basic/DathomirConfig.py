@@ -5,8 +5,8 @@
 #
 # See LICENSE for details
 
-from dathomir.config import handler, accesshandler
-from dathomir import config, resource
+from dathomir.app import handler, accesshandler
+from dathomir import app, resource
 
 import os
 
@@ -44,9 +44,9 @@ class RootResource(resource.TemplateResource):
 			output += name + ': ' + str(getattr(apache, name)) + "\n"
 		return output 
 
-config.base_path = '/dathomir/examples/basic'
-config.db_url = None
-config.session_class = None
-config.initialize_store = False
-config.activate(RootResource())
-config.activate(TestResource())
+app.base_path = '/dathomir/examples/basic'
+app.db_url = None
+app.session_class = None
+app.initialize_store = False
+app.activate(RootResource())
+app.activate(TestResource())

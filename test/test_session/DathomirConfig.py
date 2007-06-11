@@ -10,9 +10,9 @@
 import unittest
 
 from dathomir.persist import storable
-from dathomir.config import handler
+from dathomir.app import handler
 from dathomir.util import test
-from dathomir import config, resource, persist, session
+from dathomir import app, resource, persist, session
 
 """
 CREATE DATABASE dathomir;
@@ -59,6 +59,6 @@ class DbSessionTestCase(unittest.TestCase):
 		self.req.log_error('comparing session object')
 		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
 	
-config.base_path = '/dathomir/test/test_session'
-config.session_class = None
-config.activate(test.TestResource(DbSessionTestCase))
+app.base_path = '/dathomir/test/test_session'
+app.session_class = None
+app.activate(test.TestResource(DbSessionTestCase))

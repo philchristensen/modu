@@ -5,8 +5,8 @@
 #
 # See LICENSE for details
 
-from dathomir.config import handler
-from dathomir import config, resource
+from dathomir.app import handler
+from dathomir import app, resource
 
 import os
 
@@ -25,8 +25,8 @@ class RootResource(resource.CherryTemplateResource):
 	def get_template(self, req):
 		return 'page.html.tmpl' 
 
-config.base_path = '/dathomir/examples/cherry'
-config.db_url = None
-config.session_class = None
-config.initialize_store = False
-config.activate(RootResource())
+app.base_path = '/dathomir/examples/cherry'
+app.db_url = None
+app.session_class = None
+app.initialize_store = False
+app.activate(RootResource())

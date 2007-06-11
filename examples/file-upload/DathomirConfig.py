@@ -5,8 +5,8 @@
 #
 # See LICENSE for details
 
-from dathomir.config import handler
-from dathomir import config, resource
+from dathomir.app import handler
+from dathomir import app, resource
 
 from mod_python import util
 
@@ -72,6 +72,6 @@ class RootResource(resource.CheetahTemplateResource):
 		else:
 			return 'page.html.tmpl'
 
-config.base_path = '/dathomir/examples/file-upload'
-config.initialize_store = False
-config.activate(RootResource())
+app.base_path = '/dathomir/examples/file-upload'
+app.initialize_store = False
+app.activate(RootResource())

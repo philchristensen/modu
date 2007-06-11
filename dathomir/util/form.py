@@ -22,7 +22,6 @@ class FormNode(object):
 	
 	def __init__(self, name):
 		self.name = name
-		self.rendered = False
 		self.parent = None
 		self.children = {}
 		self.attributes = {}
