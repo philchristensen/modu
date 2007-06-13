@@ -48,6 +48,8 @@ def handler(req):
 	return apache.OK
 
 def wsgi_handler(environ, start_response):
+	environ = _req_wrapper(environ)
+	
 	global base_url
 	uri = environ['REQUEST_URI']
 	if(uri.startswith(base_url)):
@@ -107,6 +109,14 @@ def get_headers():
 _site_tree = url.URLNode()
 _db = None
 _response_headers = []
+
+class _req_wrapper(dict):
+	def __init__(self, d):
+		dict.__init__(self)
+		self.update(d)
+	
+	def log_error(self, data):
+		self['wsgi.errors'].write(data)
 
 def _handle_file(req):
 	global webroot

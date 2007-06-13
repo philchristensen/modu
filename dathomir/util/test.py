@@ -23,10 +23,13 @@ class TestResource(resource.CheetahTemplateResource):
 		stream = cStringIO.StringIO()
 		runner = unittest.TextTestRunner(stream=stream, descriptions=1, verbosity=1)
 		loader = unittest.TestLoader()
+		
 		self.test_case_class.req = req
 		test = loader.loadTestsFromTestCase(self.test_case_class)
 		runner.run(test)
+		
 		self.add_slot('content', stream.getvalue())
+		
 		stream.close()
 	
 	def get_content_type(self, req):
@@ -34,4 +37,3 @@ class TestResource(resource.CheetahTemplateResource):
 	
 	def get_template(self, req):
 		return 'page.html.tmpl' 
-

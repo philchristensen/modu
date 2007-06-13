@@ -19,9 +19,7 @@ class RootResource(resource.CheetahTemplateResource):
 	def prepare_content(self, req):
 		self.add_slot('request', req)
 		self.add_slot('request_data', req['wsgi.input'].read())
-		#app.add_header('Set-Cookie', 'Test=test_value; expires=Sat, 01-Jan-2008 00:00:00 GMT; path='+app.base_url+';')
-		#app.add_header('Set-Cookie', 'Test2=test_value2; expires=Sat, 01-Jan-2008 00:00:00 GMT; path='+app.base_url+';')
-		
+	
 	def get_content_type(self, req):
 		return 'text/html'
 	

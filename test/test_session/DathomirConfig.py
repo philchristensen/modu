@@ -47,16 +47,11 @@ class DbSessionTestCase(unittest.TestCase):
 		pass
 	
 	def test_create(self):
-		self.req['wsgi.errors'].write('creating session object')
 		sess = session.DbSession(self.req, self.req['dathomir.db'])
-		self.req['wsgi.errors'].write('updating session object')
 		sess['test_data'] = 'test'
-		self.req['wsgi.errors'].write('saving session object')
 		sess.save()
 		
-		self.req['wsgi.errors'].write('loading session object with sess id: ' + sess.id())
 		saved_sess = session.DbSession(self.req, self.req['dathomir.db'], sid=sess.id())
-		self.req['wsgi.errors'].write('comparing session object')
 		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
 	
 app.base_url = '/dathomir/test/test_session'

@@ -7,12 +7,12 @@
 </head>
 <body>
 
-<form method="post" action="test_basic">
+<form method="post" action="test_basic" enctype="multipart/form-data">
 <input type="hidden" name="test[one][two][three]" value="value 3" />
 <input type="submit" name="test_basic" value="test_basic" />
 </form>
 
-<form method="post" action="test_broken">
+<form method="post" action="test_broken" enctype="multipart/form-data">
 <input type="hidden" name="test[one]" value="value 1" />
 <input type="hidden" name="test[one][two][three]" value="value 3" />
 <input type="submit" name="test_broken" value="test_broken" />
