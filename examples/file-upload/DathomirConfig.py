@@ -72,6 +72,6 @@ class RootResource(resource.CheetahTemplateResource):
 		else:
 			return 'page.html.tmpl'
 
-app.base_path = '/dathomir/examples/file-upload'
+app.base_url = '/dathomir/examples/file-upload'
 app.initialize_store = False
 app.activate(RootResource())

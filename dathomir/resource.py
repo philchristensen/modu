@@ -97,7 +97,7 @@ class CheetahTemplateResource(TemplateResource):
 	"""http://www.cheetahtemplate.org"""
 	def get_content(self, req):
 		from Cheetah.Template import Template
-		template_file = open(req.dathomir.approot + '/template/' + self.get_template(req))
+		template_file = open(req['dathomir.approot'] + '/template/' + self.get_template(req))
 		self.template = Template(file=template_file, searchList=[self.data])
 		return str(self.template)
 
@@ -110,7 +110,7 @@ class ZPTemplateResource(TemplateResource):
 				if not context.has_key('args'):
 					context['args'] = args
 				return self.pt_render(extra_context=context)
-		template_file = open(req.dathomir.approot + '/template/' + self.get_template(req))
+		template_file = open(req['dathomir.approot'] + '/template/' + self.get_template(req))
 		self.template = ZPTDathomirTemplate()
 		self.template.write(template_file.read())
 		return self.template(context={'here':self.data})
@@ -119,6 +119,6 @@ class CherryTemplateResource(TemplateResource):
 	"""http://cherrytemplate.python-hosting.com"""
 	def get_content(self, req):
 		from cherrytemplate import renderTemplate
-		self.data['_template_path'] = req.dathomir.approot + '/template/' + self.get_template(req)
+		self.data['_template_path'] = req['dathomir.approot'] + '/template/' + self.get_template(req)
 		self.data['_renderTemplate'] = renderTemplate
 		return eval('_renderTemplate(file=_template_path)', self.data)

@@ -22,10 +22,9 @@ class RootResource(resource.CheetahTemplateResource):
 		self.add_slot('sample_hash', {'one':1, 'two':2, 'three':3})
 		
 		output = ''
-		for key in dir(req):
-			output += key + ': ' + str(getattr(req, key)) + "\n"
+		for key in req:
+			output += key + ': ' + str(req[key]) + "\n"
 		self.add_slot('request_data', output)
-		#self.add_slot('request_data', util.FieldStorage(req))
 	
 	def get_content_type(self, req):
 		return 'text/html'
@@ -33,7 +32,7 @@ class RootResource(resource.CheetahTemplateResource):
 	def get_template(self, req):
 		return 'page.html.tmpl' 
 
-app.base_path = '/dathomir/examples/cheetah'
+app.base_url = '/dathomir/examples/cheetah'
 app.db_url = None
 app.session_class = None
 app.initialize_store = False

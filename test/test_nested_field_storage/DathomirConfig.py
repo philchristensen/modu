@@ -35,7 +35,7 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 			self.assertEqual(fields['test']['one'], 'value 1', 'Did not find "value 1" where expected.')
 			self.assertEqual(fields['test[one][two][three]'], 'value 3', 'Did not find "value 3" where expected.')
 	
-app.base_path = '/dathomir/test/test_nested_field_storage'
+app.base_url = '/dathomir/test/test_nested_field_storage'
 app.db_url = None
 app.session_class = None
 app.initialize_store = False

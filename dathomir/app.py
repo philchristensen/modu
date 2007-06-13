@@ -7,10 +7,10 @@
 
 import MySQLdb, mimetypes, os, stat, os.path
 from dathomir.util import url
-from dathomir import session, persist
+from dathomir import session, persist, wsgi
 from mod_python import apache, util
 
-base_path = '/'
+base_url = '/'
 db_url = 'mysql://dathomir:dathomir@localhost/dathomir'
 session_class = session.UserSession
 initialize_store = True
@@ -23,70 +23,103 @@ def activate(rsrc):
 		_site_tree.register(path, rsrc)
 
 def handler(req):
-	req.dathomir = _dathomir_namespace()
+	environ = wsgi.get_environment(req)
+	environ.update(_get_config_dict())
 	
-	global base_path
-	if(req.uri.startswith(base_path)):
-		req.dathomir.path = req.uri[len(base_path):]
+	def start_response(status, response_headers):
+		req.status = int(status[:3])
+		
+		for key, val in response_headers:
+			if key.lower() == 'content-length':
+				req.set_content_length(int(val))
+			elif key.lower() == 'content-type':
+				req.content_type = val
+			else:
+				req.headers_out.add(key, val)
+		
+		return req.write
+	
+	content = wsgi_handler(environ, start_response)
+	if(isinstance(content, wsgi.FileWrapper)):
+		req.sendfile(content.filelike.name, content.blksize)
 	else:
-		req.dathomir.path = req.uri
-	
-	req.dathomir.approot = apache.get_handler_root()
-	
-	result = _handle_file(req)
-	if(result):
-		if(result[1]):
-			req.content_type = result[1]
-			req.set_content_length(result[2])
-			req.sendfile(result[0])
-			return apache.OK
-		else:
-			return apache.HTTP_FORBIDDEN
-	else:
-		rsrc = _site_tree.parse(req.dathomir.path)
-		if not(rsrc):
-			return apache.HTTP_NOT_FOUND
-		
-		req.dathomir.tree = _site_tree
-		
-		for key, value in _bootstrap(req).iteritems():
-			setattr(req.dathomir, key, value)
-		
-		rsrc.prepare_content(req)
-		req.content_type = rsrc.get_content_type(req)
-		content = rsrc.get_content(req)
-		req.set_content_length(len(content))
-		req.write(content)
-		
-		global db_url, session_class
-		if(db_url and session_class):
-			req.session.save()
-	
+		for data in content:
+			req.write(data)
 	return apache.OK
+
+def wsgi_handler(environ, start_response):
+	global base_url
+	uri = environ['REQUEST_URI']
+	if(uri.startswith(base_url)):
+		environ['dathomir.path'] = uri[len(base_url):]
+	else:
+		environ['dathomir.path'] = uri
+	
+	# TODO: Fix this
+	environ['dathomir.approot'] = apache.get_handler_root()
+	
+	result = _handle_file(environ)
+	if(result):
+		content = []
+		if(result[1]):
+			add_header('Content-Type', result[1])
+			add_header('Content-Length', result[2])
+			try:
+				content = wsgi.FileWrapperopen(open(result[0]))
+			except:
+				status = '401 Forbidden'
+			else:
+				status = '200 OK'
+		else:
+			status = '401 Forbidden'
+		start_response(status, get_headers())
+		return content
+	
+	rsrc = _site_tree.parse(environ['dathomir.path'])
+	if not(rsrc):
+		start_response('404 Not Found', [])
+		return []
+	
+	environ['dathomir.tree'] = _site_tree
+	
+	for key, value in _bootstrap(environ).iteritems():
+		environ['dathomir.' + key] = value
+	
+	rsrc.prepare_content(environ)
+	add_header('Content-Type', rsrc.get_content_type(environ))
+	content = rsrc.get_content(environ)
+	add_header('Content-Length', len(content))
+	
+	global db_url, session_class
+	if(db_url and session_class):
+		environ['dathomir.session'].save()
+	
+	start_response('200 OK', get_headers())
+	return [content]
+
+def add_header(header, data):
+	global _response_headers
+	_response_headers.append((header, data))
+
+def get_headers():
+	return _response_headers
 
 _site_tree = url.URLNode()
 _db = None
-
-class _dathomir_namespace(dict):
-	def __getattribute__(self, key):
-		if(key in self):
-			return self[key]
-		raise AttributeError(key)
-	
-	def __setattr__(self, key, value):
-		self[key] = value
+_response_headers = []
 
 def _handle_file(req):
 	global webroot
 	if(webroot.startswith('/')):
 		true_path = webroot
 	else:
-		true_path = os.path.join(req.dathomir.approot, webroot)
+		true_path = os.path.join(req['dathomir.approot'], webroot)
 	
-	true_path = os.path.join(true_path, req.dathomir.path)
+	true_path = os.path.join(true_path, req['dathomir.path'])
 	try:
 		finfo = os.stat(true_path)
-	
+		# note that there's no support for directory indexes,
+		# only direct file access
 		if(stat.S_ISREG(finfo.st_mode)):
 			try:
 				content_type = mimetypes.guess_type(true_path)[0]
@@ -98,6 +131,16 @@ def _handle_file(req):
 		pass
 	
 	return None
+
+def _get_config_dict():
+	environ = {}
+	environ['dathomir.config.db_url'] = db_url
+	environ['dathomir.config.session_class'] = session_class
+	environ['dathomir.config.debug_session'] = debug_session
+	environ['dathomir.config.initialize_store'] = initialize_store
+	environ['dathomir.config.base_url'] = base_url
+	environ['dathomir.config.webroot'] = webroot
+	return environ
 
 def _bootstrap(req):
 	result = {}

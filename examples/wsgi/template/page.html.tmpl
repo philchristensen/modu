@@ -1,0 +1,28 @@
+<!DOCTYPE html PUBLIC 
+	"-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+	<title>Dathomir WSGI Test Page</title>
+</head>
+<body>
+	<form method="post" >
+		<input type="hidden" name="field1" value="value 1"/>
+		<input type="hidden" name="field2" value="value 2"/>
+		<input type="submit" name="submit" value="post" />
+	</form>
+	<pre>
+		$request_data
+	</pre>
+	<table>
+	#for $key in $request
+		<tr>
+			<td><b>$key</b></td>
+			#filter WebSafe
+			<td>$request[$key]</td>
+			#end filter
+		</tr>
+	#end for
+	</table>
+</body>
+</html>

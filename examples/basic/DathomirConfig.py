@@ -33,17 +33,16 @@ class RootResource(resource.TemplateResource):
 		return 'text/plain'
 	
 	def get_template(self, req):
-		output = "This is the web root at: " + req.dathomir.path + "\n"
-		output += "meets_conditions() returns: " + str(req.meets_conditions()) + "\n"
-		for key in dir(req):
-			output += key + ': ' + str(getattr(req, key)) + "\n"
+		output = "This is the web root at: " + req['dathomir.path'] + "\n"
+		for key in req:
+			output += key + ': ' + str(req[key]) + "\n"
 		from mod_python import apache
 		output += '\n\n'
 		for name in dir(apache):
 			output += name + ': ' + str(getattr(apache, name)) + "\n"
 		return output 
 
-app.base_path = '/dathomir/examples/basic'
+app.base_url = '/dathomir/examples/basic'
 app.db_url = None
 app.session_class = None
 app.initialize_store = False
