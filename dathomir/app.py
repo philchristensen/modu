@@ -22,45 +22,45 @@ def activate(rsrc):
 	for path in rsrc.get_paths():
 		_site_tree.register(path, rsrc)
 
-def handler(req):
-	environ = wsgi.get_environment(req)
-	environ.update(_get_config_dict())
+def handler(mp_req):
+	req = wsgi.get_environment(mp_req)
+	req.update(_get_config_dict())
 	
 	def start_response(status, response_headers):
-		req.status = int(status[:3])
+		mp_req.status = int(status[:3])
 		
 		for key, val in response_headers:
 			if key.lower() == 'content-length':
-				req.set_content_length(int(val))
+				mp_req.set_content_length(int(val))
 			elif key.lower() == 'content-type':
-				req.content_type = val
+				mp_req.content_type = val
 			else:
-				req.headers_out.add(key, val)
+				mp_req.headers_out.add(key, val)
 		
-		return req.write
+		return mp_req.write
 	
-	content = wsgi_handler(environ, start_response)
+	content = wsgi_handler(req, start_response)
 	if(isinstance(content, wsgi.FileWrapper)):
-		req.sendfile(content.filelike.name, content.blksize)
+		mp_req.sendfile(content.filelike.name, content.blksize)
 	else:
 		for data in content:
-			req.write(data)
+			mp_req.write(data)
 	return apache.OK
 
-def wsgi_handler(environ, start_response):
-	environ = _req_wrapper(environ)
+def wsgi_handler(req, start_response):
+	req = _req_wrapper(req)
 	
 	global base_url
-	uri = environ['REQUEST_URI']
+	uri = req['REQUEST_URI']
 	if(uri.startswith(base_url)):
-		environ['dathomir.path'] = uri[len(base_url):]
+		req['dathomir.path'] = uri[len(base_url):]
 	else:
-		environ['dathomir.path'] = uri
+		req['dathomir.path'] = uri
 	
 	# TODO: Fix this
-	environ['dathomir.approot'] = apache.get_handler_root()
+	req['dathomir.approot'] = apache.get_handler_root()
 	
-	result = _handle_file(environ)
+	result = _handle_file(req)
 	if(result):
 		content = []
 		if(result[1]):
@@ -77,24 +77,24 @@ def wsgi_handler(environ, start_response):
 		start_response(status, get_headers())
 		return content
 	
-	rsrc = _site_tree.parse(environ['dathomir.path'])
+	rsrc = _site_tree.parse(req['dathomir.path'])
 	if not(rsrc):
 		start_response('404 Not Found', [])
 		return []
 	
-	environ['dathomir.tree'] = _site_tree
+	req['dathomir.tree'] = _site_tree
 	
-	for key, value in _bootstrap(environ).iteritems():
-		environ['dathomir.' + key] = value
+	for key, value in _bootstrap(req).iteritems():
+		req['dathomir.' + key] = value
 	
-	rsrc.prepare_content(environ)
-	add_header('Content-Type', rsrc.get_content_type(environ))
-	content = rsrc.get_content(environ)
+	rsrc.prepare_content(req)
+	add_header('Content-Type', rsrc.get_content_type(req))
+	content = rsrc.get_content(req)
 	add_header('Content-Length', len(content))
 	
 	global db_url, session_class
 	if(db_url and session_class):
-		environ['dathomir.session'].save()
+		req['dathomir.session'].save()
 	
 	start_response('200 OK', get_headers())
 	return [content]
@@ -114,6 +114,13 @@ class _req_wrapper(dict):
 	def __init__(self, d):
 		dict.__init__(self)
 		self.update(d)
+	
+	def __getattr__(self, key):
+		if(key in self):
+			return self[key]
+		elif(key.find('_') != -1):
+			return self[key.replace('_', '.')]
+		raise AttributeError(key)
 	
 	def log_error(self, data):
 		self['wsgi.errors'].write(data)
@@ -143,14 +150,14 @@ def _handle_file(req):
 	return None
 
 def _get_config_dict():
-	environ = {}
-	environ['dathomir.config.db_url'] = db_url
-	environ['dathomir.config.session_class'] = session_class
-	environ['dathomir.config.debug_session'] = debug_session
-	environ['dathomir.config.initialize_store'] = initialize_store
-	environ['dathomir.config.base_url'] = base_url
-	environ['dathomir.config.webroot'] = webroot
-	return environ
+	req = {}
+	req['dathomir.config.db_url'] = db_url
+	req['dathomir.config.session_class'] = session_class
+	req['dathomir.config.debug_session'] = debug_session
+	req['dathomir.config.initialize_store'] = initialize_store
+	req['dathomir.config.base_url'] = base_url
+	req['dathomir.config.webroot'] = webroot
+	return req
 
 def _bootstrap(req):
 	result = {}

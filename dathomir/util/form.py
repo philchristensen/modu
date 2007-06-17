@@ -171,6 +171,43 @@ class NestedFieldStorage(cgi.FieldStorage):
 				self.list.append(item)
 		
 		self.skip_lines()
+	
+	# def make_file(self, binary=None):
+	# 	if(self.filename):
+	# 		return MagicFile(self.req, self.filename, 'w+b')
+	# 	else:
+	# 		import tempfile
+	# 		return tempfile.TemporaryFile("w+b")
+
+class MagicFile(file):
+	def __init__(self, req, filename, mode='r', bufsize=-1):
+		import tempfile, md5, os.path
+		hashed_filename = os.path.join(tempfile.gettempdir(), md5.new(filename + time.ctime()).hexdigest())
+		
+		file.__init__(self, hashed_filename, mode, bufsize)
+		
+		self.req = req
+		self.client_filename = filename
+		session = self.req['dathomir.session']
+		if('dathomir.file' not in session):
+			session['dathomir.file'] = {}
+		
+		byte_estimate = int(self.req.headers_in['Content-Length'])
+		session['dathomir.file'][self.client_filename] = {'bytes_written':0, 'total_bytes':byte_estimate}
+		session.save()
+	
+	def write(self, data):
+		session = self.req['dathomir.session']
+		file_state = session['dathomir.file'][self.client_filename]
+		file_state['bytes_written'] += len(data)
+		session.save()
+		super(MagicFile, self).write(data)
+	
+	def seek(self, offset, whence=0):
+		self.req.log_error('file was sought')
+		session = self.req['dathomir.session']
+		session['dathomir.file'][self.client_filename]['complete'] = 1
+		super(MagicFile, self).seek(offset, whence)
 
 class DictField(dict):
 	def __init__(self, value):
