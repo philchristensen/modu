@@ -24,7 +24,7 @@ class RootResource(resource.CheetahTemplateResource):
 				file_state = info_dict.setdefault(selected_file, {})
 				if('complete' in file_state):
 					self.add_slot('status', 'complete')
-					#del session['dathomir.file'][selected_file]
+					del session['dathomir.file'][selected_file]['bytes_written']
 				else:
 					written = file_state.setdefault('bytes_written', 0)
 					total = file_state.setdefault('total_bytes', 0)
