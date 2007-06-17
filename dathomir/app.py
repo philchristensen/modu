@@ -31,7 +31,7 @@ def handler(mp_req):
 		
 		for key, val in response_headers:
 			if key.lower() == 'content-length':
-				mp_req.set_content_length(int(val))
+				mp_req.set_content_length(long(val))
 			elif key.lower() == 'content-type':
 				mp_req.content_type = val
 			else:
@@ -41,7 +41,7 @@ def handler(mp_req):
 	
 	content = wsgi_handler(req, start_response)
 	if(isinstance(content, wsgi.FileWrapper)):
-		mp_req.sendfile(content.filelike.name, content.blksize)
+		mp_req.sendfile(content.filelike.name)
 	else:
 		for data in content:
 			mp_req.write(data)
@@ -57,7 +57,7 @@ def wsgi_handler(req, start_response):
 	else:
 		req['dathomir.path'] = uri
 	
-	# TODO: Fix this
+	# TODO: This shouldn't use the apache module
 	req['dathomir.approot'] = apache.get_handler_root()
 	
 	result = _handle_file(req)
@@ -67,7 +67,7 @@ def wsgi_handler(req, start_response):
 			add_header('Content-Type', result[1])
 			add_header('Content-Length', result[2])
 			try:
-				content = wsgi.FileWrapperopen(open(result[0]))
+				content = wsgi.FileWrapper(open(result[0]))
 			except:
 				status = '401 Forbidden'
 			else:
@@ -84,8 +84,7 @@ def wsgi_handler(req, start_response):
 	
 	req['dathomir.tree'] = _site_tree
 	
-	for key, value in _bootstrap(req).iteritems():
-		req['dathomir.' + key] = value
+	req.update(_bootstrap(req))
 	
 	rsrc.prepare_content(req)
 	add_header('Content-Type', rsrc.get_content_type(req))
@@ -131,8 +130,8 @@ def _handle_file(req):
 		true_path = webroot
 	else:
 		true_path = os.path.join(req['dathomir.approot'], webroot)
-	
-	true_path = os.path.join(true_path, req['dathomir.path'])
+
+	true_path = os.path.realpath(true_path + req['dathomir.path'])
 	try:
 		finfo = os.stat(true_path)
 		# note that there's no support for directory indexes,
@@ -164,19 +163,19 @@ def _bootstrap(req):
 	
 	global db_url
 	if(db_url):
-		result['db'] = _init_database(req)
+		result['dathomir.db'] = _init_database(req)
 	
 	global session_class
 	if(db_url and session_class):
-		result['session'] = _init_session(req, result['db'])
+		result['dathomir.session'] = _init_session(req, result['dathomir.db'])
 	
 	global debug_session
 	if(debug_session):
-		req.log_error('session contains: ' + str(result['session']))
+		req.log_error('session contains: ' + str(result['dathomir.session']))
 	
 	global initialize_store
 	if(db_url and initialize_store):
-		result['store'] = _init_store(req, result['db'])
+		result['dathomir.store'] = _init_store(req, result['dathomir.db'])
 	
 	return result
 

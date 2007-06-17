@@ -53,6 +53,12 @@ class URLNodeTestCase(unittest.TestCase):
 		tree = url.URLNode()
 		tree.register('/one', 'ONE')
 		self.failUnlessRaises(ValueError, tree.register, '/one', 'TWO')
+	
+	def test_bug1(self):
+		tree = url.URLNode()
+		tree.register('/', 'SLASH')
+		result = tree.parse('/status')
+		self.failUnlessEqual(result, 'SLASH', "Root resource was not returned properly")
 
 if __name__ == "__main__":
 	unittest.main()

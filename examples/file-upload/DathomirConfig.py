@@ -24,13 +24,14 @@ class RootResource(resource.CheetahTemplateResource):
 				file_state = info_dict.setdefault(selected_file, {})
 				if('complete' in file_state):
 					self.add_slot('status', 'complete')
-					del session['dathomir.file'][selected_file]
+					#del session['dathomir.file'][selected_file]
 				else:
 					written = file_state.setdefault('bytes_written', 0)
 					total = file_state.setdefault('total_bytes', 0)
-					self.add_slot('status', '%d/%d' % (written, total))
+					self.add_slot('status', '%s/%s' % (written, total))
 		else:
 			forms = form.NestedFieldStorage(req)
+			self.add_slot('request_data', str(req))
 	
 	def get_content_type(self, req):
 		return 'text/html'

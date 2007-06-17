@@ -24,7 +24,7 @@ class RootResource(resource.CheetahTemplateResource):
 		output = ''
 		for key in req:
 			output += key + ': ' + str(req[key]) + "\n"
-		self.add_slot('request_data', output)
+		self.add_slot('request_data', req['wsgi.input'].read())
 	
 	def get_content_type(self, req):
 		return 'text/html'

@@ -27,25 +27,25 @@ The module.function will be called with no arguments on server shutdown,
 once for each child process or thread.
 """
 
-import traceback
+import traceback, os
 
 from mod_python import apache
 
 class InputWrapper(object):
-	def __init__(self, req):
-		self.req = req
+	def __init__(self, mp_req):
+		self.mp_req = mp_req
 	
 	def close(self):
 		pass
 	
 	def read(self, size=-1):
-		return self.req.read(size)
+		return self.mp_req.read(size)
 	
 	def readline(self, size=-1):
-		return self.req.readline(size)
+		return self.mp_req.readline(size)
 	
 	def readlines(self, hint=-1):
-		return self.req.readlines(hint)
+		return self.mp_req.readlines(hint)
 	
 	def __iter__(self):
 		line = self.readline()
@@ -56,14 +56,14 @@ class InputWrapper(object):
 			line = self.readline()
 
 class ErrorWrapper(object):
-	def __init__(self, req):
-		self.req = req
+	def __init__(self, mp_req):
+		self.mp_req = mp_req
 	
 	def flush(self):
 		pass
 	
 	def write(self, msg):
-		self.req.log_error(msg)
+		self.mp_req.log_error(msg)
 	
 	def writelines(self, seq):
 		self.write(''.join(seq))
@@ -81,8 +81,8 @@ class FileWrapper:
 			return data
 		raise IndexError
 
-def get_environment(req):
-	options = req.get_options()
+def get_environment(mp_req):
+	options = mp_req.get_options()
 	
 	# Threading and forking
 	try:
@@ -106,15 +106,18 @@ def get_environment(req):
 		else:
 			raise ValueError(bad_value % "multiprocess")
 	
-	env = dict(apache.build_cgi_env(req))
+	env = dict(apache.build_cgi_env(mp_req))
 	
 	if 'SCRIPT_NAME' in options:
-		# Override SCRIPT_NAME and PATH_INFO if requested.
+		# Override SCRIPT_NAME and PATH_INFO if mp_requested.
 		env['SCRIPT_NAME'] = options['SCRIPT_NAME']
-		env['PATH_INFO'] = req.uri[len(options['SCRIPT_NAME']):]
+		env['PATH_INFO'] = mp_req.uri[len(options['SCRIPT_NAME']):]
 	
-	env['wsgi.input'] = InputWrapper(req)
-	env['wsgi.errors'] = ErrorWrapper(req)
+	if('CONTENT_LENGTH' in mp_req.headers_in):
+		env['CONTENT_LENGTH'] = long(mp_req.headers_in['Content-Length'])
+	
+	env['wsgi.input'] = InputWrapper(mp_req)
+	env['wsgi.errors'] = ErrorWrapper(mp_req)
 	env['wsgi.file_wrapper'] = FileWrapper
 	env['wsgi.version'] = (1,0)
 	env['wsgi.run_once'] = False

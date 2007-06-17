@@ -10,11 +10,12 @@
 <script type="text/javascript">
 #raw
 var task_id = undefined;
+var check_count = 0;
 
 function waitForCompletion(file_element){
 	var statusField = $('status-field');
 	statusField.innerHTML = 'Starting check daemon';
-	setTimeout('task_id = setInterval(checkTotal, 500, myfile.value);', 1000);
+	task_id = setInterval(checkTotal, 1000, file_element.value);
 }
 
 function checkTotal(filename){
@@ -23,6 +24,7 @@ function checkTotal(filename){
 }
 
 function checkTotalCallback(response){
+	check_count++;
 	var statusField = $('status-field');
 	statusField.innerHTML = response.responseText;
 	if(response.responseText == 'complete'){
@@ -49,6 +51,12 @@ function checkTotalErrback(response) {
 	<div id="status-field"></div>
 	<iframe name="iframe_upload" style="border: 0;width: 0px;height: 0px;"></iframe>
 </form>
+
+<tt>
+#filter WebSafe
+$request_data
+#end filter
+</tt>
 
 </body>
 </html>
