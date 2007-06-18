@@ -11,10 +11,26 @@ from MySQLdb import cursors
 
 import cPickle
 
+"""
+The change to WSGI support meant I needed to find a substitute for
+mod_python.util.Session. I mimicked a great deal of the original
+class, but I did omit some things.
+
+The biggest omission was locking. Since I only wanted a DB-based
+session, I let the DB take care of locking operations, which would
+be a problem for non threadsafe session storage.
+
+Other changes or omissions are outlined below.
+"""
+
 VALIDATE_SID_RE = re.compile('[0-9a-f]{32}$')
 CLEANUP_CHANCE = 1000
 
 def generate_token(entropy=None):
+	"""
+	This function is used to generate "unique" session IDs. It's
+	not nearly as fancy as it probably should be.
+	"""
 	try:
 		import hashlib
 	except:
@@ -29,10 +45,20 @@ def validate_sid(sid):
 	For file-based sessions this is really important, but not so
 	much for DB ones, since we're already pretty careful about
 	escaping SQL.
+	
+	File based-sessions could potentially be exploited by using
+	slashes and .. to access non-session data.
 	"""
 	return VALIDATE_SID_RE.match(sid)
 
 class BaseSession(dict):
+	"""
+	BaseSession should never be instantiated. It's an abstract class
+	that takes care of session ID creation and cookie management,
+	while delegating actual storage tasks to subclasses.
+	
+	This is where locking should be implemented, one day.
+	"""
 	def __init__(self, req, sid=None):
 		self._req = req
 		self._cookie = None
@@ -62,6 +88,9 @@ class BaseSession(dict):
 			self.cleanup()
 	
 	def _send_cookie(self):
+		"""
+		Add the proper cookie-setting headers to the output.
+		"""
 		from dathomir import app
 		
 		cookie_data = self._cookie.output()

@@ -66,7 +66,7 @@ def build_select(table, data):
 		list/tuple types	  result in an IN statement
 		None				  results in an ISNULL statement
 		persist.RAW objects	  result in directly embedded SQL, such that
-							  'col1':" = ENCRYPT('whatever')" equals
+							  'col1':RAW(" = ENCRYPT('whatever')") equals
 							  `col1` = ENCRYPT('whatever')
 	"""
 	if('__select_keyword' in data):
