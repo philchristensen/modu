@@ -125,24 +125,18 @@ class NestedFieldStorage(cgi.FieldStorage):
 						else:
 							node[fragment] = value
 			except ValueError:
-				# Some kind of collision, just keep the
-				# original key
-				# item = util.StringField(value)
-				# item.name = original_key
-				# self.list.append(item)
+				# Some kind of collision, just keep the original key
 				return (original_key, value, True)
 			else:
 				if(new):
-					# item = DictField(self.__nested_table_cache[key])
-					# item.name = key
-					# self.list.append(item)
+					# No existing top-level form name
 					return (key, self.__nested_table_cache[key], True)
 				else:
+					# The top-level name has been added, and we've already
+					# manipulated its child hash references
 					return (key, self.__nested_table_cache[key], False)
 		else:
-			# item = util.StringField(value)
-			# item.name = key
-			# self.list.append(item)
+			# No nested field names found, use the normal behavior
 			return (key, value, True)
 	
 	

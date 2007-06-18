@@ -1,35 +1,28 @@
-"""
-WSGI wrapper for mod_python. Requires Python 2.2 or greater.
+# dathomir
+# Copyright (C) 2007 Phil Christensen
+#
+# $Id$
+#
+# See LICENSE for details
 
-
-Example httpd.conf section for a CherryPy app called "mcontrol":
-
-<Location /mcontrol>
-	SetHandler python-program
-	PythonFixupHandler mcontrol.cherry::startup
-	PythonHandler modpython_gateway::handler
-	PythonOption wsgi.application cherrypy._cpwsgi::wsgiApp
-</Location>
-
-Some WSGI implementations assume that the SCRIPT_NAME environ variable will
-always be equal to "the root URL of the app"; Apache probably won't act as
-you expect in that case. You can add another PythonOption directive to tell
-modpython_gateway to force that behavior:
-
-	PythonOption SCRIPT_NAME /mcontrol
-
-Some WSGI applications need to be cleaned up when Apache exits. You can
-register a cleanup handler with yet another PythonOption directive:
-
-	PythonOption wsgi.cleanup module::function
-
-The module.function will be called with no arguments on server shutdown,
-once for each child process or thread.
-"""
-
-import traceback, os
+import traceback, mimetypes, os, stat, os.path
 
 from mod_python import apache
+
+class Request(dict):
+	def __init__(self, d):
+		dict.__init__(self)
+		self.update(d)
+	
+	def __getattr__(self, key):
+		if(key in self):
+			return self[key]
+		elif(key.find('_') != -1):
+			return self[key.replace('_', '.')]
+		raise AttributeError(key)
+	
+	def log_error(self, data):
+		self['wsgi.errors'].write(data)
 
 class InputWrapper(object):
 	def __init__(self, mp_req):
@@ -108,13 +101,25 @@ def get_environment(mp_req):
 	
 	env = dict(apache.build_cgi_env(mp_req))
 	
-	if 'SCRIPT_NAME' in options:
-		# Override SCRIPT_NAME and PATH_INFO if mp_requested.
-		env['SCRIPT_NAME'] = options['SCRIPT_NAME']
-		env['PATH_INFO'] = mp_req.uri[len(options['SCRIPT_NAME']):]
+	from dathomir import app
+	app.load_config(env)
+	
+	env['SCRIPT_FILENAME'] = env['dathomir.approot'] = apache.get_handler_root()
+	env['SCRIPT_NAME'] = env['dathomir.config.base_url']
+	
+	uri = env['REQUEST_URI']
+	if(uri.startswith(env['SCRIPT_NAME'])):
+		env['PATH_INFO'] = env['dathomir.path'] = uri[len(env['SCRIPT_NAME']):]
+	else:
+		env['PATH_INFO'] = env['dathomir.path'] = uri
 	
 	if('CONTENT_LENGTH' in mp_req.headers_in):
 		env['CONTENT_LENGTH'] = long(mp_req.headers_in['Content-Length'])
+	
+	approot = env['dathomir.approot']
+	webroot = env['dathomir.config.webroot']
+	webroot = os.path.join(approot, webroot)
+	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['dathomir.path'])
 	
 	env['wsgi.input'] = InputWrapper(mp_req)
 	env['wsgi.errors'] = ErrorWrapper(mp_req)
@@ -125,8 +130,72 @@ def get_environment(mp_req):
 		env['wsgi.url_scheme'] = 'https'
 	else:
 		env['wsgi.url_scheme'] = 'http'
-	env['wsgi.multithread']	 = threaded
+	env['wsgi.multithread'] = threaded
 	env['wsgi.multiprocess'] = forked
 	
 	return env
+
+def handler(req, start_response):
+	from dathomir import app
+	
+	req = Request(req)
+	
+	result = check_file(req)
+	if(result):
+		content = []
+		if(result[1]):
+			app.add_header('Content-Type', result[1])
+			app.add_header('Content-Length', result[2])
+			try:
+				content = FileWrapper(open(result[0]))
+			except:
+				status = '401 Forbidden'
+			else:
+				status = '200 OK'
+		else:
+			status = '401 Forbidden'
+		start_response(status, app.get_headers())
+		return content
+	
+	tree = app.get_tree()
+	rsrc = tree.parse(req['dathomir.path'])
+	if not(rsrc):
+		start_response('404 Not Found', [])
+		return []
+	
+	req['dathomir.tree'] = tree
+	
+	req.log_error('req was: ' + str(req))
+	app.bootstrap(req)
+	req.log_error('req is: ' + str(req))
+	
+	rsrc.prepare_content(req)
+	app.add_header('Content-Type', rsrc.get_content_type(req))
+	content = rsrc.get_content(req)
+	app.add_header('Content-Length', len(content))
+	
+	if(req['dathomir.config.db_url'] and req['dathomir.config.session_class']):
+		req['dathomir.session'].save()
+	
+	start_response('200 OK', app.get_headers())
+	return [content]
+
+def check_file(req):
+	true_path = req['PATH_TRANSLATED']
+	try:
+		finfo = os.stat(true_path)
+		# note that there's no support for directory indexes,
+		# only direct file access
+		if(stat.S_ISREG(finfo.st_mode)):
+			try:
+				content_type = mimetypes.guess_type(true_path)[0]
+				size = finfo.st_size
+				return (true_path, content_type, size)
+			except IOError:
+				return (true_path, None, None)
+	except OSError:
+		pass
+	
+	return None
+
 
