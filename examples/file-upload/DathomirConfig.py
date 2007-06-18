@@ -18,7 +18,8 @@ class RootResource(resource.CheetahTemplateResource):
 	def prepare_content(self, req):
 		tree = req['dathomir.tree']
 		session = req['dathomir.session']
-		if(tree.unparsed_path and tree.unparsed_path[0] == 'status' and len(tree.unparsed_path) >= 2):
+		if(tree.unparsed_path):
+			if(tree.unparsed_path[0] == 'status' and len(tree.unparsed_path) >= 2):
 				selected_file = tree.unparsed_path[1]
 				info_dict = session.setdefault('dathomir.file', {})
 				file_state = info_dict.setdefault(selected_file, {})
@@ -31,7 +32,6 @@ class RootResource(resource.CheetahTemplateResource):
 					self.add_slot('status', '%s/%s' % (written, total))
 		else:
 			forms = form.NestedFieldStorage(req)
-			self.add_slot('request_data', str(req))
 	
 	def get_content_type(self, req):
 		return 'text/html'

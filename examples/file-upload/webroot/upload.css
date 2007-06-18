@@ -1,0 +1,26 @@
+#progress-field{
+	border: 1px solid black;
+	background-color: #888;
+	width: 250px;
+	height: 30px;
+}
+
+#progress-bar {
+	position: relative;
+	background-color: #800;
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	width: 0px;
+}
+
+#progress-text {
+	position: relative;
+	z-index: 65536;
+	top: -25px;
+	left: 0px;
+	color: #fff;
+	font-family: Helvetica, Arial;
+	font-weight: bold;
+	text-align: center;
+}

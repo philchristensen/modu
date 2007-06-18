@@ -4,86 +4,29 @@
 <html>
 <head>
 	<title>Dathomir File Upload Test Page</title>
+
+	<script src="prototype.js"></script>
+	<script src="upload.js"></script>
+
+	<style type="text/css">
+		@import url('upload.css');
+	</style>
 </head>
-
-<script src="prototype.js"></script>
-<script type="text/javascript">
-#raw
-var task_id = undefined;
-
-function waitForCompletion(file_element){
-	var progressField = $('progress-bar');
-	progressField.innerHTML = '0%';
-	task_id = setInterval(checkTotal, 1000, file_element.value);
-}
-
-function checkTotal(filename){
-	filename = filename.split('/').pop();
-	var ajax = new Ajax.Request('status/' + filename, {method:'get', onSuccess:checkTotalCallback, onFailure:checkTotalErrback});
-}
-
-function checkTotalCallback(response){
-	var progressField = $('progress-field');
-	var progressBar = $('progress-bar');
-	var stats = response.responseText.split('/');
-	if(response.responseText == 'complete'){
-		clearInterval(task_id)
-		task_id = undefined;
-		progressBar.style.width = progressField.clientWidth + "px";
-		progressBar.innerHTML = '100%';
-	}
-	else{
-		var percent = stats[0] / stats[1];
-		progressBar.style.width = Math.round(percent * progressField.clientWidth) + "px";
-		progressBar.innerHTML = Math.round(percent * 100) + '%';
-	}
-}
-
-function checkTotalErrback(response) {
-	var progressField = $('progress-bar');
-	progressField.innerHTML = 'Error ' + response.status + ' -- ' + response.statusText;
-	if(task_id){
-		clearInterval(task_id)
-		task_id = undefined;
-	}
-}
-#end raw
-</script>
-<style type="text/css">
-#progress-field{
-	border: 1px solid black;
-	color: #fff;
-	font-family: Helvetica, Arial;
-	font-weight: bold;
-	background-color: #888;
-	width: 250px;
-	height: 30px;
-}
-
-#progress-bar {
-	position: relative;
-	background-color: #800;
-	top: 0px;
-	left: 0px;
-	height: 100%;
-	width: 0px;
-}
-
-</style>
 <body>
 
-<form enctype="multipart/form-data" method="post" target="iframe_upload" onSubmit="waitForCompletion($('myfile'));">
-	<input type="file" id="myfile" name="myfile" />
+#raw
+<form enctype="multipart/form-data" method="post" target="progress-frame" onSubmit="waitForCompletion($('file-field'));">
+#end raw
+	<input type="file" id="file-field" name="file_field" />
 	<input type="submit" name="submit" value="send file" />
-	<div id="progress-field"><div id="progress-bar"></div></div>
-	<iframe name="iframe_upload" style="border: 0;width: 0px;height: 0px;"></iframe>
 </form>
 
-<tt>
-#filter WebSafe
-$request_data
-#end filter
-</tt>
+<div id="progress-field">
+	<div id="progress-bar"></div>
+	<div id="progress-text"></div>
+</div>
+
+<iframe name="progress-frame" style="border: 0;width: 0px;height: 0px;"></iframe>
 
 </body>
 </html>
