@@ -165,16 +165,14 @@ def handler(req, start_response):
 	
 	req['dathomir.tree'] = tree
 	
-	req.log_error('req was: ' + str(req))
 	app.bootstrap(req)
-	req.log_error('req is: ' + str(req))
 	
 	rsrc.prepare_content(req)
 	app.add_header('Content-Type', rsrc.get_content_type(req))
 	content = rsrc.get_content(req)
 	app.add_header('Content-Length', len(content))
 	
-	if(req['dathomir.config.db_url'] and req['dathomir.config.session_class']):
+	if('dathomir.session' in req):
 		req['dathomir.session'].save()
 	
 	start_response('200 OK', app.get_headers())
