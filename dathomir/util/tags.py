@@ -51,6 +51,12 @@ class Tag(object):
 			output += ' />'
 		
 		return output
+	
+	def __add__(self, other):
+		return str(self) + str(other)
+	
+	def __radd__(self, other):
+		return str(other) + str(self)
 
 class _tag(str):
 	"""_tag is a string subclass. Instances of _tag, which are constructed

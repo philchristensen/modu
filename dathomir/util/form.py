@@ -19,7 +19,7 @@ class FormNode(object):
 	"""
 	In an attempt to mimic the Drupal form-building process in a slightly more
 	Pythonic way, this class allows you to populate a Form object using
-	dictionary-like syntax.
+	dictionary- and call-like syntax.
 	
 	Note that this will simply create a form definition. Separate classes/modules
 	will need to be used to render the form.
@@ -31,15 +31,30 @@ class FormNode(object):
 		self.children = {}
 		self.attributes = {}
 		
-		self.submit = None
+		self.submit = self._submit
+		self.validate = self._validate
 		self.theme = None
-		self.validate = None
+	
+	def __getattr__(self, name):
+		if(name in self.attributes):
+			return self.attributes[name]
+		raise AttributeError(name)
+	
+	def attrib(self, name, default):
+		if(name in self.attributes):
+			return self.attributes[name]
+		return default
 	
 	def __call__(self, *args, **kwargs):
+		"""
+		This call method allows the syntax (attr=value, attr2=value2, etc...).
+		If the boolean 'clobber' is True, the provided attribs replace any
+		currently set in the form node.
+		"""
 		if('clobber' in kwargs and kwargs['clobber']):
 			del kwargs['clobber']
 			self.attributes = kwargs
-			return
+			return self
 		
 		for key, value in kwargs.iteritems():
 			if(key in ('theme', 'validate', 'submit')):
@@ -48,6 +63,7 @@ class FormNode(object):
 				setattr(self, key, value)
 			else:
 				self.attributes[key] = value
+		return self
 	
 	def __getitem__(self, key):
 		if(key not in self.children):
@@ -56,6 +72,29 @@ class FormNode(object):
 			self.children[key] = FormNode(key)
 			self.children[key].parent = self
 		return self.children[key]
+	
+	def __len__(self):
+		return len(self.children)
+	
+	def __iter__(self):
+		return self.iterkeys()
+	
+	def __contains__(self, key):
+		return key in self.children
+	
+	def iterkeys(self):
+		return self.children.iterkeys()
+	
+	def _validate(self, req, form):
+		result = True
+		
+		for child in self.children:
+			result = result and child.validate(req, form)
+		
+		return result
+	
+	def _submit(self, req, form):
+		raise NotImplementedError("FormNode('%s')::submit" % self.name)
 
 class NestedFieldStorage(cgi.FieldStorage):
 	"""

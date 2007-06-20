@@ -118,10 +118,10 @@ def bootstrap(req):
 		req['dathomir.session'] = session_class(req, req['dathomir.db'])
 	
 	initialize_store = req['dathomir.config.initialize_store']
-	if(db_url and initialize_store):
+	if(_db):
 		# FIXME: I really can't think of any scenario where a store will
 		# already be initialized, but we'll check anyway, for now
 		store = persist.get_store()
 		if not(store):
-			store = persist.Store(db)
+			store = persist.Store(_db)
 		req['dathomir.store'] = store
