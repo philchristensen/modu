@@ -50,5 +50,5 @@ class RootResource(resource.CheetahTemplateResource):
 	def get_template(self, req):
 		return 'page.html.tmpl'
 
-app.base_url = '/dathomir/examples/node'
+app.base_url = '/dathomir/examples/form'
 app.activate(RootResource())
