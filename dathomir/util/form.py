@@ -40,11 +40,6 @@ class FormNode(object):
 			return self.attributes[name]
 		raise AttributeError(name)
 	
-	def attrib(self, name, default):
-		if(name in self.attributes):
-			return self.attributes[name]
-		return default
-	
 	def __call__(self, *args, **kwargs):
 		"""
 		This call method allows the syntax (attr=value, attr2=value2, etc...).
@@ -83,12 +78,40 @@ class FormNode(object):
 		return key in self.children
 	
 	def iterkeys(self):
-		return self.children.iterkeys()
+		def __weighted_cmp(a, b):
+			a = self.children[a]
+			b = self.children[b]
+			return cmp(a.weight, b.weight)
+		
+		keys = self.children.keys()
+		keys.sort(__weighted_cmp)
+		return iter(keys)
+	
+	def attrib(self, name, default):
+		if(name in self.attributes):
+			return self.attributes[name]
+		return default
+	
+	def execute(self, req):
+		if(self.validate(req, self)):
+			self.submit(req, self)
 	
 	def _validate(self, req, form):
+		"""
+		This is the default validation function. If not overriden
+		by setting the validate attribute, this will call validate()
+		on all children. If any return false, validation fails for
+		this form.
+		
+		Note that in this case `self` and `form` refer to the same
+		object. This is so that when a custom validation function is
+		supplied, it still gets a reference to the form instance
+		it was called for.
+		"""
 		result = True
 		
 		for child in self.children:
+			child = self.children[child]
 			result = result and child.validate(req, form)
 		
 		return result
@@ -116,19 +139,6 @@ class NestedFieldStorage(cgi.FieldStorage):
 		cgi.FieldStorage.__init__(self, fp, headers, outerboundary,
 									environ, keep_blank_values, strict_parsing)
 	
-	def __getattr__(self, name):
-		if name != 'value':
-			raise AttributeError, name
-		if self.file:
-			self.file.seek(0)
-			value = self.file.read()
-			self.file.seek(0)
-		elif self.list is not None:
-			value = self.list
-		else:
-			value = None
-		return value
-
 	def parse_field(self, key, value):
 		original_key = key
 		tree = []
@@ -159,16 +169,19 @@ class NestedFieldStorage(cgi.FieldStorage):
 						if(node == self.__nested_table_cache):
 							new = True
 						if(tree):
-							node[fragment] = {}
+							node[fragment] = DictField()
 							node = node[fragment]
 						else:
 							node[fragment] = value
+							#self.req.log_error('node is now: ' + str(node))
 			except ValueError:
 				# Some kind of collision, just keep the original key
+				self.req.log_error('1')
 				return (original_key, value, True)
 			else:
 				if(new):
 					# No existing top-level form name
+					self.req.log_error('2')
 					return (key, self.__nested_table_cache[key], True)
 				else:
 					# The top-level name has been added, and we've already
@@ -181,29 +194,22 @@ class NestedFieldStorage(cgi.FieldStorage):
 	
 	def read_urlencoded(self):
 		"""Internal: read data in query string format."""
-		self.req.log_error('read_urlencoded()')
+		#self.req.log_error('read_urlencoded()')
 		qs = self.fp.read(self.length)
 		self.list = list = []
 		for key, value in cgi.parse_qsl(qs, self.keep_blank_values,
 									self.strict_parsing):
-			key, value, new = self.parse_field(key, value)
-			
 			part = cgi.MiniFieldStorage(key, value)
 			name, value, new = self.parse_field(part.name, part)
 			if(new):
-				if(isinstance(value, dict)):
-					item = DictField(value)
-				else:
-					item = value
-				item.name = name
-				self.list.append(item)
+				value.name = name
+				self.list.append(value)
 		
 		self.skip_lines()
 	
 	
 	def read_multi(self, environ, keep_blank_values, strict_parsing):
 		"""Internal: read a part that is itself multipart."""
-		self.req.log_error('read_multi()')
 		ib = self.innerboundary
 		if not cgi.valid_boundary(ib):
 			raise ValueError, 'Invalid boundary in multipart form: %r' % (ib,)
@@ -217,19 +223,15 @@ class NestedFieldStorage(cgi.FieldStorage):
 						 environ, keep_blank_values, strict_parsing)
 			
 			name, value, new = self.parse_field(part.name, part)
+			self.req.log_error('got back ' + str((name, value, new)))
 			if(new):
-				if(isinstance(value, dict)):
-					item = DictField(value)
-				else:
-					item = value
-				item.name = name
-				self.list.append(item)
+				value.name = name
+				self.list.append(value)
 		
 		self.skip_lines()
 	
 	
 	def make_file(self, binary=None):
-		self.req.log_error('make_file()')
 		if(self.filename):
 			return MagicFile(self.req, self.filename, 'w+b')
 		else:
@@ -244,7 +246,6 @@ class MagicFile(file):
 		file.__init__(self, hashed_filename, mode, bufsize)
 		
 		self.req = req
-		self.req.log_error('saving to ' + hashed_filename)
 		self.client_filename = filename
 		session = self.req['dathomir.session']
 		if('dathomir.file' not in session):
@@ -254,6 +255,9 @@ class MagicFile(file):
 		session.save()
 	
 	def write(self, data):
+		# FIXME: This is horribly inefficient. There's no reason to update the
+		# session for each bytecount. Instead add the temp filename to sesison
+		# once, and poll the filesize.
 		session = self.req['dathomir.session']
 		file_state = session['dathomir.file'][self.client_filename]
 		
@@ -263,12 +267,13 @@ class MagicFile(file):
 		super(MagicFile, self).write(data)
 	
 	def seek(self, offset, whence=0):
-		self.req.log_error('file was sought')
+		#self.req.log_error('file was sought')
 		session = self.req['dathomir.session']
 		session['dathomir.file'][self.client_filename]['complete'] = 1
 		super(MagicFile, self).seek(offset, whence)
 
 class DictField(dict):
-	def __init__(self, value):
+	def __init__(self, value=None):
 		dict.__init__(self)
-		self.update(value)
+		if(value):
+			self.update(value)

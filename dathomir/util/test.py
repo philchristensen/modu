@@ -28,7 +28,7 @@ class TestResource(resource.CheetahTemplateResource):
 		test = loader.loadTestsFromTestCase(self.test_case_class)
 		runner.run(test)
 		
-		self.add_slot('content', stream.getvalue())
+		self.set_slot('content', stream.getvalue())
 		
 		stream.close()
 	

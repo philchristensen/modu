@@ -15,7 +15,7 @@ class RootResource(resource.ZPTemplateResource):
 		return ['/']
 	
 	def prepare_content(self, req):
-		self.add_slot('title', 'Dathomir ZPT Test Page')
+		self.set_slot('title', 'Dathomir ZPT Test Page')
 	
 	def get_content_type(self, req):
 		return 'text/html'

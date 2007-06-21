@@ -73,7 +73,7 @@ class TemplateResource(Resource):
 	def __init__(self):
 		self.data = {}
 	
-	def add_slot(self, name, value):
+	def set_slot(self, name, value):
 		self.data[name] = value
 	
 	def get_content(self, req):

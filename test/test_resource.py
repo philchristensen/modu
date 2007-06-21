@@ -16,9 +16,9 @@ class TestResource(resource.TemplateResource):
 		return ['/test']
 	
 	def prepare_content(self, req):
-		self.add_slot('test', 'This is my test string.')
-		self.add_slot('one', 1)
-		self.add_slot('two', 2)
+		self.set_slot('test', 'This is my test string.')
+		self.set_slot('one', 1)
+		self.set_slot('two', 2)
 	
 	def get_template(self, req):
 		return 'The string is "$test", one is $one, two is $two'

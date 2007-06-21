@@ -17,14 +17,14 @@ class RootResource(resource.CheetahTemplateResource):
 		return ['/']
 	
 	def prepare_content(self, req):
-		self.add_slot('test', 'This is my test string.')
-		self.add_slot('sample_array', ['one', 'two', 'three'])
-		self.add_slot('sample_hash', {'one':1, 'two':2, 'three':3})
+		self.set_slot('test', 'This is my test string.')
+		self.set_slot('sample_array', ['one', 'two', 'three'])
+		self.set_slot('sample_hash', {'one':1, 'two':2, 'three':3})
 		
 		output = ''
 		for key in req:
 			output += key + ': ' + str(req[key]) + "\n"
-		self.add_slot('request_data', req['wsgi.input'].read())
+		self.set_slot('request_data', req['wsgi.input'].read())
 	
 	def get_content_type(self, req):
 		return 'text/html'

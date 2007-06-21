@@ -196,7 +196,7 @@ class DbSession(BaseSession):
 	def do_cleanup(self, *args):
 		self._req.log_error('db_cleanup passed extra args: ' + str(args))
 		cur = self._connection.cursor()
-		cur.execute("DELETE FROM session s WHERE %s - s.accessed > s.timeout", [int(time.time())])
+		cur.execute("DELETE FROM session s WHERE (%s - s.accessed) > s.timeout", [int(time.time())])
 	
 	def get_user(self):
 		raise NotImplementedError('%s::get_user()' % self.__class__.__name__)

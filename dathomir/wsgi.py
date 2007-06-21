@@ -24,8 +24,12 @@ class Request(dict):
 	def log_error(self, data):
 		self['wsgi.errors'].write(data)
 	
-	def is_post(self):
-		return self['REQUEST_METHOD'] == 'POST'
+	def has_form_data(self):
+		if(self['REQUEST_METHOD'] == 'POST'):
+			return True
+		elif(self['QUERY_STRING']):
+			return True
+		return False
 
 class InputWrapper(object):
 	def __init__(self, mp_req):
