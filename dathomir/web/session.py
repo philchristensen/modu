@@ -144,7 +144,8 @@ class BaseSession(dict):
 		self._created  = result["_created"]
 		self._accessed = result["_accessed"]
 		self._timeout  = result["_timeout"]
-		self.update(result["_data"])
+		if(result["_data"]):
+			self.update(result["_data"])
 		return True
 	
 	def save(self):
@@ -189,7 +190,10 @@ class DbSession(BaseSession):
 		record = cur.fetchone()
 		if(record):
 			result = {'_created':record['created'], '_accessed':record['accessed'], '_timeout':record['timeout']}
-			result['_data'] = cPickle.loads(record['data'].tostring())
+			if(record['data']):
+				result['_data'] = cPickle.loads(record['data'].tostring())
+			else:
+				result['_data'] = None
 			self.user_id = record['user_id']
 			return result
 		else:
@@ -199,20 +203,20 @@ class DbSession(BaseSession):
 		cur = self._connection.cursor()
 		if not(hasattr(self, 'user_id') and self.user_id):
 			self.user_id = 0
-		if(self.id() and self._clean):
-			cur.execute("UPDATE session SET accessed = %s WHERE id = %s", [dict['_accessed'], self.id()])
+		if(self._clean):
+			cur.execute("UPDATE session s SET s.user_id = %s, s.created = %s, s.accessed = %s, s.timeout = %s WHERE s.id = %s",
+						[self.user_id, dict['_created'], dict['_accessed'], dict['_timeout'], self.id()])
 		else:
 			cur.execute("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
 						[self.id(), self.user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'], 1)])
 	
 	def do_delete(self):
 		cur = self._connection.cursor()
-		cur.execute("DELETE FROM session s WHERE s.id = %s", [self.id()])
+		cur.execute("DELETE FROM session WHERE id = %s", [self.id()])
 	
 	def do_cleanup(self, *args):
-		self._req.log_error('db_cleanup passed extra args: ' + str(args))
 		cur = self._connection.cursor()
-		cur.execute("DELETE FROM session s WHERE (%s - s.accessed) > s.timeout", [int(time.time())])
+		cur.execute("DELETE FROM session WHERE timeout < (%s - accessed)", [int(time.time())])
 	
 	def get_user(self):
 		raise NotImplementedError('%s::get_user()' % self.__class__.__name__)

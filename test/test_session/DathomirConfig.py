@@ -12,7 +12,8 @@ import unittest
 from dathomir.persist import storable
 from dathomir.web.modpython import handler
 from dathomir.util import test
-from dathomir.web import app, resource, persist, session
+from dathomir.web import app, resource, session
+from dathomir import persist
 
 """
 CREATE DATABASE dathomir;
@@ -20,8 +21,7 @@ GRANT ALL ON dathomir.* TO dathomir@localhost IDENTIFIED BY 'dathomir';
 """
 
 TEST_TABLES = """
-DROP TABLE IF EXISTS `session`;
-CREATE TABLE session (
+CREATE TABLE IF NOT EXISTS `session`(
   id varchar(255) NOT NULL default '',
   user_id bigint(20) unsigned NOT NULL,
   created int(11) NOT NULL default '0',
@@ -53,6 +53,18 @@ class DbSessionTestCase(unittest.TestCase):
 		
 		saved_sess = session.DbSession(self.req, self.req['dathomir.db'], sid=sess.id())
 		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
+		self.failUnlessEqual(int(saved_sess._created), int(sess._created), "Session created date changed during save/load cycle.")
+	
+	def test_noclobber(self):
+		sessid = session.generate_token()
+		sess = session.DbSession(self.req, self.req['dathomir.db'], sessid)
+		sess2 = session.DbSession(self.req, self.req['dathomir.db'], sessid)
+		sess['test_data'] = 'something'
+		sess.save()
+		sess2.save()
+		
+		saved_sess = session.DbSession(self.req, self.req['dathomir.db'], sid=sess.id())
+		self.failUnlessEqual(saved_sess['test_data'], 'something', "Session data was not saved properly.")
 	
 app.base_url = '/dathomir/test/test_session'
 app.session_class = None
