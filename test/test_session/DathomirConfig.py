@@ -10,7 +10,7 @@
 import unittest
 
 from dathomir.persist import storable
-from dathomir.app import handler
+from dathomir.web.modpython import handler
 from dathomir.util import test
 from dathomir import app, resource, persist, session
 

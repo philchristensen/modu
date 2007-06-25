@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-from dathomir.app import handler
+from dathomir.web.modpython import handler
 from dathomir import app, resource
 from dathomir.util import form
 
