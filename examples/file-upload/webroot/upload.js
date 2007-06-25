@@ -22,6 +22,9 @@ function checkTotalCallback(response){
 		progressBar.style.width = progressField.clientWidth + "px";
 		progressText.innerHTML = '100%';
 	}
+	else if(stats[0] == 0){
+		progressText.innerHTML = 'Waiting...';
+	}
 	else{
 		var percent = stats[0] / stats[1];
 		progressBar.style.width = Math.round(percent * progressField.clientWidth) + "px";

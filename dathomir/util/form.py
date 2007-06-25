@@ -176,12 +176,10 @@ class NestedFieldStorage(cgi.FieldStorage):
 							#self.req.log_error('node is now: ' + str(node))
 			except ValueError:
 				# Some kind of collision, just keep the original key
-				self.req.log_error('1')
 				return (original_key, value, True)
 			else:
 				if(new):
 					# No existing top-level form name
-					self.req.log_error('2')
 					return (key, self.__nested_table_cache[key], True)
 				else:
 					# The top-level name has been added, and we've already
@@ -223,7 +221,6 @@ class NestedFieldStorage(cgi.FieldStorage):
 						 environ, keep_blank_values, strict_parsing)
 			
 			name, value, new = self.parse_field(part.name, part)
-			self.req.log_error('got back ' + str((name, value, new)))
 			if(new):
 				value.name = name
 				self.list.append(value)
@@ -255,9 +252,10 @@ class MagicFile(file):
 		session.save()
 	
 	def write(self, data):
-		# FIXME: This is horribly inefficient. There's no reason to update the
-		# session for each bytecount. Instead add the temp filename to sesison
-		# once, and poll the filesize.
+		# So, we automatically save the session every time a page is
+		# loaded, since we need to update the access time. So writing
+		# the pickled data repeatedly (as we update the bytes written)
+		# is really only a bad thing because of the pickling overhead.
 		session = self.req['dathomir.session']
 		file_state = session['dathomir.file'][self.client_filename]
 		

@@ -82,7 +82,6 @@ class BaseSession(dict):
 		
 		self._sid = None
 		self._created = time.time()
-		self._accessed = time.time()
 		self._timeout = 1800
 		
 		if(sid and validate_sid(sid)):
@@ -99,6 +98,8 @@ class BaseSession(dict):
 		
 		if(self._sid):
 			self.load()
+		
+		self._accessed = time.time()
 		
 		if(random.randint(1, CLEANUP_CHANCE) == 1):
 			self.cleanup()

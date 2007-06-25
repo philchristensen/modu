@@ -28,7 +28,7 @@ class RootResource(resource.CheetahTemplateResource):
 					del session['dathomir.file'][selected_file]['bytes_written']
 				else:
 					written = file_state.setdefault('bytes_written', 0)
-					total = file_state.setdefault('total_bytes', 0)
+					total = file_state.setdefault('total_bytes', 1)
 					self.set_slot('status', '%s/%s' % (written, total))
 		else:
 			forms = form.NestedFieldStorage(req)
