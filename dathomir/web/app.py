@@ -7,12 +7,13 @@
 
 import MySQLdb
 from dathomir.util import url
-from dathomir import session, persist, wsgi
-from mod_python import apache
+from dathomir.web import session, wsgi
+from dathomir import persist
 
 base_url = '/'
 db_url = 'mysql://dathomir:dathomir@localhost/dathomir'
 session_class = session.UserSession
+debug_session = False
 initialize_store = True
 webroot = 'webroot'
 
@@ -69,6 +70,7 @@ def load_config(req):
 	
 	req['dathomir.config.db_url'] = db_url
 	req['dathomir.config.session_class'] = session_class
+	req['dathomir.config.debug_session'] = debug_session
 	req['dathomir.config.initialize_store'] = initialize_store
 	req['dathomir.config.base_url'] = base_url
 	req['dathomir.config.webroot'] = webroot
@@ -97,6 +99,8 @@ def bootstrap(req):
 	session_class = req['dathomir.config.session_class']
 	if(db_url and session_class):
 		req['dathomir.session'] = session_class(req, req['dathomir.db'])
+		if(req['dathomir.config.debug_session']):
+			req.log_error('session contains: ' + str(req['dathomir.session']))
 	
 	initialize_store = req['dathomir.config.initialize_store']
 	if(_db):

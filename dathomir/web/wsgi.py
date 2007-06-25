@@ -108,7 +108,7 @@ def get_environment(mp_req):
 	
 	env = dict(apache.build_cgi_env(mp_req))
 	
-	from dathomir import app
+	from dathomir.web import app
 	app.load_config(env)
 	
 	env['SCRIPT_FILENAME'] = env['dathomir.approot'] = apache.get_handler_root()
@@ -143,7 +143,7 @@ def get_environment(mp_req):
 	return env
 
 def handler(req, start_response):
-	from dathomir import app
+	from dathomir.web import app
 	
 	req = Request(req)
 	

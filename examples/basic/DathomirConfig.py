@@ -6,7 +6,7 @@
 # See LICENSE for details
 
 from dathomir.web.modpython import handler
-from dathomir import app, resource
+from dathomir.web import app, resource
 
 import os
 

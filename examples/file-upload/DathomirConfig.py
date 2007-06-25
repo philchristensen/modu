@@ -6,10 +6,10 @@
 # See LICENSE for details
 
 from dathomir.web.modpython import handler
-from dathomir import app, resource
+from dathomir.web import app, resource
 from dathomir.util import form
 
-import os, time
+import os, time, urllib
 
 class RootResource(resource.CheetahTemplateResource):
 	def get_paths(self):
@@ -20,7 +20,7 @@ class RootResource(resource.CheetahTemplateResource):
 		session = req['dathomir.session']
 		if(tree.unparsed_path):
 			if(tree.unparsed_path[0] == 'status' and len(tree.unparsed_path) >= 2):
-				selected_file = tree.unparsed_path[1]
+				selected_file = urllib.unquote(tree.unparsed_path[1])
 				info_dict = session.setdefault('dathomir.file', {})
 				file_state = info_dict.setdefault(selected_file, {})
 				if('complete' in file_state):
@@ -45,4 +45,5 @@ class RootResource(resource.CheetahTemplateResource):
 
 app.base_url = '/dathomir/examples/file-upload'
 app.initialize_store = False
+app.debug_session = True
 app.activate(RootResource())

@@ -5,7 +5,8 @@
 #
 # See LICENSE for details
 
-from dathomir import wsgi, app
+from mod_python import apache
+from dathomir.web import wsgi, app
 
 def handler(mp_req):
 	"""

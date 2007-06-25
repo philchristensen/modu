@@ -9,7 +9,7 @@
 
 import unittest
 
-from dathomir import resource
+from dathomir.web import resource
 
 class TestResource(resource.TemplateResource):
 	def get_paths(self):

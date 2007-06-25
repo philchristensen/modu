@@ -79,6 +79,8 @@ class BaseSession(dict):
 		self._req = req
 		self._cookie = None
 		self._valid = True
+		self._clean = True
+		self._loaded = False
 		
 		self._sid = None
 		self._created = time.time()
@@ -103,12 +105,22 @@ class BaseSession(dict):
 		
 		if(random.randint(1, CLEANUP_CHANCE) == 1):
 			self.cleanup()
+		
+		self._loaded = True
+	
+	def __setitem__(self, key, value):
+		if(self._loaded):
+			self.touch()
+		dict.__setitem__(self, key, value)
+	
+	def touch(self):
+		self._clean = False
 	
 	def _send_cookie(self):
 		"""
 		Add the proper cookie-setting headers to the output.
 		"""
-		from dathomir import app
+		from dathomir.web import app
 		
 		cookie_data = self._cookie.output()
 		for header in cookie_data.split("\n"):
@@ -187,7 +199,10 @@ class DbSession(BaseSession):
 		cur = self._connection.cursor()
 		if not(hasattr(self, 'user_id') and self.user_id):
 			self.user_id = 0
-		cur.execute("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
+		if(self.id() and self._clean):
+			cur.execute("UPDATE session SET accessed = %s WHERE id = %s", [dict['_accessed'], self.id()])
+		else:
+			cur.execute("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
 						[self.id(), self.user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'], 1)])
 	
 	def do_delete(self):

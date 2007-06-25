@@ -12,7 +12,7 @@ import unittest
 from dathomir.persist import storable
 from dathomir.web.modpython import handler
 from dathomir.util import test
-from dathomir import app, resource, persist, session
+from dathomir.web import app, resource, persist, session
 
 """
 CREATE DATABASE dathomir;

@@ -7,7 +7,7 @@
 #
 # See LICENSE for details
 
-from dathomir import resource
+from dathomir.web import resource
 
 import cStringIO, unittest
 
