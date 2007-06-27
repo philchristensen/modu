@@ -21,15 +21,21 @@ class RootResource(resource.CheetahTemplateResource):
 		if(tree.unparsed_path):
 			if(tree.unparsed_path[0] == 'status' and len(tree.unparsed_path) >= 2):
 				selected_file = urllib.unquote(tree.unparsed_path[1])
-				info_dict = session.setdefault('dathomir.file', {})
-				file_state = info_dict.setdefault(selected_file, {})
-				if('complete' in file_state):
-					self.set_slot('status', 'complete')
-					del session['dathomir.file'][selected_file]['bytes_written']
+				if('dathomir.file' in session):
+					info_dict = session['dathomir.file']
+					if(selected_file in info_dict):
+						file_state = info_dict.setdefault(selected_file, {})
+						if('complete' in file_state):
+							self.set_slot('status', 'complete')
+							del session['dathomir.file'][selected_file]['bytes_written']
+						else:
+							written = file_state.get('bytes_written', 0)
+							total = file_state.get('total_bytes', 1)
+							self.set_slot('status', '%s/%s' % (written, total))
+					else:
+						self.set_slot('status', '0/1')
 				else:
-					written = file_state.setdefault('bytes_written', 0)
-					total = file_state.setdefault('total_bytes', 1)
-					self.set_slot('status', '%s/%s' % (written, total))
+					self.set_slot('status', '0/1')
 		else:
 			forms = form.NestedFieldStorage(req)
 	

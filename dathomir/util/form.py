@@ -12,6 +12,8 @@ try:
 except:
 	import StringIO
 
+from dathomir.util import theme
+
 NESTED_NAME = re.compile(r'([^\[]+)(\[([^\]]+)\])*')
 KEYED_FRAGMENT = re.compile(r'\[([^\]]+)\]*')
 
@@ -25,7 +27,8 @@ class FormNode(object):
 	will need to be used to render the form.
 	"""
 	
-	def __init__(self, name):
+	def __init__(self, req, name):
+		self.req = req
 		self.name = name
 		self.parent = None
 		self.children = {}
@@ -33,7 +36,7 @@ class FormNode(object):
 		
 		self.submit = self._submit
 		self.validate = self._validate
-		self.theme = None
+		self.theme = theme.Theme
 	
 	def __getattr__(self, name):
 		if(name in self.attributes):
@@ -64,7 +67,7 @@ class FormNode(object):
 		if(key not in self.children):
 			if(self.parent is not None and self.attributes['type'] != 'fieldset'):
 				raise TypeError('Only forms and fieldsets can have child fields.')
-			self.children[key] = FormNode(key)
+			self.children[key] = FormNode(self.req, key)
 			self.children[key].parent = self
 		return self.children[key]
 	
@@ -92,9 +95,13 @@ class FormNode(object):
 			return self.attributes[name]
 		return default
 	
-	def execute(self, req):
-		if(self.validate(req, self)):
-			self.submit(req, self)
+	def execute(self):
+		if(self.validate(self.req, self)):
+			self.submit(self.req, self)
+	
+	def render(self):
+		thm = self.theme(self.req)
+		return thm.form(self)
 	
 	def _validate(self, req, form):
 		"""
@@ -112,11 +119,11 @@ class FormNode(object):
 		
 		for child in self.children:
 			child = self.children[child]
-			result = result and child.validate(req, form)
+			result = result and child.validate(self.req, form)
 		
 		return result
 	
-	def _submit(self, req, form):
+	def _submit(self, form):
 		raise NotImplementedError("FormNode('%s')::submit" % self.name)
 
 class NestedFieldStorage(cgi.FieldStorage):

@@ -6,13 +6,13 @@
 # See LICENSE for details
 
 from dathomir.web.modpython import handler
-from dathomir.web import app, resource, theme
-from dathomir.util import form
+from dathomir.web import app, resource
+from dathomir.util import form, theme
 
 import os, time
 
-def sample_form(submit_func):
-	frm = form.FormNode('node-form')
+def sample_form(req):
+	frm = form.FormNode(req, 'node-form')
 	frm(enctype='multipart/form-data')
 	frm['title'](type='textfield',
 				 label='Title',
@@ -31,8 +31,6 @@ def sample_form(submit_func):
 				value='submit',
 				weight=100,
 				)
-	frm.submit = submit_func
-	frm.theme = theme.Theme()
 	return frm
 
 class RootResource(resource.CheetahTemplateResource):
@@ -40,11 +38,12 @@ class RootResource(resource.CheetahTemplateResource):
 		return ['/']
 	
 	def prepare_content(self, req):
-		frm = sample_form(self.submit_form)
-		self.set_slot('form', frm.theme.form(frm))
+		frm = sample_form(req)
+		frm.submit = self.submit_form
+		self.set_slot('form', frm.render())
 		self.set_slot('result_data', '(none)')
 		if(req.has_form_data()):
-			frm.execute(req)
+			frm.execute()
 	
 	def submit_form(self, req, frm):
 		data = form.NestedFieldStorage(req)

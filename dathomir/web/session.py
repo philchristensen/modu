@@ -103,15 +103,13 @@ class BaseSession(dict):
 		
 		self._accessed = time.time()
 		
+		if(req.get('dathomir.config.debug_session', False)):
+			req.log_error('session contains: ' + str(self))
+
 		if(random.randint(1, CLEANUP_CHANCE) == 1):
 			self.cleanup()
 		
 		self._loaded = True
-	
-	def __setitem__(self, key, value):
-		if(self._loaded):
-			self.touch()
-		dict.__setitem__(self, key, value)
 	
 	def touch(self):
 		self._clean = False
@@ -154,6 +152,8 @@ class BaseSession(dict):
 					"_created" : self._created, 
 					"_accessed": self._accessed, 
 					"_timeout" : self._timeout}
+			if(self._req.get('dathomir.config.debug_session', False)):
+				self._req.log_error('session cleanliness is: ' + str(self.is_clean()))
 			self.do_save(result)
 	
 	def delete(self):
@@ -177,7 +177,45 @@ class BaseSession(dict):
 	
 	def cleanup(self):
 		self.do_cleanup()
-
+	
+	def is_clean(self):
+		return self._clean
+	
+	def __setitem__(self, key, value):
+		if(self._loaded):
+			self.touch()
+		dict.__setitem__(self, key, value)
+	
+	def __del__(self, key):
+		if(self._loaded):
+			self.touch()
+		dict.__del__(self, key)
+	
+	def setdefault(self, key, value=None):
+		if(self._loaded):
+			self.touch()
+		return dict.setdefault(self, key, value)
+	
+	def clear(self):
+		if(self._loaded):
+			self.touch()
+		dict.clear(self)
+	
+	def update(self, d=None, **kwargs):
+		if(self._loaded):
+			self.touch()
+		dict.update(self, d, **kwargs)
+	
+	def pop(self, key=None):
+		if(self._loaded):
+			self.touch()
+		dict.pop(self, key)
+	
+	def popitem(self):
+		if(self._loaded):
+			self.touch()
+		dict.popitem(self)
+	
 
 class DbSession(BaseSession):
 	def __init__(self, req, connection, sid=None):
@@ -203,7 +241,7 @@ class DbSession(BaseSession):
 		cur = self._connection.cursor()
 		if not(hasattr(self, 'user_id') and self.user_id):
 			self.user_id = 0
-		if(self._clean):
+		if(self.is_clean()):
 			cur.execute("UPDATE session s SET s.user_id = %s, s.created = %s, s.accessed = %s, s.timeout = %s WHERE s.id = %s",
 						[self.user_id, dict['_created'], dict['_accessed'], dict['_timeout'], self.id()])
 		else:

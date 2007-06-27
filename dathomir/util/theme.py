@@ -8,11 +8,8 @@
 from dathomir.util import tags
 
 class Theme(object):
-	def render(self, type, *args, **kwargs):
-		"""
-		Should we be using a top-level theme function?
-		"""
-		pass
+	def __init__(self, req):
+		self.req = req
 	
 	def form(self, form):
 		content = ''
@@ -35,9 +32,9 @@ class Theme(object):
 		content += theme_func(element, form)
 		
 		if(hasattr(element, 'help')):
-			content += tags.div(class_='form-help')[element.help]
+			content += tags.div(_class='form-help')[element.help]
 		
-		return tags.div(class_='form-item')[content]
+		return tags.div(_class='form-item')[content]
 	
 	def form_markup(self, element, form):
 		return element.attrib('value', '')
@@ -46,8 +43,7 @@ class Theme(object):
 		attribs = element.attrib('attributes', {})
 		attribs['name'] = '%s[%s]' % (form.name, element.name)
 		attribs['size'] = element.attrib('size', 30)
-		attribs['type'] = 'text'
-		return tags.input(**attribs)
+		return tags.input(type='text', **attribs)
 	
 	def form_textarea(self, element, form):
 		attribs = element.attrib('attributes', {})
