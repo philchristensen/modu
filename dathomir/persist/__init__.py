@@ -148,7 +148,7 @@ class Store(object):
 	factories for each table you wish to load objects from.
 	"""
 	
-	def __init__(self, connection, guid_table='guid'):
+	def __init__(self, connection, guid_table='guid', debug_file=None):
 		"""
 		Create a Store. Parameters are mostly identical to the DB-API connect()
 		function, but you may also pass in the 'guid_table' parameter, to set
@@ -168,6 +168,7 @@ class Store(object):
 		self._factories = {}
 		self._object_cache = {}
 		self.cache = False
+		self.debug_file = debug_file
 		
 		global _current_store
 		if(_current_store):
@@ -244,6 +245,9 @@ class Store(object):
 		if(query in self._object_cache and self.cache and not ignore_cache):
 			return self._object_cache[query]
 		
+		if(self.debug_file):
+			self.debug_file.write("[Store] %s\n" % query)
+		
 		result = factory.get_items_by_query(query)
 		
 		if(self.cache):
@@ -275,18 +279,22 @@ class Store(object):
 		data = storable_item.get_data()
 		cur = self.get_cursor()
 		
-		if(self.uses_guids()):
+		if(id or self.uses_guids()):
 			data[storable.ID_COLUMN] = id
 			query = build_replace(table, data)
 		else:
 			query = build_insert(table, data)
 			cur.execute('LOCK TABLES `%s` WRITE' % table)
 		
+		if(self.debug_file):
+			self.debug_file.write("[Store] %s\n" % query)
+			
 		cur.execute(query)
 		
 		if not(self.uses_guids()):
 			cur.execute('SELECT MAX(%s) AS id FROM `%s`' % (storable.ID_COLUMN, table))
-			storable_item.set_id(cur.fetchone()['id'])
+			if not(storable_item.get_id()):
+				storable_item.set_id(cur.fetchone()['id'])
 			cur.fetchall()
 			cur.execute('UNLOCK TABLES')
 	
@@ -306,6 +314,12 @@ class Store(object):
 	def _destroy(self, storable_item):
 		delete_query = "DELETE FROM `%s` WHERE id = %%s" % storable_item.get_table()
 		cur = self.get_cursor(None)
-		cur.execute(delete_query, storable_item.get_id())
+		
+		query = interp(delete_query, [storable_item.get_id()])
+		
+		if(self.debug_file):
+			self.debug_file.write("[Store] %s\n" % query)
+			
+		cur.execute(query)
 		storable_item.reset_id()
 

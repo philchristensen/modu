@@ -7,7 +7,7 @@
 #
 # See LICENSE for details
 
-import MySQLdb, unittest, time
+import MySQLdb, unittest, time, sys
 
 from MySQLdb import cursors
 
@@ -20,7 +20,6 @@ GRANT ALL ON dathomir.* TO dathomir@localhost IDENTIFIED BY 'dathomir';
 """
 
 TEST_TABLES = """
-DROP TABLE IF EXISTS `page`;
 CREATE TABLE IF NOT EXISTS `page` (
   `id` bigint(20) unsigned NOT NULL default 0,
   `code` varchar(128) NOT NULL default '',
@@ -32,12 +31,11 @@ CREATE TABLE IF NOT EXISTS `page` (
   UNIQUE KEY `code_uni` (`code`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `guid`;
 CREATE TABLE IF NOT EXISTS `guid` (
   `guid` bigint(20) unsigned NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-INSERT INTO `guid` VALUES (1);
+REPLACE INTO `guid` VALUES (1);
 """
 
 class StorableTestCase(unittest.TestCase):
@@ -45,9 +43,13 @@ class StorableTestCase(unittest.TestCase):
 		self.store = persist.get_store()
 		if not(self.store):
 			self.connection = MySQLdb.connect('localhost', 'dathomir', 'dathomir', 'dathomir')
-			self.store = persist.Store(self.connection)
+			self.store = persist.Store(self.connection, debug_file=sys.stderr)
+		
+		global TEST_TABLES
 		cur = self.store.get_cursor()
-		cur.execute(TEST_TABLES)
+		for sql in TEST_TABLES.split(";"):
+			if(sql.strip()):
+				cur.execute(sql)
 	
 	def tearDown(self):
 		pass
