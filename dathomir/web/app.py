@@ -13,9 +13,10 @@ from dathomir import persist
 base_url = '/'
 db_url = 'mysql://dathomir:dathomir@localhost/dathomir'
 session_class = session.UserSession
-debug_session = False
 initialize_store = True
 webroot = 'webroot'
+debug_session = False
+debug_store = False
 
 _site_tree = url.URLNode()
 _db = None
@@ -66,14 +67,16 @@ def load_config(req):
 	provided request object.
 	"""
 	global db_url, session_class, initialize_store
-	global base_url, webroot
+	global base_url, webroot, debug_store, debug_session
 	
 	req['dathomir.config.db_url'] = db_url
 	req['dathomir.config.session_class'] = session_class
-	req['dathomir.config.debug_session'] = debug_session
 	req['dathomir.config.initialize_store'] = initialize_store
 	req['dathomir.config.base_url'] = base_url
 	req['dathomir.config.webroot'] = webroot
+	
+	req['dathomir.config.debug_session'] = debug_session
+	req['dathomir.config.debug_store'] = debug_store
 
 def bootstrap(req):
 	"""
@@ -108,5 +111,9 @@ def bootstrap(req):
 		# already be initialized, but we'll check anyway, for now
 		store = persist.get_store()
 		if not(store):
-			store = persist.Store(_db)
+			if(req['dathomir.config.debug_store']):
+				debug_file = req['wsgi.errors']
+			else:
+				debug_file = None
+			store = persist.Store(_db, debug_file=debug_file)
 		req['dathomir.store'] = store
