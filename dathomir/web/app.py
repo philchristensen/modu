@@ -14,6 +14,7 @@ base_url = '/'
 db_url = 'mysql://dathomir:dathomir@localhost/dathomir'
 session_class = session.UserSession
 initialize_store = True
+default_guid_table = 'guid'
 webroot = 'webroot'
 debug_session = False
 debug_store = False
@@ -115,5 +116,6 @@ def bootstrap(req):
 				debug_file = req['wsgi.errors']
 			else:
 				debug_file = None
-			store = persist.Store(_db, debug_file=debug_file)
+			
+			store = persist.Store(_db, guid_table=default_guid_table, debug_file=debug_file)
 		req['dathomir.store'] = store

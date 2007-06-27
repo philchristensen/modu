@@ -10,14 +10,18 @@ from MySQLdb import cursors, converters
 
 from dathomir.persist import storable
 
-_current_store = None
+stores = {}
 
-def get_store():
+DEFAULT_STORE_NAME = '__default__'
+
+def get_store(name=DEFAULT_STORE_NAME):
 	"""
 	Return the current Store instance, if it exists.
 	"""
-	global _current_store
-	return _current_store
+	global stores
+	if(name in stores):
+		return stores[name]
+	return None
 
 def build_insert(table, data):
 	"""
@@ -148,7 +152,7 @@ class Store(object):
 	factories for each table you wish to load objects from.
 	"""
 	
-	def __init__(self, connection, guid_table='guid', debug_file=None):
+	def __init__(self, connection, guid_table='guid', debug_file=None, name=DEFAULT_STORE_NAME):
 		"""
 		Create a Store. Parameters are mostly identical to the DB-API connect()
 		function, but you may also pass in the 'guid_table' parameter, to set
@@ -170,10 +174,10 @@ class Store(object):
 		self.cache = False
 		self.debug_file = debug_file
 		
-		global _current_store
-		if(_current_store):
-			raise RuntimeError("Only one Store instance may be created.")
-		_current_store = self
+		global stores
+		if(name in stores):
+			raise RuntimeError("There is already a Store instance by the name '%s'." % name)
+		stores[name] = self
 	
 	def get_cursor(self, cursor_type=cursors.SSDictCursor):
 		"""
