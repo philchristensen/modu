@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -9,15 +9,15 @@
 
 import unittest
 
-from dathomir.persist import storable
-from dathomir.web.modpython import handler
-from dathomir.util import test
-from dathomir.web import app, resource, session
-from dathomir import persist
+from modu.persist import storable
+from modu.web.modpython import handler
+from modu.util import test
+from modu.web import app, resource, session
+from modu import persist
 
 """
-CREATE DATABASE dathomir;
-GRANT ALL ON dathomir.* TO dathomir@localhost IDENTIFIED BY 'dathomir';
+CREATE DATABASE modu;
+GRANT ALL ON modu.* TO modu@localhost IDENTIFIED BY 'modu';
 """
 
 TEST_TABLES = """
@@ -40,32 +40,32 @@ class DbSessionTestCase(unittest.TestCase):
 	req = None
 	
 	def setUp(self):
-		cur = self.req['dathomir.db'].cursor()
+		cur = self.req['modu.db'].cursor()
 		cur.execute(TEST_TABLES)
 	
 	def tearDown(self):
 		pass
 	
 	def test_create(self):
-		sess = session.DbSession(self.req, self.req['dathomir.db'])
+		sess = session.DbSession(self.req, self.req['modu.db'])
 		sess['test_data'] = 'test'
 		sess.save()
 		
-		saved_sess = session.DbSession(self.req, self.req['dathomir.db'], sid=sess.id())
+		saved_sess = session.DbSession(self.req, self.req['modu.db'], sid=sess.id())
 		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
 		self.failUnlessEqual(int(saved_sess._created), int(sess._created), "Session created date changed during save/load cycle.")
 	
 	def test_noclobber(self):
 		sessid = session.generate_token()
-		sess = session.DbSession(self.req, self.req['dathomir.db'], sessid)
-		sess2 = session.DbSession(self.req, self.req['dathomir.db'], sessid)
+		sess = session.DbSession(self.req, self.req['modu.db'], sessid)
+		sess2 = session.DbSession(self.req, self.req['modu.db'], sessid)
 		sess['test_data'] = 'something'
 		sess.save()
 		sess2.save()
 		
-		saved_sess = session.DbSession(self.req, self.req['dathomir.db'], sid=sess.id())
+		saved_sess = session.DbSession(self.req, self.req['modu.db'], sid=sess.id())
 		self.failUnlessEqual(saved_sess['test_data'], 'something', "Session data was not saved properly.")
 	
-app.base_url = '/dathomir/test/test_session'
+app.base_url = '/modu/test/test_session'
 app.session_class = None
 app.activate(test.TestResource(DbSessionTestCase))

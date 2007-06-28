@@ -5,7 +5,6 @@
 #
 # See LICENSE for details
 
-import MySQLdb
 from modu.util import url
 from modu.web import session, wsgi
 from modu import persist
@@ -93,6 +92,7 @@ def bootstrap(req):
 	if(not _db and db_url):
 		dsn = url.urlparse(req['modu.config.db_url'])
 		if(dsn['scheme'] == 'mysql'):
+			import MySQLdb
 			_db = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
 		else:
 			raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
@@ -116,6 +116,6 @@ def bootstrap(req):
 				debug_file = req['wsgi.errors']
 			else:
 				debug_file = None
-			
+			global default_guid_table
 			store = persist.Store(_db, guid_table=default_guid_table, debug_file=debug_file)
 		req['modu.store'] = store

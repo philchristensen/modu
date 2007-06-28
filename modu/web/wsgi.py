@@ -7,10 +7,8 @@
 
 import traceback, mimetypes, os, stat, os.path
 
-from mod_python import apache
-
 class Request(dict):
-	def __init__(self, d):
+	def __init__(self, d={}):
 		dict.__init__(self)
 		self.update(d)
 	
@@ -82,6 +80,8 @@ class FileWrapper:
 		raise IndexError
 
 def get_environment(mp_req):
+	from mod_python import apache
+	
 	options = mp_req.get_options()
 	
 	# Threading and forking

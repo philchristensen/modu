@@ -29,6 +29,20 @@ class TagsTestCase(unittest.TestCase):
 		expected = '<select name="select_field"><option value="some-value">some-label</option></select>'
 		self.assertEqual(str(tag), expected, "Got '%s' instead of '%s'" % (str(tag), expected))
 	
+	def test_select_trick(self):
+		options = {1:'some-label', 2:'other-label'}
+		opt_tags = map(lambda(item): tags.option(value=item[0])[item[1]], options.items())
+		tag = tags.select(name="select_field")[opt_tags]
+		expected = '<select name="select_field"><option value="1">some-label</option><option value="2">other-label</option></select>'
+		self.assertEqual(str(tag), expected, "Got '%s' instead of '%s'" % (str(tag), expected))
+	
+	def test_select_trick2(self):
+		options = ['some-label', 'other-label']
+		opt_tags = map(lambda(item): tags.option(value=item[0])[item[1]], [(i,options[i]) for i in range(len(options))])
+		tag = tags.select(name="select_field")[opt_tags]
+		expected = '<select name="select_field"><option value="0">some-label</option><option value="1">other-label</option></select>'
+		self.assertEqual(str(tag), expected, "Got '%s' instead of '%s'" % (str(tag), expected))
+	
 	def test_longer_select(self):
 		option = tags.option(value="some-value")['some-label']
 		option2 = tags.option(value="some-other-value")['some-other-label']

@@ -57,6 +57,9 @@ class Tag(object):
 	
 	def __radd__(self, other):
 		return str(other) + str(self)
+	
+	def __eq__(self, other):
+		return str(self) == str(other)
 
 class _tag(str):
 	"""_tag is a string subclass. Instances of _tag, which are constructed

@@ -105,13 +105,13 @@ class ZPTemplateResource(TemplateResource):
 	"""http://zpt.sourceforge.net"""
 	def get_content(self, req):
 		from ZopePageTemplates import PageTemplate
-		class ZPTDathomirTemplate(PageTemplate):
+		class ZPTmoduTemplate(PageTemplate):
 			def __call__(self, context={}, *args):
 				if not context.has_key('args'):
 					context['args'] = args
 				return self.pt_render(extra_context=context)
 		template_file = open(req['modu.approot'] + '/template/' + self.get_template(req))
-		self.template = ZPTDathomirTemplate()
+		self.template = ZPTmoduTemplate()
 		self.template.write(template_file.read())
 		return self.template(context={'here':self.data})
 

@@ -1,20 +1,20 @@
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
 #
 # See LICENSE for details
 
-from dathomir.web.modpython import handler
-from dathomir.web import app, resource
-from dathomir.util import form, theme
+from modu.web.modpython import handler
+from modu.web import app, resource
+from modu.util import form, theme
 
 import os, time
 
 def sample_form(req):
 	frm = form.FormNode(req, 'node-form')
 	frm(enctype='multipart/form-data')
-	frm['title'](type='textfield',
+	frm['title'](type='text',
 				 label='Title',
 				 weight=-20,
 				 size=30,
@@ -55,5 +55,5 @@ class RootResource(resource.CheetahTemplateResource):
 	def get_template(self, req):
 		return 'page.html.tmpl'
 
-app.base_url = '/dathomir/examples/form'
+app.base_url = '/modu/examples/form'
 app.activate(RootResource())

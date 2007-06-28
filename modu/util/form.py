@@ -27,8 +27,7 @@ class FormNode(object):
 	will need to be used to render the form.
 	"""
 	
-	def __init__(self, req, name):
-		self.req = req
+	def __init__(self, name):
 		self.name = name
 		self.parent = None
 		self.children = {}
@@ -67,7 +66,7 @@ class FormNode(object):
 		if(key not in self.children):
 			if(self.parent is not None and self.attributes['type'] != 'fieldset'):
 				raise TypeError('Only forms and fieldsets can have child fields.')
-			self.children[key] = FormNode(self.req, key)
+			self.children[key] = FormNode(key)
 			self.children[key].parent = self
 		return self.children[key]
 	
@@ -95,12 +94,12 @@ class FormNode(object):
 			return self.attributes[name]
 		return default
 	
-	def execute(self):
-		if(self.validate(self.req, self)):
-			self.submit(self.req, self)
+	def execute(self, req):
+		if(self.validate(req, self)):
+			self.submit(req, self)
 	
-	def render(self):
-		thm = self.theme(self.req)
+	def render(self, req):
+		thm = self.theme(req)
 		return thm.form(self)
 	
 	def _validate(self, req, form):
@@ -119,7 +118,7 @@ class FormNode(object):
 		
 		for child in self.children:
 			child = self.children[child]
-			result = result and child.validate(self.req, form)
+			result = result and child.validate(req, form)
 		
 		return result
 	

@@ -1,12 +1,12 @@
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
 #
 # See LICENSE for details
 
-from dathomir.web.modpython import handler
-from dathomir.web import app, resource
+from modu.web.modpython import handler
+from modu.web import app, resource
 
 import os
 
@@ -33,7 +33,7 @@ class RootResource(resource.TemplateResource):
 		return 'text/plain'
 	
 	def get_template(self, req):
-		output = "This is the web root at: " + req['dathomir.path'] + "\n"
+		output = "This is the web root at: " + req['modu.path'] + "\n"
 		for key in req:
 			output += key + ': ' + str(req[key]) + "\n"
 		from mod_python import apache
@@ -42,7 +42,7 @@ class RootResource(resource.TemplateResource):
 			output += name + ': ' + str(getattr(apache, name)) + "\n"
 		return output 
 
-app.base_url = '/dathomir/examples/basic'
+app.base_url = '/modu/examples/basic'
 app.db_url = None
 app.session_class = None
 app.initialize_store = False
