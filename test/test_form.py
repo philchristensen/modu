@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
 #
 # See LICENSE for details
 
-from dathomir.util import form
+from modu.util import form
 
 import unittest
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -9,7 +9,7 @@
 
 import unittest
 
-from dathomir.web import resource
+from modu.web import resource
 
 class TestResource(resource.TemplateResource):
 	def get_paths(self):

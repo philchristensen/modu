@@ -1,11 +1,11 @@
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
 #
 # See LICENSE for details
 
-from dathomir.util import tags
+from modu.util import tags
 
 class Theme(object):
 	def __init__(self, req):

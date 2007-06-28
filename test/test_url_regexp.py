@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -9,7 +9,7 @@
 
 import unittest
 
-from dathomir.util import url
+from modu.util import url
 
 class URLRegExpTestCase(unittest.TestCase):
 	def test_full(self):
@@ -33,10 +33,10 @@ class URLRegExpTestCase(unittest.TestCase):
 		self.failUnlessEqual(result['path'], '/database', "Didn't find 'path' where I expected")
 	
 	def test_svn_ssh(self):
-		result = url.urlparse('svn+ssh://svn.dathomir.org/svnroot/dathomir/trunk');
+		result = url.urlparse('svn+ssh://svn.modu.org/svnroot/modu/trunk');
 		self.failUnlessEqual(result['scheme'], 'svn+ssh', "Didn't find 'scheme' where I expected")
-		self.failUnlessEqual(result['host'], 'svn.dathomir.org', "Didn't find 'host' where I expected")
-		self.failUnlessEqual(result['path'], '/svnroot/dathomir/trunk', "Didn't find 'path' where I expected")
+		self.failUnlessEqual(result['host'], 'svn.modu.org', "Didn't find 'host' where I expected")
+		self.failUnlessEqual(result['path'], '/svnroot/modu/trunk', "Didn't find 'path' where I expected")
 	
 if __name__ == "__main__":
 	unittest.main()

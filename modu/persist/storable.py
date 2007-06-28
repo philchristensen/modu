@@ -1,4 +1,4 @@
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -19,7 +19,7 @@ class Storable(object):
 	the Storable API allows for creation of custom complex queries
 	that can be used for object instantiation as well.
 	
-	Once loaded via a dathomir.persist.Store, Storable objects provide
+	Once loaded via a modu.persist.Store, Storable objects provide
 	access to the data of the result through object attribute access.
 	
 	Although the standard Storable class provides all the functionality
@@ -97,7 +97,7 @@ class Storable(object):
 		this is an unsaved object. It's not possible to use "predictive"
 		IDs in that case.
 		"""
-		from dathomir import persist
+		from modu import persist
 		id = object.__getattribute__(self, '_id')
 		if(id == 0 and fetch):
 			store = persist.get_store()
@@ -232,7 +232,7 @@ class DefaultFactory(Factory):
 		return self.create_item_query_for_table(self.table, data)
 	
 	def create_item_query_for_table(self, table, data):
-		from dathomir import persist
+		from modu import persist
 		return persist.build_select(table, data)
 	
 	def get_item(self, id):
@@ -253,7 +253,7 @@ class DefaultFactory(Factory):
 		return result
 	
 	def get_item_records(self, query):
-		from dathomir import persist
+		from modu import persist
 		store = persist.get_store()
 		cursor = store.get_cursor()
 		cursor.execute(query)

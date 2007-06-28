@@ -1,4 +1,4 @@
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -12,7 +12,7 @@ try:
 except:
 	import StringIO
 
-from dathomir.util import theme
+from modu.util import theme
 
 NESTED_NAME = re.compile(r'([^\[]+)(\[([^\]]+)\])*')
 KEYED_FRAGMENT = re.compile(r'\[([^\]]+)\]*')
@@ -251,11 +251,11 @@ class MagicFile(file):
 		
 		self.req = req
 		self.client_filename = filename
-		session = self.req['dathomir.session']
-		if('dathomir.file' not in session):
-			session['dathomir.file'] = {}
+		session = self.req['modu.session']
+		if('modu.file' not in session):
+			session['modu.file'] = {}
 		
-		session['dathomir.file'][self.client_filename] = {'bytes_written':0, 'total_bytes':self.req['CONTENT_LENGTH']}
+		session['modu.file'][self.client_filename] = {'bytes_written':0, 'total_bytes':self.req['CONTENT_LENGTH']}
 		session.save()
 	
 	def write(self, data):
@@ -263,8 +263,8 @@ class MagicFile(file):
 		# loaded, since we need to update the access time. So writing
 		# the pickled data repeatedly (as we update the bytes written)
 		# is really only a bad thing because of the pickling overhead.
-		session = self.req['dathomir.session']
-		file_state = session['dathomir.file'][self.client_filename]
+		session = self.req['modu.session']
+		file_state = session['modu.file'][self.client_filename]
 		
 		file_state['bytes_written'] += len(data)
 		session.save()
@@ -273,8 +273,8 @@ class MagicFile(file):
 	
 	def seek(self, offset, whence=0):
 		#self.req.log_error('file was sought')
-		session = self.req['dathomir.session']
-		session['dathomir.file'][self.client_filename]['complete'] = 1
+		session = self.req['modu.session']
+		session['modu.file'][self.client_filename]['complete'] = 1
 		super(MagicFile, self).seek(offset, whence)
 
 class DictField(dict):

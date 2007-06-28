@@ -1,4 +1,4 @@
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -6,7 +6,7 @@
 # See LICENSE for details
 
 from mod_python import apache
-from dathomir.web import wsgi, app
+from modu.web import wsgi, app
 
 def handler(mp_req):
 	"""

@@ -1,4 +1,4 @@
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -8,7 +8,7 @@
 import MySQLdb, warnings
 from MySQLdb import cursors, converters
 
-from dathomir.persist import storable
+from modu.persist import storable
 
 stores = {}
 
@@ -29,7 +29,7 @@ def build_insert(table, data):
 	sorted alphabetically before output, so the result of running a semantically
 	identical dictionary should be the same every time.
 	
-	Use dathomir.persist.RAW to embed SQL directly in the VALUES clause.
+	Use modu.persist.RAW to embed SQL directly in the VALUES clause.
 	"""
 	keys = data.keys()
 	keys.sort()
@@ -43,7 +43,7 @@ def build_replace(table, data):
 	sorted alphabetically before output, so the result of running a semantically
 	identical dictionary should be the same every time.
 	
-	Use dathomir.persist.RAW to embed SQL directly in the SET clause.
+	Use modu.persist.RAW to embed SQL directly in the SET clause.
 	"""
 	keys = data.keys()
 	keys.sort()
@@ -111,7 +111,7 @@ def interp(query, args):
 	"""
 	Interpolate the provided arguments into the provided query, using
 	the DB-API's default conversions, with the additional 'RAW' support
-	from dathomir.persist.Raw2Literal
+	from modu.persist.Raw2Literal
 	"""
 	conv_dict = converters.conversions.copy()
 	conv_dict[RAW] = Raw2Literal

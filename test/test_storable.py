@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -11,12 +11,12 @@ import MySQLdb, unittest, time, sys
 
 from MySQLdb import cursors
 
-from dathomir import persist
-from dathomir.persist import storable
+from modu import persist
+from modu.persist import storable
 
 """
-CREATE DATABASE dathomir;
-GRANT ALL ON dathomir.* TO dathomir@localhost IDENTIFIED BY 'dathomir';
+CREATE DATABASE modu;
+GRANT ALL ON modu.* TO modu@localhost IDENTIFIED BY 'modu';
 """
 
 TEST_TABLES = """
@@ -42,7 +42,7 @@ class StorableTestCase(unittest.TestCase):
 	def setUp(self):
 		self.store = persist.get_store()
 		if not(self.store):
-			self.connection = MySQLdb.connect('localhost', 'dathomir', 'dathomir', 'dathomir')
+			self.connection = MySQLdb.connect('localhost', 'modu', 'modu', 'modu')
 			self.store = persist.Store(self.connection, debug_file=sys.stderr)
 		
 		global TEST_TABLES

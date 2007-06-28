@@ -1,4 +1,4 @@
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -108,25 +108,25 @@ def get_environment(mp_req):
 	
 	env = dict(apache.build_cgi_env(mp_req))
 	
-	from dathomir.web import app
+	from modu.web import app
 	app.load_config(env)
 	
-	env['SCRIPT_FILENAME'] = env['dathomir.approot'] = apache.get_handler_root()
-	env['SCRIPT_NAME'] = env['dathomir.config.base_url']
+	env['SCRIPT_FILENAME'] = env['modu.approot'] = apache.get_handler_root()
+	env['SCRIPT_NAME'] = env['modu.config.base_url']
 	
 	uri = env['REQUEST_URI']
 	if(uri.startswith(env['SCRIPT_NAME'])):
-		env['PATH_INFO'] = env['dathomir.path'] = uri[len(env['SCRIPT_NAME']):]
+		env['PATH_INFO'] = env['modu.path'] = uri[len(env['SCRIPT_NAME']):]
 	else:
-		env['PATH_INFO'] = env['dathomir.path'] = uri
+		env['PATH_INFO'] = env['modu.path'] = uri
 	
 	if('CONTENT_LENGTH' in mp_req.headers_in):
 		env['CONTENT_LENGTH'] = long(mp_req.headers_in['Content-Length'])
 	
-	approot = env['dathomir.approot']
-	webroot = env['dathomir.config.webroot']
+	approot = env['modu.approot']
+	webroot = env['modu.config.webroot']
 	webroot = os.path.join(approot, webroot)
-	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['dathomir.path'])
+	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['modu.path'])
 	
 	env['wsgi.input'] = InputWrapper(mp_req)
 	env['wsgi.errors'] = ErrorWrapper(mp_req)
@@ -143,7 +143,7 @@ def get_environment(mp_req):
 	return env
 
 def handler(req, start_response):
-	from dathomir.web import app
+	from modu.web import app
 	
 	req = Request(req)
 	
@@ -165,12 +165,12 @@ def handler(req, start_response):
 		return content
 	
 	tree = app.get_tree()
-	rsrc = tree.parse(req['dathomir.path'])
+	rsrc = tree.parse(req['modu.path'])
 	if not(rsrc):
 		start_response('404 Not Found', [])
 		return []
 	
-	req['dathomir.tree'] = tree
+	req['modu.tree'] = tree
 	
 	app.bootstrap(req)
 	
@@ -179,8 +179,8 @@ def handler(req, start_response):
 	content = rsrc.get_content(req)
 	app.add_header('Content-Length', len(content))
 	
-	if('dathomir.session' in req):
-		req['dathomir.session'].save()
+	if('modu.session' in req):
+		req['modu.session'].save()
 	
 	start_response('200 OK', app.get_headers())
 	return [content]

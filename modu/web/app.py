@@ -1,4 +1,4 @@
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -6,12 +6,12 @@
 # See LICENSE for details
 
 import MySQLdb
-from dathomir.util import url
-from dathomir.web import session, wsgi
-from dathomir import persist
+from modu.util import url
+from modu.web import session, wsgi
+from modu import persist
 
 base_url = '/'
-db_url = 'mysql://dathomir:dathomir@localhost/dathomir'
+db_url = 'mysql://modu:modu@localhost/modu'
 session_class = session.UserSession
 initialize_store = True
 default_guid_table = 'guid'
@@ -70,14 +70,14 @@ def load_config(req):
 	global db_url, session_class, initialize_store
 	global base_url, webroot, debug_store, debug_session
 	
-	req['dathomir.config.db_url'] = db_url
-	req['dathomir.config.session_class'] = session_class
-	req['dathomir.config.initialize_store'] = initialize_store
-	req['dathomir.config.base_url'] = base_url
-	req['dathomir.config.webroot'] = webroot
+	req['modu.config.db_url'] = db_url
+	req['modu.config.session_class'] = session_class
+	req['modu.config.initialize_store'] = initialize_store
+	req['modu.config.base_url'] = base_url
+	req['modu.config.webroot'] = webroot
 	
-	req['dathomir.config.debug_session'] = debug_session
-	req['dathomir.config.debug_store'] = debug_store
+	req['modu.config.debug_session'] = debug_session
+	req['modu.config.debug_store'] = debug_store
 
 def bootstrap(req):
 	"""
@@ -89,33 +89,33 @@ def bootstrap(req):
 	# as a global variable. Ordinarily this is a naughty-no-no in mod_python,
 	# but we're going to be very very careful.
 	global _db
-	db_url = req['dathomir.config.db_url']
+	db_url = req['modu.config.db_url']
 	if(not _db and db_url):
-		dsn = url.urlparse(req['dathomir.config.db_url'])
+		dsn = url.urlparse(req['modu.config.db_url'])
 		if(dsn['scheme'] == 'mysql'):
 			_db = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
 		else:
 			raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
-	req['dathomir.db'] = _db
+	req['modu.db'] = _db
 	
 	# FIXME: We assume that any session class requires database access, and pass
 	# the db connection as the second paramter to the session class constructor
-	session_class = req['dathomir.config.session_class']
+	session_class = req['modu.config.session_class']
 	if(db_url and session_class):
-		req['dathomir.session'] = session_class(req, req['dathomir.db'])
-		if(req['dathomir.config.debug_session']):
-			req.log_error('session contains: ' + str(req['dathomir.session']))
+		req['modu.session'] = session_class(req, req['modu.db'])
+		if(req['modu.config.debug_session']):
+			req.log_error('session contains: ' + str(req['modu.session']))
 	
-	initialize_store = req['dathomir.config.initialize_store']
+	initialize_store = req['modu.config.initialize_store']
 	if(_db):
 		# FIXME: I really can't think of any scenario where a store will
 		# already be initialized, but we'll check anyway, for now
 		store = persist.get_store()
 		if not(store):
-			if(req['dathomir.config.debug_store']):
+			if(req['modu.config.debug_store']):
 				debug_file = req['wsgi.errors']
 			else:
 				debug_file = None
 			
 			store = persist.Store(_db, guid_table=default_guid_table, debug_file=debug_file)
-		req['dathomir.store'] = store
+		req['modu.store'] = store

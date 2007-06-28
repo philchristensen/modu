@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -9,7 +9,7 @@
 
 import unittest, difflib
 
-from dathomir import persist
+from modu import persist
 
 class SQLTestCase(unittest.TestCase):
 	def setUp(self):

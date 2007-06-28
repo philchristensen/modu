@@ -1,4 +1,4 @@
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -6,7 +6,7 @@
 # See LICENSE for details
 
 import Cookie, time, re, random
-from dathomir.persist import storable
+from modu.persist import storable
 from MySQLdb import cursors
 
 import cPickle
@@ -103,7 +103,7 @@ class BaseSession(dict):
 		
 		self._accessed = time.time()
 		
-		if(req.get('dathomir.config.debug_session', False)):
+		if(req.get('modu.config.debug_session', False)):
 			req.log_error('session contains: ' + str(self))
 
 		if(random.randint(1, CLEANUP_CHANCE) == 1):
@@ -118,7 +118,7 @@ class BaseSession(dict):
 		"""
 		Add the proper cookie-setting headers to the output.
 		"""
-		from dathomir.web import app
+		from modu.web import app
 		
 		cookie_data = self._cookie.output()
 		for header in cookie_data.split("\n"):
@@ -152,7 +152,7 @@ class BaseSession(dict):
 					"_created" : self._created, 
 					"_accessed": self._accessed, 
 					"_timeout" : self._timeout}
-			if(self._req.get('dathomir.config.debug_session', False)):
+			if(self._req.get('modu.config.debug_session', False)):
 				self._req.log_error('session cleanliness is: ' + str(self.is_clean()))
 			self.do_save(result)
 	

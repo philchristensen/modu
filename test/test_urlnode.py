@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# dathomir
+# modu
 # Copyright (C) 2007 Phil Christensen
 #
 # $Id$
@@ -9,7 +9,7 @@
 
 import unittest
 
-from dathomir.util import url
+from modu.util import url
 
 class URLNodeTestCase(unittest.TestCase):
 	def setUp(self):
