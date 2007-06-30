@@ -42,7 +42,7 @@ class FormThemeTestCase(unittest.TestCase):
 					weight=100,
 					)
 		
-		self.theme = theme.Theme(wsgi.Request())
+		self.theme = theme.Theme({})
 	
 	def tearDown(self):
 		pass

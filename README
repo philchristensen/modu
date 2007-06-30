@@ -4,3 +4,8 @@
 # $Id$
 #
 # See LICENSE for details
+
+Twisted Plugins
+Small File for Config
+plugins can load other plugins ('sabi')
+config.set_default_path('/home')

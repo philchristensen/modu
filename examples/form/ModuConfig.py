@@ -12,7 +12,7 @@ from modu.util import form, theme
 import os, time
 
 def sample_form(req):
-	frm = form.FormNode(req, 'node-form')
+	frm = form.FormNode('node-form')
 	frm(enctype='multipart/form-data')
 	frm['title'](type='text',
 				 label='Title',
@@ -40,10 +40,10 @@ class RootResource(resource.CheetahTemplateResource):
 	def prepare_content(self, req):
 		frm = sample_form(req)
 		frm.submit = self.submit_form
-		self.set_slot('form', frm.render())
+		self.set_slot('form', frm.render(req))
 		self.set_slot('result_data', '(none)')
 		if(req.has_form_data()):
-			frm.execute()
+			frm.execute(req)
 	
 	def submit_form(self, req, frm):
 		data = form.NestedFieldStorage(req)

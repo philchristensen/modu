@@ -14,7 +14,7 @@ class Theme(object):
 	def form(self, form):
 		content = ''
 		for child in form:
-			content += self.form_element(form[child], form)
+			content += self.form_element(form.name, form[child])
 			content += "\n"
 		
 		attribs = form.attrib('attributes', {})

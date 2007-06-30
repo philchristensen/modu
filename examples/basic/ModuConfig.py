@@ -34,12 +34,26 @@ class RootResource(resource.TemplateResource):
 	
 	def get_template(self, req):
 		output = "This is the web root at: " + req['modu.path'] + "\n"
+		
+		for key in dir(req['modpython.request']):
+			item = getattr(req['modpython.request'], key)
+			output += key + ': ' + str(item) + "\n"
+			# if(callable(item)):
+			# 	try:
+			# 		output += "\t\t" + str(item()) + "\n"
+			# 	except:
+			# 		pass 
+		
+		output += '\n\n'
+		
 		for key in req:
 			output += key + ': ' + str(req[key]) + "\n"
+		
 		from mod_python import apache
 		output += '\n\n'
 		for name in dir(apache):
 			output += name + ': ' + str(getattr(apache, name)) + "\n"
+		
 		return output 
 
 app.base_url = '/modu/examples/basic'

@@ -7,145 +7,10 @@
 
 import traceback, mimetypes, os, stat, os.path
 
-class Request(dict):
-	def __init__(self, d={}):
-		dict.__init__(self)
-		self.update(d)
-	
-	def __getattr__(self, key):
-		if(key in self):
-			return self[key]
-		elif(key.find('_') != -1):
-			return self[key.replace('_', '.')]
-		raise AttributeError(key)
-	
-	def log_error(self, data):
-		self['wsgi.errors'].write(data)
-	
-	def has_form_data(self):
-		if(self['REQUEST_METHOD'] == 'POST'):
-			return True
-		elif(self['QUERY_STRING']):
-			return True
-		return False
-
-class InputWrapper(object):
-	def __init__(self, mp_req):
-		self.mp_req = mp_req
-	
-	def close(self):
-		pass
-	
-	def read(self, size=-1):
-		return self.mp_req.read(size)
-	
-	def readline(self, size=-1):
-		return self.mp_req.readline(size)
-	
-	def readlines(self, hint=-1):
-		return self.mp_req.readlines(hint)
-	
-	def __iter__(self):
-		line = self.readline()
-		while line:
-			yield line
-			# Notice this won't prefetch the next line; it only
-			# gets called if the generator is resumed.
-			line = self.readline()
-
-class ErrorWrapper(object):
-	def __init__(self, mp_req):
-		self.mp_req = mp_req
-	
-	def flush(self):
-		pass
-	
-	def write(self, msg):
-		self.mp_req.log_error(msg)
-	
-	def writelines(self, seq):
-		self.write(''.join(seq))
-
-class FileWrapper:
-	def __init__(self, filelike, blksize=8192):
-		self.filelike = filelike
-		self.blksize = blksize
-		if hasattr(filelike,'close'):
-			self.close = filelike.close
-	
-	def __getitem__(self,key):
-		data = self.filelike.read(self.blksize)
-		if data:
-			return data
-		raise IndexError
-
-def get_environment(mp_req):
-	from mod_python import apache
-	
-	options = mp_req.get_options()
-	
-	# Threading and forking
-	try:
-		q = apache.mpm_query
-		threaded = q(apache.AP_MPMQ_IS_THREADED)
-		forked = q(apache.AP_MPMQ_IS_FORKED)
-	except AttributeError:
-		threaded = options.get('multithread', '').lower()
-		if threaded == 'on':
-			threaded = True
-		elif threaded == 'off':
-			threaded = False
-		else:
-			raise ValueError(bad_value % "multithread")
-		
-		forked = options.get('multiprocess', '').lower()
-		if forked == 'on':
-			forked = True
-		elif forked == 'off':
-			forked = False
-		else:
-			raise ValueError(bad_value % "multiprocess")
-	
-	env = dict(apache.build_cgi_env(mp_req))
-	
-	from modu.web import app
-	app.load_config(env)
-	
-	env['SCRIPT_FILENAME'] = env['modu.approot'] = apache.get_handler_root()
-	env['SCRIPT_NAME'] = env['modu.config.base_url']
-	
-	uri = env['REQUEST_URI']
-	if(uri.startswith(env['SCRIPT_NAME'])):
-		env['PATH_INFO'] = env['modu.path'] = uri[len(env['SCRIPT_NAME']):]
-	else:
-		env['PATH_INFO'] = env['modu.path'] = uri
-	
-	if('CONTENT_LENGTH' in mp_req.headers_in):
-		env['CONTENT_LENGTH'] = long(mp_req.headers_in['Content-Length'])
-	
-	approot = env['modu.approot']
-	webroot = env['modu.config.webroot']
-	webroot = os.path.join(approot, webroot)
-	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['modu.path'])
-	
-	env['wsgi.input'] = InputWrapper(mp_req)
-	env['wsgi.errors'] = ErrorWrapper(mp_req)
-	env['wsgi.file_wrapper'] = FileWrapper
-	env['wsgi.version'] = (1,0)
-	env['wsgi.run_once'] = False
-	if env.get("HTTPS") in ('yes', 'on', '1'):
-		env['wsgi.url_scheme'] = 'https'
-	else:
-		env['wsgi.url_scheme'] = 'http'
-	env['wsgi.multithread'] = threaded
-	env['wsgi.multiprocess'] = forked
-	
-	return env
-
-def handler(req, start_response):
+def handler(env, start_response):
 	from modu.web import app
 	
-	req = Request(req)
+	req = get_request(env)
 	
 	result = check_file(req)
 	if(result):
@@ -190,7 +55,7 @@ def check_file(req):
 	try:
 		finfo = os.stat(true_path)
 		# note that there's no support for directory indexes,
-		# only direct file access
+		# only direct file access under the webroot
 		if(stat.S_ISREG(finfo.st_mode)):
 			try:
 				content_type = mimetypes.guess_type(true_path)[0]
@@ -203,4 +68,69 @@ def check_file(req):
 	
 	return None
 
+def get_request(env):
+	from modu.web import app
+	app.load_config(env)
+	
+	# Hopefully the next release of mod_python
+	# will let us ditch this line
+	env['SCRIPT_NAME'] = env['modu.config.base_url']
+	
+	# once the previous line is gone, this next
+	# block should be able to be moved elsewhere
+	uri = env['REQUEST_URI']
+	if(uri.startswith(env['SCRIPT_NAME'])):
+		env['PATH_INFO'] = uri[len(env['SCRIPT_NAME']):]
+	else:
+		env['PATH_INFO'] = uri
+	
+	env['modu.approot'] = env['SCRIPT_FILENAME']
+	env['modu.path'] = env['PATH_INFO']
+	
+	approot = env['modu.approot']
+	webroot = env['modu.config.webroot']
+	webroot = os.path.join(approot, webroot)
+	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['modu.path'])
+	
+	return Request(env)
+
+class FileWrapper:
+	def __init__(self, filelike, blksize=8192):
+		self.filelike = filelike
+		self.blksize = blksize
+		if hasattr(filelike,'close'):
+			self.close = filelike.close
+	
+	def __getitem__(self,key):
+		data = self.filelike.read(self.blksize)
+		if data:
+			return data
+		raise IndexError
+
+class Request(dict):
+	"""
+	At this point we are supposedly server-neutral, although
+	the code does make a few assumptions about what various
+	environment variables actually mean. Shocking.
+	"""
+	def __init__(self, env={}):
+		dict.__init__(self)
+		self.update(env)
+	
+	def __getattr__(self, key):
+		if(key in self):
+			return self[key]
+		elif(key.find('_') != -1):
+			return self[key.replace('_', '.')]
+		raise AttributeError(key)
+	
+	def log_error(self, data):
+		self['wsgi.errors'].write(data)
+	
+	def has_form_data(self):
+		if(self['REQUEST_METHOD'] == 'POST'):
+			return True
+		elif(self['QUERY_STRING']):
+			return True
+		return False
 
