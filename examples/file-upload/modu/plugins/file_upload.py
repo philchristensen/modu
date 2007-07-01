@@ -9,6 +9,10 @@ from modu.web.modpython import handler
 from modu.web import app, resource
 from modu.util import form
 
+from modu.web.app import ISite
+from zope.interface import classProvides
+from twisted import plugin
+
 import os, time, urllib
 
 class RootResource(resource.CheetahTemplateResource):
@@ -49,7 +53,12 @@ class RootResource(resource.CheetahTemplateResource):
 		else:
 			return 'page.html.tmpl'
 
-app.base_path = '/modu/examples/file-upload'
-app.initialize_store = False
-app.debug_session = True
-app.activate(RootResource())
+class FileUploadSite(object):
+	classProvides(plugin.IPlugin, ISite)
+	
+	def configure_app(self, application):
+		application.base_domain = 'localhost:8888'
+		application.base_path = '/modu/examples/file-upload'
+		application.initialize_store = False
+		application.debug_session = True
+		application.activate(RootResource())

@@ -15,6 +15,7 @@ from zope import interface
 import sys, os, copy
 
 host_trees = {}
+db_pool = {}
 
 def get_application(env):
 	load_plugins(env)
@@ -78,7 +79,6 @@ class Application(object):
 		_dict['config']['debug_store'] = False
 		
 		_dict['_site_tree'] = url.URLNode()
-		_dict['_db'] = None
 		_dict['_response_headers'] = []
 	
 	def __setattr__(self, key, value):
@@ -139,14 +139,14 @@ class Application(object):
 		# as a global variable. Ordinarily this is a naughty-no-no in mod_python,
 		# but we're going to be very very careful.
 		db_url = req['modu.config.db_url']
-		if(not self._db and db_url):
+		if('__default__' not in db_pool  and db_url):
 			dsn = url.urlparse(req['modu.config.db_url'])
 			if(dsn['scheme'] == 'mysql'):
 				import MySQLdb
-				self._db = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
+				db_pool['__default__'] = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
 			else:
 				raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
-		req['modu.db'] = self._db
+		req['modu.db'] = db_pool['__default__']
 		
 		# FIXME: We assume that any session class requires database access, and pass
 		# the db connection as the second paramter to the session class constructor
@@ -157,7 +157,7 @@ class Application(object):
 				req.log_error('session contains: ' + str(req['modu.session']))
 		
 		initialize_store = req['modu.config.initialize_store']
-		if(self._db):
+		if(req['modu.db']):
 			# FIXME: I really can't think of any scenario where a store will
 			# already be initialized, but we'll check anyway, for now
 			store = persist.get_store()
@@ -166,6 +166,5 @@ class Application(object):
 					debug_file = req['wsgi.errors']
 				else:
 					debug_file = None
-				global default_guid_table
-				store = persist.Store(self._db, guid_table=default_guid_table, debug_file=debug_file)
+				store = persist.Store(req['modu.db'], guid_table=self.default_guid_table, debug_file=debug_file)
 			req['modu.store'] = store
