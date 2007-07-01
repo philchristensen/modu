@@ -5,7 +5,6 @@
 #
 # See LICENSE for details
 
-from modu.web.modpython import handler
 from modu.web import resource
 
 from modu.web.app import ISite

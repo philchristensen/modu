@@ -5,7 +5,6 @@
 #
 # See LICENSE for details
 
-from modu.web.modpython import handler
 from modu.web import app, resource
 from modu.util import form
 
@@ -60,5 +59,5 @@ class FileUploadSite(object):
 		application.base_domain = 'localhost:8888'
 		application.base_path = '/modu/examples/file-upload'
 		application.initialize_store = False
-		application.debug_session = True
+		#application.debug_session = True
 		application.activate(RootResource())

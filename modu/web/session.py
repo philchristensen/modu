@@ -118,12 +118,10 @@ class BaseSession(dict):
 		"""
 		Add the proper cookie-setting headers to the output.
 		"""
-		from modu.web import app
-		
 		cookie_data = self._cookie.output()
 		for header in cookie_data.split("\n"):
 			header, data = header.split(":")
-			app.add_header(header, data)
+			self._req['modu.app'].add_header(header, data)
 	
 	def invalidate(self):
 		self._cookie['sid']['expires'] = 0

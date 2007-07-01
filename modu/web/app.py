@@ -139,14 +139,16 @@ class Application(object):
 		# as a global variable. Ordinarily this is a naughty-no-no in mod_python,
 		# but we're going to be very very careful.
 		db_url = req['modu.config.db_url']
-		if('__default__' not in db_pool  and db_url):
-			dsn = url.urlparse(req['modu.config.db_url'])
-			if(dsn['scheme'] == 'mysql'):
-				import MySQLdb
-				db_pool['__default__'] = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
-			else:
-				raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
-		req['modu.db'] = db_pool['__default__']
+		if(db_url):
+			if('__default__' not in db_pool):
+				dsn = url.urlparse(req['modu.config.db_url'])
+				if(dsn['scheme'] == 'mysql'):
+					import MySQLdb
+					db_pool['__default__'] = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
+				else:
+					raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
+			
+			req['modu.db'] = db_pool['__default__']
 		
 		# FIXME: We assume that any session class requires database access, and pass
 		# the db connection as the second paramter to the session class constructor
@@ -157,7 +159,7 @@ class Application(object):
 				req.log_error('session contains: ' + str(req['modu.session']))
 		
 		initialize_store = req['modu.config.initialize_store']
-		if(req['modu.db']):
+		if('modu.db' in req and initialize_store):
 			# FIXME: I really can't think of any scenario where a store will
 			# already be initialized, but we'll check anyway, for now
 			store = persist.get_store()

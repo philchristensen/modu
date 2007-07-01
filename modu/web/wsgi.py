@@ -19,6 +19,7 @@ def handler(env, start_response):
 	
 	application.load_config(env)
 	req = get_request(env)
+	req['modu.app'] = application
 	
 	result = check_file(req)
 	if(result):
