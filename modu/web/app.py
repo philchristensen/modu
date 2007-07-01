@@ -42,8 +42,11 @@ def get_application(env):
 
 def load_plugins():
 	global host_trees
-	
 	import modu.plugins
+	
+	# FIXME: regenerate the cache
+	#list(plugin.getPlugins(ISite, modu.plugins))
+	
 	for site_plugin in plugin.getPlugins(ISite, modu.plugins):
 		app = Application()
 		site = site_plugin()

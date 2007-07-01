@@ -10,23 +10,24 @@ import traceback, mimetypes, os, stat, os.path, sys
 from modu.util import tags
 
 def handler(env, start_response):
+	from modu.web import app
 	if(env['SCRIPT_FILENAME'] not in sys.path):
+		app.desperate_apache_log('added ' + env['SCRIPT_FILENAME'] + ' to path')
 		sys.path.append(env['SCRIPT_FILENAME'])
 	
-	from modu.web import app
 	app.load_plugins()
 	application = app.get_application(env)
 	
 	if not(application):
 		start_response('404 Not Found', [('Content-Type', 'text/html')])
-		return [content404()]
+		return [content404(env['REQUEST_URI'])]
 	
 	application.load_config(env)
 	req = get_request(env)
 	
 	result = check_file(req)
 	if(result):
-		content = [content401()]
+		content = [content401(env['REQUEST_URI'])]
 		headers = []
 		if(result[1]):
 			try:
@@ -48,7 +49,7 @@ def handler(env, start_response):
 	rsrc = tree.parse(req['modu.path'])
 	if not(rsrc):
 		start_response('404 Not Found', [('Content-Type', 'text/html')])
-		return [content404()]
+		return [content404(env['REQUEST_URI'])]
 	
 	req['modu.tree'] = tree
 	
@@ -106,16 +107,20 @@ def get_request(env):
 	
 	return Request(env)
 
-def content404():
+def content404(path=None):
 	content = tags.h1()['Not Found']
 	content += tags.hr()
 	content += tags.p()['There is no application registered at that path.']
+	if(path):
+		content += tags.strong()[path]
 	return content
 
-def content401():
+def content401(path=None):
 	content = tags.h1()['Forbidden']
 	content += tags.hr()
 	content += tags.p()['You are not allowed to access that path.']
+	if(path):
+		content += tags.strong()[path]
 	return content
 
 class FileWrapper:

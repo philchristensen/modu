@@ -1,7 +1,7 @@
 # modu
 # Copyright (C) 2007 Phil Christensen
 #
-# $Id: ModuConfig.py 306 2007-07-01 04:45:48Z phil $
+# $Id$
 #
 # See LICENSE for details
 
