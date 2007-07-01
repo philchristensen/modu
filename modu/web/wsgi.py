@@ -18,34 +18,37 @@ def handler(env, start_response):
 	application = app.get_application(env)
 	
 	if not(application):
-		start_response('404 Not Found', [])
-		return []
+		start_response('404 Not Found', [('Content-Type', 'text/html')])
+		return [content404()]
 	
 	application.load_config(env)
 	req = get_request(env)
 	
 	result = check_file(req)
 	if(result):
-		content = []
+		content = [content401()]
+		headers = []
 		if(result[1]):
-			application.add_header('Content-Type', result[1])
-			application.add_header('Content-Length', result[2])
 			try:
 				content = FileWrapper(open(result[0]))
 			except:
 				status = '401 Forbidden'
+				headers.append(('Content-Type', 'text/html'))
 			else:
 				status = '200 OK'
+				headers.append(('Content-Type', result[1]))
+				headers.append(('Content-Length', result[2]))
 		else:
 			status = '401 Forbidden'
+			headers.append(('Content-Type', 'text/html'))
 		start_response(status, application.get_headers())
 		return content
 	
 	tree = application.get_tree()
 	rsrc = tree.parse(req['modu.path'])
 	if not(rsrc):
-		start_response('404 Not Found', [])
-		return []
+		start_response('404 Not Found', [('Content-Type', 'text/html')])
+		return [content404()]
 	
 	req['modu.tree'] = tree
 	
@@ -102,6 +105,18 @@ def get_request(env):
 	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['modu.path'])
 	
 	return Request(env)
+
+def content404():
+	content = tags.h1()['Not Found']
+	content += tags.hr()
+	content += tags.p()['There is no application registered at that path.']
+	return content
+
+def content401():
+	content = tags.h1()['Forbidden']
+	content += tags.hr()
+	content += tags.p()['You are not allowed to access that path.']
+	return content
 
 class FileWrapper:
 	def __init__(self, filelike, blksize=8192):

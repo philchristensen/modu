@@ -27,6 +27,13 @@ class URLNode(object):
 		self.unparsed_path = []
 		self.leaf_data = leaf_data
 	
+	def __str__(self):
+		content = "URLNode(%r)[" % self.leaf_data
+		for key in self.children:
+			content += "%s:%s, " % (key, str(self.children[key]))
+		content += "]"
+		return content
+	
 	def register(self, fragment, data):
 		if(fragment == '/'):
 			self.leaf_data = data

@@ -1,3 +1,10 @@
+# modu
+# Copyright (C) 2007 Phil Christensen
+#
+# $Id$
+#
+# See LICENSE for details
+
 from modu.web import resource
 from modu.web.app import ISite
 

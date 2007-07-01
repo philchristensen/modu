@@ -59,6 +59,11 @@ class URLNodeTestCase(unittest.TestCase):
 		tree.register('/', 'SLASH')
 		result = tree.parse('/status')
 		self.failUnlessEqual(result, 'SLASH', "Root resource was not returned properly")
-
+	
+	def test_bug2(self):
+		tree = url.URLNode()
+		tree.register('/modu/examples/basic', 'BASIC')
+		self.failIf(tree.has_path('/modu/examples/cheetah'), 'tree.has_path() is broken')
+	
 if __name__ == "__main__":
 	unittest.main()

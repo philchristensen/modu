@@ -14,6 +14,13 @@ from zope import interface
 
 host_trees = {}
 
+def desperate_apache_log(msg):
+	try:
+		from mod_python import apache
+		apache.log_error('[modu] ' + str(msg))
+	except:
+		pass
+
 def get_application(env):
 	host = env.get('HTTP_HOST', env['SERVER_NAME'])
 	
@@ -21,21 +28,34 @@ def get_application(env):
 	if not(host in host_trees):
 		return None
 	
-	app = host_trees[host].parse(env['SCRIPT_NAME'])
+	desperate_apache_log('searching for host: ' + host)
+	desperate_apache_log('searching for path: ' + env['SCRIPT_NAME'])
+	
+	host_tree = host_trees[host]
+	desperate_apache_log('host tree is: ' + str(host_tree))
+	app = host_tree.parse(env['SCRIPT_NAME'])
+	
+	if(app):
+		desperate_apache_log('found app: ' + str(app))
+	
 	return app
 
 def load_plugins():
 	global host_trees
 	
 	import modu.plugins
-	for site in plugin.getPlugins(ISite, modu.plugins):
+	for site_plugin in plugin.getPlugins(ISite, modu.plugins):
 		app = Application()
-		site = site()
+		site = site_plugin()
+		desperate_apache_log('loading site plugin: ' + repr(site))
 		site.configure_app(app)
 		host_tree = host_trees.setdefault(app.base_domain, url.URLNode())
+		desperate_apache_log('host tree is: ' + str(host_trees[app.base_domain]))
 		# NOTE: remember, python state may or may not stick around
 		if not(host_tree.has_path(app.base_path)):
 			host_tree.register(app.base_path, app)
+		else:
+			desperate_apache_log('already exists app with base path: ' + app.base_path)
 
 class ISite(interface.Interface):
 	"""

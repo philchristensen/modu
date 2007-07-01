@@ -1,3 +1,4 @@
 SetHandler mod_python
+#PythonHandler ModuConfig
 PythonHandler modu.web.modpython
 PythonDebug On
