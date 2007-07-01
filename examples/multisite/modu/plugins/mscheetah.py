@@ -14,7 +14,7 @@ from twisted import plugin
 
 import os
 
-class RootResource(resource.CheetahTemplateResource):
+class CCSRootResource(resource.CheetahTemplateResource):
 	def get_paths(self):
 		return ['/']
 	
@@ -34,7 +34,7 @@ class RootResource(resource.CheetahTemplateResource):
 	def get_template(self, req):
 		return 'page.html.tmpl' 
 
-class CheetahSite(object):
+class ChildCheetahSite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
 	def configure_app(self, application):
@@ -43,4 +43,4 @@ class CheetahSite(object):
 		application.db_url = None
 		application.session_class = None
 		application.initialize_store = False
-		application.activate(RootResource())
+		application.activate(CCSRootResource())

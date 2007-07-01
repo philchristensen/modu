@@ -5,17 +5,12 @@
 #
 # See LICENSE for details
 
-import traceback, mimetypes, os, stat, os.path, sys
+import traceback, mimetypes, os, stat, os.path
 
 from modu.util import tags
 
 def handler(env, start_response):
 	from modu.web import app
-	if(env['SCRIPT_FILENAME'] not in sys.path):
-		app.desperate_apache_log('added ' + env['SCRIPT_FILENAME'] + ' to path')
-		sys.path.append(env['SCRIPT_FILENAME'])
-	
-	app.load_plugins()
 	application = app.get_application(env)
 	
 	if not(application):

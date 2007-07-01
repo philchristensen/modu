@@ -13,7 +13,7 @@ from twisted import plugin
 
 import os
 
-class TestResource(resource.TemplateResource):
+class CCSTestResource(resource.TemplateResource):
 	def get_paths(self):
 		return ['/test']
 	
@@ -25,7 +25,7 @@ class TestResource(resource.TemplateResource):
 	def get_template(self, req):
 		return 'The string is "$test", one is $one, two is $two'
 
-class RootResource(resource.TemplateResource):
+class CCSRootResource(resource.TemplateResource):
 	def get_paths(self):
 		return ['/']
 	
@@ -54,7 +54,7 @@ class RootResource(resource.TemplateResource):
 		
 		return output 
 
-class BasicSite(object):
+class ChildBasicSite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
 	def configure_app(self, application):
@@ -63,5 +63,5 @@ class BasicSite(object):
 		application.db_url = None
 		application.session_class = None
 		application.initialize_store = False
-		application.activate(RootResource())
-		application.activate(TestResource())
+		application.activate(CCSRootResource())
+		application.activate(CCSTestResource())

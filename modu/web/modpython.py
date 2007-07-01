@@ -20,6 +20,9 @@ def handler(mp_req):
 	def start_response(status, response_headers):
 		mp_req.status = int(status[:3])
 		
+		import os
+		mp_req.log_error('%d - %s - %s' % (os.getpid(), req['REQUEST_URI'], status))
+		
 		for key, val in response_headers:
 			if key.lower() == 'content-length':
 				mp_req.set_content_length(long(val))
