@@ -1,12 +1,8 @@
-# modu
-# Copyright (C) 2007 Phil Christensen
-#
-# $Id$
-#
-# See LICENSE for details
+from modu.web import resource
+from modu.web.app import ISite
 
-from modu.web.modpython import handler
-from modu.web import app, resource
+from zope.interface import classProvides
+from twisted import plugin
 
 import os
 
@@ -38,11 +34,6 @@ class RootResource(resource.TemplateResource):
 		for key in dir(req['modpython.request']):
 			item = getattr(req['modpython.request'], key)
 			output += key + ': ' + str(item) + "\n"
-			# if(callable(item)):
-			# 	try:
-			# 		output += "\t\t" + str(item()) + "\n"
-			# 	except:
-			# 		pass 
 		
 		output += '\n\n'
 		
@@ -56,9 +47,14 @@ class RootResource(resource.TemplateResource):
 		
 		return output 
 
-app.base_path = '/modu/examples/basic'
-app.db_url = None
-app.session_class = None
-app.initialize_store = False
-app.activate(RootResource())
-app.activate(TestResource())
+class BasicSite(object):
+	classProvides(plugin.IPlugin, ISite)
+	
+	def configure_app(self, application):
+		application.base_domain = 'localhost:8888'
+		application.base_path = '/modu/examples/basic'
+		application.db_url = None
+		application.session_class = None
+		application.initialize_store = False
+		application.activate(RootResource())
+		application.activate(TestResource())

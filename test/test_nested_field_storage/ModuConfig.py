@@ -45,7 +45,7 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 			self.assertEqual(fields['sample-form']['body'].value, 'body field data', 'Did not find sample-form[body] data.')
 			self.assertEqual(len(fields.__dict__['list']), 1, 'Found more fields in NestedFieldStorage::list than expected.')
 
-app.base_url = '/modu/test/test_nested_field_storage'
+app.base_path = '/modu/test/test_nested_field_storage'
 app.db_url = None
 app.session_class = None
 app.initialize_store = False

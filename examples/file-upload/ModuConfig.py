@@ -49,7 +49,7 @@ class RootResource(resource.CheetahTemplateResource):
 		else:
 			return 'page.html.tmpl'
 
-app.base_url = '/modu/examples/file-upload'
+app.base_path = '/modu/examples/file-upload'
 app.initialize_store = False
 app.debug_session = True
 app.activate(RootResource())

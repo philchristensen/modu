@@ -25,7 +25,7 @@ class RootResource(resource.CherryTemplateResource):
 	def get_template(self, req):
 		return 'page.html.tmpl' 
 
-app.base_url = '/modu/examples/cherry'
+app.base_path = '/modu/examples/cherry'
 app.db_url = None
 app.session_class = None
 app.initialize_store = False

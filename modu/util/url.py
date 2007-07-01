@@ -66,3 +66,16 @@ class URLNode(object):
 		
 		self.parsed_data = node.leaf_data
 		return self.parsed_data
+	
+	def has_path(self, fragment):
+		unparsed_path = filter(None, fragment.split('/'))
+		
+		node = self
+		while(unparsed_path):
+			segment = unparsed_path.pop(0)
+			if(segment not in node.children):
+				return node.leaf_data is not None
+			
+			node = node.children[segment]
+		
+		return node.leaf_data is not None

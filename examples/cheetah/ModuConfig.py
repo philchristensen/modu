@@ -32,7 +32,7 @@ class RootResource(resource.CheetahTemplateResource):
 	def get_template(self, req):
 		return 'page.html.tmpl' 
 
-app.base_url = '/modu/examples/cheetah'
+app.base_path = '/modu/examples/cheetah'
 app.db_url = None
 app.session_class = None
 app.initialize_store = False

@@ -5,19 +5,31 @@
 #
 # See LICENSE for details
 
-import traceback, mimetypes, os, stat, os.path
+import traceback, mimetypes, os, stat, os.path, sys
+
+from modu.util import tags
 
 def handler(env, start_response):
-	from modu.web import app
+	if(env['SCRIPT_FILENAME'] not in sys.path):
+		sys.path.append(env['SCRIPT_FILENAME'])
 	
+	from modu.web import app
+	app.load_plugins()
+	application = app.get_application(env)
+	
+	if not(application):
+		start_response('404 Not Found', [])
+		return []
+	
+	application.load_config(env)
 	req = get_request(env)
 	
 	result = check_file(req)
 	if(result):
 		content = []
 		if(result[1]):
-			app.add_header('Content-Type', result[1])
-			app.add_header('Content-Length', result[2])
+			application.add_header('Content-Type', result[1])
+			application.add_header('Content-Length', result[2])
 			try:
 				content = FileWrapper(open(result[0]))
 			except:
@@ -26,10 +38,10 @@ def handler(env, start_response):
 				status = '200 OK'
 		else:
 			status = '401 Forbidden'
-		start_response(status, app.get_headers())
+		start_response(status, application.get_headers())
 		return content
 	
-	tree = app.get_tree()
+	tree = application.get_tree()
 	rsrc = tree.parse(req['modu.path'])
 	if not(rsrc):
 		start_response('404 Not Found', [])
@@ -37,17 +49,17 @@ def handler(env, start_response):
 	
 	req['modu.tree'] = tree
 	
-	app.bootstrap(req)
+	application.bootstrap(req)
 	
 	rsrc.prepare_content(req)
-	app.add_header('Content-Type', rsrc.get_content_type(req))
+	application.add_header('Content-Type', rsrc.get_content_type(req))
 	content = rsrc.get_content(req)
-	app.add_header('Content-Length', len(content))
+	application.add_header('Content-Length', len(content))
 	
 	if('modu.session' in req):
 		req['modu.session'].save()
 	
-	start_response('200 OK', app.get_headers())
+	start_response('200 OK', application.get_headers())
 	return [content]
 
 def check_file(req):
@@ -69,12 +81,9 @@ def check_file(req):
 	return None
 
 def get_request(env):
-	from modu.web import app
-	app.load_config(env)
-	
 	# Hopefully the next release of mod_python
 	# will let us ditch this line
-	env['SCRIPT_NAME'] = env['modu.config.base_url']
+	env['SCRIPT_NAME'] = env['modu.config.base_path']
 	
 	# once the previous line is gone, this next
 	# block should be able to be moved elsewhere

@@ -23,7 +23,7 @@ class RootResource(resource.ZPTemplateResource):
 	def get_template(self, req):
 		return 'page.html.tmpl' 
 
-app.base_url = '/modu/examples/zpt'
+app.base_path = '/modu/examples/zpt'
 app.db_url = None
 app.session_class = None
 app.initialize_store = False

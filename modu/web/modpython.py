@@ -6,7 +6,7 @@
 # See LICENSE for details
 
 from mod_python import apache
-from modu.web import wsgi, app
+from modu.web import wsgi
 
 def handler(mp_req):
 	"""
@@ -20,7 +20,7 @@ def handler(mp_req):
 	def start_response(status, response_headers):
 		mp_req.status = int(status[:3])
 		
-		for key, val in app.get_headers():
+		for key, val in response_headers:
 			if key.lower() == 'content-length':
 				mp_req.set_content_length(long(val))
 			elif key.lower() == 'content-type':

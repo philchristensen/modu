@@ -66,6 +66,6 @@ class DbSessionTestCase(unittest.TestCase):
 		saved_sess = session.DbSession(self.req, self.req['modu.db'], sid=sess.id())
 		self.failUnlessEqual(saved_sess['test_data'], 'something', "Session data was not saved properly.")
 	
-app.base_url = '/modu/test/test_session'
+app.base_path = '/modu/test/test_session'
 app.session_class = None
 app.activate(test.TestResource(DbSessionTestCase))

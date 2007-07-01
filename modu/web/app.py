@@ -9,113 +9,154 @@ from modu.util import url
 from modu.web import session, wsgi
 from modu import persist
 
-base_url = '/'
-db_url = 'mysql://modu:modu@localhost/modu'
-session_class = session.UserSession
-initialize_store = True
-default_guid_table = 'guid'
-webroot = 'webroot'
-debug_session = False
-debug_store = False
+from twisted import plugin
+from zope import interface
 
-_site_tree = url.URLNode()
-_db = None
-_response_headers = []
+host_trees = {}
 
-def activate(rsrc):
-	"""
-	Add a resource to this site's URLNode tree
-	"""
-	global _site_tree
-	for path in rsrc.get_paths():
-		_site_tree.register(path, rsrc)
-
-def get_tree():
-	"""
-	Return this site's URLNode tree
-	"""
-	global _site_tree
-	return _site_tree
-
-def add_header(header, data):
-	"""
-	Store headers for later retrieval.
-	"""
-	global _response_headers
-	_response_headers.append((header, data))
-
-def has_header(header):
-	"""
-	Check if a header has ever been set.
-	"""
-	global _response_headers
-	for h, d in _response_headers:
-		if(h == header):
-			return True
-	return False
-
-def get_headers():
-	"""
-	Get accumulated headers
-	"""
-	global _response_headers
-	return _response_headers
-
-def load_config(req):
-	"""
-	Load this app's configuration variables into the
-	provided request object.
-	"""
-	global db_url, session_class, initialize_store
-	global base_url, webroot, debug_store, debug_session
+def get_application(env):
+	host = env.get('HTTP_HOST', env['SERVER_NAME'])
 	
-	req['modu.config.db_url'] = db_url
-	req['modu.config.session_class'] = session_class
-	req['modu.config.initialize_store'] = initialize_store
-	req['modu.config.base_url'] = base_url
-	req['modu.config.webroot'] = webroot
+	global host_trees
+	if not(host in host_trees):
+		return None
 	
-	req['modu.config.debug_session'] = debug_session
-	req['modu.config.debug_store'] = debug_store
+	app = host_trees[host].parse(env['SCRIPT_NAME'])
+	return app
 
-def bootstrap(req):
-	"""
-	Initialize the common services, store them in the
-	provided request variable.
-	"""
-	# Databases are a slightly special case. Since we want to re-use
-	# db connections as much as possible, we keep the current connection
-	# as a global variable. Ordinarily this is a naughty-no-no in mod_python,
-	# but we're going to be very very careful.
-	global _db
-	db_url = req['modu.config.db_url']
-	if(not _db and db_url):
-		dsn = url.urlparse(req['modu.config.db_url'])
-		if(dsn['scheme'] == 'mysql'):
-			import MySQLdb
-			_db = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
-		else:
-			raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
-	req['modu.db'] = _db
+def load_plugins():
+	global host_trees
 	
-	# FIXME: We assume that any session class requires database access, and pass
-	# the db connection as the second paramter to the session class constructor
-	session_class = req['modu.config.session_class']
-	if(db_url and session_class):
-		req['modu.session'] = session_class(req, req['modu.db'])
-		if(req['modu.config.debug_session']):
-			req.log_error('session contains: ' + str(req['modu.session']))
+	import modu.plugins
+	for site in plugin.getPlugins(ISite, modu.plugins):
+		app = Application()
+		site = site()
+		site.configure_app(app)
+		host_tree = host_trees.setdefault(app.base_domain, url.URLNode())
+		# NOTE: remember, python state may or may not stick around
+		if not(host_tree.has_path(app.base_path)):
+			host_tree.register(app.base_path, app)
+
+class ISite(interface.Interface):
+	"""
+	An ISitePlugin defines an application that responds to
+	a certain hostname and/or path.
+	"""
+	def configure_app(self, app):
+		"""
+		Configure an application object for this site.
+		"""
+
+class IPlugin(interface.Interface):
+	def menu(self):
+		"""
+		Return an array of resources.
+		"""
+
+class Application(object):
+	def __init__(self):
+		_dict = self.__dict__
+		_dict['config'] = {}
+		
+		_dict['config']['base_domain'] = 'localhost'
+		_dict['config']['base_path'] = '/'
+		_dict['config']['db_url'] = 'mysql://modu:modu@localhost/modu'
+		_dict['config']['session_class'] = session.UserSession
+		_dict['config']['initialize_store'] = True
+		_dict['config']['default_guid_table'] = 'guid'
+		_dict['config']['webroot'] = 'webroot'
+		_dict['config']['debug_session'] = False
+		_dict['config']['debug_store'] = False
+		
+		_dict['_site_tree'] = url.URLNode()
+		_dict['_db'] = None
+		_dict['_response_headers'] = []
 	
-	initialize_store = req['modu.config.initialize_store']
-	if(_db):
-		# FIXME: I really can't think of any scenario where a store will
-		# already be initialized, but we'll check anyway, for now
-		store = persist.get_store()
-		if not(store):
-			if(req['modu.config.debug_store']):
-				debug_file = req['wsgi.errors']
+	def __setattr__(self, key, value):
+		self.config[key] = value
+	
+	def __getattr__(self, key):
+		return self.__dict__['config'][key]
+	
+	def activate(self, rsrc):
+		"""
+		Add a resource to this site's URLNode tree
+		"""
+		for path in rsrc.get_paths():
+			self._site_tree.register(path, rsrc)
+	
+	def get_tree(self):
+		"""
+		Return this site's URLNode tree
+		"""
+		return self._site_tree
+	
+	def add_header(self, header, data):
+		"""
+		Store headers for later retrieval.
+		"""
+		self._response_headers.append((header, data))
+	
+	def has_header(self, header):
+		"""
+		Check if a header has ever been set.
+		"""
+		for h, d in self._response_headers:
+			if(h == header):
+				return True
+		return False
+	
+	def get_headers(self):
+		"""
+		Get accumulated headers
+		"""
+		return self._response_headers
+	
+	def load_config(self, req):
+		"""
+		Load this app's configuration variables into the
+		provided request object.
+		"""
+		for key in self.config:
+			req['modu.config.' + key] = self.config[key]
+	
+	def bootstrap(self, req):
+		"""
+		Initialize the common services, store them in the
+		provided request variable.
+		"""
+		# Databases are a slightly special case. Since we want to re-use
+		# db connections as much as possible, we keep the current connection
+		# as a global variable. Ordinarily this is a naughty-no-no in mod_python,
+		# but we're going to be very very careful.
+		db_url = req['modu.config.db_url']
+		if(not self._db and db_url):
+			dsn = url.urlparse(req['modu.config.db_url'])
+			if(dsn['scheme'] == 'mysql'):
+				import MySQLdb
+				self._db = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
 			else:
-				debug_file = None
-			global default_guid_table
-			store = persist.Store(_db, guid_table=default_guid_table, debug_file=debug_file)
-		req['modu.store'] = store
+				raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
+		req['modu.db'] = self._db
+		
+		# FIXME: We assume that any session class requires database access, and pass
+		# the db connection as the second paramter to the session class constructor
+		session_class = req['modu.config.session_class']
+		if(db_url and session_class):
+			req['modu.session'] = session_class(req, req['modu.db'])
+			if(req['modu.config.debug_session']):
+				req.log_error('session contains: ' + str(req['modu.session']))
+		
+		initialize_store = req['modu.config.initialize_store']
+		if(self._db):
+			# FIXME: I really can't think of any scenario where a store will
+			# already be initialized, but we'll check anyway, for now
+			store = persist.get_store()
+			if not(store):
+				if(req['modu.config.debug_store']):
+					debug_file = req['wsgi.errors']
+				else:
+					debug_file = None
+				global default_guid_table
+				store = persist.Store(self._db, guid_table=default_guid_table, debug_file=debug_file)
+			req['modu.store'] = store
