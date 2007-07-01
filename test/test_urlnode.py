@@ -62,8 +62,21 @@ class URLNodeTestCase(unittest.TestCase):
 	
 	def test_bug2(self):
 		tree = url.URLNode()
-		tree.register('/modu/examples/basic', 'BASIC')
+		self.failIf(tree.has_path('/modu/examples/multisite/cheetah'), 'tree.has_path() is broken')
+		tree.register('/modu/examples/multisite/cheetah', 'MSCHEETAH')
+		self.failUnless(tree.has_path('/modu/examples/multisite/cheetah'), 'tree.has_path() is broken')
+		
+		self.failIf(tree.has_path('/modu/examples/multisite/basic'), 'tree.has_path() is broken')
+		tree.register('/modu/examples/multisite/basic', 'MSBASIC')
+		self.failUnless(tree.has_path('/modu/examples/multisite/basic'), 'tree.has_path() is broken')
+
 		self.failIf(tree.has_path('/modu/examples/cheetah'), 'tree.has_path() is broken')
+		tree.register('/modu/examples/cheetah', 'CHEETAH')
+		self.failUnless(tree.has_path('/modu/examples/cheetah'), 'tree.has_path() is broken')
+		
+		self.failIf(tree.has_path('/modu/examples/basic'), 'tree.has_path() is broken')
+		tree.register('/modu/examples/basic', 'BASIC')
+		self.failUnless(tree.has_path('/modu/examples/basic'), 'tree.has_path() is broken')
 	
 if __name__ == "__main__":
 	unittest.main()

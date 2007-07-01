@@ -12,23 +12,12 @@ from modu import persist
 from twisted import plugin
 from zope import interface
 
-import sys, os
+import sys, os, copy
 
 host_trees = {}
 
-def desperate_apache_log(msg):
-	try:
-		from mod_python import apache
-		apache.log_error(('[modu-%d] ' % os.getpid()) + str(msg))
-	except:
-		pass
-
 def get_application(env):
-	if(env['SCRIPT_FILENAME'] not in sys.path):
-		#desperate_apache_log('added ' + env['SCRIPT_FILENAME'] + ' to path')
-		sys.path.append(env['SCRIPT_FILENAME'])
-	
-	load_plugins()
+	load_plugins(env)
 	
 	host = env.get('HTTP_HOST', env['SERVER_NAME'])
 	
@@ -36,41 +25,26 @@ def get_application(env):
 	if not(host in host_trees):
 		return None
 	
-	#desperate_apache_log('searching for host: ' + host)
-	#desperate_apache_log('searching for path: ' + env['SCRIPT_NAME'])
-	
 	host_tree = host_trees[host]
-	#desperate_apache_log('host tree is: ' + str(host_tree))
-	app = host_tree.parse(env['SCRIPT_NAME'])
-	
-	#if(app):
-	#	desperate_apache_log('found app: ' + str(app))
+	app = host_tree.get_data_at(env['SCRIPT_NAME'])
 	
 	return app
 
-def load_plugins():
+def load_plugins(env):
 	global host_trees
-	import modu.plugins
-	reload(modu.plugins)
 	
-	# # FIXME: regenerate the cache
-	try:
-		list(plugin.getPlugins(plugin.IPlugin, modu.plugins))
-	except:
-		pass
-	#desperate_apache_log('plugin __path__ is: ' + str(modu.plugins.__path__))
-	for site_plugin in plugin.getPlugins(ISite, modu.plugins):
+	if(env['SCRIPT_FILENAME'] not in sys.path):
+		sys.path.append(env['SCRIPT_FILENAME'])
+	
+	import modu.plugins as modu_plugins
+	reload(modu_plugins)
+	
+	for site_plugin in plugin.getPlugins(ISite, modu_plugins):
 		app = Application()
 		site = site_plugin()
-		#desperate_apache_log('loading site plugin: ' + repr(site))
 		site.configure_app(app)
 		host_tree = host_trees.setdefault(app.base_domain, url.URLNode())
-		#desperate_apache_log('host tree is: ' + str(host_trees[app.base_domain]))
-		# NOTE: remember, python state may or may not stick around
-		if not(host_tree.has_path(app.base_path)):
-			host_tree.register(app.base_path, app)
-		#else:
-		#	desperate_apache_log('already exists app with base path: ' + app.base_path)
+		host_tree.register(app.base_path, app, clobber=True)
 
 class ISite(interface.Interface):
 	"""
@@ -124,7 +98,7 @@ class Application(object):
 		"""
 		Return this site's URLNode tree
 		"""
-		return self._site_tree
+		return copy.deepcopy(self._site_tree)
 	
 	def add_header(self, header, data):
 		"""

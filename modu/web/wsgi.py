@@ -22,20 +22,20 @@ def handler(env, start_response):
 	
 	result = check_file(req)
 	if(result):
-		content = [content401(env['REQUEST_URI'])]
+		content = [content403(env['REQUEST_URI'])]
 		headers = []
 		if(result[1]):
 			try:
 				content = FileWrapper(open(result[0]))
 			except:
-				status = '401 Forbidden'
+				status = '403 Forbidden'
 				headers.append(('Content-Type', 'text/html'))
 			else:
 				status = '200 OK'
 				headers.append(('Content-Type', result[1]))
 				headers.append(('Content-Length', result[2]))
 		else:
-			status = '401 Forbidden'
+			status = '403 Forbidden'
 			headers.append(('Content-Type', 'text/html'))
 		start_response(status, application.get_headers())
 		return content
@@ -110,10 +110,18 @@ def content404(path=None):
 		content += tags.strong()[path]
 	return content
 
-def content401(path=None):
+def content403(path=None):
 	content = tags.h1()['Forbidden']
 	content += tags.hr()
 	content += tags.p()['You are not allowed to access that path.']
+	if(path):
+		content += tags.strong()[path]
+	return content
+
+def content401(path=None):
+	content = tags.h1()['Unauthorized']
+	content += tags.hr()
+	content += tags.p()['You have not supplied the appropriate credentials.']
 	if(path):
 		content += tags.strong()[path]
 	return content

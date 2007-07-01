@@ -34,7 +34,7 @@ class URLNode(object):
 		content += "]"
 		return content
 	
-	def register(self, fragment, data):
+	def register(self, fragment, data, clobber=False):
 		if(fragment == '/'):
 			self.leaf_data = data
 			return
@@ -47,7 +47,7 @@ class URLNode(object):
 			if(segment in node.children):
 				node = node.children[segment]
 				if(i == len(parts) - 1):
-					if(node.leaf_data is None):
+					if(node.leaf_data is None or clobber):
 						node.leaf_data = data
 					else:
 						raise ValueError("There is already a leaf node at %s" % fragment)
@@ -74,15 +74,18 @@ class URLNode(object):
 		self.parsed_data = node.leaf_data
 		return self.parsed_data
 	
-	def has_path(self, fragment):
+	def get_data_at(self, fragment):
 		unparsed_path = filter(None, fragment.split('/'))
 		
 		node = self
 		while(unparsed_path):
 			segment = unparsed_path.pop(0)
 			if(segment not in node.children):
-				return node.leaf_data is not None
+				return node.leaf_data
 			
 			node = node.children[segment]
 		
-		return node.leaf_data is not None
+		return node.leaf_data
+	
+	def has_path(self, fragment):
+		return self.get_data_at(fragment) is not None
