@@ -18,20 +18,6 @@ host_trees = {}
 db_pool = {}
 
 def get_application(env):
-	load_plugins(env)
-	
-	host = env.get('HTTP_HOST', env['SERVER_NAME'])
-	
-	global host_trees
-	if not(host in host_trees):
-		return None
-	
-	host_tree = host_trees[host]
-	app = host_tree.get_data_at(env['SCRIPT_NAME'])
-	
-	return app
-
-def load_plugins(env):
 	global host_trees
 	
 	if(env['SCRIPT_FILENAME'] not in sys.path):
@@ -46,6 +32,16 @@ def load_plugins(env):
 		site.configure_app(app)
 		host_tree = host_trees.setdefault(app.base_domain, url.URLNode())
 		host_tree.register(app.base_path, app, clobber=True)
+	
+	host = env.get('HTTP_HOST', env['SERVER_NAME'])
+	
+	if not(host in host_trees):
+		return None
+	
+	host_tree = host_trees[host]
+	app = host_tree.get_data_at(env['SCRIPT_NAME'])
+	
+	return copy.deepcopy(app)
 
 class ISite(interface.Interface):
 	"""
@@ -68,15 +64,15 @@ class Application(object):
 		_dict = self.__dict__
 		_dict['config'] = {}
 		
-		_dict['config']['base_domain'] = 'localhost'
-		_dict['config']['base_path'] = '/'
-		_dict['config']['db_url'] = 'mysql://modu:modu@localhost/modu'
-		_dict['config']['session_class'] = session.UserSession
-		_dict['config']['initialize_store'] = True
-		_dict['config']['default_guid_table'] = 'guid'
-		_dict['config']['webroot'] = 'webroot'
-		_dict['config']['debug_session'] = False
-		_dict['config']['debug_store'] = False
+		self.base_domain = 'localhost'
+		self.base_path = '/'
+		self.db_url = 'mysql://modu:modu@localhost/modu'
+		self.session_class = session.UserSession
+		self.initialize_store = True
+		self.default_guid_table = 'guid'
+		self.webroot = 'webroot'
+		self.debug_session = False
+		self.debug_store = False
 		
 		_dict['_site_tree'] = url.URLNode()
 		_dict['_response_headers'] = []
@@ -121,14 +117,6 @@ class Application(object):
 		"""
 		return self._response_headers
 	
-	def load_config(self, req):
-		"""
-		Load this app's configuration variables into the
-		provided request object.
-		"""
-		for key in self.config:
-			req['modu.config.' + key] = self.config[key]
-	
 	def bootstrap(self, req):
 		"""
 		Initialize the common services, store them in the
@@ -138,10 +126,10 @@ class Application(object):
 		# db connections as much as possible, we keep the current connection
 		# as a global variable. Ordinarily this is a naughty-no-no in mod_python,
 		# but we're going to be very very careful.
-		db_url = req['modu.config.db_url']
+		db_url = req['modu.app'].db_url
 		if(db_url):
 			if('__default__' not in db_pool):
-				dsn = url.urlparse(req['modu.config.db_url'])
+				dsn = url.urlparse(req['modu.app'].db_url)
 				if(dsn['scheme'] == 'mysql'):
 					import MySQLdb
 					db_pool['__default__'] = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
@@ -152,19 +140,19 @@ class Application(object):
 		
 		# FIXME: We assume that any session class requires database access, and pass
 		# the db connection as the second paramter to the session class constructor
-		session_class = req['modu.config.session_class']
+		session_class = req['modu.app'].session_class
 		if(db_url and session_class):
 			req['modu.session'] = session_class(req, req['modu.db'])
-			if(req['modu.config.debug_session']):
+			if(req['modu.app'].debug_session):
 				req.log_error('session contains: ' + str(req['modu.session']))
 		
-		initialize_store = req['modu.config.initialize_store']
+		initialize_store = req['modu.app'].initialize_store
 		if('modu.db' in req and initialize_store):
 			# FIXME: I really can't think of any scenario where a store will
 			# already be initialized, but we'll check anyway, for now
 			store = persist.get_store()
 			if not(store):
-				if(req['modu.config.debug_store']):
+				if(req['modu.app'].debug_store):
 					debug_file = req['wsgi.errors']
 				else:
 					debug_file = None

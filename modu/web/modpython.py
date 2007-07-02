@@ -34,7 +34,7 @@ def handler(mp_req):
 		return mp_req.write
 	
 	content = wsgi.handler(req, start_response)
-	if(isinstance(content, wsgi.FileWrapper)):
+	if(isinstance(content, FileWrapper)):
 		mp_req.sendfile(content.filelike.name)
 		if(hasattr(content, 'close')):
 			content.close()
@@ -83,7 +83,7 @@ def get_wsgi_environment(mp_req):
 	
 	env['wsgi.input'] = InputWrapper(mp_req)
 	env['wsgi.errors'] = ErrorWrapper(mp_req)
-	env['wsgi.file_wrapper'] = wsgi.FileWrapper
+	env['wsgi.file_wrapper'] = FileWrapper
 	env['wsgi.version'] = (1,0)
 	env['wsgi.run_once'] = False
 	if env.get("HTTPS") in ('yes', 'on', '1'):
@@ -94,6 +94,19 @@ def get_wsgi_environment(mp_req):
 	env['wsgi.multiprocess'] = forked
 	
 	return env
+
+class FileWrapper:
+	def __init__(self, filelike, blksize=8192):
+		self.filelike = filelike
+		self.blksize = blksize
+		if hasattr(filelike,'close'):
+			self.close = filelike.close
+	
+	def __getitem__(self,key):
+		data = self.filelike.read(self.blksize)
+		if data:
+			return data
+		raise IndexError
 
 class InputWrapper(object):
 	def __init__(self, mp_req):

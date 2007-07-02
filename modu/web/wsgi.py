@@ -17,9 +17,8 @@ def handler(env, start_response):
 		start_response('404 Not Found', [('Content-Type', 'text/html')])
 		return [content404(env['REQUEST_URI'])]
 	
-	application.load_config(env)
+	env['modu.app'] = application
 	req = get_request(env)
-	req['modu.app'] = application
 	
 	result = check_file(req)
 	if(result):
@@ -27,7 +26,7 @@ def handler(env, start_response):
 		headers = []
 		if(result[1]):
 			try:
-				content = FileWrapper(open(result[0]))
+				content = req['wsgi.file_wrapper'](open(result[0]))
 			except:
 				status = '403 Forbidden'
 				headers.append(('Content-Type', 'text/html'))
@@ -83,7 +82,7 @@ def check_file(req):
 def get_request(env):
 	# Hopefully the next release of mod_python
 	# will let us ditch this line
-	env['SCRIPT_NAME'] = env['modu.config.base_path']
+	env['SCRIPT_NAME'] = env['modu.app'].base_path
 	
 	# once the previous line is gone, this next
 	# block should be able to be moved elsewhere
@@ -97,7 +96,7 @@ def get_request(env):
 	env['modu.path'] = env['PATH_INFO']
 	
 	approot = env['modu.approot']
-	webroot = env['modu.config.webroot']
+	webroot = env['modu.app'].webroot
 	webroot = os.path.join(approot, webroot)
 	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['modu.path'])
 	
@@ -126,19 +125,6 @@ def content401(path=None):
 	if(path):
 		content += tags.strong()[path]
 	return content
-
-class FileWrapper:
-	def __init__(self, filelike, blksize=8192):
-		self.filelike = filelike
-		self.blksize = blksize
-		if hasattr(filelike,'close'):
-			self.close = filelike.close
-	
-	def __getitem__(self,key):
-		data = self.filelike.read(self.blksize)
-		if data:
-			return data
-		raise IndexError
 
 class Request(dict):
 	"""
