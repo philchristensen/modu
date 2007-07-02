@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import traceback, mimetypes, os, stat, os.path
+import mimetypes, os, stat, os.path
 
 from modu.util import tags
 

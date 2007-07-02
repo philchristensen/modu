@@ -18,6 +18,25 @@ host_trees = {}
 db_pool = {}
 
 def get_application(env):
+	"""
+	Traverse through the available site plugins.
+	"""
+	global host_trees
+	
+	host = env.get('HTTP_HOST', env['SERVER_NAME'])
+	
+	if not(host in host_trees):
+		_load_plugins(env)
+	
+	host_tree = host_trees[host]
+	
+	if not(host_tree.has_path(env['SCRIPT_NAME'])):
+		_load_plugins(env)
+	
+	app = host_tree.get_data_at(env['SCRIPT_NAME'])
+	return copy.deepcopy(app)
+
+def _load_plugins(env):
 	global host_trees
 	
 	if(env['SCRIPT_FILENAME'] not in sys.path):
@@ -32,16 +51,6 @@ def get_application(env):
 		site.configure_app(app)
 		host_tree = host_trees.setdefault(app.base_domain, url.URLNode())
 		host_tree.register(app.base_path, app, clobber=True)
-	
-	host = env.get('HTTP_HOST', env['SERVER_NAME'])
-	
-	if not(host in host_trees):
-		return None
-	
-	host_tree = host_trees[host]
-	app = host_tree.get_data_at(env['SCRIPT_NAME'])
-	
-	return copy.deepcopy(app)
 
 class ISite(interface.Interface):
 	"""
