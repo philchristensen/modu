@@ -19,7 +19,11 @@ db_pool = {}
 
 def get_application(env):
 	"""
-	Traverse through the available site plugins.
+	Return an application object for the site configured
+	at the path specified in env.
+	
+	Note that ISite plugins are only searched when the
+	specified host/path is not found.
 	"""
 	global host_trees
 	
@@ -59,16 +63,19 @@ class ISite(interface.Interface):
 	"""
 	def configure_app(self, app):
 		"""
-		Configure an application object for this site.
-		"""
-
-class IPlugin(interface.Interface):
-	def menu(self):
-		"""
-		Return an array of resources.
+		Configure the application object for this site.
 		"""
 
 class Application(object):
+	"""
+	An 'application' in the modu universe is simply a place
+	to store static configuration data about a particular
+	hostname and path on a webserver.
+	
+	When writing ISite plugins, you'll be populating an empty
+	instance of this class, which will be cloned and stored
+	in the request object for each page request.
+	"""
 	def __init__(self):
 		_dict = self.__dict__
 		_dict['config'] = {}

@@ -112,6 +112,9 @@ class BaseSession(dict):
 		self._loaded = True
 	
 	def touch(self):
+		"""
+		Mark this session as dirty.
+		"""
 		self._clean = False
 	
 	def _send_cookie(self):
@@ -124,12 +127,18 @@ class BaseSession(dict):
 			self._req['modu.app'].add_header(header, data)
 	
 	def invalidate(self):
+		"""
+		Delete and dishonor this session.
+		"""
 		self._cookie['sid']['expires'] = 0
 		self._send_cookie()
 		self.delete()
 		self._valid = False
 	
 	def load(self):
+		"""
+		Load the session data for this object's session ID
+		"""
 		result = self.do_load()
 		if result is None:
 			return False
@@ -145,6 +154,9 @@ class BaseSession(dict):
 		return True
 	
 	def save(self):
+		"""
+		Save the session data for this object's session ID
+		"""
 		if self._valid:
 			result = {"_data"	   : self.copy(), 
 					"_created" : self._created, 
@@ -155,6 +167,9 @@ class BaseSession(dict):
 			self.do_save(result)
 	
 	def delete(self):
+		"""
+		Delete this session's record from the DB
+		"""
 		self.do_delete()
 		self.clear()
 	
@@ -216,6 +231,9 @@ class BaseSession(dict):
 	
 
 class DbSession(BaseSession):
+	"""
+	The standard implementor of the BaseSession object.
+	"""
 	def __init__(self, req, connection, sid=None):
 		self._connection = connection
 		BaseSession.__init__(self, req, sid)
