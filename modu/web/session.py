@@ -23,22 +23,6 @@ be a problem for non threadsafe session storage.
 Other changes or omissions are outlined below.
 """
 
-"""
-CREATE TABLE session (
-  id varchar(255) NOT NULL default '',
-  user_id bigint(20) unsigned NOT NULL,
-  created int(11) NOT NULL default '0',
-  accessed int(11) NOT NULL default '0',
-  timeout int(11) NOT NULL default '0',
-  data BLOB,
-  PRIMARY KEY (id),
-  KEY user_idx (user_id),
-  KEY accessed_idx (accessed),
-  KEY timeout_idx (timeout),
-  KEY expiry_idx (accessed, timeout)
-) DEFAULT CHARACTER SET utf8;
-"""
-
 VALIDATE_SID_RE = re.compile('[0-9a-f]{32}$')
 CLEANUP_CHANCE = 1000
 
