@@ -208,9 +208,14 @@ class Store(object):
 		result = cur.execute('LOCK TABLES `%s` WRITE' % self._guid_table)
 		result = cur.execute('SELECT `guid` FROM `%s`' % self._guid_table)
 		
-		guid = cur.fetchall()[0]['guid']
+		result = cur.fetchall()
+		if(result is None or len(result) == 0):
+			guid = 1
+			result = cur.execute('INSERT INTO `%s` VALUES (%%s)' % self._guid_table, [guid + increment])
+		else:
+			guid = result[0]['guid']
+			result = cur.execute('UPDATE `%s` SET `guid` = %%s' % self._guid_table, [guid + increment])
 		
-		result = cur.execute('UPDATE `%s` SET `guid` = %%s' % self._guid_table, [guid + increment])
 		result = cur.execute('UNLOCK TABLES')
 		
 		return guid

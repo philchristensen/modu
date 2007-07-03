@@ -5,3 +5,10 @@
 #
 # See LICENSE for details
 
+class HTTPStatus(Exception):
+	def __init__(self, status, headers, content):
+		self.status = status
+		self.headers = headers
+		self.content = content
+		Exception.__init__(self, status)
+

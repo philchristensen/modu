@@ -65,15 +65,17 @@ class Storable(object):
 		occur on save.
 		"""
 		if not(key.startswith('_')):
-			_class = object.__getattribute__(self, '__class__')
-			if(key in _class.__dict__ and callable(_class.__dict__[key])):
-				return object.__getattribute__(self, key)
-			_data = object.__getattribute__(self, '_data')
-			if(key in _data):
-				return _data[key]
-			_dict = object.__getattribute__(self, '__dict__')
-			if(key in _dict):
-				return _dict[key]
+			try:
+				func = object.__getattribute__(self, key)
+				if(callable(func)):
+					return func
+			except:
+				_data = object.__getattribute__(self, '_data')
+				if(key in _data):
+					return _data[key]
+				_dict = object.__getattribute__(self, '__dict__')
+				if(key in _dict):
+					return _dict[key]
 			
 		raise AttributeError('No such attribute "%s" on %r' % (key, self))
 	
@@ -187,6 +189,16 @@ class Storable(object):
 		resaved, creating a new record.
 		"""
 		object.__setattr__(self, '_id', 0)
+	
+	def save(self):
+		from modu import persist
+		store = persist.get_store()
+		store.save(self)
+	
+	def destroy(self):
+		from modu import persist
+		store = persist.get_store()
+		store.destroy(self)
 
 class Factory(object):
 	def get_item(self, id):
@@ -221,8 +233,10 @@ class DefaultFactory(Factory):
 	def create_item(self, data):
 		if not(self.model_class):
 			raise NotImplementedError('%s::create_item()' % self.__class__.__name__)
-		
-		item = self.model_class(self.table)
+		if(self.model_class is Storable):
+			item = self.model_class(self.table)
+		else:
+			item = self.model_class()
 		item.load_data(data)
 		return item
 	

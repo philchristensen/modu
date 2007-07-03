@@ -46,10 +46,10 @@ def _load_plugins(env):
 	if(env['SCRIPT_FILENAME'] not in sys.path):
 		sys.path.append(env['SCRIPT_FILENAME'])
 	
-	import modu.plugins as modu_plugins
-	reload(modu_plugins)
+	import modu.plugins
+	reload(modu.plugins)
 	
-	for site_plugin in plugin.getPlugins(ISite, modu_plugins):
+	for site_plugin in plugin.getPlugins(ISite, modu.plugins):
 		app = Application()
 		site = site_plugin()
 		site.configure_app(app)
@@ -83,7 +83,7 @@ class Application(object):
 		self.base_domain = 'localhost'
 		self.base_path = '/'
 		self.db_url = 'mysql://modu:modu@localhost/modu'
-		self.session_class = session.UserSession
+		self.session_class = session.DbUserSession
 		self.initialize_store = True
 		self.default_guid_table = 'guid'
 		self.webroot = 'webroot'

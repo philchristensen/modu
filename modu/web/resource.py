@@ -70,10 +70,9 @@ class Resource(Controller, Content):
 		raise NotImplementedError('%s::get_content_type()' % self.__class__.__name__)
 
 class TemplateResource(Resource):
-	def __init__(self):
-		self.data = {}
-	
 	def set_slot(self, name, value):
+		if not(hasattr(self, 'data')):
+			self.data = {}
 		self.data[name] = value
 	
 	def get_content(self, req):

@@ -6,10 +6,12 @@
 # See LICENSE for details
 
 import Cookie, time, re, random
-from modu.persist import storable
 from MySQLdb import cursors
 
 import cPickle
+
+from modu.web import user
+from modu import persist
 
 """
 The change to WSGI support meant I needed to find a substitute for
@@ -69,6 +71,9 @@ class BaseSession(dict):
 		self._sid = None
 		self._created = time.time()
 		self._timeout = 1800
+		
+		self._user = None
+		self._user_id = None
 		
 		if(sid and validate_sid(sid)):
 			self._sid = sid
@@ -133,6 +138,7 @@ class BaseSession(dict):
 		self._created  = result["_created"]
 		self._accessed = result["_accessed"]
 		self._timeout  = result["_timeout"]
+		self._user_id = result.get("_user_id", None)
 		if(result["_data"]):
 			self.update(result["_data"])
 		return True
@@ -145,7 +151,8 @@ class BaseSession(dict):
 			result = {"_data"	   : self.copy(), 
 					"_created" : self._created, 
 					"_accessed": self._accessed, 
-					"_timeout" : self._timeout}
+					"_timeout" : self._timeout,
+					"_user_id" : self._user_id}
 			if(self._req['modu.app'].debug_session):
 				self._req.log_error('session cleanliness is: ' + str(self.is_clean()))
 			self.do_save(result)
@@ -183,10 +190,10 @@ class BaseSession(dict):
 			self.touch()
 		dict.__setitem__(self, key, value)
 	
-	def __del__(self, key):
+	def __delitem__(self, key):
 		if(self._loaded):
 			self.touch()
-		dict.__del__(self, key)
+		dict.__delitem__(self, key)
 	
 	def setdefault(self, key, value=None):
 		if(self._loaded):
@@ -213,11 +220,30 @@ class BaseSession(dict):
 			self.touch()
 		dict.popitem(self)
 	
+	def get_user(self):
+		raise NotImplementedError('%s::get_user()' % self.__class__.__name__)
+	
+	def set_user(self):
+		raise NotImplementedError('%s::set_user()' % self.__class__.__name__)
+	
+	def do_load(self):
+		raise NotImplementedError('%s::do_load()' % self.__class__.__name__)
+	
+	def do_save(self):
+		raise NotImplementedError('%s::do_save()' % self.__class__.__name__)
+	
+	def do_delete(self):
+		raise NotImplementedError('%s::do_delete()' % self.__class__.__name__)
+	
+	def do_cleanup(self):
+		raise NotImplementedError('%s::do_cleanup()' % self.__class__.__name__)
 
-class DbSession(BaseSession):
+class DbUserSession(BaseSession):
 	"""
 	The standard implementor of the BaseSession object.
 	"""
+	user_class = user.User
+	
 	def __init__(self, req, connection, sid=None):
 		self._connection = connection
 		BaseSession.__init__(self, req, sid)
@@ -227,26 +253,24 @@ class DbSession(BaseSession):
 		cur.execute("SELECT s.* FROM session s WHERE id = %s", [self.id()])
 		record = cur.fetchone()
 		if(record):
-			result = {'_created':record['created'], '_accessed':record['accessed'], '_timeout':record['timeout']}
+			result = {'_created':record['created'], '_accessed':record['accessed'],
+					  '_timeout':record['timeout'], '_user_id':record['user_id']}
 			if(record['data']):
 				result['_data'] = cPickle.loads(record['data'].tostring())
 			else:
 				result['_data'] = None
-			self.user_id = record['user_id']
 			return result
 		else:
 			return None
 	
 	def do_save(self, dict):
 		cur = self._connection.cursor()
-		if not(hasattr(self, 'user_id') and self.user_id):
-			self.user_id = 0
 		if(self.is_clean()):
 			cur.execute("UPDATE session s SET s.user_id = %s, s.created = %s, s.accessed = %s, s.timeout = %s WHERE s.id = %s",
-						[self.user_id, dict['_created'], dict['_accessed'], dict['_timeout'], self.id()])
+						[self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], self.id()])
 		else:
 			cur.execute("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
-						[self.id(), self.user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'], 1)])
+						[self.id(), self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'], 1)])
 	
 	def do_delete(self):
 		cur = self._connection.cursor()
@@ -257,37 +281,21 @@ class DbSession(BaseSession):
 		cur.execute("DELETE FROM session WHERE timeout < (%s - accessed)", [int(time.time())])
 	
 	def get_user(self):
-		raise NotImplementedError('%s::get_user()' % self.__class__.__name__)
-	
-	def set_user(self):
-		raise NotImplementedError('%s::set_user()' % self.__class__.__name__)
-
-
-class User(storable.Storable):
-	def __init__(self):
-		super(User, self).__init__('user')
-
-
-class UserSession(DbSession):
-	"""
-	This is broken. It's a dict, shouldn't be using attribute access.
-	"""
-	user_class = User
-	
-	def get_user(self):
-		if(hasattr(self, 'user') and self.user):
-			return self.user
+		if(hasattr(self, '_user') and self._user):
+			return self._user
 		
-		if(hasattr(self, 'user_id') and self.user_id):
+		if(self._user_id is not None):
 			store = persist.get_store()
 			if not(store.has_factory('user')):
-				store.ensure_factory('user', user_class)
-			self.user = store.load_once('user', {'id':self.user_id})
-			return self.user
+				store.ensure_factory('user', self.user_class)
+			self._user = store.load_one('user', {'id':self._user_id})
 		
-		return None
+		return self._user
 	
 	def set_user(self, user):
-		self.user = user
-		if(self.user):
-			self.user_id = self.user.get_id(True)
+		self._user = user
+		if(self._user):
+			self._user_id = self._user.get_id(True)
+		else:
+			self._user_id = None
+

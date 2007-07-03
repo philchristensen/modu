@@ -8,6 +8,7 @@
 import mimetypes, os, stat, os.path
 
 from modu.util import tags
+from modu import web
 
 def handler(env, start_response):
 	from modu.web import app
@@ -50,7 +51,12 @@ def handler(env, start_response):
 	
 	application.bootstrap(req)
 	
-	rsrc.prepare_content(req)
+	try:
+		rsrc.prepare_content(req)
+	except web.HTTPStatus, http:
+		start_response(http.status, http.headers)
+		return http.content
+	
 	application.add_header('Content-Type', rsrc.get_content_type(req))
 	content = rsrc.get_content(req)
 	application.add_header('Content-Length', len(content))
