@@ -56,12 +56,29 @@ def build_select(table, data):
 	"""
 	Given a table name and a dictionary, construct an SELECT query. Keys are
 	sorted alphabetically before output, so the result of running a semantically
-	identical dictionary should be the same every time.
+	identical dictionary should be the same every time. For more info, see the
+	build_where() docstring.
 	
 	These SELECTs always select * from a single table.
 	
 	Special keys can be inserted in the provided dictionary, such that:
 		'__select_keyword'	  is inserted between 'SELECT' and '*'
+	
+	"""
+	if('__select_keyword' in data):
+		query = "SELECT %s * FROM `%s` " % (data['__select_keyword'], table)
+	else:
+		query = "SELECT * FROM `%s` " % table
+	
+	return query + build_where(data)
+	
+def build_where(data):
+	"""
+	Given a dictionary, construct a WHERE clause. Keys are sorted alphabetically
+	before output, so the result of running a semantically identical dictionary
+	should be the same every time.
+	
+	Special keys can be inserted in the provided dictionary, such that:
 		'__order_by'		  inserts an ORDER BY clause. ASC/DESC must be
 							  part of the string if you wish to use them
 		'__limit'			  add a LIMIT clause to this query
@@ -73,11 +90,7 @@ def build_select(table, data):
 							  'col1':RAW(" = ENCRYPT('whatever')") equals
 							  `col1` = ENCRYPT('whatever')
 	"""
-	if('__select_keyword' in data):
-		query = "SELECT %s * FROM `%s` " % (data['__select_keyword'], table)
-	else:
-		query = "SELECT * FROM `%s` " % table
-	
+	query = ''
 	criteria = []
 	values = []
 	keys = data.keys()

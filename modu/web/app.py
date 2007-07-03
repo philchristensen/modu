@@ -6,7 +6,7 @@
 # See LICENSE for details
 
 from modu.util import url
-from modu.web import session, wsgi
+from modu.web import session, wsgi, user
 from modu import persist
 
 from twisted import plugin
@@ -161,6 +161,9 @@ class Application(object):
 			req['modu.session'] = session_class(req, req['modu.db'])
 			if(req['modu.app'].debug_session):
 				req.log_error('session contains: ' + str(req['modu.session']))
+			req['modu.user'] = req['modu.session'].get_user()
+			if(req['modu.user'] is None and self.enable_anonymous_users):
+				req['modu.user'] = user.AnonymousUser()
 		
 		initialize_store = req['modu.app'].initialize_store
 		if('modu.db' in req and initialize_store):
