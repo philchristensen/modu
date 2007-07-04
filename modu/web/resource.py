@@ -69,7 +69,7 @@ class Resource(Controller, Content):
 	def get_content_type(self, req):
 		raise NotImplementedError('%s::get_content_type()' % self.__class__.__name__)
 
-class TemplateResource(Resource):
+class TemplateContent(Content):
 	def set_slot(self, name, value):
 		if not(hasattr(self, 'data')):
 			self.data = {}
@@ -83,16 +83,10 @@ class TemplateResource(Resource):
 	def get_content_type(self, req):
 		return 'text/html'
 	
-	def get_paths(self):
-		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
-	
 	def prepare_content(self, req):
 		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
-	
-	def get_template(self, req):
-		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 
-class CheetahTemplateResource(TemplateResource):
+class CheetahTemplateContent(TemplateContent):
 	"""http://www.cheetahtemplate.org"""
 	def get_content(self, req):
 		from Cheetah.Template import Template
@@ -100,7 +94,7 @@ class CheetahTemplateResource(TemplateResource):
 		self.template = Template(file=template_file, searchList=[self.data])
 		return str(self.template)
 
-class ZPTemplateResource(TemplateResource):
+class ZPTemplateContent(TemplateContent):
 	"""http://zpt.sourceforge.net"""
 	def get_content(self, req):
 		from ZopePageTemplates import PageTemplate
@@ -114,7 +108,37 @@ class ZPTemplateResource(TemplateResource):
 		self.template.write(template_file.read())
 		return self.template(context={'here':self.data})
 
-class CherryTemplateResource(TemplateResource):
+class CherryTemplateContent(TemplateContent):
+	"""http://cherrytemplate.python-hosting.com"""
+	def get_content(self, req):
+		from cherrytemplate import renderTemplate
+		self.data['_template_path'] = req['modu.approot'] + '/template/' + self.get_template(req)
+		self.data['_renderTemplate'] = renderTemplate
+		return eval('_renderTemplate(file=_template_path)', self.data)
+
+class CheetahTemplateResource(Resource, CheetahTemplateContent):
+	"""http://www.cheetahtemplate.org"""
+	def get_content(self, req):
+		from Cheetah.Template import Template
+		template_file = open(req['modu.approot'] + '/template/' + self.get_template(req))
+		self.template = Template(file=template_file, searchList=[self.data])
+		return str(self.template)
+
+class ZPTemplateResource(Resource, ZPTemplateContent):
+	"""http://zpt.sourceforge.net"""
+	def get_content(self, req):
+		from ZopePageTemplates import PageTemplate
+		class ZPTmoduTemplate(PageTemplate):
+			def __call__(self, context={}, *args):
+				if not context.has_key('args'):
+					context['args'] = args
+				return self.pt_render(extra_context=context)
+		template_file = open(req['modu.approot'] + '/template/' + self.get_template(req))
+		self.template = ZPTmoduTemplate()
+		self.template.write(template_file.read())
+		return self.template(context={'here':self.data})
+
+class CherryTemplateResource(Resource, CherryTemplateContent):
 	"""http://cherrytemplate.python-hosting.com"""
 	def get_content(self, req):
 		from cherrytemplate import renderTemplate
