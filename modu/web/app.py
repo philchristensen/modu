@@ -7,6 +7,7 @@
 
 from modu.util import url
 from modu.web import session, wsgi, user
+from modu.web.resource import IController
 from modu import persist
 
 from twisted import plugin
@@ -89,6 +90,8 @@ class Application(object):
 		self.webroot = 'webroot'
 		self.debug_session = False
 		self.debug_store = False
+		self.enable_anonymous_users = True
+		self.disable_session_users = False
 		
 		_dict['_site_tree'] = url.URLNode()
 		_dict['_response_headers'] = []
@@ -99,12 +102,15 @@ class Application(object):
 	def __getattr__(self, key):
 		return self.__dict__['config'][key]
 	
-	def activate(self, rsrc):
+	def activate(self, controller):
 		"""
 		Add a resource to this site's URLNode tree
 		"""
-		for path in rsrc.get_paths():
-			self._site_tree.register(path, rsrc)
+		if not IController.providedBy(controller):
+			raise TypeError('%r does not implement IController' % controller)
+		
+		for path in controller.get_paths():
+			self._site_tree.register(path, controller)
 	
 	def get_tree(self):
 		"""
@@ -154,17 +160,6 @@ class Application(object):
 			
 			req['modu.db'] = db_pool['__default__']
 		
-		# FIXME: We assume that any session class requires database access, and pass
-		# the db connection as the second paramter to the session class constructor
-		session_class = req['modu.app'].session_class
-		if(db_url and session_class):
-			req['modu.session'] = session_class(req, req['modu.db'])
-			if(req['modu.app'].debug_session):
-				req.log_error('session contains: ' + str(req['modu.session']))
-			req['modu.user'] = req['modu.session'].get_user()
-			if(req['modu.user'] is None and self.enable_anonymous_users):
-				req['modu.user'] = user.AnonymousUser()
-		
 		initialize_store = req['modu.app'].initialize_store
 		if('modu.db' in req and initialize_store):
 			# FIXME: I really can't think of any scenario where a store will
@@ -177,3 +172,21 @@ class Application(object):
 					debug_file = None
 				store = persist.Store(req['modu.db'], guid_table=self.default_guid_table, debug_file=debug_file)
 			req['modu.store'] = store
+		
+		# FIXME: We assume that any session class requires database access, and pass
+		# the db connection as the second paramter to the session class constructor
+		session_class = req['modu.app'].session_class
+		if(db_url and session_class):
+			req['modu.session'] = session_class(req, req['modu.db'])
+			if(req['modu.app'].debug_session):
+				req.log_error('session contains: ' + str(req['modu.session']))
+			if(self.disable_session_users):
+				if(self.enable_anonymous_users):
+					req['modu.user'] = user.AnonymousUser()
+				else:
+					req['modu.user'] = None
+			else:
+				req['modu.user'] = req['modu.session'].get_user()
+				if(req['modu.user'] is None and self.enable_anonymous_users):
+					req['modu.user'] = user.AnonymousUser()
+		

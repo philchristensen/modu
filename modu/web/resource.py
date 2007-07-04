@@ -44,6 +44,19 @@ class IContent(interface.Interface):
 		Return the mime type of this content.
 		"""
 
+class ITemplate(interface.Interface):
+	def set_slot(self, key, value):
+		"""
+		Set a slot in the template to the provided key and value.
+		"""
+	
+	def get_template(self, req):
+		"""
+		Get an opaque value representing the template. For most template engines
+		this is probably a filename, but for the default TemplateContent class, it's
+		a StringTemplate-style string.
+		"""
+
 class Resource(object):
 	implements(IController, IContent)
 	
@@ -55,7 +68,13 @@ class Resource(object):
 		return content
 
 class TemplateContent(object):
-	implements(IContent)
+	implements(IContent, ITemplate)
+	
+	def __getattr__(self, key):
+		if(key == 'data'):
+			self.data = {}
+			return self.data
+		raise AttributeError(key)
 	
 	def set_slot(self, name, value):
 		if not(hasattr(self, 'data')):

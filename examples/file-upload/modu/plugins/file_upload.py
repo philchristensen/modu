@@ -60,4 +60,5 @@ class FileUploadSite(object):
 		application.base_path = '/modu/examples/file-upload'
 		application.initialize_store = False
 		#application.debug_session = True
+		application.disable_session_users = True
 		application.activate(RootResource())
