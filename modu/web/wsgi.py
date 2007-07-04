@@ -52,17 +52,14 @@ def handler(env, start_response):
 	application.bootstrap(req)
 	
 	try:
-		rsrc.prepare_content(req)
-	except web.HTTPStatus, http:
-		start_response(http.status, http.headers)
-		return http.content
-	
-	application.add_header('Content-Type', rsrc.get_content_type(req))
-	content = rsrc.get_content(req)
-	application.add_header('Content-Length', len(content))
-	
-	if('modu.session' in req):
-		req['modu.session'].save()
+		try:
+			content = rsrc.get_response(req)
+		except web.HTTPStatus, http:
+			start_response(http.status, http.headers)
+			return http.content
+	finally:
+		if('modu.session' in req):
+			req['modu.session'].save()
 	
 	start_response('200 OK', application.get_headers())
 	return [content]

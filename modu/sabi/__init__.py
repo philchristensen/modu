@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import modu import web
+import modu import web, wsgi
 from modu.web import resource
 
 class DynamicResource(resource.Resource):
@@ -42,7 +42,7 @@ class DynamicResource(resource.Resource):
 class ProtectedDynamicResource(DynamicResource):
 	def prepare_content(self, req):
 		if not(check_access(req)):
-			raise modu.HTTPStatus('403 Forbidden', [('Content-Type', 'text/html')], [app.content403()])
+			raise web.HTTPStatus('403 Forbidden', [('Content-Type', 'text/html')], [wsgi.content403()])
 		super(ProtectedDynamicResource, self).prepare_content(req)
 	
 	def set_perms(self, perms):
