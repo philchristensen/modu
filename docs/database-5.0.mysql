@@ -28,3 +28,24 @@ CREATE TABLE IF NOT EXISTS `user` (
   UNIQUE KEY `username_idx` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
 
+CREATE TABLE IF NOT EXISTS `user_role` (
+  `user_id` bigint(20),
+  `role_id` bigint(20),
+  PRIMARY KEY (`user_id`, `role_id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE IF NOT EXISTS `role` (
+  `id` bigint(20),
+  `name` varchar(255),
+  PRIMARY KEY (id),
+  UNIQUE KEY `name_idx` (`name`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE IF NOT EXISTS `permission` (
+  `id` bigint(20),
+  `role_id` bigint(20),
+  `name` varchar(255),
+  PRIMARY KEY (id),
+  UNIQUE KEY `perm_idx` (`role_id`, `name`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+

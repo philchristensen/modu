@@ -7,7 +7,7 @@
 
 from modu.util import url
 from modu.web import session, wsgi, user
-from modu.web.resource import IController
+from modu.web.resource import IResource
 from modu import persist
 
 from twisted import plugin
@@ -102,15 +102,15 @@ class Application(object):
 	def __getattr__(self, key):
 		return self.__dict__['config'][key]
 	
-	def activate(self, controller):
+	def activate(self, rsrc):
 		"""
 		Add a resource to this site's URLNode tree
 		"""
-		if not IController.providedBy(controller):
-			raise TypeError('%r does not implement IController' % controller)
+		if not IResource.providedBy(rsrc):
+			raise TypeError('%r does not implement IResource' % rsrc)
 		
-		for path in controller.get_paths():
-			self._site_tree.register(path, controller)
+		for path in rsrc.get_paths():
+			self._site_tree.register(path, rsrc)
 	
 	def get_tree(self):
 		"""

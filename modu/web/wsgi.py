@@ -7,8 +7,9 @@
 
 import mimetypes, os, stat, os.path
 
-from modu.util import tags
 from modu import web
+from modu.web import resource
+from modu.util import tags
 
 def handler(env, start_response):
 	from modu.web import app
@@ -53,6 +54,10 @@ def handler(env, start_response):
 	
 	try:
 		try:
+			if(resource.IResourceDelegate.providedBy(rsrc)):
+				rsrc = rsrc.get_delegate(req)
+			if(resource.IAccessControl.providedBy(rsrc)):
+				rsrc.check_access(req)
 			content = rsrc.get_response(req)
 		except web.HTTPStatus, http:
 			start_response(http.status, http.headers)

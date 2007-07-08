@@ -10,6 +10,12 @@ from modu.persist import storable
 class User(storable.Storable):
 	def __init__(self):
 		super(User, self).__init__('user')
+	
+	def is_allowed(self, perm):
+		return False
+	
+	def has_role(self, role):
+		return False
 
 class AnonymousUser(User):
 	def get_data(self):

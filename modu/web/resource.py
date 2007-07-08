@@ -8,7 +8,7 @@
 from zope import interface
 from zope.interface import implements
 
-class IController(interface.Interface):
+class IResource(interface.Interface):
 	"""
 	This class defines something that reacts when a path is req.
 	"""
@@ -21,7 +21,42 @@ class IController(interface.Interface):
 		"""
 		Do whatever this thing should do when a path is loaded.
 		"""
-		raise NotImplementedError('%s::get_response()' % self.__class__.__name__)
+
+
+class IResourceDelegate(IResource):
+	"""
+	Classes that implement this object can emulate a Resource by
+	returning some arbitrary Resource object.
+	"""
+	def get_delegate(self, req):
+		"""
+		Return a this object's Resource delegate.
+		"""
+
+class Resource(object):
+	implements(IResource)
+	
+	def set_content_provider(self, content_provider):
+		self.content_provider = content_provider
+	
+	def get_content_provider(self):
+		if(not hasattr(self, 'content_provider') and IContent.providedBy(self)):
+			return self
+		return self.content_provider
+	
+	def get_response(self, req):
+		cnt = self.get_content_provider()
+		if(IAccessControl.providedBy(cnt)):
+			cnt.check_access(req)
+		cnt.prepare_content(req)
+		req['modu.app'].add_header('Content-Type', cnt.get_content_type(req))
+		content = cnt.get_content(req)
+		req['modu.app'].add_header('Content-Length', len(content))
+		return content
+	
+	def get_paths(self):
+		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
+
 
 class IContent(interface.Interface):
 	"""
@@ -44,7 +79,12 @@ class IContent(interface.Interface):
 		Return the mime type of this content.
 		"""
 
+
 class ITemplate(interface.Interface):
+	"""
+	A template implementor has slots and some opaque value that
+	represents the template itself.
+	"""
 	def set_slot(self, key, value):
 		"""
 		Set a slot in the template to the provided key and value.
@@ -57,15 +97,6 @@ class ITemplate(interface.Interface):
 		a StringTemplate-style string.
 		"""
 
-class Resource(object):
-	implements(IController, IContent)
-	
-	def get_response(self, req):
-		self.prepare_content(req)
-		req['modu.app'].add_header('Content-Type', self.get_content_type(req))
-		content = self.get_content(req)
-		req['modu.app'].add_header('Content-Length', len(content))
-		return content
 
 class TemplateContent(object):
 	implements(IContent, ITemplate)
@@ -88,6 +119,13 @@ class TemplateContent(object):
 	
 	def get_content_type(self, req):
 		return 'text/html'
+	
+	def prepare_content(self, req):
+		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
+	
+	def get_template(self, req):
+		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
+
 
 class CheetahTemplateContent(TemplateContent):
 	"""http://www.cheetahtemplate.org"""
@@ -96,6 +134,13 @@ class CheetahTemplateContent(TemplateContent):
 		template_file = open(req['modu.approot'] + '/template/' + self.get_template(req))
 		self.template = Template(file=template_file, searchList=[self.data])
 		return str(self.template)
+	
+	def prepare_content(self, req):
+		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
+	
+	def get_template(self, req):
+		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
+
 
 class ZPTemplateContent(TemplateContent):
 	"""http://zpt.sourceforge.net"""
@@ -110,6 +155,13 @@ class ZPTemplateContent(TemplateContent):
 		self.template = ZPTmoduTemplate()
 		self.template.write(template_file.read())
 		return self.template(context={'here':self.data})
+	
+	def prepare_content(self, req):
+		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
+	
+	def get_template(self, req):
+		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
+
 
 class CherryTemplateContent(TemplateContent):
 	"""http://cherrytemplate.python-hosting.com"""
@@ -118,15 +170,48 @@ class CherryTemplateContent(TemplateContent):
 		self.data['_template_path'] = req['modu.approot'] + '/template/' + self.get_template(req)
 		self.data['_renderTemplate'] = renderTemplate
 		return eval('_renderTemplate(file=_template_path)', self.data)
+	
+	def prepare_content(self, req):
+		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
+	
+	def get_template(self, req):
+		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
+
+
+class IAccessControl(interface.Interface):
+	"""
+	An access controlled object can look at a request and determine if
+	the user is allowed access or not.
+	"""
+	def check_access(self, req, throws=True):
+		"""
+		Is this request allowed access?
+		"""
+
+
+class RoleBasedAccessControl(object):
+	implements(IAccessControl)
+	
+	def check_access(self, req):
+		if('modu.user' in req):
+			pass
+		return False
+	
+	def get_perms(self, req):
+		raise NotImplementedError('%s::get_perms()' % self.__class__.__name__)
+
 
 class TemplateResource(Resource, TemplateContent):
 	pass
 
+
 class CheetahTemplateResource(Resource, CheetahTemplateContent):
 	pass
 
+
 class ZPTemplateResource(Resource, ZPTemplateContent):
 	pass
+
 
 class CherryTemplateResource(Resource, CherryTemplateContent):
 	pass
