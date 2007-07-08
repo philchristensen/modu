@@ -7,7 +7,7 @@
 #
 # See LICENSE for details
 
-import unittest
+from twisted.trial import unittest
 
 from modu.util import url
 
@@ -38,5 +38,3 @@ class URLRegExpTestCase(unittest.TestCase):
 		self.failUnlessEqual(result['host'], 'svn.modu.org', "Didn't find 'host' where I expected")
 		self.failUnlessEqual(result['path'], '/svnroot/modu/trunk', "Didn't find 'path' where I expected")
 	
-if __name__ == "__main__":
-	unittest.main()

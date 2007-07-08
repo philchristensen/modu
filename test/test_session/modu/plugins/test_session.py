@@ -7,7 +7,7 @@
 #
 # See LICENSE for details
 
-import unittest
+from twisted.trial import unittest
 
 from modu.persist import storable, RAW
 from modu.util import test

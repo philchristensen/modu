@@ -7,12 +7,14 @@
 #
 # See LICENSE for details
 
-import MySQLdb, unittest, time, sys
+import MySQLdb, time, sys
 
 from MySQLdb import cursors
 
 from modu import persist
 from modu.persist import storable
+
+from twisted.trial import unittest
 
 """
 CREATE DATABASE modu;
@@ -62,5 +64,3 @@ class StorableTestCase(unittest.TestCase):
 		
 		self.failUnlessEqual(s.content, t.content, 'Content changed during save/load cycle')
 	
-if __name__ == "__main__":
-	unittest.main()

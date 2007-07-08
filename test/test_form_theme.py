@@ -10,7 +10,8 @@
 from modu.util import form, theme
 from modu.web import wsgi
 
-import unittest, sys
+from twisted.trial import unittest
+import sys
 
 EXPECTED_TITLE = '<input name="node-form[title]" size="30" type="text" value="" />'
 EXPECTED_BODY = '<textarea cols="30" name="node-form[body]" rows="10"></textarea>'
@@ -86,5 +87,3 @@ class FormThemeTestCase(unittest.TestCase):
 		submitfield_check = EXPECTED_ELEMENT % EXPECTED_SUBMIT
 		self.failUnlessEqual(submitfield_result, submitfield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (submitfield_result, submitfield_check));
 
-if __name__ == "__main__":
-	unittest.main()

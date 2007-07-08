@@ -7,7 +7,7 @@
 #
 # See LICENSE for details
 
-import unittest
+from twisted.trial import unittest
 
 from modu.web import resource
 
@@ -29,5 +29,3 @@ class TemplateResourceTestCase(unittest.TestCase):
 		res.prepare_content(None)
 		self.assertEqual(res.get_content(None), 'The string is "This is my test string.", one is 1, two is 2')
 
-if __name__ == "__main__":
-	unittest.main()

@@ -9,7 +9,7 @@
 
 from modu.util import form
 
-import unittest
+from twisted.trial import unittest
 
 class FormTestCase(unittest.TestCase):
 	def setUp(self):
@@ -34,5 +34,3 @@ class FormTestCase(unittest.TestCase):
 		self.assertEqual(frm['title-area'].attributes['type'], 'fieldset', "Didn't find correct type.")
 		self.assertEqual(frm['title-area'].children['title'], frm['title-area']['title'], "Didn't find nested child.")
 
-if __name__ == "__main__":
-	unittest.main()

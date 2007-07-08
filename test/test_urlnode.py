@@ -7,7 +7,7 @@
 #
 # See LICENSE for details
 
-import unittest
+from twisted.trial import unittest
 
 from modu.util import url
 
@@ -78,5 +78,3 @@ class URLNodeTestCase(unittest.TestCase):
 		tree.register('/modu/examples/basic', 'BASIC')
 		self.failUnless(tree.has_path('/modu/examples/basic'), 'tree.has_path() is broken')
 	
-if __name__ == "__main__":
-	unittest.main()

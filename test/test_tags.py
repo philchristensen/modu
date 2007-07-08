@@ -7,7 +7,7 @@
 #
 # See LICENSE for details
 
-import unittest, difflib
+from twisted.trial import unittest
 
 from modu.util import tags
 
@@ -55,5 +55,3 @@ class TagsTestCase(unittest.TestCase):
 		expected = '<input type="checkbox" value="1" checked />'
 		self.assertEqual(str(tag), expected, "Got '%s' instead of '%s'" % (str(tag), expected))
 	
-if __name__ == "__main__":
-	unittest.main()
