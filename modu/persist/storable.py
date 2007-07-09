@@ -258,17 +258,20 @@ class DefaultFactory(Factory):
 		return self.get_items_by_query(query)
 	
 	def get_items_by_query(self, query):
-		records = self.get_item_records(query)
-		result = None
-		if(records):
-			result = map(lambda(data): self.create_item(data), records)
-		if not(result):
-			return False
-		return result
+		for record in self.get_item_records(query):
+			yield self.create_item(record)
+		return
 	
 	def get_item_records(self, query):
 		from modu import persist
+		
 		store = persist.get_store()
 		cursor = store.get_cursor()
 		cursor.execute(query)
-		return cursor.fetchall()
+		
+		row = cursor.fetchone()
+		while(row):
+			yield row
+			row = cursor.fetchone()
+		
+		return

@@ -272,15 +272,18 @@ class Store(object):
 		
 		result = factory.get_items_by_query(query)
 		
-		if(self.cache):
-			self._object_cache[query] = result
+		if(callable(result)):
+			return result()
+		else:
+			if(self.cache):
+				self._object_cache[query] = result
 		
 		return result
 	
 	def load_one(self, table, data, ignore_cache=False):
-		result = self.load(table, data, ignore_cache)
-		if(result and len(result)):
-			return result[0]
+		results = self.load(table, data, ignore_cache)
+		for result in results:
+			return result
 		return None
 	
 	def save(self, storable_item):

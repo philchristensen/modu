@@ -2,8 +2,6 @@ CREATE TABLE IF NOT EXISTS `guid` (
   `guid` bigint(20) unsigned
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
 
-REPLACE INTO `guid` VALUES (1);
-
 CREATE TABLE IF NOT EXISTS `session` (
   `id` varchar(255),
   `user_id` bigint(20),
