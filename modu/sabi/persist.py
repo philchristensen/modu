@@ -10,9 +10,8 @@ from modu.sabi import api
 
 class SabiFactory(storable.DefaultFactory):
 	def __init__(self, req, table=None, model_class=None):
+		super(storable.DefaultFactory, self).__init__(self, table=table, model_class=model_class)
 		self.req = req
-		self.table = table
-		self.model_class = model_class
 	
 	def create_item(self, data):
 		item = super(SabiFactory, self).create_item(data)

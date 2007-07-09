@@ -27,7 +27,7 @@ class Storable(object):
 	can override the instantiation process to implement more advanced
 	persistence mechanisms.
 	"""
-	def __init__(self, table):
+	def __init__(self, table, id_col='id'):
 		"""
 		When creating a new (unsaved) Storable object, you'll need to
 		pass the table name to the object constructor. Subclasses can
@@ -40,6 +40,7 @@ class Storable(object):
 		object.__setattr__(self, '_table', None)
 		object.__setattr__(self, 'created_date', 0)
 		object.__setattr__(self, 'modified_date', 0)
+		object.__setattr__(self, '_id_col', id_col)
 	
 		object.__setattr__(self, '_table', table)
 	
@@ -108,6 +109,9 @@ class Storable(object):
 			id = new_id
 		return id
 	
+	def get_primary_key(self):
+		return object.__getattribute__(self, '_id_col')
+	
 	def touch(self):
 		"""
 		Mark this object as `dirty` and update the last
@@ -136,9 +140,10 @@ class Storable(object):
 		pairs, but this is also a convenient way to populate
 		or update Storable objects quickly.
 		"""
-		if(ID_COLUMN in data):
-			self.set_id(data[ID_COLUMN])
-			del data[ID_COLUMN]
+		id_col = self.get_primary_key()
+		if(id_col in data):
+			self.set_id(data[id_col])
+			del data[id_col]
 		if('created_date' in data):
 			self.created_date = data['created_date']
 		else:
@@ -223,18 +228,16 @@ class Factory(object):
 		raise NotImplementedError('%s::get_item_records()' % self.__class__.__name__)
 
 class DefaultFactory(Factory):
-	table = None
-	model_class = None
-	
-	def __init__(self, table=None, model_class=None):
+	def __init__(self, table=None, model_class=None, id_col='id'):
 		self.table = table
 		self.model_class = model_class
+		self.id_col = id_col
 	
 	def create_item(self, data):
 		if not(self.model_class):
 			raise NotImplementedError('%s::create_item()' % self.__class__.__name__)
 		if(self.model_class is Storable):
-			item = self.model_class(self.table)
+			item = self.model_class(self.table, self.id_col)
 		else:
 			item = self.model_class()
 		item.load_data(data)
@@ -250,7 +253,7 @@ class DefaultFactory(Factory):
 		return persist.build_select(table, data)
 	
 	def get_item(self, id):
-		(result) = self.get_items({'id':id})
+		(result) = self.get_items({self.id_col:id})
 		return result
 	
 	def get_items(self, data):
