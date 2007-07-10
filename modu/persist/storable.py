@@ -183,6 +183,11 @@ class Storable(object):
 		store.destroy(self)
 
 class IFactory(interface.Interface):
+	def set_store(self, store):
+		"""
+		Associate a store with this factory.
+		"""
+	
 	def get_id(self):
 		"""
 		Generate an ID (if appropriate) for an object about to be saved.
@@ -226,6 +231,9 @@ class DefaultFactory(object):
 		self.model_class = model_class
 		self.id_col = id_col
 		self.guid_table = guid_table
+	
+	def set_store(self, store):
+		self.store = store
 	
 	def get_id(self, increment=1):
 		"""
@@ -301,9 +309,7 @@ class DefaultFactory(object):
 		return
 	
 	def get_item_records(self, query):
-		from modu.persist import Store
-		store = Store.get_store()
-		cursor = store.get_cursor()
+		cursor = self.store.get_cursor()
 		cursor.execute(query)
 		
 		row = cursor.fetchone()

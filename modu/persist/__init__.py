@@ -208,6 +208,7 @@ class Store(object):
 		if not(storable.IFactory.providedBy(factory)):
 			raise ValueError('%r does not implement IFactory' % factory)
 		self._factories[table] = factory
+		factory.set_store(self)
 	
 	def has_factory(self, table):
 		return table in self._factories
@@ -270,7 +271,7 @@ class Store(object):
 	
 	def load_one(self, table, data, ignore_cache=False):
 		results = self.load(table, data, ignore_cache)
-		for result in results:
+		for result in list(results):
 			return result
 		return None
 	
