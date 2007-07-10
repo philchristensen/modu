@@ -7,6 +7,9 @@
 
 import time, copy
 
+from zope import interface
+from zope.interface import implements
+
 class Storable(object):
 	"""
 	A Storable object represents a single standardized result from a
@@ -96,10 +99,10 @@ class Storable(object):
 		this is an unsaved object. It's not possible to use "predictive"
 		IDs in that case.
 		"""
-		from modu import persist
 		id = object.__getattribute__(self, '_id')
 		if(id == 0 and fetch):
-			store = persist.get_store()
+			from modu.persist import Store
+			store = Store.get_store()
 			table = self.get_table()
 			if not(store.has_factory(table)):
 				raise NotImplementedError('There is no factory registered for the table `%s`' % table)
@@ -189,41 +192,54 @@ class Storable(object):
 		object.__setattr__(self, '_id', 0)
 	
 	def save(self):
-		from modu import persist
-		store = persist.get_store()
+		from modu.persist import Store
+		store = Store.get_store()
 		store.save(self)
 	
 	def destroy(self):
-		from modu import persist
-		store = persist.get_store()
+		from modu.persist import Store
+		store = Store.get_store()
 		store.destroy(self)
 
-class Factory(object):
+class IFactory(interface.Interface):
 	def get_id(self):
-		raise NotImplementedError('%s::get_id()' % self.__class__.__name__)
+		"""
+		Generate an ID (if appropriate) for an object about to be saved.
+		"""
 	
 	def get_item(self, id):
-		raise NotImplementedError('%s::get_item()' % self.__class__.__name__)
+		"""
+		Load an object based on its ID.
+		"""
 	
 	def get_items(self, attribs):
-		raise NotImplementedError('%s::get_items()' % self.__class__.__name__)
+		"""
+		Return an iterable of items that match the provided attributes.
+		"""
 	
 	def get_items_by_query(self, query):
-		raise NotImplementedError('%s::get_items_by_query()' % self.__class__.__name__)
+		"""
+		Return an iterable of items that are returned by the provided query.
+		"""
 	
 	def create_item(self, record):
-		raise NotImplementedError('%s::create_item()' % self.__class__.__name__)
-	
-	def create_item_query_for_table(self, attribs, type):
-		raise NotImplementedError('%s::create_item_query_for_table()' % self.__class__.__name__)
+		"""
+		Create an object for the provided record.
+		"""
 	
 	def create_item_query(self, attribs):
-		raise NotImplementedError('%s::create_item_query()' % self.__class__.__name__)
+		"""
+		Create a query with the provided attributes.
+		"""
 	
 	def get_item_records(self, query):
-		raise NotImplementedError('%s::get_item_records()' % self.__class__.__name__)
+		"""
+		Return an iterable of records returned by the provided query.
+		"""
 
-class DefaultFactory(Factory):
+class DefaultFactory(object):
+	implements(IFactory)
+	
 	def __init__(self, table=None, model_class=Storable, id_col='id', guid_table='guid'):
 		self.table = table
 		self.model_class = model_class
@@ -241,8 +257,8 @@ class DefaultFactory(Factory):
 		if not(self.uses_guids()):
 			return None
 		
-		from modu import persist
-		store = persist.get_store()
+		from modu.persist import Store
+		store = Store.get_store()
 		cur = store.get_cursor()
 		
 		result = cur.execute('LOCK TABLES `%s` WRITE' % self.guid_table)
@@ -288,11 +304,8 @@ class DefaultFactory(Factory):
 	def create_item_query(self, data):
 		if not(self.table):
 			raise NotImplementedError('%s::create_item_query()' % self.__class__.__name__)
-		return self.create_item_query_for_table(self.table, data)
-	
-	def create_item_query_for_table(self, table, data):
 		from modu import persist
-		return persist.build_select(table, data)
+		return persist.build_select(self.table, data)
 	
 	def get_item(self, id):
 		(result) = self.get_items({self.id_col:id})
@@ -308,9 +321,8 @@ class DefaultFactory(Factory):
 		return
 	
 	def get_item_records(self, query):
-		from modu import persist
-		
-		store = persist.get_store()
+		from modu.persist import Store
+		store = Store.get_store()
 		cursor = store.get_cursor()
 		cursor.execute(query)
 		

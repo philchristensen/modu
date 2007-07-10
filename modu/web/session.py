@@ -285,7 +285,7 @@ class DbUserSession(BaseSession):
 			return self._user
 		
 		if(self._user_id is not None):
-			store = persist.get_store()
+			store = persist.Store.get_store()
 			if not(store.has_factory('user')):
 				store.ensure_factory('user', self.user_class)
 			self._user = store.load_one('user', {'id':self._user_id})

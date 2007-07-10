@@ -10,18 +10,7 @@ from MySQLdb import cursors, converters
 
 from modu.persist import storable
 
-stores = {}
-
 DEFAULT_STORE_NAME = '__default__'
-
-def get_store(name=DEFAULT_STORE_NAME):
-	"""
-	Return the current Store instance, if it exists.
-	"""
-	global stores
-	if(name in stores):
-		return stores[name]
-	return None
 
 def build_insert(table, data):
 	"""
@@ -165,6 +154,16 @@ class Store(object):
 	factories for each table you wish to load objects from.
 	"""
 	
+	@classmethod
+	def get_store(cls, name=DEFAULT_STORE_NAME):
+		"""
+		Return the current Store instance, if it exists.
+		"""
+		if(hasattr(cls, '_stores')):
+			if(name in cls._stores):
+				return cls._stores[name]
+		return None
+
 	def __init__(self, connection, debug_file=None, name=DEFAULT_STORE_NAME):
 		"""
 		Create a Store for a given DB connection object.
@@ -183,10 +182,11 @@ class Store(object):
 		self._factories = {}
 		self._object_cache = {}
 		
-		global stores
-		if(name in stores):
+		if not(hasattr(Store, '_stores')):
+			Store._stores = {}
+		elif(name in Store._stores):
 			raise RuntimeError("There is already a Store instance by the name '%s'." % name)
-		stores[name] = self
+		Store._stores[name] = self
 	
 	def get_cursor(self, cursor_type=cursors.SSDictCursor):
 		"""
@@ -205,8 +205,8 @@ class Store(object):
 		"""
 		Register an object to be the factory for this class.
 		"""
-		if not(isinstance(factory, storable.Factory)):
-			raise ValueError('%r is not a Factory subclass' % factory)
+		if not(storable.IFactory.providedBy(factory)):
+			raise ValueError('%r does not implement IFactory' % factory)
 		self._factories[table] = factory
 	
 	def has_factory(self, table):

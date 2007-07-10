@@ -163,7 +163,7 @@ class Application(object):
 		if('modu.db' in req and initialize_store):
 			# FIXME: I really can't think of any scenario where a store will
 			# already be initialized, but we'll check anyway, for now
-			store = persist.get_store()
+			store = persist.Store.get_store()
 			if not(store):
 				if(req['modu.app'].debug_store):
 					debug_file = req['wsgi.errors']

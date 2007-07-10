@@ -32,7 +32,7 @@ CREATE TABLE `autoinc_table` (
 
 class StorableTestCase(unittest.TestCase):
 	def setUp(self):
-		self.store = persist.get_store()
+		self.store = persist.Store.get_store()
 		if not(self.store):
 			self.connection = MySQLdb.connect('localhost', 'modu', 'modu', 'modu')
 			self.store = persist.Store(self.connection, debug_file=sys.stderr)
