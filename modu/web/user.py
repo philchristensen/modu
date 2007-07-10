@@ -21,7 +21,7 @@ class AnonymousUser(User):
 	def get_data(self):
 		raise RuntimeError('It is not possible to save the anonymous user object.')
 	
-	def get_id(self, fetch=False):
+	def get_id(self):
 		return 0
 	
 	def set_id(self):

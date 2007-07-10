@@ -221,6 +221,28 @@ class Store(object):
 		if(table not in self._factories):
 			self.register_factory(table, storable.DefaultFactory(table, *args, **kwargs))
 	
+	def fetch_id(self, storable):
+		"""
+		"Predict" the id for this storable. If GUIDs are being used,
+		this method will fetch a new GUID, set it, and return
+		that ID immediately (assuming that this object will ultimately
+		be saved with that ID).
+		
+		If GUIDs are not being used, this method will return 0 if
+		this is an unsaved object. It's not possible to use "predictive"
+		IDs in that case.
+		"""
+		id = storable.get_id()
+		if(id == 0):
+			table = storable.get_table()
+			if not(self.has_factory(table)):
+				raise NotImplementedError('There is no factory registered for the table `%s`' % table)
+			factory = self.get_factory(table)
+			new_id = factory.get_id()
+			storable.set_id(new_id)
+			return new_id
+		return id
+	
 	def load(self, table, data, ignore_cache=False):
 		if(table not in self._factories):
 			raise NotImplementedError('There is no factory registered for the table `%s`' % table)
@@ -234,16 +256,15 @@ class Store(object):
 		if(query in self._object_cache and self.cache and not ignore_cache):
 			return self._object_cache[query]
 		
-		if(self.debug_file):
-			self.debug_file.write("[Store] %s\n" % query)
+		self.log(query)
 		
 		result = factory.get_items_by_query(query)
 		
 		if(callable(result)):
 			return result()
-		else:
-			if(self.cache):
-				self._object_cache[query] = result
+		
+		if(self.cache):
+			self._object_cache[query] = result
 		
 		return result
 	
@@ -264,7 +285,7 @@ class Store(object):
 		id_list = []
 		while(child_list):
 			child = child_list.pop()
-			child_id = child.get_id(True)
+			child_id = self.fetch_id(child)
 			assert(child_id not in id_list or not factory.uses_guids(), 'Found circular storable reference during save')
 			_save(child)
 			child_list.extend(child.get_related_storables())
@@ -272,7 +293,7 @@ class Store(object):
 	
 	def _save(self, storable_item, factory):
 		table = storable_item.get_table()
-		id = storable_item.get_id(True)
+		id = self.fetch_id(storable_item)
 		data = storable_item.get_data()
 		cur = self.get_cursor()
 		
@@ -283,15 +304,15 @@ class Store(object):
 			query = build_insert(table, data)
 			cur.execute('LOCK TABLES `%s` WRITE' % table)
 		
-		if(self.debug_file):
-			self.debug_file.write("[Store] %s\n" % query)
+		self.log(query)
 			
 		cur.execute(query)
 		
 		if not(factory.uses_guids()):
 			if not(storable_item.get_id()):
 				cur.execute('SELECT MAX(%s) AS id FROM `%s`' % (factory.get_primary_key(), table))
-				storable_item.set_id(cur.fetchone()['id'])
+				new_id = cur.fetchone()['id']
+				storable_item.set_id(new_id)
 				cur.fetchall()
 			cur.execute('UNLOCK TABLES')
 	
@@ -302,7 +323,7 @@ class Store(object):
 			id_list = []
 			while(child_list):
 				child = child_list.pop()
-				child_id = child.get_id(True)
+				child_id = self.fetch_id(child)
 				if(child_id not in id_list):
 					_destroy(child)
 					child_list.extend(child.get_related_storables())
@@ -314,9 +335,12 @@ class Store(object):
 		
 		query = interp(delete_query, [storable_item.get_id()])
 		
-		if(self.debug_file):
-			self.debug_file.write("[Store] %s\n" % query)
+		self.log(query)
 			
 		cur.execute(query)
 		storable_item.reset_id()
+	
+	def log(self, message):
+		if(self.debug_file):
+			self.debug_file.write("[Store] %s\n" % message)
 

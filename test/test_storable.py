@@ -36,8 +36,6 @@ CREATE TABLE IF NOT EXISTS `page` (
 CREATE TABLE IF NOT EXISTS `guid` (
   `guid` bigint(20) unsigned NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-REPLACE INTO `guid` VALUES (1);
 """
 
 class StorableTestCase(unittest.TestCase):
@@ -87,4 +85,10 @@ class StorableTestCase(unittest.TestCase):
 		
 		self.failIf(t, 'Storable object was not properly destroyed.')
 		self.failIf(s.get_id(), 'Storable object still has an id after being destroyed.')
+	
+	def test_save_related(self):
+		raise NotImplementedError('StorableTestCase::test_save_related()')
+	
+	def test_destroy_related(self):
+		raise NotImplementedError('StorableTestCase::test_save_related()')
 	

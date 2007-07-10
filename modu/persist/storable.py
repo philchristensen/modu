@@ -26,7 +26,7 @@ class Storable(object):
 	can override the instantiation process to implement more advanced
 	persistence mechanisms.
 	"""
-	def __init__(self, table, id_col='id'):
+	def __init__(self, table):
 		"""
 		When creating a new (unsaved) Storable object, you'll need to
 		pass the table name to the object constructor. Subclasses can
@@ -39,7 +39,6 @@ class Storable(object):
 		object.__setattr__(self, '_table', None)
 		object.__setattr__(self, 'created_date', 0)
 		object.__setattr__(self, 'modified_date', 0)
-		object.__setattr__(self, '_id_col', id_col)
 	
 		object.__setattr__(self, '_table', table)
 	
@@ -88,29 +87,11 @@ class Storable(object):
 			raise RuntimeError("%r already has the id %d, cannot be set to %d" % (self, self.get_id(), id))
 		object.__setattr__(self, '_id', id)
 	
-	def get_id(self, fetch=False):
+	def get_id(self):
 		"""
-		Get the ID of this object. If GUIDs are being used, and `fetch`
-		is True, this method will fetch a new GUID, set it, and return
-		that ID immediately (assuming that this object will ultimately
-		be saved with that ID).
-		
-		If GUIDs are not being used, this method will return 0 if
-		this is an unsaved object. It's not possible to use "predictive"
-		IDs in that case.
+		Get the ID of this object.
 		"""
-		id = object.__getattribute__(self, '_id')
-		if(id == 0 and fetch):
-			from modu.persist import Store
-			store = Store.get_store()
-			table = self.get_table()
-			if not(store.has_factory(table)):
-				raise NotImplementedError('There is no factory registered for the table `%s`' % table)
-			factory = store.get_factory(table)
-			new_id = factory.get_id()
-			object.__setattr__(self, '_id', new_id)
-			id = new_id
-		return id
+		return object.__getattribute__(self, '_id')
 	
 	def touch(self):
 		"""
@@ -289,14 +270,13 @@ class DefaultFactory(object):
 		if not(self.model_class and self.table):
 			raise NotImplementedError('%s::create_item()' % self.__class__.__name__)
 		if(self.model_class is Storable):
-			item = self.model_class(self.table, self.id_col)
+			item = self.model_class(self.table)
 		else:
 			item = self.model_class()
 		
-		id_col = self.get_primary_key()
-		if(id_col in data):
-			item.set_id(data[id_col])
-			del data[id_col]
+		if(self.id_col in data):
+			item.set_id(data[self.id_col])
+			del data[self.id_col]
 		
 		item.load_data(data)
 		return item
