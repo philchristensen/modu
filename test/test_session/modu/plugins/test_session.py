@@ -9,7 +9,7 @@
 
 from twisted.trial import unittest
 
-from modu.persist import storable, RAW
+from modu.persist import storable, RAW, Store
 from modu.util import test
 from modu.web import resource, session, user
 from modu import persist
@@ -80,7 +80,8 @@ class DbSessionTestCase(unittest.TestCase):
 		usr.first = 'Sample'
 		usr.last = 'User'
 		usr.crypt = RAW("ENCRYPT('%s')" % 'password')
-		usr.save()
+		store = Store.get_store()
+		store.save(usr)
 		
 		sess = session.DbUserSession(self.req, self.req['modu.db'])
 		sess.set_user(usr)

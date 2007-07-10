@@ -246,9 +246,7 @@ class DefaultFactory(object):
 		if not(self.uses_guids()):
 			return None
 		
-		from modu.persist import Store
-		store = Store.get_store()
-		cur = store.get_cursor()
+		cur = self.store.get_cursor()
 		
 		result = cur.execute('LOCK TABLES `%s` WRITE' % self.guid_table)
 		result = cur.execute('SELECT `guid` FROM `%s`' % self.guid_table)
