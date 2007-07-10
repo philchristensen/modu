@@ -46,6 +46,7 @@ class StorableTestCase(unittest.TestCase):
 		if not(self.store):
 			self.connection = MySQLdb.connect('localhost', 'modu', 'modu', 'modu')
 			self.store = persist.Store(self.connection)
+		self.store.ensure_factory('page')
 		
 		global TEST_TABLES
 		cur = self.store.get_cursor()
@@ -64,7 +65,6 @@ class StorableTestCase(unittest.TestCase):
 		
 		self.store.save(s)
 		self.failUnless(s.get_id(), 'Storable object has no id after being saved.')
-		self.store.ensure_factory('page')
 		t = self.store.load_one('page', {'id':s.get_id()});
 		
 		self.failUnlessEqual(t.get_id(), s.get_id(), 'Column `id` changed in save/load cycle')
@@ -83,7 +83,6 @@ class StorableTestCase(unittest.TestCase):
 		self.failUnless(saved_id, 'Storable object has no id after being saved.')
 		
 		self.store.destroy(s)
-		self.store.ensure_factory('page')
 		t = self.store.load_one('page', {'id':saved_id});
 		
 		self.failIf(t, 'Storable object was not properly destroyed.')

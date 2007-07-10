@@ -300,12 +300,17 @@ class Store(object):
 	
 	def _save(self, storable_item):
 		table = storable_item.get_table()
+		
+		if(table not in self._factories):
+			raise NotImplementedError('There is no factory registered for the table `%s`' % table)
+		factory = self._factories[table]
+		
 		id = storable_item.get_id(True)
 		data = storable_item.get_data()
 		cur = self.get_cursor()
 		
 		if(id or self.uses_guids()):
-			data[storable.ID_COLUMN] = id
+			data[factory.get_primary_key()] = id
 			query = build_replace(table, data)
 		else:
 			query = build_insert(table, data)

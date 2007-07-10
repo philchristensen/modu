@@ -109,9 +109,6 @@ class Storable(object):
 			id = new_id
 		return id
 	
-	def get_primary_key(self):
-		return object.__getattribute__(self, '_id_col')
-	
 	def touch(self):
 		"""
 		Mark this object as `dirty` and update the last
@@ -140,10 +137,6 @@ class Storable(object):
 		pairs, but this is also a convenient way to populate
 		or update Storable objects quickly.
 		"""
-		id_col = self.get_primary_key()
-		if(id_col in data):
-			self.set_id(data[id_col])
-			del data[id_col]
 		if('created_date' in data):
 			self.created_date = data['created_date']
 		else:
@@ -233,6 +226,9 @@ class DefaultFactory(Factory):
 		self.model_class = model_class
 		self.id_col = id_col
 	
+	def get_primary_key(self):
+		return self.id_col
+	
 	def create_item(self, data):
 		if not(self.model_class):
 			raise NotImplementedError('%s::create_item()' % self.__class__.__name__)
@@ -240,6 +236,12 @@ class DefaultFactory(Factory):
 			item = self.model_class(self.table, self.id_col)
 		else:
 			item = self.model_class()
+		
+		id_col = self.get_primary_key()
+		if(id_col in data):
+			item.set_id(data[id_col])
+			del data[id_col]
+		
 		item.load_data(data)
 		return item
 	

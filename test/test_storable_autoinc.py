@@ -36,6 +36,7 @@ class StorableTestCase(unittest.TestCase):
 		if not(self.store):
 			self.connection = MySQLdb.connect('localhost', 'modu', 'modu', 'modu')
 			self.store = persist.Store(self.connection, guid_table=None, debug_file=sys.stderr)
+		self.store.ensure_factory('autoinc_table')
 		
 		global TEST_TABLES
 		cur = self.store.get_cursor()
@@ -59,7 +60,6 @@ class StorableTestCase(unittest.TestCase):
 		saved_id = s.get_id()
 		self.failUnlessEqual(saved_id, 1, 'Autoincrement IDs are broken')
 		
-		self.store.ensure_factory('autoinc_table')
 		t = self.store.load_one('autoinc_table', {'id':saved_id})
 		
 		self.failUnlessEqual(s.content, t.content, 'Content changed during save/load cycle')
