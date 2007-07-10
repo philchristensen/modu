@@ -86,7 +86,6 @@ class Application(object):
 		self.db_url = 'mysql://modu:modu@localhost/modu'
 		self.session_class = session.DbUserSession
 		self.initialize_store = True
-		self.default_guid_table = 'guid'
 		self.webroot = 'webroot'
 		self.debug_session = False
 		self.debug_store = False
@@ -170,7 +169,7 @@ class Application(object):
 					debug_file = req['wsgi.errors']
 				else:
 					debug_file = None
-				store = persist.Store(req['modu.db'], guid_table=self.default_guid_table, debug_file=debug_file)
+				store = persist.Store(req['modu.db'], debug_file=debug_file)
 			req['modu.store'] = store
 		
 		# FIXME: We assume that any session class requires database access, and pass

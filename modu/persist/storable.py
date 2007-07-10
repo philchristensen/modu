@@ -7,10 +7,6 @@
 
 import time, copy
 
-# I'm trying to use this constant universally, but 
-# it's not 100% yet
-ID_COLUMN = 'id'
-
 class Storable(object):
 	"""
 	A Storable object represents a single standardized result from a
@@ -104,7 +100,11 @@ class Storable(object):
 		id = object.__getattribute__(self, '_id')
 		if(id == 0 and fetch):
 			store = persist.get_store()
-			new_id = store.get_guid()
+			table = self.get_table()
+			if not(store.has_factory(table)):
+				raise NotImplementedError('There is no factory registered for the table `%s`' % table)
+			factory = store.get_factory(table)
+			new_id = factory.get_id()
 			object.__setattr__(self, '_id', new_id)
 			id = new_id
 		return id
@@ -199,6 +199,9 @@ class Storable(object):
 		store.destroy(self)
 
 class Factory(object):
+	def get_id(self):
+		raise NotImplementedError('%s::get_id()' % self.__class__.__name__)
+	
 	def get_item(self, id):
 		raise NotImplementedError('%s::get_item()' % self.__class__.__name__)
 	
@@ -221,16 +224,53 @@ class Factory(object):
 		raise NotImplementedError('%s::get_item_records()' % self.__class__.__name__)
 
 class DefaultFactory(Factory):
-	def __init__(self, table=None, model_class=None, id_col='id'):
+	def __init__(self, table=None, model_class=Storable, id_col='id', guid_table='guid'):
 		self.table = table
 		self.model_class = model_class
 		self.id_col = id_col
+		self.guid_table = guid_table
+	
+	def get_id(self, increment=1):
+		"""
+		Get a new GUID. If you pass the optional increment parameter, the next
+		GUID returned by this function will be that much higher, allowing multi-
+		master code to request ranges of IDs in advance, or for efficiency.
+		
+		If GUIDs are disabled for this Factory, return None.
+		"""
+		if not(self.uses_guids()):
+			return None
+		
+		from modu import persist
+		store = persist.get_store()
+		cur = store.get_cursor()
+		
+		result = cur.execute('LOCK TABLES `%s` WRITE' % self.guid_table)
+		result = cur.execute('SELECT `guid` FROM `%s`' % self.guid_table)
+		
+		result = cur.fetchall()
+		if(result is None or len(result) == 0):
+			guid = 1
+			result = cur.execute('INSERT INTO `%s` VALUES (%%s)' % self.guid_table, [guid + increment])
+		else:
+			guid = result[0]['guid']
+			result = cur.execute('UPDATE `%s` SET `guid` = %%s' % self.guid_table, [guid + increment])
+		
+		result = cur.execute('UNLOCK TABLES')
+		
+		return guid
+	
+	def uses_guids(self):
+		"""
+		Does this Factory use GUIDs?
+		"""
+		return self.guid_table != None
 	
 	def get_primary_key(self):
 		return self.id_col
 	
 	def create_item(self, data):
-		if not(self.model_class):
+		if not(self.model_class and self.table):
 			raise NotImplementedError('%s::create_item()' % self.__class__.__name__)
 		if(self.model_class is Storable):
 			item = self.model_class(self.table, self.id_col)

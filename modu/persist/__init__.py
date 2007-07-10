@@ -165,14 +165,11 @@ class Store(object):
 	factories for each table you wish to load objects from.
 	"""
 	
-	def __init__(self, connection, guid_table='guid', debug_file=None, name=DEFAULT_STORE_NAME):
+	def __init__(self, connection, debug_file=None, name=DEFAULT_STORE_NAME):
 		"""
-		Create a Store. Parameters are mostly identical to the DB-API connect()
-		function, but you may also pass in the 'guid_table' parameter, to set
-		the name of your GUID table.
+		Create a Store for a given DB connection object.
 		
-		If you pass a None value for the 'guid_table' paramter, GUID support is
-		disabled.
+		Registered factories can choose whether or not to use GUIDs.
 		
 		If you choose not to use GUIDs (say, by having each DB table contain an
 		auto_increment ID column), each INSERT (but not REPLACE, aka update) will
@@ -180,12 +177,11 @@ class Store(object):
 		finally UNLOCK the table.
 		"""
 		self.connection = connection
-		
-		self._guid_table = guid_table
-		self._factories = {}
-		self._object_cache = {}
 		self.cache = False
 		self.debug_file = debug_file
+		
+		self._factories = {}
+		self._object_cache = {}
 		
 		global stores
 		if(name in stores):
@@ -205,40 +201,6 @@ class Store(object):
 			cur = self.connection.cursor()
 		return cur
 	
-	def get_guid(self, increment=1):
-		"""
-		Get a new GUID. If you pass the optional increment parameter, the next
-		GUID returned by this function will be that much higher, allowing multi-
-		master code to request ranges of IDs in advance, or for efficiency.
-		
-		If GUIDs are disabled for this Store, return None.
-		"""
-		if not(self.uses_guids()):
-			return None
-		
-		cur = self.get_cursor()
-		
-		result = cur.execute('LOCK TABLES `%s` WRITE' % self._guid_table)
-		result = cur.execute('SELECT `guid` FROM `%s`' % self._guid_table)
-		
-		result = cur.fetchall()
-		if(result is None or len(result) == 0):
-			guid = 1
-			result = cur.execute('INSERT INTO `%s` VALUES (%%s)' % self._guid_table, [guid + increment])
-		else:
-			guid = result[0]['guid']
-			result = cur.execute('UPDATE `%s` SET `guid` = %%s' % self._guid_table, [guid + increment])
-		
-		result = cur.execute('UNLOCK TABLES')
-		
-		return guid
-	
-	def uses_guids(self):
-		"""
-		Does this Store use GUIDs?
-		"""
-		return self._guid_table != None
-	
 	def register_factory(self, table, factory):
 		"""
 		Register an object to be the factory for this class.
@@ -250,9 +212,14 @@ class Store(object):
 	def has_factory(self, table):
 		return table in self._factories
 	
-	def ensure_factory(self, table, model_class=storable.Storable):
+	def get_factory(self, table):
 		if(table not in self._factories):
-			self.register_factory(table, storable.DefaultFactory(table, model_class))
+			raise KeyError('There is no factory registered for the table `%s`' % table)
+		return self._factories[table]
+	
+	def ensure_factory(self, table, *args, **kwargs):
+		if(table not in self._factories):
+			self.register_factory(table, storable.DefaultFactory(table, *args, **kwargs))
 	
 	def load(self, table, data, ignore_cache=False):
 		if(table not in self._factories):
@@ -287,29 +254,29 @@ class Store(object):
 		return None
 	
 	def save(self, storable_item):
-		self._save(storable_item)
+		table = storable_item.get_table()
+		if(table not in self._factories):
+			raise NotImplementedError('There is no factory registered for the table `%s`' % table)
+		factory = self._factories[table]
+		
+		self._save(storable_item, factory)
 		child_list = storable_item.get_related_storables()
 		id_list = []
 		while(child_list):
 			child = child_list.pop()
 			child_id = child.get_id(True)
-			assert(child_id not in id_list or not self.uses_guids(), 'Found circular storable reference during save')
+			assert(child_id not in id_list or not factory.uses_guids(), 'Found circular storable reference during save')
 			_save(child)
 			child_list.extend(child.get_related_storables())
 			id_list.append(child_id)
 	
-	def _save(self, storable_item):
+	def _save(self, storable_item, factory):
 		table = storable_item.get_table()
-		
-		if(table not in self._factories):
-			raise NotImplementedError('There is no factory registered for the table `%s`' % table)
-		factory = self._factories[table]
-		
 		id = storable_item.get_id(True)
 		data = storable_item.get_data()
 		cur = self.get_cursor()
 		
-		if(id or self.uses_guids()):
+		if(id or factory.uses_guids()):
 			data[factory.get_primary_key()] = id
 			query = build_replace(table, data)
 		else:
@@ -321,11 +288,11 @@ class Store(object):
 			
 		cur.execute(query)
 		
-		if not(self.uses_guids()):
-			cur.execute('SELECT MAX(%s) AS id FROM `%s`' % (storable.ID_COLUMN, table))
+		if not(factory.uses_guids()):
 			if not(storable_item.get_id()):
+				cur.execute('SELECT MAX(%s) AS id FROM `%s`' % (factory.get_primary_key(), table))
 				storable_item.set_id(cur.fetchone()['id'])
-			cur.fetchall()
+				cur.fetchall()
 			cur.execute('UNLOCK TABLES')
 	
 	def destroy(self, storable_item, destroy_related_storables=False):
