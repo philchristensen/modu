@@ -77,3 +77,8 @@ class SQLTestCase(unittest.TestCase):
 		sql = persist.build_select('table', {'col1':persist.LIKE("somestring")});
 		expecting = "SELECT * FROM `table` WHERE `col1` LIKE '%somestring%'"
 		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+
+	def test_build_select_not(self):
+		sql = persist.build_select('table', {'col1':persist.NOT("somestring")});
+		expecting = "SELECT * FROM `table` WHERE `col1` <> 'somestring'"
+		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))

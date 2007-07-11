@@ -92,9 +92,12 @@ def build_where(data):
 			criteria.append('`%s` IN (%s)' % (key, ', '.join(['%s'] * len(value))))
 			values.extend(value)
 		elif(isinstance(value, RAW)):
-			criteria.append('`%s`%s' % (key, value.sql))
+			criteria.append('`%s`%s' % (key, value.value))
 		elif(value is None):
 			criteria.append('ISNULL(`%s`)' % key)
+		elif(isinstance(value, NOT)):
+			criteria.append('`%s` <> %%s' % key)
+			values.append(value.value)
 		else:
 			criteria.append('`%s` = %%s' % key)
 			values.append(value)
@@ -116,15 +119,23 @@ def interp(query, args):
 	from modu.persist.Raw2Literal
 	"""
 	conv_dict = converters.conversions.copy()
+	# This is only used in build_replace/insert()
 	conv_dict[RAW] = Raw2Literal
 	return query % MySQLdb.escape_sequence(args, conv_dict)
+
+class NOT:
+	"""
+	Allows NOTs to be embedded in constructed queries.
+	"""
+	def __init__(self, value):
+		self.value = value
 
 class RAW:
 	"""
 	Allows RAW SQL to be embedded in constructed queries.
 	"""
-	def __init__(self, sql):
-		self.sql = sql
+	def __init__(self, value):
+		self.value = value
 
 class LIKE(RAW):
 	"""
@@ -138,13 +149,13 @@ class LIKE(RAW):
 	def __init__(self, match):
 		# This is a tricky one. These strings always go through an
 		# interpolation process, so we have to double up on the %
-		self.sql = " LIKE '%%" + match + "%%'"
+		self.value = " LIKE '%%" + match + "%%'"
 
 def Raw2Literal(o, d):
 	"""
 	Provides conversion support for RAW
 	"""
-	return o.sql
+	return o.value
 
 class Store(object):
 	"""
