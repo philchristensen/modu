@@ -36,11 +36,27 @@ class Storable(object):
 		object.__setattr__(self, '_id', 0)
 		object.__setattr__(self, '_dirty', True)
 		object.__setattr__(self, '_data', {})
-		object.__setattr__(self, '_table', None)
+		object.__setattr__(self, '_table', table)
 		object.__setattr__(self, 'created_date', 0)
 		object.__setattr__(self, 'modified_date', 0)
 	
-		object.__setattr__(self, '_table', table)
+	def __setitem__(self, key, value):
+		object.__getattribute__(self, '_data')[key] = value
+	
+	def __getitem__(self, key):
+		return object.__getattribute__(self, '_data')[key]
+	
+	def __contains__(self, key):
+		return key in object.__getattribute__(self, '_data')
+	
+	def __len__(self):
+		return len(object.__getattribute__(self, '_data'))
+	
+	def __iter__(self):
+		return object.__getattribute__(self, '_data').iterkeys()
+	
+	def iterkeys(self):
+		return object.__getattribute__(self, '_data').iterkeys()
 	
 	def __setattr__(self, key, value):
 		"""
@@ -50,12 +66,11 @@ class Storable(object):
 		All other attributes are assumed to be SQL column names,
 		and therefore must not begin with an underscore.
 		"""
-		_dict = object.__getattribute__(self, '__dict__')
-		if(key not in _dict):
-			self.touch()
-			object.__getattribute__(self, '_data')[key] = value
-		elif not(key.startswith('_')):
-			object.__setattr__(self, key, value)
+		if(key.startswith('_')):
+			_dict = object.__getattribute__(self, '__dict__')
+			_dict[key] = value
+		else:
+			self[key] = value
 	
 	def __getattribute__(self, key):
 		"""
@@ -63,18 +78,19 @@ class Storable(object):
 		column does not exist in the chosen table, errors will
 		occur on save.
 		"""
-		if not(key.startswith('_')):
-			try:
-				func = object.__getattribute__(self, key)
-				if(callable(func)):
-					return func
-			except:
-				_data = object.__getattribute__(self, '_data')
-				if(key in _data):
-					return _data[key]
-				_dict = object.__getattribute__(self, '__dict__')
-				if(key in _dict):
-					return _dict[key]
+		try:
+			func = object.__getattribute__(self, key)
+			if(callable(func)):
+				return func
+		except:
+			pass
+		
+		if(key.startswith('_')):
+			_dict = object.__getattribute__(self, '__dict__')
+			return _dict[key]
+		else:
+			_data = object.__getattribute__(self, '_data')
+			return _data[key]
 			
 		raise AttributeError('No such attribute "%s" on %r' % (key, self))
 	
@@ -226,7 +242,7 @@ class IFactory(interface.Interface):
 class DefaultFactory(object):
 	implements(IFactory)
 	
-	def __init__(self, table=None, model_class=Storable, id_col='id', guid_table='guid'):
+	def __init__(self, table, model_class=Storable, id_col='id', guid_table='guid'):
 		self.table = table
 		self.model_class = model_class
 		self.id_col = id_col

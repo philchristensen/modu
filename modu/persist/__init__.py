@@ -5,6 +5,8 @@
 #
 # See LICENSE for details
 
+from __future__ import generators
+
 import MySQLdb, warnings
 from MySQLdb import cursors, converters
 
@@ -230,7 +232,8 @@ class Store(object):
 		return self._factories[table]
 	
 	def ensure_factory(self, table, *args, **kwargs):
-		if(table not in self._factories):
+		if(kwargs.setdefault('force', False) or table not in self._factories):
+			del kwargs['force']
 			self.register_factory(table, storable.DefaultFactory(table, *args, **kwargs))
 	
 	def fetch_id(self, storable):
@@ -298,8 +301,12 @@ class Store(object):
 		while(child_list):
 			child = child_list.pop()
 			child_id = self.fetch_id(child)
+			child_table = child.get_table()
+			if(child_table not in self._factories):
+				raise NotImplementedError('There is no factory registered for the table `%s`' % child_table)
+			factory = self._factories[child_table]
 			assert(child_id not in id_list or not factory.uses_guids(), 'Found circular storable reference during save')
-			_save(child)
+			self._save(child, factory)
 			child_list.extend(child.get_related_storables())
 			id_list.append(child_id)
 	
@@ -317,7 +324,7 @@ class Store(object):
 			cur.execute('LOCK TABLES `%s` WRITE' % table)
 		
 		self.log(query)
-			
+		
 		cur.execute(query)
 		
 		if not(factory.uses_guids()):
@@ -337,7 +344,7 @@ class Store(object):
 				child = child_list.pop()
 				child_id = self.fetch_id(child)
 				if(child_id not in id_list):
-					_destroy(child)
+					self._destroy(child)
 					child_list.extend(child.get_related_storables())
 					id_list.append(child_id)
 	
@@ -348,7 +355,7 @@ class Store(object):
 		query = interp(delete_query, [storable_item.get_id()])
 		
 		self.log(query)
-			
+		
 		cur.execute(query)
 		storable_item.reset_id()
 	
