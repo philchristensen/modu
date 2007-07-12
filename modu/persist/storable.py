@@ -37,8 +37,6 @@ class Storable(object):
 		object.__setattr__(self, '_dirty', True)
 		object.__setattr__(self, '_data', {})
 		object.__setattr__(self, '_table', table)
-		object.__setattr__(self, 'created_date', 0)
-		object.__setattr__(self, 'modified_date', 0)
 	
 	def __setitem__(self, key, value):
 		object.__getattribute__(self, '_data')[key] = value
@@ -115,7 +113,6 @@ class Storable(object):
 		modified date.
 		"""
 		object.__setattr__(self, '_dirty', True)
-		object.__setattr__(self, 'modified_date', time.time())
 	
 	def clean(self):
 		"""
@@ -137,30 +134,14 @@ class Storable(object):
 		pairs, but this is also a convenient way to populate
 		or update Storable objects quickly.
 		"""
-		if('created_date' in data):
-			self.created_date = data['created_date']
-		else:
-			self.created_date = time.time()
-		if('modified_date' in data):
-			self.modified_date = data['modified_date']
 		object.__getattribute__(self, '_data').update(data)
 	
 	def get_data(self):
 		"""
 		Return a dict of column name => value pairs. This dict
 		will be passed to the query building functions.
-		
-		If created/modified_date columns were ever populated
-		on this object (either from the DB or manually), the
-		created/modified_date properties of this object will
-		used to update those columns.
 		"""
-		result = copy.copy(object.__getattribute__(self, '_data'))
-		if('created_date' in result):
-			result['created_date'] = self.created_date
-		if('modified_date' in result):
-			result['modified_date'] = self.modified_date
-		return result
+		return copy.copy(object.__getattribute__(self, '_data'))
 	
 	def get_table(self):
 		"""
