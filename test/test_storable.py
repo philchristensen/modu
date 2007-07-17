@@ -172,6 +172,53 @@ class StorableTestCase(unittest.TestCase):
 		page3 = self.store.load_one('subpage', {'code':'__sample-3__'})
 		self.failUnless(page3 is None, "Found '__sample-3__' object after destroying it.")
 	
+	def test_cache(self):
+		self.store.ensure_factory('page', force=True, use_cache=True)
+		self.failUnless(self.store._factories['page'].use_cache, "Caching wasn't turned on properly")
+		
+		s = storable.Storable('page')
+		s.code = 'url-code'
+		s.content = 'The quick brown fox jumps over the lazy dog.'
+		s.title = 'Old School'
+		
+		self.store.fetch_id(s)
+		x = self.store.load_one('page', {'id':s.get_id()});
+		self.failIf(x, 'Found unexpected object in DB.')
+		
+		self.store.save(s)
+		
+		t = self.store.load_one('page', {'id':s.get_id()});
+		self.failUnless(t, 'Cache is saving empty results.')
+		
+		t.title = 'a whole new title'
+		
+		u = self.store.load_one('page', {'id':s.get_id()});
+		self.failUnlessEqual(u.title, 'a whole new title', "Didn't get cached object when expected (1).")
+		
+		cur = self.store.get_cursor()
+		cur.execute("UPDATE page SET title = 'Old School' WHERE id = %s", [s.get_id()])
+		
+		v = self.store.load_one('page', {'id':s.get_id()});
+		self.failIfEqual(v.title, 'Old School', "Didn't get cached object when expected (2).")
+		
+	
+	def test_nocache(self):
+		self.store.ensure_factory('page', force=True)
+		
+		s = storable.Storable('page')
+		s.code = 'url-code'
+		s.content = 'The quick brown fox jumps over the lazy dog.'
+		s.title = 'Old School'
+		
+		self.store.save(s)
+		
+		t = self.store.load_one('page', {'id':s.get_id()});
+		
+		t.title = 'a whole new title'
+		self.store.save(t)
+		
+		u = self.store.load_one('page', {'id':s.get_id()});
+		self.failUnlessEqual(u.title, t.title, "Got cached object when not expected.")
 
 class TestStorable(storable.Storable):
 	def __init__(self):

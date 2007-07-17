@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import time, copy
+import time, copy, sys
 
 from zope import interface
 from zope.interface import implements
@@ -223,14 +223,19 @@ class IFactory(interface.Interface):
 class DefaultFactory(object):
 	implements(IFactory)
 	
-	def __init__(self, table, model_class=Storable, id_col='id', guid_table='guid'):
+	default_cache_setting = False
+	
+	def __init__(self, table, model_class=Storable, id_col='id', guid_table='guid', use_cache=None):
 		self.table = table
 		self.model_class = model_class
 		self.id_col = id_col
 		self.guid_table = guid_table
-	
-	def set_store(self, store):
-		self.store = store
+		
+		if(use_cache is not None):
+			self.use_cache = use_cache
+		else:
+			self.use_cache = self.default_cache_setting
+		self.cache = {}
 	
 	def get_id(self, increment=1):
 		"""
@@ -299,6 +304,26 @@ class DefaultFactory(object):
 		return self.get_items_by_query(query)
 	
 	def get_items_by_query(self, query):
+		if(self.use_cache):
+			print 'looking up query "%s"' % query
+			if(query not in self.cache):
+				print 'running query'
+				result = [self.create_item(record)
+							for record in self.get_item_records(query)]
+				if(result):
+					print 'populating cache'
+					self.cache[query] = result
+				else:
+					return result
+			else:
+				print 'cache is: ' + str(self.cache)
+			print 'returning cached items'
+			return self.cache[query]
+		else:
+			return self._get_items_by_query_generator(query)
+		return
+	
+	def _get_items_by_query_generator(self, query):
 		for record in self.get_item_records(query):
 			yield self.create_item(record)
 		return

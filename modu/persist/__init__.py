@@ -5,6 +5,14 @@
 #
 # See LICENSE for details
 
+"""
+The modu.persist package is home to modu's database abstraction
+layer and object/relational mapping API.
+
+@var DEFAULT_STORE_NAME: the default Store name
+@type DEFAULT_STORE_NAME: str
+"""
+
 from __future__ import generators
 
 import MySQLdb, warnings
@@ -209,12 +217,22 @@ class Store(object):
 	persistence layer. You create a single Store object for any given runtime,
 	and load any desired objects through this interface, after registering
 	factories for each table you wish to load objects from.
+	
+	@cvar _stores: pool of Store objects
+	@type _stores: dict
 	"""
+	
+	_stores = {}
 	
 	@classmethod
 	def get_store(cls, name=DEFAULT_STORE_NAME):
 		"""
-		Return the current Store instance, if it exists.
+		Return the current Store instance of the given name, if it exists.
+		
+		@param name: the name of the Store instance to retrieve
+		@type name: str
+		
+		@returns: requested Store, or None
 		"""
 		if(hasattr(cls, '_stores')):
 			if(name in cls._stores):
@@ -231,26 +249,35 @@ class Store(object):
 		auto_increment ID column), each INSERT (but not REPLACE, aka update) will
 		LOCK the table, execute the INSERT, read the MAX(id) for that table, and
 		finally UNLOCK the table.
+		
+		@param connection: the connection object to use for this store
+		@type connection: a DB-API 2.0 compliant connection (MySQLdb only, for now)
+		
+		@param name: the name of the Store instance to be created
+		@type name: str
+		
+		@raises RuntimeError: if a Store instance by that name already exists
 		"""
 		self.connection = connection
-		self.cache = False
 		self.debug_file = None
 		
 		self._factories = {}
-		self._object_cache = {}
 		
-		if not(hasattr(Store, '_stores')):
-			Store._stores = {}
-		elif(name in Store._stores):
+		if(name in self._stores):
 			raise RuntimeError("There is already a Store instance by the name '%s'." % name)
-		Store._stores[name] = self
+		self._stores[name] = self
 	
 	def get_cursor(self, cursor_type=cursors.SSDictCursor):
 		"""
+		Get a database cursor.
+		
 		To run queries directly against the Store's DB connection,
 		get a cursor object from this function. The default cursor
 		type is SSDictCursor, but others may be passed in as an
 		optional parameter.
+		
+		@param cursor_type: the cursor type to use
+		@type cursor_type: valid DB-API cursor
 		"""
 		if(cursor_type):
 			cur = self.connection.cursor(cursor_type)
@@ -261,11 +288,14 @@ class Store(object):
 	def register_factory(self, table, factory):
 		"""
 		Register an object to be the factory for this class.
+		
+		@param table: the table to register the given factory for
+		@type table: L{storable.IFactory} implementor
 		"""
 		if not(storable.IFactory.providedBy(factory)):
 			raise ValueError('%r does not implement IFactory' % factory)
 		self._factories[table] = factory
-		factory.set_store(self)
+		factory.store = self
 	
 	def has_factory(self, table):
 		"""
@@ -283,8 +313,9 @@ class Store(object):
 	
 	def ensure_factory(self, table, *args, **kwargs):
 		"""
-		A convenience method for registering a DefaultFactory for
-		the provided table. If there is already a factory registered,
+		Register a DefaultFactory for the provided table.
+		
+		A convenience method, if there is already a factory registered,
 		and the function was not passed a keyword argument 'force',
 		any other args or kwargs are passed to the storable.DefaultFactory
 		constructor.
@@ -295,6 +326,8 @@ class Store(object):
 	
 	def fetch_id(self, storable):
 		"""
+		Attempt to fetch an ID for this object, if necessary.
+		
 		"Predict" the id for this storable. If GUIDs are being used,
 		this method will fetch a new GUID, set it, and return
 		that ID immediately (assuming that this object will ultimately
@@ -315,15 +348,13 @@ class Store(object):
 			return new_id
 		return id
 	
-	def load(self, table, data={}, _ignore_cache=False, **kwargs):
+	def load(self, table, data={}, **kwargs):
 		"""
-		Load an object from the requested table, using whatever factory
-		is registered for that table. `data` may be either a dict-like
-		object or a query string (which skips the query-building phase
-		of the factory).
+		Load an object from the requested table.
 		
-		An optional third argument (or keyword argument `_ignore_cache`)
-		will disable query->object caching for this invocation.
+		This function uses whatever factory is registered for the requested
+		table. `data` may be either a dict-like object or a query string
+		(which skips the query-building phase of the factory).
 		
 		Any additional keyword arguments are added to the `data` dict,
 		and are ignored if `data` is a query string.
@@ -340,11 +371,6 @@ class Store(object):
 			data.update(kwargs)
 			query = factory.create_item_query(data)
 		
-		if(query in self._object_cache and self.cache and not _ignore_cache):
-			return self._object_cache[query]
-		
-		self.log(query)
-		
 		result = factory.get_items_by_query(query)
 		try:
 			iter(result)
@@ -354,18 +380,15 @@ class Store(object):
 		if(callable(result)):
 			return result()
 		
-		if(self.cache):
-			self._object_cache[query] = result
-		
 		return result
 	
-	def load_one(self, table, data={}, _ignore_cache=False, **kwargs):
+	def load_one(self, table, data={}, **kwargs):
 		"""
 		Load one item from the store. If the resulting query returns
 		multiple rows/objects, the first is returned, and the rest
 		are discarded.
 		"""
-		results = self.load(table, data, _ignore_cache, **kwargs)
+		results = self.load(table, data, **kwargs)
 		for result in list(results):
 			return result
 		return None
