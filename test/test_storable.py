@@ -57,7 +57,8 @@ class StorableTestCase(unittest.TestCase):
 		self.store = persist.Store.get_store()
 		if not(self.store):
 			self.connection = MySQLdb.connect('localhost', 'modu', 'modu', 'modu')
-			self.store = persist.Store(self.connection, debug_file=sys.stderr)
+			self.store = persist.Store(self.connection)
+			self.store.debug_file = sys.stderr
 		
 		global TEST_TABLES
 		cur = self.store.get_cursor()

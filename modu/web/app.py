@@ -169,7 +169,8 @@ class Application(object):
 					debug_file = req['wsgi.errors']
 				else:
 					debug_file = None
-				store = persist.Store(req['modu.db'], debug_file=debug_file)
+				store = persist.Store(req['modu.db'])
+				store.debug_file = debug_file
 			req['modu.store'] = store
 		
 		# FIXME: We assume that any session class requires database access, and pass
