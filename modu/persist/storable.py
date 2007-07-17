@@ -305,19 +305,13 @@ class DefaultFactory(object):
 	
 	def get_items_by_query(self, query):
 		if(self.use_cache):
-			print 'looking up query "%s"' % query
 			if(query not in self.cache):
-				print 'running query'
 				result = [self.create_item(record)
 							for record in self.get_item_records(query)]
 				if(result):
-					print 'populating cache'
 					self.cache[query] = result
 				else:
 					return result
-			else:
-				print 'cache is: ' + str(self.cache)
-			print 'returning cached items'
 			return self.cache[query]
 		else:
 			return self._get_items_by_query_generator(query)

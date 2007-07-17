@@ -220,6 +220,15 @@ class Store(object):
 	
 	@cvar _stores: pool of Store objects
 	@type _stores: dict
+	
+	@ivar connection: the connection object
+	@type connection: a DB-API 2.0 compliant connection
+	
+	@ivar debug_file: print debug info to this object, if not None
+	@type debug_file: a file-like object
+	
+	@ivar _factories: table names mapped to registered factories
+	@type _factories: dict
 	"""
 	
 	_stores = {}
@@ -290,7 +299,12 @@ class Store(object):
 		Register an object to be the factory for this class.
 		
 		@param table: the table to register the given factory for
-		@type table: L{storable.IFactory} implementor
+		@type table: str
+		
+		@param factory: the factory object to register
+		@type factory: L{storable.IFactory} implementor
+		
+		@raises ValueError: if the provided factory is not a L{storable.IFactory} implementor
 		"""
 		if not(storable.IFactory.providedBy(factory)):
 			raise ValueError('%r does not implement IFactory' % factory)
@@ -300,15 +314,25 @@ class Store(object):
 	def has_factory(self, table):
 		"""
 		Does this store already know how to handle the provided table?
+		
+		@param table: the table whose factory is sought
+		
+		@returns: boolean
 		"""
 		return table in self._factories
 	
 	def get_factory(self, table):
 		"""
 		Return the factory registered for the given table.
+		
+		@param table: the table whose factory is sought
+		
+		@returns: the requested factory
+		@rtype: L{storable.IFactory}
+		@raises LookupError: if no factory has been registered for the given table
 		"""
 		if(table not in self._factories):
-			raise KeyError('There is no factory registered for the table `%s`' % table)
+			raise LookupError('There is no factory registered for the table `%s`' % table)
 		return self._factories[table]
 	
 	def ensure_factory(self, table, *args, **kwargs):
@@ -319,6 +343,12 @@ class Store(object):
 		and the function was not passed a keyword argument 'force',
 		any other args or kwargs are passed to the storable.DefaultFactory
 		constructor.
+		
+		@param table: the table to register the given factory for
+		@type table: str
+		
+		@param force: should this override existing factory registrations?
+		@type force: bool
 		"""
 		if(kwargs.setdefault('force', False) or table not in self._factories):
 			del kwargs['force']
@@ -326,7 +356,7 @@ class Store(object):
 	
 	def fetch_id(self, storable):
 		"""
-		Attempt to fetch an ID for this object, if necessary.
+		Fetch an ID for this object, if possible.
 		
 		"Predict" the id for this storable. If GUIDs are being used,
 		this method will fetch a new GUID, set it, and return
@@ -336,12 +366,19 @@ class Store(object):
 		If GUIDs are not being used, this method will return 0 if
 		this is an unsaved object. It's not possible to use "predictive"
 		IDs in that case.
+		
+		@param storable: the object whose ID you wish to fetch
+		@type storable: L{storable.Storable}
+		
+		@returns: the item's id, or 0
+		@rtype: int
+		@raises LookupError: if no factory has been registered for this Storable's table
 		"""
 		id = storable.get_id()
 		if(id == 0):
 			table = storable.get_table()
 			if not(self.has_factory(table)):
-				raise NotImplementedError('There is no factory registered for the table `%s`' % table)
+				raise LookupError('There is no factory registered for the table `%s`' % table)
 			factory = self.get_factory(table)
 			new_id = factory.get_id()
 			storable.set_id(new_id)
@@ -360,9 +397,19 @@ class Store(object):
 		and are ignored if `data` is a query string.
 		
 		Returns an iterable object.
+
+		@param table: the table to register the given factory for
+		@type table: str
+		
+		@param data: a column name to value map; possibly other Factory-specific values
+		@type data: dict
+	
+		@returns: a set of resulting objects
+		@rtype: iterable
+		@raises LookupError: if no factory has been registered for this Storable's table
 		"""
 		if(table not in self._factories):
-			raise NotImplementedError('There is no factory registered for the table `%s`' % table)
+			raise LookupError('There is no factory registered for the table `%s`' % table)
 		
 		factory = self._factories[table]
 		if(isinstance(data, basestring)):
@@ -375,7 +422,7 @@ class Store(object):
 		try:
 			iter(result)
 		except TypeError:
-			raise RuntimeError('Result of %s::get_items_by_query() does not return an iterable object.', result.__class__.__name__)
+			raise AssertionError('Result of %s::get_items_by_query() does not return an iterable object.', result.__class__.__name__)
 		
 		if(callable(result)):
 			return result()
@@ -384,40 +431,60 @@ class Store(object):
 	
 	def load_one(self, table, data={}, **kwargs):
 		"""
-		Load one item from the store. If the resulting query returns
-		multiple rows/objects, the first is returned, and the rest
-		are discarded.
+		Load one item from the store.
+		
+		If the resulting query returns multiple rows/objects, the first is
+		returned, and the rest are discarded.
+		
+		@seealso: L{load()}
 		"""
 		results = self.load(table, data, **kwargs)
 		for result in list(results):
 			return result
 		return None
 	
-	def save(self, storable_item):
-		table = storable_item.get_table()
+	def save(self, storable, save_related_storables=True):
+		"""
+		Save the provided Storable.
+		
+		@param storable: the object you wish to save
+		@type storable: L{storable.Storable}
+		
+		@param save_related_storables: should the items returned by
+			L{Storable.get_related_storables()} be automatically saved?
+		@type save_related_storables: bool
+		
+		@raises LookupError: if no factory has been registered for this Storable's table
+		"""
+		table = storable.get_table()
 		if(table not in self._factories):
-			raise NotImplementedError('There is no factory registered for the table `%s`' % table)
+			raise LookupError('There is no factory registered for the table `%s`' % table)
 		factory = self._factories[table]
 		
-		self._save(storable_item, factory)
-		child_list = storable_item.get_related_storables()
+		self._save(storable, factory)
+		child_list = storable.get_related_storables()
 		id_list = []
-		while(child_list):
+		while(child_list and save_related_storables):
 			child = child_list.pop()
 			child_id = self.fetch_id(child)
 			child_table = child.get_table()
 			if(child_table not in self._factories):
-				raise NotImplementedError('There is no factory registered for the table `%s`' % child_table)
+				raise LookupError('There is no factory registered for the table `%s`' % child_table)
 			factory = self._factories[child_table]
-			assert(child_id not in id_list or not factory.uses_guids(), 'Found circular storable reference during save')
+			if(child_id in id_list and factory.uses_guids()):
+				raise AssertionError('Found circular storable reference during save')
 			self._save(child, factory)
 			child_list.extend(child.get_related_storables())
 			id_list.append(child_id)
 	
-	def _save(self, storable_item, factory):
-		table = storable_item.get_table()
-		id = self.fetch_id(storable_item)
-		data = storable_item.get_data()
+	def _save(self, storable, factory):
+		"""
+		Internal function that is responsible for doing the
+		actual saving.
+		"""
+		table = storable.get_table()
+		id = self.fetch_id(storable)
+		data = storable.get_data()
 		cur = self.get_cursor()
 		
 		if(id or factory.uses_guids()):
@@ -432,38 +499,56 @@ class Store(object):
 		cur.execute(query)
 		
 		if not(factory.uses_guids()):
-			if not(storable_item.get_id()):
+			if not(storable.get_id()):
 				cur.execute('SELECT MAX(%s) AS `id` FROM `%s`' % (factory.get_primary_key(), table))
 				new_id = cur.fetchone()['id']
-				storable_item.set_id(new_id)
+				storable.set_id(new_id)
 				cur.fetchall()
 			cur.execute('UNLOCK TABLES')
 	
-	def destroy(self, storable_item, destroy_related_storables=False):
-		self._destroy(storable_item)
-		if(destroy_related_storables):
-			child_list = storable_item.get_related_storables()
-			id_list = []
-			while(child_list):
-				child = child_list.pop()
-				child_id = self.fetch_id(child)
-				if(child_id not in id_list):
-					self._destroy(child)
-					child_list.extend(child.get_related_storables())
-					id_list.append(child_id)
+	def destroy(self, storable, destroy_related_storables=False):
+		"""
+		Destroy the provided Storable.
+		
+		@param storable: the object you wish to destroy
+		@type storable: L{storable.Storable}
+		
+		@param destroy_related_storables: should the items returned by
+			L{Storable.get_related_storables()} be automatically destroyed?
+		@type destroy_related_storables: bool
+		"""
+		self._destroy(storable)
+		child_list = storable.get_related_storables()
+		id_list = []
+		while(child_list and destroy_related_storables):
+			child = child_list.pop()
+			child_id = self.fetch_id(child)
+			if(child_id in id_list and factory.uses_guids()):
+				raise AssertionError('Found circular storable reference during save')
+			self._destroy(child)
+			child_list.extend(child.get_related_storables())
+			id_list.append(child_id)
 	
-	def _destroy(self, storable_item):
-		delete_query = "DELETE FROM `%s` WHERE `id` = %%s" % storable_item.get_table()
+	def _destroy(self, storable):
+		"""
+		Internal function that is responsible for doing the
+		actual destruction.
+		"""
+		delete_query = "DELETE FROM `%s` WHERE `id` = %%s" % storable.get_table()
 		cur = self.get_cursor(None)
 		
-		query = interp(delete_query, [storable_item.get_id()])
+		query = interp(delete_query, [storable.get_id()])
 		
 		self.log(query)
 		
 		cur.execute(query)
-		storable_item.reset_id()
+		storable.reset_id()
 	
 	def log(self, message):
+		"""
+		I think I might switch to using the Twisted logger, but for
+		now this logs output if the debug_file attribute has been set.
+		"""
 		if(self.debug_file):
 			self.debug_file.write("[Store] %s\n" % message)
 
