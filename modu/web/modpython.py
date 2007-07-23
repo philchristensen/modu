@@ -6,7 +6,7 @@
 # See LICENSE for details
 
 from mod_python import apache
-from modu.web import wsgi
+from modu.web import app
 
 def handler(mp_req):
 	"""
@@ -33,7 +33,7 @@ def handler(mp_req):
 		
 		return mp_req.write
 	
-	content = wsgi.handler(req, start_response)
+	content = app.handler(req, start_response)
 	if(isinstance(content, FileWrapper)):
 		mp_req.sendfile(content.filelike.name)
 		if(hasattr(content, 'close')):
