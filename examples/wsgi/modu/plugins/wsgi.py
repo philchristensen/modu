@@ -31,7 +31,7 @@ class RootResource(resource.CheetahTemplateResource):
 class WSGISite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
-	def configure_app(self, application):
+	def initialize(self, application):
 		application.base_domain = 'localhost:8888'
 		application.base_path = '/modu/examples/wsgi'
 		application.db_url = None

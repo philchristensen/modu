@@ -28,6 +28,26 @@ Other changes or omissions are outlined below.
 VALIDATE_SID_RE = re.compile('[0-9a-f]{32}$')
 CLEANUP_CHANCE = 1000
 
+def activate_session(req):
+	# FIXME: We assume that any session class requires database access, and pass
+	# the db connection as the second paramter to the session class constructor
+	app = req['modu.app']
+	session_class = app.session_class
+	db_url = app.db_url
+	if(db_url and session_class):
+		req['modu.session'] = session_class(req, req['modu.db'])
+		if(app.debug_session):
+			req.log_error('session contains: ' + str(req['modu.session']))
+		if(app.disable_session_users):
+			if(app.enable_anonymous_users):
+				req['modu.user'] = user.AnonymousUser()
+			else:
+				req['modu.user'] = None
+		else:
+			req['modu.user'] = req['modu.session'].get_user()
+			if(req['modu.user'] is None and app.enable_anonymous_users):
+				req['modu.user'] = user.AnonymousUser()
+
 def generate_token(entropy=None):
 	"""
 	This function is used to generate "unique" session IDs. It's

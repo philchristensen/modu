@@ -16,7 +16,7 @@ import os
 class SabiDefaultSite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
-	def configure_app(self, app):
+	def initialize(self, app):
 		app.base_domain = 'localhost:8888'
 		app.base_path = '/modu/examples/sabi'
 		self.load_plugins(app)

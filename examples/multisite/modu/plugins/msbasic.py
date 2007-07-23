@@ -57,7 +57,7 @@ class CCSRootResource(resource.TemplateResource):
 class ChildBasicSite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
-	def configure_app(self, application):
+	def initialize(self, application):
 		application.base_domain = 'localhost:8888'
 		application.base_path = '/modu/examples/multisite/basic'
 		application.db_url = None

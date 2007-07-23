@@ -30,7 +30,7 @@ class RootResource(resource.ZPTemplateResource):
 class WSGISite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
-	def configure_app(self, application):
+	def initialize(self, application):
 		application.base_domain = 'localhost:8888'
 		application.base_path = '/modu/examples/zpt'
 		application.db_url = None

@@ -52,7 +52,7 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 class TestSessionSite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
-	def configure_app(self, application):
+	def initialize(self, application):
 		application.base_domain = 'localhost:8888'
 		application.base_path = '/modu/test/test_nested_field_storage'
 		application.db_url = None

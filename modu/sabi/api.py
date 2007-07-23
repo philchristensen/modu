@@ -16,7 +16,7 @@ def invoke(func, *args, **kwargs):
 	pass
 
 class IExtension(interface.Interface):
-	def bootstrap(self, req, app):
+	def initialize(self, req, app):
 		"""
 		Called when first configuring an application
 		in this memory space. Allows creation of app

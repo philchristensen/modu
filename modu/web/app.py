@@ -19,13 +19,12 @@ db_pool = {}
 
 def handler(env, start_response):
 	application = get_application(env)
+	env['modu.app'] = application
+	req = get_request(env)
 	
 	if not(application):
 		start_response('404 Not Found', [('Content-Type', 'text/html')])
 		return [content404(env['REQUEST_URI'])]
-	
-	env['modu.app'] = application
-	req = get_request(env)
 	
 	result = check_file(req)
 	if(result):
@@ -75,25 +74,6 @@ def handler(env, start_response):
 	return [content]
 
 
-def check_file(req):
-	true_path = req['PATH_TRANSLATED']
-	try:
-		finfo = os.stat(true_path)
-		# note that there's no support for directory indexes,
-		# only direct file access under the webroot
-		if(stat.S_ISREG(finfo.st_mode)):
-			try:
-				content_type = mimetypes.guess_type(true_path)[0]
-				size = finfo.st_size
-				return (true_path, content_type, size)
-			except IOError:
-				return (true_path, None, None)
-	except OSError:
-		pass
-	
-	return None
-
-
 def get_request(env):
 	# Hopefully the next release of mod_python
 	# will let us ditch this line
@@ -118,27 +98,47 @@ def get_request(env):
 	return Request(env)
 
 
-def get_application(env):
+def check_file(req):
+	true_path = req['PATH_TRANSLATED']
+	try:
+		finfo = os.stat(true_path)
+		# note that there's no support for directory indexes,
+		# only direct file access under the webroot
+		if(stat.S_ISREG(finfo.st_mode)):
+			try:
+				content_type = mimetypes.guess_type(true_path)[0]
+				size = finfo.st_size
+				return (true_path, content_type, size)
+			except IOError:
+				return (true_path, None, None)
+	except OSError:
+		pass
+	
+	return None
+
+
+def get_application(req):
 	"""
 	Return an application object for the site configured
-	at the path specified in env.
+	at the path specified in req.
 	
 	Note that ISite plugins are only searched when the
 	specified host/path is not found.
 	"""
 	global host_trees
 	
-	host = env.get('HTTP_HOST', env['SERVER_NAME'])
+	host = req.get('HTTP_HOST', req['SERVER_NAME'])
 	
 	if not(host in host_trees):
-		_scan_plugins(env)
+		_scan_plugins(req)
 	
 	host_tree = host_trees[host]
 	
-	if not(host_tree.has_path(env['SCRIPT_NAME'])):
-		_scan_plugins(env)
+	if not(host_tree.has_path(req['SCRIPT_NAME'])):
+		_scan_plugins(req)
 	
-	app = host_tree.get_data_at(env['SCRIPT_NAME'])
+	app = host_tree.get_data_at(req['SCRIPT_NAME'])
+	
 	return copy.deepcopy(app)
 
 
@@ -179,9 +179,8 @@ def _scan_plugins(env):
 	reload(modu.plugins)
 	
 	for site_plugin in plugin.getPlugins(ISite, modu.plugins):
-		app = Application()
 		site = site_plugin()
-		site.configure_app(app)
+		app = Application(site)
 		host_tree = host_trees.setdefault(app.base_domain, url.URLNode())
 		host_tree.register(app.base_path, app, clobber=True)
 
@@ -191,9 +190,10 @@ class ISite(interface.Interface):
 	An ISitePlugin defines an application that responds to
 	a certain hostname and/or path.
 	"""
-	def configure_app(self, app):
+	def initialize(self, app):
 		"""
-		Configure the application object for this site.
+		Configure the application object for this site. This method is
+		only called once for the lifetime of the app object.
 		"""
 
 
@@ -235,7 +235,7 @@ class Application(object):
 	instance of this class, which will be cloned and stored
 	in the request object for each page request.
 	"""
-	def __init__(self):
+	def __init__(self, site):
 		_dict = self.__dict__
 		_dict['config'] = {}
 		
@@ -252,6 +252,9 @@ class Application(object):
 		
 		_dict['_site_tree'] = url.URLNode()
 		_dict['_response_headers'] = []
+		_dict['_site'] = site
+		
+		site.initialize(self)
 	
 	def __setattr__(self, key, value):
 		self.config[key] = value
@@ -301,50 +304,17 @@ class Application(object):
 		Initialize the common services, store them in the
 		provided request variable.
 		"""
-		# Databases are a slightly special case. Since we want to re-use
-		# db connections as much as possible, we keep the current connection
-		# as a global variable. Ordinarily this is a naughty-no-no in mod_python,
-		# but we're going to be very very careful.
 		db_url = req['modu.app'].db_url
 		if(db_url):
 			if('__default__' not in db_pool):
 				dsn = url.urlparse(req['modu.app'].db_url)
 				if(dsn['scheme'] == 'mysql'):
-					import MySQLdb
-					db_pool['__default__'] = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
+					from modu.persist import mysql
+					db_pool['__default__'] = mysql.connect(dsn)
 				else:
 					raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
 			
 			req['modu.db'] = db_pool['__default__']
 		
-		initialize_store = req['modu.app'].initialize_store
-		if('modu.db' in req and initialize_store):
-			# FIXME: I really can't think of any scenario where a store will
-			# already be initialized, but we'll check anyway, for now
-			store = persist.Store.get_store()
-			if not(store):
-				if(req['modu.app'].debug_store):
-					debug_file = req['wsgi.errors']
-				else:
-					debug_file = None
-				store = persist.Store(req['modu.db'])
-				store.debug_file = debug_file
-			req['modu.store'] = store
-		
-		# FIXME: We assume that any session class requires database access, and pass
-		# the db connection as the second paramter to the session class constructor
-		session_class = req['modu.app'].session_class
-		if(db_url and session_class):
-			req['modu.session'] = session_class(req, req['modu.db'])
-			if(req['modu.app'].debug_session):
-				req.log_error('session contains: ' + str(req['modu.session']))
-			if(self.disable_session_users):
-				if(self.enable_anonymous_users):
-					req['modu.user'] = user.AnonymousUser()
-				else:
-					req['modu.user'] = None
-			else:
-				req['modu.user'] = req['modu.session'].get_user()
-				if(req['modu.user'] is None and self.enable_anonymous_users):
-					req['modu.user'] = user.AnonymousUser()
-		
+		persist.activate_store(req)
+		session.activate_session(req)

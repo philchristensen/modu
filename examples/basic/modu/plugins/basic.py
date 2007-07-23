@@ -57,7 +57,7 @@ class RootResource(resource.TemplateResource):
 class BasicSite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
-	def configure_app(self, application):
+	def initialize(self, application):
 		application.base_domain = 'localhost:8888'
 		application.base_path = '/modu/examples/basic'
 		application.db_url = None

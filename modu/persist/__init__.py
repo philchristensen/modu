@@ -22,6 +22,22 @@ from modu.persist import storable
 
 DEFAULT_STORE_NAME = '__default__'
 
+def activate_store(req):
+	app = req['modu.app']
+	if('modu.db' in req and app.initialize_store):
+		# FIXME: I really can't think of any scenario where a store will
+		# already be initialized, but we'll check anyway, for now
+		store = persist.Store.get_store()
+		if not(store):
+			if(app.debug_store):
+				debug_file = req['wsgi.errors']
+			else:
+				debug_file = None
+			store = persist.Store(req['modu.db'])
+			store.debug_file = debug_file
+		req['modu.store'] = store
+
+
 def build_insert(table, data):
 	"""
 	Given a table name and a dictionary, construct an INSERT query. Keys are
@@ -184,6 +200,13 @@ def interp(query, args):
 	return query % MySQLdb.escape_sequence(args, conv_dict)
 
 
+def Raw2Literal(o, d):
+	"""
+	Provides conversion support for RAW
+	"""
+	return o.value
+
+
 class NOT:
 	"""
 	Allows NOTs to be embedded in constructed queries.
@@ -202,13 +225,6 @@ class RAW:
 	"""
 	def __init__(self, value):
 		self.value = value
-
-
-def Raw2Literal(o, d):
-	"""
-	Provides conversion support for RAW
-	"""
-	return o.value
 
 
 class Store(object):
@@ -247,7 +263,7 @@ class Store(object):
 			if(name in cls._stores):
 				return cls._stores[name]
 		return None
-
+	
 	def __init__(self, connection, name=DEFAULT_STORE_NAME):
 		"""
 		Create a Store for a given DB connection object.
@@ -397,13 +413,13 @@ class Store(object):
 		and are ignored if `data` is a query string.
 		
 		Returns an iterable object.
-
+		
 		@param table: the table to register the given factory for
 		@type table: str
 		
 		@param data: a column name to value map; possibly other Factory-specific values
 		@type data: dict
-	
+		
 		@returns: a set of resulting objects
 		@rtype: iterable
 		@raises LookupError: if no factory has been registered for this Storable's table

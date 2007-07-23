@@ -36,7 +36,7 @@ class RootResource(resource.CheetahTemplateResource):
 class CheetahSite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
-	def configure_app(self, application):
+	def initialize(self, application):
 		application.base_domain = 'localhost:8888'
 		application.base_path = '/modu/examples/cheetah'
 		application.db_url = None
