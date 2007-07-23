@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import os, os.path, sys, stat, copy, mimetypes
+import os, os.path, sys, stat, copy, mimetypes, traceback
 
 from modu.util import url, tags
 from modu.web import session, user, resource
@@ -18,6 +18,12 @@ host_trees = {}
 db_pool = {}
 
 def handler(env, start_response):
+	try:
+		sanity_check(env)
+	except Exception, e:
+		start_response('500 Internal Server Error', [('Content-Type', 'text/html')])
+		return [content500(env['REQUEST_URI'], e)]
+	
 	application = get_application(env)
 	env['modu.app'] = application
 	req = configure_request(env)
@@ -26,6 +32,7 @@ def handler(env, start_response):
 		start_response('404 Not Found', [('Content-Type', 'text/html')])
 		return [content404(env['REQUEST_URI'])]
 	
+	application.bootstrap(req)
 	result = check_file(req)
 	if(result):
 		content = [content403(env['REQUEST_URI'])]
@@ -54,8 +61,6 @@ def handler(env, start_response):
 	
 	req['modu.tree'] = tree
 	
-	application.bootstrap(req)
-	
 	try:
 		try:
 			if(resource.IResourceDelegate.providedBy(rsrc)):
@@ -72,6 +77,13 @@ def handler(env, start_response):
 	
 	start_response('200 OK', application.get_headers())
 	return [content]
+
+
+def sanity_check(env):
+	if(env['wsgi.multithread']):
+		raise EnvironmentError("""Sorry, modu does not support multithreaded
+		web containers at this time. If you are using Apache 2, please make
+		sure you're using the Prefork MPM.""")
 
 
 def configure_request(env):
@@ -164,6 +176,16 @@ def content401(path=None):
 	content = tags.h1()['Unauthorized']
 	content += tags.hr()
 	content += tags.p()['You have not supplied the appropriate credentials.']
+	if(path):
+		content += tags.strong()[path]
+	return content
+
+
+def content500(path=None, exception=None):
+	content = tags.h1()['Internal Server Error']
+	content += tags.hr()
+	content += tags.p()['Sorry, an error has occurred:']
+	content += tags.pre()[traceback.format_exc()]
 	if(path):
 		content += tags.strong()[path]
 	return content
