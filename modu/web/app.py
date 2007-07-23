@@ -20,7 +20,7 @@ db_pool = {}
 def handler(env, start_response):
 	application = get_application(env)
 	env['modu.app'] = application
-	req = get_request(env)
+	req = configure_request(env)
 	
 	if not(application):
 		start_response('404 Not Found', [('Content-Type', 'text/html')])
@@ -74,7 +74,7 @@ def handler(env, start_response):
 	return [content]
 
 
-def get_request(env):
+def configure_request(env):
 	# Hopefully the next release of mod_python
 	# will let us ditch this line
 	env['SCRIPT_NAME'] = env['modu.app'].base_path
@@ -145,7 +145,7 @@ def get_application(req):
 def content404(path=None):
 	content = tags.h1()['Not Found']
 	content += tags.hr()
-	content += tags.p()['There is no application registered at that path.']
+	content += tags.p()['There is no object registered at that path.']
 	if(path):
 		content += tags.strong()[path]
 	return content
