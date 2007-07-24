@@ -11,7 +11,7 @@ from distutils.version import LooseVersion
 
 def connect(dsn):
 	conn = MySQLdb.connect(dsn['host'], dsn['user'], dsn['password'], dsn['path'][1:])
-	mysql.fix_mysqldb(conn)
+	fix_mysqldb(conn)
 	return conn
 
 

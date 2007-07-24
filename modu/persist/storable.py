@@ -324,6 +324,7 @@ class DefaultFactory(object):
 	
 	def get_item_records(self, query):
 		cursor = self.store.get_cursor()
+		self.store.log(query)
 		cursor.execute(query)
 		
 		row = cursor.fetchone()

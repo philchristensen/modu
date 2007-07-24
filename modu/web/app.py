@@ -191,11 +191,11 @@ def content500(path=None, exception=None):
 	return content
 
 
-def _scan_plugins(env):
+def _scan_plugins(req):
 	global host_trees
 	
-	if(env['SCRIPT_FILENAME'] not in sys.path):
-		sys.path.append(env['SCRIPT_FILENAME'])
+	if(req['SCRIPT_FILENAME'] not in sys.path):
+		sys.path.append(req['SCRIPT_FILENAME'])
 	
 	import modu.plugins
 	reload(modu.plugins)

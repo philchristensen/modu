@@ -27,13 +27,13 @@ def activate_store(req):
 	if('modu.db' in req and app.initialize_store):
 		# FIXME: I really can't think of any scenario where a store will
 		# already be initialized, but we'll check anyway, for now
-		store = persist.Store.get_store()
+		store = Store.get_store()
 		if not(store):
 			if(app.debug_store):
 				debug_file = req['wsgi.errors']
 			else:
 				debug_file = None
-			store = persist.Store(req['modu.db'])
+			store = Store(req['modu.db'])
 			store.debug_file = debug_file
 		req['modu.store'] = store
 
