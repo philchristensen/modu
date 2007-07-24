@@ -18,12 +18,6 @@ host_trees = {}
 db_pool = {}
 
 def handler(env, start_response):
-	try:
-		sanity_check(env)
-	except Exception, e:
-		start_response('500 Internal Server Error', [('Content-Type', 'text/html')])
-		return [content500(env['REQUEST_URI'], e)]
-	
 	application = get_application(env)
 	env['modu.app'] = application
 	req = configure_request(env)
@@ -77,13 +71,6 @@ def handler(env, start_response):
 	
 	start_response('200 OK', application.get_headers())
 	return [content]
-
-
-def sanity_check(env):
-	if(env['wsgi.multithread']):
-		raise EnvironmentError("""Sorry, modu does not support multithreaded
-		web containers at this time. If you are using Apache 2, please make
-		sure you're using the Prefork MPM.""")
 
 
 def configure_request(env):
