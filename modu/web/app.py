@@ -12,6 +12,7 @@ from modu.web import session, user, resource
 from modu import persist, web
 
 from twisted import plugin
+from twisted.python import log
 from zope import interface
 
 host_trees = {}
@@ -19,14 +20,15 @@ db_pool = {}
 
 def handler(env, start_response):
 	application = get_application(env)
-	env['modu.app'] = application
-	req = configure_request(env)
 	
 	if not(application):
 		start_response('404 Not Found', [('Content-Type', 'text/html')])
 		return [content404(env['REQUEST_URI'])]
 	
+	env['modu.app'] = application
+	req = configure_request(env)
 	application.bootstrap(req)
+	
 	result = check_file(req)
 	if(result):
 		content = [content403(env['REQUEST_URI'])]
@@ -133,10 +135,10 @@ def get_application(req):
 	
 	host_tree = host_trees[host]
 	
-	if not(host_tree.has_path(req['SCRIPT_NAME'])):
+	if not(host_tree.has_path(req['REQUEST_URI'])):
 		_scan_plugins(req)
 	
-	app = host_tree.get_data_at(req['SCRIPT_NAME'])
+	app = host_tree.get_data_at(req['REQUEST_URI'])
 	
 	return copy.deepcopy(app)
 

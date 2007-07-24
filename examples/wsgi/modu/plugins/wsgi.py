@@ -5,9 +5,7 @@
 #
 # See LICENSE for details
 
-from modu.web.modpython import handler
 from modu.web import app, resource
-
 from modu.web.app import ISite
 from zope.interface import classProvides
 from twisted import plugin
@@ -26,7 +24,7 @@ class RootResource(resource.CheetahTemplateResource):
 		return 'text/html'
 	
 	def get_template(self, req):
-		return 'page.html.tmpl' 
+		return 'page.html.tmpl'
 
 class WSGISite(object):
 	classProvides(plugin.IPlugin, ISite)
