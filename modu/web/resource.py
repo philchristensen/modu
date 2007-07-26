@@ -48,10 +48,15 @@ class Resource(object):
 		cnt = self.get_content_provider()
 		if(IAccessControl.providedBy(cnt)):
 			cnt.check_access(req)
+		
 		cnt.prepare_content(req)
+		
 		req['modu.app'].add_header('Content-Type', cnt.get_content_type(req))
+		
 		content = cnt.get_content(req)
+		
 		req['modu.app'].add_header('Content-Length', len(content))
+		
 		return content
 	
 	def get_paths(self):
