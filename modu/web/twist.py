@@ -10,7 +10,6 @@ import urllib, os, sys
 from twisted.internet import defer
 from twisted.web import resource, server
 from twisted.web2 import wsgi
-from twisted.python import log
 
 headerNameTranslation = ''.join([c.isalnum() and c.upper() or '_' for c in map(chr, range(256))])
 
@@ -120,26 +119,27 @@ class WSGIResource(resource.Resource):
 		handler = WSGIHandler(self.application, request)
 		handler.environment['SCRIPT_FILENAME'] = os.getcwd()
 		
-		def __write(content):
-			request.write(content)
-			request.finish()
-		
-		def __finish(response):
-			for key, values in response.headers.getAllRawHeaders():
-				for value in values:
-					request.setHeader(key, value)
-			
-			content = response.stream.read()
-			if(isinstance(content, defer.Deferred)):
-				content.addCallback(__write)
-			else:
-				__write(content)
-		
-		handler.responseDeferred.addCallback(__finish)
+		handler.responseDeferred.addCallback(self._finish, request)
 		
 		# Run it in a thread
 		reactor.callInThread(handler.run)
 		return server.NOT_DONE_YET
+	
+	def _write(self, content, request):
+		request.write(content)
+		request.finish()
+	
+	def _finish(self, response, request):
+		for key, values in response.headers.getAllRawHeaders():
+			for value in values:
+				request.setHeader(key, value)
+		
+		content = response.stream.read()
+		if(isinstance(content, defer.Deferred)):
+			content.addCallback(self._write, request)
+		else:
+			self._write(content, request)
+
 
 class WSGIHandler(wsgi.WSGIHandler):
 	def setupEnvironment(self, request):
