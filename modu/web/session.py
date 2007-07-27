@@ -284,7 +284,7 @@ class DbUserSession(BaseSession):
 			else:
 				return None
 		finally:
-			#cur.fetchall()
+			cur.fetchall()
 			cur.close()
 	
 	def do_save(self, dict):

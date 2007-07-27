@@ -316,11 +316,10 @@ class DefaultFactory(object):
 		return self.cache[query]
 	
 	def get_item_records(self, query):
-		cursor = self.store.get_cursor()
+		cur = self.store.get_cursor()
 		try:
 			self.store.log(query)
-			cursor.execute(query)
+			cur.execute(query)
+			return cur.fetchall()
 		finally:
-			result = cursor.fetchall()
-			cursor.close()
-			return result
+			cur.close()

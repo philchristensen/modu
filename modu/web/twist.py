@@ -10,6 +10,7 @@ import urllib, os, sys
 from twisted.internet import defer
 from twisted.web import resource, server, util
 from twisted.web2 import wsgi
+from twisted.python import log
 
 headerNameTranslation = ''.join([c.isalnum() and c.upper() or '_' for c in map(chr, range(256))])
 
@@ -146,7 +147,6 @@ class WSGIResource(resource.Resource):
 		request.setHeader('Content-Type', 'text/html')
 		request.setHeader('Content-Length', len(content))
 		self._write(content, request)
-		raise failure
 
 
 class WSGIHandler(wsgi.WSGIHandler):
