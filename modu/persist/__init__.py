@@ -503,24 +503,28 @@ class Store(object):
 		data = storable.get_data()
 		cur = self.get_cursor()
 		
-		if(id or factory.uses_guids()):
-			data[factory.get_primary_key()] = id
-			query = build_replace(table, data)
-		else:
-			query = build_insert(table, data)
-			cur.execute('LOCK TABLES `%s` WRITE' % table)
+		try:
+			if(id or factory.uses_guids()):
+				data[factory.get_primary_key()] = id
+				query = build_replace(table, data)
+			else:
+				query = build_insert(table, data)
+				cur.execute('LOCK TABLES `%s` WRITE' % table)
 		
-		self.log(query)
+			self.log(query)
 		
-		cur.execute(query)
+			cur.execute(query)
 		
-		if not(factory.uses_guids()):
-			if not(storable.get_id()):
-				cur.execute('SELECT MAX(%s) AS `id` FROM `%s`' % (factory.get_primary_key(), table))
-				new_id = cur.fetchone()['id']
-				storable.set_id(new_id)
-				cur.fetchall()
-			cur.execute('UNLOCK TABLES')
+			if not(factory.uses_guids()):
+				if not(storable.get_id()):
+					cur.execute('SELECT MAX(%s) AS `id` FROM `%s`' % (factory.get_primary_key(), table))
+					new_id = cur.fetchone()['id']
+					storable.set_id(new_id)
+					#cur.fetchall()
+				cur.execute('UNLOCK TABLES')
+		finally:
+			#cur.fetchall()
+			cur.close()
 	
 	def destroy(self, storable, destroy_related_storables=False):
 		"""
@@ -552,13 +556,16 @@ class Store(object):
 		"""
 		delete_query = "DELETE FROM `%s` WHERE `id` = %%s" % storable.get_table()
 		cur = self.get_cursor(None)
-		
-		query = interp(delete_query, [storable.get_id()])
-		
-		self.log(query)
-		
-		cur.execute(query)
-		storable.reset_id()
+		try:
+			query = interp(delete_query, [storable.get_id()])
+			
+			self.log(query)
+			
+			cur.execute(query)
+			storable.reset_id()
+		finally:
+			#cur.fetchall()
+			cur.close()
 	
 	def log(self, message):
 		"""

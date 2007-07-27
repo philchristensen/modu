@@ -31,54 +31,56 @@ def handler(env, start_response):
 	env['modu.app'] = application
 	req = configure_request(env)
 	
-	if(application.db_url):
-		req['modu.db'] = _acquire_db(application.db_url, env['wsgi.multithread'])
-		persist.activate_store(req)
-		session.activate_session(req)
-	
 	try:
-		result = check_file(req)
-		if(result):
-			content = [content403(env['REQUEST_URI'])]
-			headers = []
-			if(result[1]):
-				try:
-					content = req['wsgi.file_wrapper'](open(result[0]))
-				except:
-					status = '403 Forbidden'
-					headers.append(('Content-Type', 'text/html'))
-				else:
-					status = '200 OK'
-					headers.append(('Content-Type', result[1]))
-					headers.append(('Content-Length', result[2]))
-			else:
-				status = '403 Forbidden'
-				headers.append(('Content-Type', 'text/html'))
-			start_response(status, application.get_headers())
-			return content
-	
-		tree = application.get_tree()
-		rsrc = tree.parse(req['modu.path'])
-		if not(rsrc):
-			start_response('404 Not Found', [('Content-Type', 'text/html')])
-			return [content404(env['REQUEST_URI'])]
-	
-		req['modu.tree'] = tree
+		if(application.db_url):
+			req['modu.db'] = _acquire_db(application.db_url, env['wsgi.multithread'])
+			persist.activate_store(req)
+			session.activate_session(req)
 		
 		try:
-			if(resource.IResourceDelegate.providedBy(rsrc)):
-				rsrc = rsrc.get_delegate(req)
-			if(resource.IAccessControl.providedBy(rsrc)):
-				rsrc.check_access(req)
-			content = rsrc.get_response(req)
-		except web.HTTPStatus, http:
-			start_response(http.status, http.headers)
-			return http.content
-	finally:
-		if('modu.session' in req):
-			req['modu.session'].save()
-		# if(application.db_url):
-		# 	_release_db(req['modu.db'])
+			result = check_file(req)
+			if(result):
+				content = [content403(env['REQUEST_URI'])]
+				headers = []
+				if(result[1]):
+					try:
+						content = req['wsgi.file_wrapper'](open(result[0]))
+					except:
+						status = '403 Forbidden'
+						headers.append(('Content-Type', 'text/html'))
+					else:
+						status = '200 OK'
+						headers.append(('Content-Type', result[1]))
+						headers.append(('Content-Length', result[2]))
+				else:
+					status = '403 Forbidden'
+					headers.append(('Content-Type', 'text/html'))
+				start_response(status, application.get_headers())
+				return content
+			
+			tree = application.get_tree()
+			rsrc = tree.parse(req['modu.path'])
+			if not(rsrc):
+				start_response('404 Not Found', [('Content-Type', 'text/html')])
+				return [content404(env['REQUEST_URI'])]
+			
+			req['modu.tree'] = tree
+			
+			try:
+				if(resource.IResourceDelegate.providedBy(rsrc)):
+					rsrc = rsrc.get_delegate(req)
+				if(resource.IAccessControl.providedBy(rsrc)):
+					rsrc.check_access(req)
+				content = rsrc.get_response(req)
+			except web.HTTPStatus, http:
+				start_response(http.status, http.headers)
+				return http.content
+		finally:
+			if('modu.session' in req):
+				req['modu.session'].save()
+	except req['modu.db'].Error, e:
+		_release_db(req['modu.db'])
+		raise e
 	
 	start_response('200 OK', application.get_headers())
 	return [content]
@@ -220,26 +222,15 @@ def _scan_plugins(req):
 def _acquire_db(db_url, threaded=True):
 	global db_pool, db_pool_lock
 	
-	#db_url = req['modu.app'].db_url
-	# if(db_url):
-	# 	if('__default__' not in db_pool):
-	# 		dsn = url.urlparse(req['modu.app'].db_url)
-	# 		if(dsn['scheme'] == 'mysql'):
-	# 			from modu.persist import mysql
-	# 			db_pool['__default__'] = mysql.connect(dsn)
-	# 		else:
-	# 			raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
-	# 	
-	# 	req['modu.db'] = db_pool['__default__']
-	
 	db_pool_lock.acquire()
 	try:
 		if not(db_pool):
 			from modu.persist import adbapi
 			db_pool = adbapi.connect(db_url, threaded=threaded)
-		return db_pool.connect()
 	finally:
 		db_pool_lock.release()
+	
+	return db_pool.connect()
 
 
 def _release_db(connection):

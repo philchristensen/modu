@@ -249,20 +249,22 @@ class DefaultFactory(object):
 			return None
 		
 		cur = self.store.get_cursor()
+		try:
+			result = cur.execute('LOCK TABLES `%s` WRITE' % self.guid_table)
+			result = cur.execute('SELECT `guid` FROM `%s`' % self.guid_table)
 		
-		result = cur.execute('LOCK TABLES `%s` WRITE' % self.guid_table)
-		result = cur.execute('SELECT `guid` FROM `%s`' % self.guid_table)
+			result = cur.fetchall()
+			if(result is None or len(result) == 0):
+				guid = 1
+				result = cur.execute('INSERT INTO `%s` VALUES (%%s)' % self.guid_table, [guid + increment])
+			else:
+				guid = result[0]['guid']
+				result = cur.execute('UPDATE `%s` SET `guid` = %%s' % self.guid_table, [guid + increment])
 		
-		result = cur.fetchall()
-		if(result is None or len(result) == 0):
-			guid = 1
-			result = cur.execute('INSERT INTO `%s` VALUES (%%s)' % self.guid_table, [guid + increment])
-		else:
-			guid = result[0]['guid']
-			result = cur.execute('UPDATE `%s` SET `guid` = %%s' % self.guid_table, [guid + increment])
-		
-		result = cur.execute('UNLOCK TABLES')
-		
+			result = cur.execute('UNLOCK TABLES')
+		finally:
+			#cur.fetchall()
+			cur.close()
 		return guid
 	
 	def uses_guids(self):
@@ -304,32 +306,21 @@ class DefaultFactory(object):
 		return self.get_items_by_query(query)
 	
 	def get_items_by_query(self, query):
-		if(self.use_cache):
-			if(query not in self.cache):
-				result = [self.create_item(record)
-							for record in self.get_item_records(query)]
-				if(result):
-					self.cache[query] = result
-				else:
-					return result
-			return self.cache[query]
-		else:
-			return self._get_items_by_query_generator(query)
-		return
-	
-	def _get_items_by_query_generator(self, query):
-		for record in self.get_item_records(query):
-			yield self.create_item(record)
-		return
+		if(query not in self.cache):
+			result = [self.create_item(record)
+						for record in self.get_item_records(query)]
+			if(result and self.use_cache):
+				self.cache[query] = result
+			else:
+				return result
+		return self.cache[query]
 	
 	def get_item_records(self, query):
 		cursor = self.store.get_cursor()
-		self.store.log(query)
-		cursor.execute(query)
-		
-		row = cursor.fetchone()
-		while(row):
-			yield row
-			row = cursor.fetchone()
-		
-		return
+		try:
+			self.store.log(query)
+			cursor.execute(query)
+		finally:
+			result = cursor.fetchall()
+			cursor.close()
+			return result

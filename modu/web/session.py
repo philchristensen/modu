@@ -270,35 +270,51 @@ class DbUserSession(BaseSession):
 	
 	def do_load(self):
 		cur = self._connection.cursor(cursors.SSDictCursor)
-		cur.execute("SELECT s.* FROM session s WHERE id = %s", [self.id()])
-		record = cur.fetchone()
-		if(record):
-			result = {'_created':record['created'], '_accessed':record['accessed'],
-					  '_timeout':record['timeout'], '_user_id':record['user_id']}
-			if(record['data']):
-				result['_data'] = cPickle.loads(record['data'].tostring())
+		try:
+			cur.execute("SELECT s.* FROM session s WHERE id = %s", [self.id()])
+			record = cur.fetchone()
+			if(record):
+				result = {'_created':record['created'], '_accessed':record['accessed'],
+						  '_timeout':record['timeout'], '_user_id':record['user_id']}
+				if(record['data']):
+					result['_data'] = cPickle.loads(record['data'].tostring())
+				else:
+					result['_data'] = None
+				return result
 			else:
-				result['_data'] = None
-			return result
-		else:
-			return None
+				return None
+		finally:
+			#cur.fetchall()
+			cur.close()
 	
 	def do_save(self, dict):
 		cur = self._connection.cursor()
-		if(self.is_clean()):
-			cur.execute("UPDATE session s SET s.user_id = %s, s.created = %s, s.accessed = %s, s.timeout = %s WHERE s.id = %s",
-						[self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], self.id()])
-		else:
-			cur.execute("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
-						[self.id(), self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'], 1)])
+		try:
+			if(self.is_clean()):
+				cur.execute("UPDATE session s SET s.user_id = %s, s.created = %s, s.accessed = %s, s.timeout = %s WHERE s.id = %s",
+							[self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], self.id()])
+			else:
+				cur.execute("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
+							[self.id(), self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'], 1)])
+		finally:
+			#cur.fetchall()
+			cur.close()
 	
 	def do_delete(self):
-		cur = self._connection.cursor()
-		cur.execute("DELETE FROM session WHERE id = %s", [self.id()])
+		try:
+			cur = self._connection.cursor()
+			cur.execute("DELETE FROM session WHERE id = %s", [self.id()])
+		finally:
+			#cur.fetchall()
+			cur.close()
 	
 	def do_cleanup(self, *args):
-		cur = self._connection.cursor()
-		cur.execute("DELETE FROM session WHERE timeout < (%s - accessed)", [int(time.time())])
+		try:
+			cur = self._connection.cursor()
+			cur.execute("DELETE FROM session WHERE timeout < (%s - accessed)", [int(time.time())])
+		finally:
+			#cur.fetchall()
+			cur.close()
 	
 	def get_user(self):
 		if(hasattr(self, '_user') and self._user):
