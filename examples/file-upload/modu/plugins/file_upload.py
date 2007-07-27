@@ -56,7 +56,6 @@ class FileUploadSite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
 	def initialize(self, application):
-		application.base_domain = 'localhost:8888'
 		application.base_path = '/modu/examples/file-upload'
 		application.initialize_store = False
 		#application.debug_session = True

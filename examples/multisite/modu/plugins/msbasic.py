@@ -58,7 +58,6 @@ class ChildBasicSite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
 	def initialize(self, application):
-		application.base_domain = 'localhost:8888'
 		application.base_path = '/modu/examples/multisite/basic'
 		application.db_url = None
 		application.session_class = None

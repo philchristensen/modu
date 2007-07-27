@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import os, os.path, sys, stat, copy, mimetypes, traceback
+import os, os.path, sys, stat, copy, mimetypes, traceback, threading
 
 from modu.util import url, tags
 from modu.web import session, user, resource
@@ -15,8 +15,11 @@ from twisted import plugin
 from twisted.python import log
 from zope import interface
 
-host_trees = {}
+host_tree = {}
+host_tree_lock = threading.BoundedSemaphore()
+
 db_pool = {}
+db_pool_lock = threading.BoundedSemaphore()
 
 def handler(env, start_response):
 	application = get_application(env)
@@ -27,7 +30,6 @@ def handler(env, start_response):
 	
 	env['modu.app'] = application
 	req = configure_request(env)
-	application.bootstrap(req)
 	
 	result = check_file(req)
 	if(result):
@@ -96,7 +98,9 @@ def configure_request(env):
 	webroot = os.path.join(approot, webroot)
 	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['modu.path'])
 	
-	return Request(env)
+	req = Request(env)
+	_bootstrap_request(req)
+	return req
 
 
 def check_file(req):
@@ -126,19 +130,25 @@ def get_application(req):
 	Note that ISite plugins are only searched when the
 	specified host/path is not found.
 	"""
-	global host_trees
+	global host_tree
 	
 	host = req.get('HTTP_HOST', req['SERVER_NAME'])
+	if(host.find(':') == -1):
+		host += ':' + req['SERVER_PORT']
 	
-	if not(host in host_trees):
+	host_tree_lock.acquire()
+	
+	if not(host in host_tree):
 		_scan_plugins(req)
 	
-	host_tree = host_trees[host]
+	host_node = host_tree[host]
 	
-	if not(host_tree.has_path(req['REQUEST_URI'])):
+	if not(host_node.has_path(req['REQUEST_URI'])):
 		_scan_plugins(req)
 	
-	app = host_tree.get_data_at(req['REQUEST_URI'])
+	app = host_node.get_data_at(req['REQUEST_URI'])
+	
+	host_tree_lock.release()
 	
 	return copy.deepcopy(app)
 
@@ -181,7 +191,7 @@ def content500(path=None, exception=None):
 
 
 def _scan_plugins(req):
-	global host_trees
+	global host_tree
 	
 	if(req['SCRIPT_FILENAME'] not in sys.path):
 		sys.path.append(req['SCRIPT_FILENAME'])
@@ -192,8 +202,38 @@ def _scan_plugins(req):
 	for site_plugin in plugin.getPlugins(ISite, modu.plugins):
 		site = site_plugin()
 		app = Application(site)
-		host_tree = host_trees.setdefault(app.base_domain, url.URLNode())
-		host_tree.register(app.base_path, app, clobber=True)
+		
+		domain = app.base_domain
+		if(domain.find(':') == -1):
+			req['wsgi.errors'].write('No port specified in ISite %r, assuming %s' % (site, req['SERVER_PORT']))
+			domain += ':' + req['SERVER_PORT']
+		
+		host_node = host_tree.setdefault(domain, url.URLNode())
+		host_node.register(app.base_path, app, clobber=True)
+
+
+def _bootstrap_request(req):
+	"""
+	Initialize the common services, store them in the
+	provided request variable.
+	"""
+	global db_pool
+	
+	db_url = req['modu.app'].db_url
+	if(db_url):
+		db_pool_lock.acquire()
+		if('__default__' not in db_pool):
+			dsn = url.urlparse(req['modu.app'].db_url)
+			if(dsn['scheme'] == 'mysql'):
+				from modu.persist import mysql
+				db_pool['__default__'] = mysql.connect(dsn)
+			else:
+				raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
+		db_pool_lock.release()
+		req['modu.db'] = db_pool['__default__']
+	
+	persist.activate_store(req)
+	session.activate_session(req)
 
 
 class ISite(interface.Interface):
@@ -309,23 +349,3 @@ class Application(object):
 		Get accumulated headers
 		"""
 		return self._response_headers
-	
-	def bootstrap(self, req):
-		"""
-		Initialize the common services, store them in the
-		provided request variable.
-		"""
-		db_url = req['modu.app'].db_url
-		if(db_url):
-			if('__default__' not in db_pool):
-				dsn = url.urlparse(req['modu.app'].db_url)
-				if(dsn['scheme'] == 'mysql'):
-					from modu.persist import mysql
-					db_pool['__default__'] = mysql.connect(dsn)
-				else:
-					raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
-			
-			req['modu.db'] = db_pool['__default__']
-		
-		persist.activate_store(req)
-		session.activate_session(req)

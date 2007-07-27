@@ -99,7 +99,6 @@ class TestSessionSite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
 	def initialize(self, application):
-		application.base_domain = 'localhost:8888'
 		application.base_path = '/modu/test/test_session'
 		application.session_class = None
 		application.activate(test.TestResource(DbSessionTestCase))

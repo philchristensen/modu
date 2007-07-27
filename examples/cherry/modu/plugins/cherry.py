@@ -32,7 +32,6 @@ class CherrySite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
 	def initialize(self, application):
-		application.base_domain = 'localhost:8888'
 		application.base_path = '/modu/examples/cherry'
 		application.db_url = None
 		application.session_class = None

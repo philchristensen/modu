@@ -8,7 +8,7 @@
 import urllib, os, sys
 
 from twisted.internet import defer
-from twisted.web import resource, server
+from twisted.web import resource, server, util
 from twisted.web2 import wsgi
 
 headerNameTranslation = ''.join([c.isalnum() and c.upper() or '_' for c in map(chr, range(256))])
@@ -120,6 +120,7 @@ class WSGIResource(resource.Resource):
 		handler.environment['SCRIPT_FILENAME'] = os.getcwd()
 		
 		handler.responseDeferred.addCallback(self._finish, request)
+		handler.responseDeferred.addErrback(self._error, request)
 		
 		# Run it in a thread
 		reactor.callInThread(handler.run)
@@ -139,6 +140,12 @@ class WSGIResource(resource.Resource):
 			content.addCallback(self._write, request)
 		else:
 			self._write(content, request)
+	
+	def _error(self, failure, request):
+		content = util.formatFailure(failure)
+		request.setHeader('Content-Type', 'text/html')
+		request.setHeader('Content-Length', len(content))
+		self._write(content, request)
 
 
 class WSGIHandler(wsgi.WSGIHandler):

@@ -17,7 +17,6 @@ class RootResource(resource.CheetahTemplateResource):
 		return ['/']
 	
 	def prepare_content(self, req):
-		
 		self.set_slot('request', req)
 		self.set_slot('request_data', str(req['wsgi.input']))
 	
@@ -31,7 +30,6 @@ class WSGISite(object):
 	classProvides(plugin.IPlugin, ISite)
 	
 	def initialize(self, application):
-		application.base_domain = 'localhost'
 		application.base_path = '/modu/examples/wsgi'
 		application.db_url = None
 		application.session_class = None
