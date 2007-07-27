@@ -25,7 +25,7 @@ class URLRegExpTestCase(unittest.TestCase):
 		self.failUnlessEqual(result['fragment'], 'ch01', "Didn't find 'fragment' where I expected")
 	
 	def test_dsn(self):
-		result = url.urlparse('mysql://user:password@localhost/database');
+		result = url.urlparse('MySQLdb://user:password@localhost/database');
 		self.failUnlessEqual(result['scheme'], 'mysql', "Didn't find 'scheme' where I expected")
 		self.failUnlessEqual(result['user'], 'user', "Didn't find 'user' where I expected")
 		self.failUnlessEqual(result['password'], 'password', "Didn't find 'password' where I expected")

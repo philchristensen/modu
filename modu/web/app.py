@@ -18,7 +18,7 @@ from zope import interface
 host_tree = {}
 host_tree_lock = threading.BoundedSemaphore()
 
-db_pool = {}
+db_pool = None
 db_pool_lock = threading.BoundedSemaphore()
 
 def handler(env, start_response):
@@ -31,35 +31,40 @@ def handler(env, start_response):
 	env['modu.app'] = application
 	req = configure_request(env)
 	
-	result = check_file(req)
-	if(result):
-		content = [content403(env['REQUEST_URI'])]
-		headers = []
-		if(result[1]):
-			try:
-				content = req['wsgi.file_wrapper'](open(result[0]))
-			except:
-				status = '403 Forbidden'
-				headers.append(('Content-Type', 'text/html'))
-			else:
-				status = '200 OK'
-				headers.append(('Content-Type', result[1]))
-				headers.append(('Content-Length', result[2]))
-		else:
-			status = '403 Forbidden'
-			headers.append(('Content-Type', 'text/html'))
-		start_response(status, application.get_headers())
-		return content
-	
-	tree = application.get_tree()
-	rsrc = tree.parse(req['modu.path'])
-	if not(rsrc):
-		start_response('404 Not Found', [('Content-Type', 'text/html')])
-		return [content404(env['REQUEST_URI'])]
-	
-	req['modu.tree'] = tree
+	if(application.db_url):
+		req['modu.db'] = _acquire_db(application.db_url, env['wsgi.multithread'])
+		persist.activate_store(req)
+		session.activate_session(req)
 	
 	try:
+		result = check_file(req)
+		if(result):
+			content = [content403(env['REQUEST_URI'])]
+			headers = []
+			if(result[1]):
+				try:
+					content = req['wsgi.file_wrapper'](open(result[0]))
+				except:
+					status = '403 Forbidden'
+					headers.append(('Content-Type', 'text/html'))
+				else:
+					status = '200 OK'
+					headers.append(('Content-Type', result[1]))
+					headers.append(('Content-Length', result[2]))
+			else:
+				status = '403 Forbidden'
+				headers.append(('Content-Type', 'text/html'))
+			start_response(status, application.get_headers())
+			return content
+	
+		tree = application.get_tree()
+		rsrc = tree.parse(req['modu.path'])
+		if not(rsrc):
+			start_response('404 Not Found', [('Content-Type', 'text/html')])
+			return [content404(env['REQUEST_URI'])]
+	
+		req['modu.tree'] = tree
+		
 		try:
 			if(resource.IResourceDelegate.providedBy(rsrc)):
 				rsrc = rsrc.get_delegate(req)
@@ -72,6 +77,8 @@ def handler(env, start_response):
 	finally:
 		if('modu.session' in req):
 			req['modu.session'].save()
+		# if(application.db_url):
+		# 	_release_db(req['modu.db'])
 	
 	start_response('200 OK', application.get_headers())
 	return [content]
@@ -98,9 +105,7 @@ def configure_request(env):
 	webroot = os.path.join(approot, webroot)
 	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['modu.path'])
 	
-	req = Request(env)
-	_bootstrap_request(req)
-	return req
+	return Request(env)
 
 
 def check_file(req):
@@ -137,18 +142,18 @@ def get_application(req):
 		host += ':' + req['SERVER_PORT']
 	
 	host_tree_lock.acquire()
-	
-	if not(host in host_tree):
-		_scan_plugins(req)
-	
-	host_node = host_tree[host]
-	
-	if not(host_node.has_path(req['REQUEST_URI'])):
-		_scan_plugins(req)
-	
-	app = host_node.get_data_at(req['REQUEST_URI'])
-	
-	host_tree_lock.release()
+	try:
+		if not(host in host_tree):
+			_scan_plugins(req)
+		
+		host_node = host_tree[host]
+		
+		if not(host_node.has_path(req['REQUEST_URI'])):
+			_scan_plugins(req)
+		
+		app = host_node.get_data_at(req['REQUEST_URI'])
+	finally:
+		host_tree_lock.release()
 	
 	return copy.deepcopy(app)
 
@@ -212,29 +217,39 @@ def _scan_plugins(req):
 		host_node.register(app.base_path, app, clobber=True)
 
 
-def _bootstrap_request(req):
-	"""
-	Initialize the common services, store them in the
-	provided request variable.
-	"""
-	global db_pool
+def _acquire_db(db_url, threaded=True):
+	global db_pool, db_pool_lock
 	
-	db_url = req['modu.app'].db_url
-	if(db_url):
-		db_pool_lock.acquire()
-		if('__default__' not in db_pool):
-			dsn = url.urlparse(req['modu.app'].db_url)
-			if(dsn['scheme'] == 'mysql'):
-				from modu.persist import mysql
-				db_pool['__default__'] = mysql.connect(dsn)
-			else:
-				raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
+	#db_url = req['modu.app'].db_url
+	# if(db_url):
+	# 	if('__default__' not in db_pool):
+	# 		dsn = url.urlparse(req['modu.app'].db_url)
+	# 		if(dsn['scheme'] == 'mysql'):
+	# 			from modu.persist import mysql
+	# 			db_pool['__default__'] = mysql.connect(dsn)
+	# 		else:
+	# 			raise NotImplementedError("Unsupported database driver: '%s'" % dsn['scheme'])
+	# 	
+	# 	req['modu.db'] = db_pool['__default__']
+	
+	db_pool_lock.acquire()
+	try:
+		if not(db_pool):
+			from modu.persist import adbapi
+			db_pool = adbapi.connect(db_url, threaded=threaded)
+		return db_pool.connect()
+	finally:
 		db_pool_lock.release()
-		req['modu.db'] = db_pool['__default__']
-	
-	persist.activate_store(req)
-	session.activate_session(req)
 
+
+def _release_db(connection):
+	global db_pool, db_pool_lock
+	
+	db_pool_lock.acquire()
+	try:
+		db_pool.disconnect(connection)
+	finally:
+		db_pool_lock.release()
 
 class ISite(interface.Interface):
 	"""
@@ -292,7 +307,7 @@ class Application(object):
 		
 		self.base_domain = 'localhost'
 		self.base_path = '/'
-		self.db_url = 'mysql://modu:modu@localhost/modu'
+		self.db_url = 'MySQLdb://modu:modu@localhost/modu'
 		self.session_class = session.DbUserSession
 		self.initialize_store = True
 		self.webroot = 'webroot'
