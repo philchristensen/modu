@@ -146,6 +146,7 @@ class WSGIResource(resource.Resource):
 		request.setHeader('Content-Type', 'text/html')
 		request.setHeader('Content-Length', len(content))
 		self._write(content, request)
+		raise failure
 
 
 class WSGIHandler(wsgi.WSGIHandler):

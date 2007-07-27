@@ -8,6 +8,13 @@
 from zope import interface
 from zope.interface import implements
 
+import os
+
+try:
+	import cPickle as pickle
+except:
+	import pickle
+
 class IResource(interface.Interface):
 	"""
 	This class defines something that reacts when a path is req.
@@ -131,13 +138,21 @@ class TemplateContent(object):
 	def get_template(self, req):
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 
-
+# According to the docs, Template can take awhile to load.
+try:
+	from Cheetah.Template import Template as CheetahTemplate
+except:
+	def CheetahTemplate(*args, **kwargs):
+		raise RuntimeError("Cannot find the Cheetah Template modules.")
+	
 class CheetahTemplateContent(TemplateContent):
 	"""http://www.cheetahtemplate.org"""
 	def get_content(self, req):
-		from Cheetah.Template import Template
-		template_file = open(req['modu.approot'] + '/template/' + self.get_template(req))
-		self.template = Template(file=template_file, searchList=[self.data])
+		
+		template_path = req['modu.approot'] + '/template/' + self.get_template(req)
+		template_file = open(template_path)
+		self.template = CheetahTemplate(file=template_file, searchList=[self.data])
+		
 		return str(self.template)
 	
 	def prepare_content(self, req):
