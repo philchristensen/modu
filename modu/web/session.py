@@ -35,7 +35,7 @@ def activate_session(req):
 	session_class = app.session_class
 	db_url = app.db_url
 	if(db_url and session_class):
-		req['modu.session'] = session_class(req, req['modu.db'])
+		req['modu.session'] = session_class(req, req['modu.db_pool'])
 		if(app.debug_session):
 			req.log_error('session contains: ' + str(req['modu.session']))
 		if(app.disable_session_users):
@@ -269,10 +269,10 @@ class DbUserSession(BaseSession):
 		BaseSession.__init__(self, req, sid)
 	
 	def do_load(self):
-		cur = self._connection.cursor(cursors.SSDictCursor)
+		cur = self._connection #.cursor(cursors.SSDictCursor)
 		try:
-			cur.execute("SELECT s.* FROM session s WHERE id = %s", [self.id()])
-			record = cur.fetchone()
+			record = cur.runQuery("SELECT s.* FROM session s WHERE id = %s", [self.id()])
+			#record = cur.fetchone()
 			if(record):
 				result = {'_created':record['created'], '_accessed':record['accessed'],
 						  '_timeout':record['timeout'], '_user_id':record['user_id']}
@@ -284,37 +284,41 @@ class DbUserSession(BaseSession):
 			else:
 				return None
 		finally:
-			cur.fetchall()
-			cur.close()
+			#cur.fetchall()
+			#cur.close()
+			pass
 	
 	def do_save(self, dict):
-		cur = self._connection.cursor()
+		cur = self._connection #.cursor()
 		try:
 			if(self.is_clean()):
-				cur.execute("UPDATE session s SET s.user_id = %s, s.created = %s, s.accessed = %s, s.timeout = %s WHERE s.id = %s",
+				cur.runOperation("UPDATE session s SET s.user_id = %s, s.created = %s, s.accessed = %s, s.timeout = %s WHERE s.id = %s",
 							[self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], self.id()])
 			else:
-				cur.execute("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
+				cur.runOperation("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
 							[self.id(), self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'], 1)])
 		finally:
 			#cur.fetchall()
-			cur.close()
+			#cur.close()
+			pass
 	
 	def do_delete(self):
 		try:
-			cur = self._connection.cursor()
-			cur.execute("DELETE FROM session WHERE id = %s", [self.id()])
+			cur = self._connection #.cursor()
+			cur.runOperation("DELETE FROM session WHERE id = %s", [self.id()])
 		finally:
 			#cur.fetchall()
-			cur.close()
+			#cur.close()
+			pass
 	
 	def do_cleanup(self, *args):
 		try:
-			cur = self._connection.cursor()
-			cur.execute("DELETE FROM session WHERE timeout < (%s - accessed)", [int(time.time())])
+			cur = self._connection #.cursor()
+			cur.runOperation("DELETE FROM session WHERE timeout < (%s - accessed)", [int(time.time())])
 		finally:
 			#cur.fetchall()
-			cur.close()
+			#cur.close()
+			pass
 	
 	def get_user(self):
 		if(hasattr(self, '_user') and self._user):

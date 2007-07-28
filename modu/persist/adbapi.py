@@ -12,7 +12,7 @@ from modu.util import url
 def connect(db_url, threaded=True, **kwargs):
 	dsn = get_dsn(db_url)
 	kwargs.update(dsn)
-	if(threaded):
+	if(threaded and False):
 		return adbapi.ConnectionPool(**kwargs)
 	else:
 		return ThreadlessConnectionPool(**kwargs)
@@ -26,6 +26,8 @@ def get_dsn(db_url):
 	
 	if(dsn['scheme'] == 'MySQLdb'):
 		dsn['cp_openfun'] = fix_mysqldb
+		from MySQLdb import cursors
+		dsn['cursorclass'] = cursors.SSDictCursor
 
 	dsn['dbapiName'] = dsn['scheme']
 	del dsn['scheme']

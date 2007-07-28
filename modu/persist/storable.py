@@ -250,21 +250,22 @@ class DefaultFactory(object):
 		
 		cur = self.store.get_cursor()
 		try:
-			result = cur.execute('LOCK TABLES `%s` WRITE' % self.guid_table)
-			result = cur.execute('SELECT `guid` FROM `%s`' % self.guid_table)
+			cur.runOperation('LOCK TABLES `%s` WRITE' % self.guid_table)
+			result = cur.runQuery('SELECT `guid` FROM `%s`' % self.guid_table)
 		
-			result = cur.fetchall()
+			#result = cur.fetchall()
 			if(result is None or len(result) == 0):
 				guid = 1
-				result = cur.execute('INSERT INTO `%s` VALUES (%%s)' % self.guid_table, [guid + increment])
+				cur.runOperation('INSERT INTO `%s` VALUES (%%s)' % self.guid_table, [guid + increment])
 			else:
 				guid = result[0]['guid']
-				result = cur.execute('UPDATE `%s` SET `guid` = %%s' % self.guid_table, [guid + increment])
+				cur.runOperation('UPDATE `%s` SET `guid` = %%s' % self.guid_table, [guid + increment])
 		
-			result = cur.execute('UNLOCK TABLES')
+			result = cur.runOperation('UNLOCK TABLES')
 		finally:
 			#cur.fetchall()
-			cur.close()
+			#cur.close()
+			pass
 		return guid
 	
 	def uses_guids(self):
@@ -319,7 +320,8 @@ class DefaultFactory(object):
 		cur = self.store.get_cursor()
 		try:
 			self.store.log(query)
-			cur.execute(query)
-			return cur.fetchall()
+			return cur.runQuery(query)
+			#return cur.fetchall()
 		finally:
-			cur.close()
+			#cur.close()
+			pass

@@ -24,7 +24,7 @@ DEFAULT_STORE_NAME = '__default__'
 
 def activate_store(req):
 	app = req['modu.app']
-	if('modu.db' in req and app.initialize_store):
+	if('modu.db_pool' in req and app.initialize_store):
 		# FIXME: I really can't think of any scenario where a store will
 		# already be initialized, but we'll check anyway, for now
 		store = Store.get_store()
@@ -33,7 +33,7 @@ def activate_store(req):
 				debug_file = req['wsgi.errors']
 			else:
 				debug_file = None
-			store = Store(req['modu.db'])
+			store = Store(req['modu.db_pool'])
 			store.debug_file = debug_file
 		req['modu.store'] = store
 
@@ -304,11 +304,12 @@ class Store(object):
 		@param cursor_type: the cursor type to use
 		@type cursor_type: valid DB-API cursor
 		"""
-		if(cursor_type):
-			cur = self.connection.cursor(cursor_type)
-		else:
-			cur = self.connection.cursor()
-		return cur
+		# if(cursor_type):
+		# 	cur = self.connection.cursor(cursor_type)
+		# else:
+		# 	cur = self.connection.cursor()
+		# return cur
+		return self.connection
 	
 	def register_factory(self, table, factory):
 		"""
@@ -509,22 +510,23 @@ class Store(object):
 				query = build_replace(table, data)
 			else:
 				query = build_insert(table, data)
-				cur.execute('LOCK TABLES `%s` WRITE' % table)
+				cur.runOperation('LOCK TABLES `%s` WRITE' % table)
 		
 			self.log(query)
 		
-			cur.execute(query)
+			cur.runOperation(query)
 		
 			if not(factory.uses_guids()):
 				if not(storable.get_id()):
-					cur.execute('SELECT MAX(%s) AS `id` FROM `%s`' % (factory.get_primary_key(), table))
-					new_id = cur.fetchone()['id']
+					rows = cur.runQuery('SELECT MAX(%s) AS `id` FROM `%s`' % (factory.get_primary_key(), table))
+					new_id = rows[0]['id']
 					storable.set_id(new_id)
 					#cur.fetchall()
-				cur.execute('UNLOCK TABLES')
+				cur.runOperation('UNLOCK TABLES')
 		finally:
 			#cur.fetchall()
-			cur.close()
+			#cur.close()
+			pass
 	
 	def destroy(self, storable, destroy_related_storables=False):
 		"""
@@ -561,11 +563,12 @@ class Store(object):
 			
 			self.log(query)
 			
-			cur.execute(query)
+			cur.runOperation(query)
 			storable.reset_id()
 		finally:
 			#cur.fetchall()
-			cur.close()
+			#cur.close()
+			pass
 	
 	def log(self, message):
 		"""
