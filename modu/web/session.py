@@ -264,61 +264,38 @@ class DbUserSession(BaseSession):
 	"""
 	user_class = user.User
 	
-	def __init__(self, req, connection, sid=None):
-		self._connection = connection
+	def __init__(self, req, pool, sid=None):
+		self._pool = pool
 		BaseSession.__init__(self, req, sid)
 	
 	def do_load(self):
-		cur = self._connection #.cursor(cursors.SSDictCursor)
-		try:
-			record = cur.runQuery("SELECT s.* FROM session s WHERE id = %s", [self.id()])
-			#record = cur.fetchone()
-			if(record):
-				result = {'_created':record['created'], '_accessed':record['accessed'],
-						  '_timeout':record['timeout'], '_user_id':record['user_id']}
-				if(record['data']):
-					result['_data'] = cPickle.loads(record['data'].tostring())
-				else:
-					result['_data'] = None
-				return result
+		record = self._pool.runQuery("SELECT s.* FROM session s WHERE id = %s", [self.id()])
+		
+		if(record):
+			record = record[0]
+			result = {'_created':record['created'], '_accessed':record['accessed'],
+					  '_timeout':record['timeout'], '_user_id':record['user_id']}
+			if(record['data']):
+				result['_data'] = cPickle.loads(record['data'].tostring())
 			else:
-				return None
-		finally:
-			#cur.fetchall()
-			#cur.close()
-			pass
+				result['_data'] = None
+			return result
+		else:
+			return None
 	
 	def do_save(self, dict):
-		cur = self._connection #.cursor()
-		try:
-			if(self.is_clean()):
-				cur.runOperation("UPDATE session s SET s.user_id = %s, s.created = %s, s.accessed = %s, s.timeout = %s WHERE s.id = %s",
-							[self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], self.id()])
-			else:
-				cur.runOperation("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
-							[self.id(), self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'], 1)])
-		finally:
-			#cur.fetchall()
-			#cur.close()
-			pass
+		if(self.is_clean()):
+			self._pool.runOperation("UPDATE session s SET s.user_id = %s, s.created = %s, s.accessed = %s, s.timeout = %s WHERE s.id = %s",
+						[self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], self.id()])
+		else:
+			self._pool.runOperation("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
+						[self.id(), self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'], 1)])
 	
 	def do_delete(self):
-		try:
-			cur = self._connection #.cursor()
-			cur.runOperation("DELETE FROM session WHERE id = %s", [self.id()])
-		finally:
-			#cur.fetchall()
-			#cur.close()
-			pass
+		self._pool.runOperation("DELETE FROM session WHERE id = %s", [self.id()])
 	
 	def do_cleanup(self, *args):
-		try:
-			cur = self._connection #.cursor()
-			cur.runOperation("DELETE FROM session WHERE timeout < (%s - accessed)", [int(time.time())])
-		finally:
-			#cur.fetchall()
-			#cur.close()
-			pass
+		self._pool.runOperation("DELETE FROM session WHERE timeout < (%s - accessed)", [int(time.time())])
 	
 	def get_user(self):
 		if(hasattr(self, '_user') and self._user):

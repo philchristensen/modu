@@ -25,8 +25,7 @@ DEFAULT_STORE_NAME = '__default__'
 def activate_store(req):
 	app = req['modu.app']
 	if('modu.db_pool' in req and app.initialize_store):
-		# FIXME: I really can't think of any scenario where a store will
-		# already be initialized, but we'll check anyway, for now
+		# FIXME: this will need to change under a threaded environ
 		store = Store.get_store()
 		if not(store):
 			if(app.debug_store):
@@ -194,6 +193,7 @@ def interp(query, args):
 	@returns: an interpolated SQL query
 	@rtype: str
 	"""
+	#FIXME: an unfortunate MySQLdb dependency, for now
 	conv_dict = converters.conversions.copy()
 	# This is only used in build_replace/insert()
 	conv_dict[RAW] = Raw2Literal
@@ -264,7 +264,7 @@ class Store(object):
 				return cls._stores[name]
 		return None
 	
-	def __init__(self, connection, name=DEFAULT_STORE_NAME):
+	def __init__(self, pool, name=DEFAULT_STORE_NAME):
 		"""
 		Create a Store for a given DB connection object.
 		
@@ -283,7 +283,7 @@ class Store(object):
 		
 		@raises RuntimeError: if a Store instance by that name already exists
 		"""
-		self.connection = connection
+		self.pool = pool
 		self.debug_file = None
 		
 		self._factories = {}
@@ -291,25 +291,6 @@ class Store(object):
 		if(name in self._stores):
 			raise RuntimeError("There is already a Store instance by the name '%s'." % name)
 		self._stores[name] = self
-	
-	def get_cursor(self, cursor_type=cursors.SSDictCursor):
-		"""
-		Get a database cursor.
-		
-		To run queries directly against the Store's DB connection,
-		get a cursor object from this function. The default cursor
-		type is SSDictCursor, but others may be passed in as an
-		optional parameter.
-		
-		@param cursor_type: the cursor type to use
-		@type cursor_type: valid DB-API cursor
-		"""
-		# if(cursor_type):
-		# 	cur = self.connection.cursor(cursor_type)
-		# else:
-		# 	cur = self.connection.cursor()
-		# return cur
-		return self.connection
 	
 	def register_factory(self, table, factory):
 		"""
@@ -502,31 +483,25 @@ class Store(object):
 		table = storable.get_table()
 		id = self.fetch_id(storable)
 		data = storable.get_data()
-		cur = self.get_cursor()
 		
-		try:
-			if(id or factory.uses_guids()):
-				data[factory.get_primary_key()] = id
-				query = build_replace(table, data)
-			else:
-				query = build_insert(table, data)
-				cur.runOperation('LOCK TABLES `%s` WRITE' % table)
-		
-			self.log(query)
-		
-			cur.runOperation(query)
-		
-			if not(factory.uses_guids()):
-				if not(storable.get_id()):
-					rows = cur.runQuery('SELECT MAX(%s) AS `id` FROM `%s`' % (factory.get_primary_key(), table))
-					new_id = rows[0]['id']
-					storable.set_id(new_id)
-					#cur.fetchall()
-				cur.runOperation('UNLOCK TABLES')
-		finally:
-			#cur.fetchall()
-			#cur.close()
-			pass
+		if(id or factory.uses_guids()):
+			data[factory.get_primary_key()] = id
+			query = build_replace(table, data)
+		else:
+			query = build_insert(table, data)
+			self.pool.runOperation('LOCK TABLES `%s` WRITE' % table)
+	
+		self.log(query)
+	
+		self.pool.runOperation(query)
+	
+		if not(factory.uses_guids()):
+			if not(storable.get_id()):
+				rows = self.pool.runQuery('SELECT MAX(%s) AS `id` FROM `%s`' % (factory.get_primary_key(), table))
+				new_id = rows[0]['id']
+				storable.set_id(new_id)
+				#cur.fetchall()
+			self.pool.runOperation('UNLOCK TABLES')
 	
 	def destroy(self, storable, destroy_related_storables=False):
 		"""
@@ -557,18 +532,13 @@ class Store(object):
 		actual destruction.
 		"""
 		delete_query = "DELETE FROM `%s` WHERE `id` = %%s" % storable.get_table()
-		cur = self.get_cursor(None)
-		try:
-			query = interp(delete_query, [storable.get_id()])
-			
-			self.log(query)
-			
-			cur.runOperation(query)
-			storable.reset_id()
-		finally:
-			#cur.fetchall()
-			#cur.close()
-			pass
+
+		query = interp(delete_query, [storable.get_id()])
+		
+		self.log(query)
+		
+		self.pool.runOperation(query)
+		storable.reset_id()
 	
 	def log(self, message):
 		"""

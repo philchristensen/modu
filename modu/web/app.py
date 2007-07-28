@@ -32,8 +32,7 @@ def handler(env, start_response):
 	req = configure_request(env)
 	
 	if(application.db_url):
-		req['modu.db'] = _acquire_db(application.db_url, env['wsgi.multithread'])
-		req['modu.db_pool'] = db_pool
+		req['modu.db_pool'] = _acquire_db(application.db_url, env['wsgi.multithread'])
 	
 	persist.activate_store(req)
 	session.activate_session(req)
@@ -65,9 +64,7 @@ def handler(env, start_response):
 			start_response('404 Not Found', [('Content-Type', 'text/html')])
 			return [content404(env['REQUEST_URI'])]
 		
-		print 'started app'
 		req['modu.tree'] = tree
-		#try:
 		try:
 			if(resource.IResourceDelegate.providedBy(rsrc)):
 				rsrc = rsrc.get_delegate(req)
@@ -77,9 +74,6 @@ def handler(env, start_response):
 		except web.HTTPStatus, http:
 			start_response(http.status, http.headers)
 			return http.content
-		#except Exception, e:
-		#	print "something bad happened: " + str(e)
-		print 'ended app'
 	finally:
 		if('modu.session' in req):
 			req['modu.session'].save()
@@ -228,21 +222,12 @@ def _acquire_db(db_url, threaded=True):
 	try:
 		if not(db_pool):
 			from modu.persist import adbapi
-			db_pool = adbapi.connect(db_url, threaded=threaded)
+			db_pool = adbapi.connect(db_url)
 	finally:
 		db_pool_lock.release()
 	
-	return db_pool.connect()
+	return db_pool
 
-
-def _release_db(connection):
-	global db_pool, db_pool_lock
-	
-	db_pool_lock.acquire()
-	try:
-		db_pool.disconnect(connection)
-	finally:
-		db_pool_lock.release()
 
 class ISite(interface.Interface):
 	"""

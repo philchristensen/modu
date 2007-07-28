@@ -23,7 +23,7 @@ CREATE DATABASE modu;
 GRANT ALL ON modu.* TO modu@localhost IDENTIFIED BY 'modu';
 """
 
-TEST_TABLES = ["""
+TEST_TABLES = """
 CREATE TABLE IF NOT EXISTS `session` (
   `id` varchar(255),
   `user_id` bigint(20),
@@ -37,38 +37,51 @@ CREATE TABLE IF NOT EXISTS `session` (
   KEY `timeout_idx` (`timeout`),
   KEY `expiry_idx` (`accessed`, `timeout`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
-""","""
+
+CREATE TABLE IF NOT EXISTS `user` (
+  `id` bigint(20),
+  `username` varchar(255),
+  `first` varchar(255),
+  `last` varchar(255),
+  `crypt` varchar(255),
+  PRIMARY KEY (id),
+  UNIQUE KEY `username_idx` (`username`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
 CREATE TABLE IF NOT EXISTS `guid` (
   `guid` bigint(20) unsigned
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
-"""]
+"""
 
 class DbSessionTestCase(unittest.TestCase):
 	req = None
 	
 	def setUp(self):
-		cur = self.req['modu.db'].cursor()
-		for sql in TEST_TABLES:
-			cur.execute(sql)
+		pool = self.req['modu.db_pool']
+		
+		global TEST_TABLES
+		for sql in TEST_TABLES.split(";"):
+			if(sql.strip()):
+				pool.runOperation(sql)
 	
 	def test_create(self):
-		sess = session.DbUserSession(self.req, self.req['modu.db'])
+		sess = session.DbUserSession(self.req, self.req['modu.db_pool'])
 		sess['test_data'] = 'test'
 		sess.save()
 		
-		saved_sess = session.DbUserSession(self.req, self.req['modu.db'], sid=sess.id())
+		saved_sess = session.DbUserSession(self.req, self.req['modu.db_pool'], sid=sess.id())
 		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
 		#self.failUnlessEqual(int(saved_sess._created), int(sess._created), "Session created date changed during save/load cycle.")
 	
 	def test_noclobber(self):
 		sessid = session.generate_token()
-		sess = session.DbUserSession(self.req, self.req['modu.db'], sessid)
-		sess2 = session.DbUserSession(self.req, self.req['modu.db'], sessid)
+		sess = session.DbUserSession(self.req, self.req['modu.db_pool'], sessid)
+		sess2 = session.DbUserSession(self.req, self.req['modu.db_pool'], sessid)
 		sess['test_data'] = 'something'
 		sess.save()
 		sess2.save()
 		
-		saved_sess = session.DbUserSession(self.req, self.req['modu.db'], sid=sess.id())
+		saved_sess = session.DbUserSession(self.req, self.req['modu.db_pool'], sid=sess.id())
 		self.failUnlessEqual(saved_sess['test_data'], 'something', "Session data was not saved properly.")
 		
 		sess.delete()
@@ -80,14 +93,16 @@ class DbSessionTestCase(unittest.TestCase):
 		usr.first = 'Sample'
 		usr.last = 'User'
 		usr.crypt = RAW("ENCRYPT('%s')" % 'password')
+		
 		store = Store.get_store()
+		store.ensure_factory('user')
 		store.save(usr)
 		
-		sess = session.DbUserSession(self.req, self.req['modu.db'])
+		sess = session.DbUserSession(self.req, self.req['modu.db_pool'])
 		sess.set_user(usr)
 		sess.save()
 		
-		saved_sess = session.DbUserSession(self.req, self.req['modu.db'], sid=sess.id())
+		saved_sess = session.DbUserSession(self.req, self.req['modu.db_pool'], sid=sess.id())
 		saved_user = saved_sess.get_user()
 		self.failUnlessEqual(saved_sess._user_id, sess._user_id, "Found user_id %s when expecting %d." % (saved_sess._user_id, sess._user_id))
 		self.failUnlessEqual(saved_user.get_id(), usr.get_id(), "User ID changed during save/load cycle.")

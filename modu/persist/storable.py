@@ -247,25 +247,19 @@ class DefaultFactory(object):
 		"""
 		if not(self.uses_guids()):
 			return None
-		
-		cur = self.store.get_cursor()
-		try:
-			cur.runOperation('LOCK TABLES `%s` WRITE' % self.guid_table)
-			result = cur.runQuery('SELECT `guid` FROM `%s`' % self.guid_table)
-		
-			#result = cur.fetchall()
-			if(result is None or len(result) == 0):
-				guid = 1
-				cur.runOperation('INSERT INTO `%s` VALUES (%%s)' % self.guid_table, [guid + increment])
-			else:
-				guid = result[0]['guid']
-				cur.runOperation('UPDATE `%s` SET `guid` = %%s' % self.guid_table, [guid + increment])
-		
-			result = cur.runOperation('UNLOCK TABLES')
-		finally:
-			#cur.fetchall()
-			#cur.close()
-			pass
+
+		self.store.pool.runOperation('LOCK TABLES `%s` WRITE' % self.guid_table)
+		result = self.store.pool.runQuery('SELECT `guid` FROM `%s`' % self.guid_table)
+	
+		if(result is None or len(result) == 0):
+			guid = 1
+			self.store.pool.runOperation('INSERT INTO `%s` VALUES (%%s)' % self.guid_table, [guid + increment])
+		else:
+			guid = result[0]['guid']
+			self.store.pool.runOperation('UPDATE `%s` SET `guid` = %%s' % self.guid_table, [guid + increment])
+	
+		result = self.store.pool.runOperation('UNLOCK TABLES')
+
 		return guid
 	
 	def uses_guids(self):
@@ -317,11 +311,5 @@ class DefaultFactory(object):
 		return self.cache[query]
 	
 	def get_item_records(self, query):
-		cur = self.store.get_cursor()
-		try:
-			self.store.log(query)
-			return cur.runQuery(query)
-			#return cur.fetchall()
-		finally:
-			#cur.close()
-			pass
+		self.store.log(query)
+		return self.store.pool.runQuery(query)

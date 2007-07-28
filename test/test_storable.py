@@ -7,12 +7,10 @@
 #
 # See LICENSE for details
 
-import MySQLdb, time, sys, copy
-
-from MySQLdb import cursors
+import time, sys, copy
 
 from modu import persist
-from modu.persist import storable
+from modu.persist import storable, adbapi
 
 from twisted.trial import unittest
 
@@ -56,15 +54,14 @@ class StorableTestCase(unittest.TestCase):
 	def setUp(self):
 		self.store = persist.Store.get_store()
 		if not(self.store):
-			self.connection = MySQLdb.connect('localhost', 'modu', 'modu', 'modu')
-			self.store = persist.Store(self.connection)
+			pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+			self.store = persist.Store(pool)
 			self.store.debug_file = sys.stderr
 		
 		global TEST_TABLES
-		cur = self.store.get_cursor()
 		for sql in TEST_TABLES.split(";"):
 			if(sql.strip()):
-				cur.execute(sql)
+				self.store.pool.runOperation(sql)
 	
 	def tearDown(self):
 		pass
@@ -195,8 +192,7 @@ class StorableTestCase(unittest.TestCase):
 		u = self.store.load_one('page', {'id':s.get_id()});
 		self.failUnlessEqual(u.title, 'a whole new title', "Didn't get cached object when expected (1).")
 		
-		cur = self.store.get_cursor()
-		cur.execute("UPDATE page SET title = 'Old School' WHERE id = %s", [s.get_id()])
+		self.store.pool.runOperation("UPDATE page SET title = 'Old School' WHERE id = %s", [s.get_id()])
 		
 		v = self.store.load_one('page', {'id':s.get_id()});
 		self.failIfEqual(v.title, 'Old School', "Didn't get cached object when expected (2).")

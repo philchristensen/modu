@@ -9,10 +9,10 @@ from twisted.enterprise import adbapi
 from modu.persist import mysql
 from modu.util import url
 
-def connect(db_url, threaded=True, **kwargs):
+def connect(db_url, threaded=False, **kwargs):
 	dsn = get_dsn(db_url)
 	kwargs.update(dsn)
-	if(threaded and False):
+	if(threaded):
 		return adbapi.ConnectionPool(**kwargs)
 	else:
 		return ThreadlessConnectionPool(**kwargs)

@@ -12,7 +12,7 @@ import MySQLdb, time, sys
 from MySQLdb import cursors
 
 from modu import persist
-from modu.persist import storable
+from modu.persist import storable, adbapi
 
 from twisted.trial import unittest
 
@@ -34,16 +34,15 @@ class StorableTestCase(unittest.TestCase):
 	def setUp(self):
 		self.store = persist.Store.get_store()
 		if not(self.store):
-			self.connection = MySQLdb.connect('localhost', 'modu', 'modu', 'modu')
-			self.store = persist.Store(self.connection)
+			pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+			self.store = persist.Store(pool)
 			self.debug_file = sys.stderr
 		self.store.ensure_factory('autoinc_table', guid_table=None)
 		
 		global TEST_TABLES
-		cur = self.store.get_cursor()
 		for sql in TEST_TABLES.split(";"):
 			if(sql.strip()):
-				cur.execute(sql)
+				self.store.pool.runOperation(sql)
 	
 	def tearDown(self):
 		pass
