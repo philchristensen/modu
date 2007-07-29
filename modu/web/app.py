@@ -142,12 +142,12 @@ def get_application(req):
 	host_tree_lock.acquire()
 	try:
 		if not(host in host_tree):
-			_scan_plugins(req)
+			_scan_sites(req)
 		
 		host_node = host_tree[host]
 		
 		if not(host_node.has_path(req['REQUEST_URI'])):
-			_scan_plugins(req)
+			_scan_sites(req)
 		
 		app = host_node.get_data_at(req['REQUEST_URI'])
 	finally:
@@ -193,16 +193,16 @@ def content500(path=None, exception=None):
 	return content
 
 
-def _scan_plugins(req):
+def _scan_sites(req):
 	global host_tree
 	
-	if(req['SCRIPT_FILENAME'] not in sys.path):
+	if(req.get('SCRIPT_FILENAME', '') not in sys.path):
 		sys.path.append(req['SCRIPT_FILENAME'])
 	
-	import modu.plugins
-	reload(modu.plugins)
+	import modu.sites
+	reload(modu.sites)
 	
-	for site_plugin in plugin.getPlugins(ISite, modu.plugins):
+	for site_plugin in plugin.getPlugins(ISite, modu.sites):
 		site = site_plugin()
 		app = Application(site)
 		

@@ -7,6 +7,6 @@
 
 import os, sys
 
-__path__ = [os.path.abspath(os.path.join(x, 'modu', 'plugins')) for x in sys.path]
+__path__ = [os.path.abspath(os.path.join(x, 'modu', 'sites')) for x in sys.path]
 
 __all__ = []
