@@ -39,18 +39,7 @@ def handler(env, start_response):
 			else:
 				raise404(env['REQUEST_URI'])
 			
-			result = check_file(req)
-			if(result):
-				if(result[1]):
-					try:
-						headers = (('Content-Type', result[1]), ('Content-Length', result[2]))
-						content = req['wsgi.file_wrapper'](open(result[0]))
-						start_response('200 OK', headers)
-						return content
-					except:
-						raise403(env['REQUEST_URI'])
-				else:
-					raise403(env['REQUEST_URI'])
+			check_for_file(req)
 			
 			tree = application.get_tree()
 			rsrc = tree.parse(req['modu.path'])
@@ -99,8 +88,10 @@ def configure_request(env):
 	return Request(env)
 
 
-def check_file(req):
+def check_for_file(req):
 	true_path = req['PATH_TRANSLATED']
+	content_type = None
+	size = None
 	try:
 		finfo = os.stat(true_path)
 		# note that there's no support for directory indexes,
@@ -109,13 +100,16 @@ def check_file(req):
 			try:
 				content_type = mimetypes.guess_type(true_path)[0]
 				size = finfo.st_size
-				return (true_path, content_type, size)
 			except IOError:
-				return (true_path, None, None)
+				raise403('Cannot discern type: %s' % req['REQUEST_URI'])
+		else:
+			return
 	except OSError:
-		pass
+		raise403('Cannot stat: %s' % req['REQUEST_URI'])
 	
-	return None
+	headers = (('Content-Type', content_type), ('Content-Length', size))
+	content = req['wsgi.file_wrapper'](open(true_path))
+	raise200(headers, content)
 
 
 def get_application(req):
@@ -149,13 +143,17 @@ def get_application(req):
 	return copy.deepcopy(app)
 
 
+def raise200(headers, content):
+	raise web.HTTPStatus('200 OK', headers, content)
+
+
 def raise404(path=None):
 	content = tags.h1()['Not Found']
 	content += tags.hr()
 	content += tags.p()['There is no object registered at that path.']
 	if(path):
 		content += tags.strong()[path]
-	raise web.HTTPStatus('404 Not Found', [('Content-Type', 'text/html')], content)
+	raise web.HTTPStatus('404 Not Found', [('Content-Type', 'text/html')], [content])
 
 
 def raise403(path=None):
@@ -164,7 +162,7 @@ def raise403(path=None):
 	content += tags.p()['You are not allowed to access that path.']
 	if(path):
 		content += tags.strong()[path]
-	raise web.HTTPStatus('403 Forbidden', [('Content-Type', 'text/html')], content)
+	raise web.HTTPStatus('403 Forbidden', [('Content-Type', 'text/html')], [content])
 
 
 def raise401(path=None):
@@ -173,7 +171,7 @@ def raise401(path=None):
 	content += tags.p()['You have not supplied the appropriate credentials.']
 	if(path):
 		content += tags.strong()[path]
-	raise web.HTTPStatus('401 Unauthorized', [('Content-Type', 'text/html')], content)
+	raise web.HTTPStatus('401 Unauthorized', [('Content-Type', 'text/html')], [content])
 
 
 def raise500(path=None, exception=None):
