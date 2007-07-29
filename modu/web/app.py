@@ -22,61 +22,54 @@ db_pool = None
 db_pool_lock = threading.BoundedSemaphore()
 
 def handler(env, start_response):
-	application = get_application(env)
-	
-	if not(application):
-		start_response('404 Not Found', [('Content-Type', 'text/html')])
-		return [content404(env['REQUEST_URI'])]
-	
-	env['modu.app'] = application
-	req = configure_request(env)
-	
-	if(application.db_url):
-		req['modu.db_pool'] = _acquire_db(application.db_url, env['wsgi.multithread'])
-	
-	persist.activate_store(req)
-	session.activate_session(req)
-	
+	req = None
 	try:
-		result = check_file(req)
-		if(result):
-			content = [content403(env['REQUEST_URI'])]
-			headers = []
-			if(result[1]):
-				try:
-					content = req['wsgi.file_wrapper'](open(result[0]))
-				except:
-					status = '403 Forbidden'
-					headers.append(('Content-Type', 'text/html'))
-				else:
-					status = '200 OK'
-					headers.append(('Content-Type', result[1]))
-					headers.append(('Content-Length', result[2]))
-			else:
-				status = '403 Forbidden'
-				headers.append(('Content-Type', 'text/html'))
-			start_response(status, application.get_headers())
-			return content
-		
-		tree = application.get_tree()
-		rsrc = tree.parse(req['modu.path'])
-		if not(rsrc):
-			start_response('404 Not Found', [('Content-Type', 'text/html')])
-			return [content404(env['REQUEST_URI'])]
-		
-		req['modu.tree'] = tree
 		try:
+			application = get_application(env)
+			
+			if(application):
+				env['modu.app'] = application
+				req = configure_request(env)
+				
+				if(application.db_url):
+					req['modu.db_pool'] = _acquire_db(application.db_url, env['wsgi.multithread'])
+				
+				persist.activate_store(req)
+				session.activate_session(req)
+			else:
+				raise404(env['REQUEST_URI'])
+			
+			result = check_file(req)
+			if(result):
+				if(result[1]):
+					try:
+						headers = (('Content-Type', result[1]), ('Content-Length', result[2]))
+						content = req['wsgi.file_wrapper'](open(result[0]))
+						start_response('200 OK', headers)
+						return content
+					except:
+						raise403(env['REQUEST_URI'])
+				else:
+					raise403(env['REQUEST_URI'])
+			
+			tree = application.get_tree()
+			rsrc = tree.parse(req['modu.path'])
+			if not(rsrc):
+				raise404(env['REQUEST_URI'])
+			
+			req['modu.tree'] = tree
+			
 			if(resource.IResourceDelegate.providedBy(rsrc)):
 				rsrc = rsrc.get_delegate(req)
 			if(resource.IAccessControl.providedBy(rsrc)):
 				rsrc.check_access(req)
 			content = rsrc.get_response(req)
-		except web.HTTPStatus, http:
-			start_response(http.status, http.headers)
-			return http.content
-	finally:
-		if('modu.session' in req):
-			req['modu.session'].save()
+		finally:
+			if(req and 'modu.session' in req):
+				req['modu.session'].save()
+	except web.HTTPStatus, http:
+		start_response(http.status, http.headers)
+		return http.content
 	
 	start_response('200 OK', application.get_headers())
 	return [content]
@@ -156,41 +149,41 @@ def get_application(req):
 	return copy.deepcopy(app)
 
 
-def content404(path=None):
+def raise404(path=None):
 	content = tags.h1()['Not Found']
 	content += tags.hr()
 	content += tags.p()['There is no object registered at that path.']
 	if(path):
 		content += tags.strong()[path]
-	return content
+	raise web.HTTPStatus('404 Not Found', [('Content-Type', 'text/html')], content)
 
 
-def content403(path=None):
+def raise403(path=None):
 	content = tags.h1()['Forbidden']
 	content += tags.hr()
 	content += tags.p()['You are not allowed to access that path.']
 	if(path):
 		content += tags.strong()[path]
-	return content
+	raise web.HTTPStatus('403 Forbidden', [('Content-Type', 'text/html')], content)
 
 
-def content401(path=None):
+def raise401(path=None):
 	content = tags.h1()['Unauthorized']
 	content += tags.hr()
 	content += tags.p()['You have not supplied the appropriate credentials.']
 	if(path):
 		content += tags.strong()[path]
-	return content
+	raise web.HTTPStatus('401 Unauthorized', [('Content-Type', 'text/html')], content)
 
 
-def content500(path=None, exception=None):
+def raise500(path=None, exception=None):
 	content = tags.h1()['Internal Server Error']
 	content += tags.hr()
 	content += tags.p()['Sorry, an error has occurred:']
 	content += tags.pre()[traceback.format_exc()]
 	if(path):
 		content += tags.strong()[path]
-	return content
+	raise web.HTTPStatus('500 Internal Server Error', [('Content-Type', 'text/html')], content)
 
 
 def _scan_sites(req):

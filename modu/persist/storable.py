@@ -37,6 +37,7 @@ class Storable(object):
 		object.__setattr__(self, '_dirty', True)
 		object.__setattr__(self, '_data', {})
 		object.__setattr__(self, '_table', table)
+		object.__setattr__(self, '_factory', None)
 	
 	def __setitem__(self, key, value):
 		object.__getattribute__(self, '_data')[key] = value
@@ -126,6 +127,31 @@ class Storable(object):
 		"""
 		return object.__getattribute__(self, '_dirty')
 	
+	def set_factory(self, factory):
+		"""
+		Called my this object's factory after load_data()
+		"""
+		object.__setattr__(self, '_factory', factory)
+	
+	def get_factory(self, factory):
+		"""
+		Returns the factory that last loaded or saved this object.
+		Newly created, unsaved objects have no factory.
+		"""
+		return object.__getattribute__(self, '_factory')
+	
+	def get_factory(self, factory):
+		"""
+		Convenience method to get the factory for this object,
+		and provide meaningful messages after developer error.
+		"""
+		factory = object.__getattribute__(self, '_factory')
+		if not(factory):
+			raise RuntimeError, "New objects do not have factories."
+		if not(factory.store):
+			raise RuntimeError, "This object's factory has not been registered with a Store."
+		return factory.store
+		
 	def load_data(self, data):
 		"""
 		This method is called by the Store to populate
@@ -195,6 +221,11 @@ class IFactory(interface.Interface):
 		Load an object based on its ID.
 		"""
 	
+	def get_store(self, id):
+		"""
+		Load an object based on its ID.
+		"""
+	
 	def get_items(self, attribs):
 		"""
 		Return an iterable of items that match the provided attributes.
@@ -230,6 +261,7 @@ class DefaultFactory(object):
 		self.model_class = model_class
 		self.id_col = id_col
 		self.guid_table = guid_table
+		self.store = None
 		
 		if(use_cache is not None):
 			self.use_cache = use_cache
@@ -284,6 +316,7 @@ class DefaultFactory(object):
 			del data[self.id_col]
 		
 		item.load_data(data)
+		item.set_factory(self)
 		return item
 	
 	def create_item_query(self, data):
