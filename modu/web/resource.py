@@ -8,7 +8,7 @@
 from zope import interface
 from zope.interface import implements
 
-import os
+import os, re
 
 try:
 	import cPickle as pickle
@@ -149,11 +149,34 @@ class CheetahTemplateContent(TemplateContent):
 	"""http://www.cheetahtemplate.org"""
 	def get_content(self, req):
 		
-		template_path = req['modu.approot'] + '/template/' + self.get_template(req)
-		template_file = open(template_path)
-		self.template = CheetahTemplate(file=template_file, searchList=[self.data])
+		template = self.get_template(req)
+		template_path = req['modu.approot'] + '/template/' + template
+		module_name = re.sub(r'\W+', '_', template)
+		module_path = req['modu.approot'] + '/template/' + module_name + '.py'
 		
-		return str(self.template)
+		# if I can't read the template class, i'll try to create one
+		if(os.access(module_path, os.F_OK)):
+			#load module and instantiate template
+			globs = {}
+			execfile(module_path, globs)
+			tclass = globs[module_name]
+		# if I know I will be able to save a template class
+		elif(os.access(module_path, os.W_OK) or not os.access(module_path, os.F_OK)):
+			pysrc = CheetahTemplate.compile(file=open(template_path),
+											returnAClass=False,
+											moduleName=module_name,
+											className=module_name)
+			module_file = open(module_path, 'w')
+			module_file.write(pysrc)
+			module_file.close()
+			
+			globs = {}
+			exec(pysrc, globs)
+			tclass = globs[module_name]
+		else:
+			tclass = CheetahTemplate.compile(file=open(template_path))
+		
+		return str(tclass(searchList=[self.data]))
 	
 	def prepare_content(self, req):
 		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
