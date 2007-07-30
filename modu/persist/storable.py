@@ -10,6 +10,16 @@ import time, copy, sys
 from zope import interface
 from zope.interface import implements
 
+def cached(func):
+	def _cached(*args, **kwargs):
+		if(hasattr(func, 'cache')):
+			return func.cache
+		result = func(*args, **kwargs)
+		if(result):
+			func.cache = result
+		return result
+	return _cached
+
 class Storable(object):
 	"""
 	A Storable object represents a single standardized result from a

@@ -215,11 +215,24 @@ class StorableTestCase(unittest.TestCase):
 		
 		u = self.store.load_one('page', {'id':s.get_id()});
 		self.failUnlessEqual(u.title, t.title, "Got cached object when not expected.")
+	
+	def test_cache_decorator(self):
+		s = TestStorable()
+		
+		four = s.sample_cached_function()
+		self.failUnless(s._sample_calc_ran, "sample_calc hasn't run")
+		self.failUnlessEqual(four, 4, "sample_cached_function didn't return 4")
+		s._sample_calc_ran = False
+		four = s.sample_cached_function()
+		
+		self.failIf(s._sample_calc_ran, "sample_calc ran again")
+
 
 class TestStorable(storable.Storable):
 	def __init__(self):
 		super(TestStorable, self).__init__('page')
 		self._related = []
+		self._sample_calc_ran = False
 	
 	def populate_related_items(self):
 		store = persist.Store.get_store()
@@ -244,6 +257,14 @@ class TestStorable(storable.Storable):
 			page3.content = 'test content'
 		
 		self._related = [page1, page2, page3]
+	
+	@storable.cached
+	def sample_cached_function(self):
+		return self.sample_calc()
+	
+	def sample_calc(self):
+		self._sample_calc_ran = True
+		return 2 + 2
 	
 	def sample_function(self):
 		return True
