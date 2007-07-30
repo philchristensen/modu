@@ -142,13 +142,17 @@ class TemplateContent(object):
 try:
 	from Cheetah.Template import Template as CheetahTemplate
 except:
-	def CheetahTemplate(*args, **kwargs):
-		raise RuntimeError("Cannot find the Cheetah Template modules.")
+	class CheetahTemplate(object):
+		@staticmethod
+		def compile(*args, **kwargs):
+			raise RuntimeError("Cannot find the Cheetah Template modules.")
+		
+		def __init__(*args, **kwargs):
+			raise RuntimeError("Cannot find the Cheetah Template modules.")
 	
 class CheetahTemplateContent(TemplateContent):
 	"""http://www.cheetahtemplate.org"""
 	def get_content(self, req):
-		
 		template = self.get_template(req)
 		template_path = req['modu.approot'] + '/template/' + template
 		module_name = re.sub(r'\W+', '_', template)
@@ -159,7 +163,7 @@ class CheetahTemplateContent(TemplateContent):
 			#load module and instantiate template
 			globs = {}
 			execfile(module_path, globs)
-			tclass = globs[module_name]
+			self.template_class = globs[module_name]
 		# if I know I will be able to save a template class
 		elif(os.access(module_path, os.W_OK) or not os.access(module_path, os.F_OK)):
 			pysrc = CheetahTemplate.compile(file=open(template_path),
@@ -169,14 +173,14 @@ class CheetahTemplateContent(TemplateContent):
 			module_file = open(module_path, 'w')
 			module_file.write(pysrc)
 			module_file.close()
-			
+		
 			globs = {}
 			exec(pysrc, globs)
-			tclass = globs[module_name]
+			self.template_class = globs[module_name]
 		else:
-			tclass = CheetahTemplate.compile(file=open(template_path))
+			self.template_class = CheetahTemplate.compile(file=open(template_path))
 		
-		return str(tclass(searchList=[self.data]))
+		return str(self.template_class(searchList=[self.data]))
 	
 	def prepare_content(self, req):
 		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)

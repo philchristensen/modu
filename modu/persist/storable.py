@@ -10,14 +10,20 @@ import time, copy, sys
 from zope import interface
 from zope.interface import implements
 
-def cached(func):
-	def _cached(*args, **kwargs):
-		if(hasattr(func, 'cache')):
-			return func.cache
-		result = func(*args, **kwargs)
-		if(result):
-			func.cache = result
-		return result
+def cached(timeout):
+	def _cached(func):
+		func.expires = 0
+		def __cached(*args, **kwargs):
+			if(timeout and func.expires < time.time() and hasattr(func, 'cache')):
+				del func.cache
+			if(hasattr(func, 'cache')):
+				return func.cache
+			result = func(*args, **kwargs)
+			if(result):
+				func.cache = result
+				func.expires = time.time() + timeout
+			return result
+		return __cached
 	return _cached
 
 class Storable(object):

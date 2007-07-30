@@ -258,7 +258,7 @@ class TestStorable(storable.Storable):
 		
 		self._related = [page1, page2, page3]
 	
-	@storable.cached
+	@storable.cached(0)
 	def sample_cached_function(self):
 		return self.sample_calc()
 	
