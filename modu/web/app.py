@@ -292,12 +292,11 @@ class Application(object):
 		site.initialize(self)
 	
 	def __setattr__(self, key, value):
-		if(key.startswith('_')):
-			super(Application, self).__setattr__(key, value)
-		else:
-			self.config[key] = value
+		self.config[key] = value
 	
 	def __getattr__(self, key):
+		if(key.startswith('_')):
+			return super(Application, self).__getattr__(key)
 		return self.__dict__['config'][key]
 	
 	def activate(self, rsrc):
