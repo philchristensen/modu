@@ -292,7 +292,10 @@ class Application(object):
 		site.initialize(self)
 	
 	def __setattr__(self, key, value):
-		self.config[key] = value
+		if(key.startswith('_')):
+			super(Application, self).__setattr__(key, value)
+		else:
+			self.config[key] = value
 	
 	def __getattr__(self, key):
 		return self.__dict__['config'][key]
