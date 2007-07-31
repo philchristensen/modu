@@ -8,7 +8,7 @@
 from zope import interface
 from zope.interface import implements
 
-import os, re
+import os, re, threading
 
 try:
 	import cPickle as pickle
@@ -138,6 +138,7 @@ class TemplateContent(object):
 	def get_template(self, req):
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 
+
 # According to the docs, Template can take awhile to load.
 try:
 	from Cheetah.Template import Template as CheetahTemplate
@@ -149,7 +150,17 @@ except:
 		
 		def __init__(*args, **kwargs):
 			raise RuntimeError("Cannot find the Cheetah Template modules.")
-	
+
+class CheetahModuTemplate(CheetahTemplate):
+	def serverSidePath(self, path=None, normpath=os.path.normpath, abspath=os.path.abspath):
+		if(hasattr(self, 'moduTemplateDirectory')):
+			templatePath = os.path.join(self.moduTemplateDirectory, path)
+			return normpath(abspath(templatePath))
+		return super(CheetahModuTemplate, self).serverSidePath(path, normpath, abspath)
+
+
+cheetah_lock = threading.BoundedSemaphore()
+
 class CheetahTemplateContent(TemplateContent):
 	"""http://www.cheetahtemplate.org"""
 	def get_content(self, req):
@@ -158,27 +169,43 @@ class CheetahTemplateContent(TemplateContent):
 		module_name = re.sub(r'\W+', '_', template)
 		module_path = req['modu.approot'] + '/template/' + module_name + '.py'
 		
-		# if I can't read the template class, i'll try to create one
-		if(os.access(module_path, os.F_OK)):
-			#load module and instantiate template
-			globs = {}
-			execfile(module_path, globs)
-			self.template_class = globs[module_name]
-		# if I know I will be able to save a template class
-		elif(os.access(module_path, os.W_OK) or not os.access(module_path, os.F_OK)):
-			pysrc = CheetahTemplate.compile(file=open(template_path),
-											returnAClass=False,
-											moduleName=module_name,
-											className=module_name)
-			module_file = open(module_path, 'w')
-			module_file.write(pysrc)
-			module_file.close()
+		# because we have to manage moduTemplateDirectory on the class instance
+		cheetah_lock.acquire()
+		try:
+			CheetahModuTemplate.moduTemplateDirectory = req['modu.approot'] + '/template/'
 		
-			globs = {}
-			exec(pysrc, globs)
-			self.template_class = globs[module_name]
-		else:
-			self.template_class = CheetahTemplate.compile(file=open(template_path))
+			try:
+				needs_recompile = (os.stat(template_path).st_mtime > os.stat(module_path).st_mtime)
+			except:
+				needs_recompile = True
+			
+			moduleGlobals = {'CHEETAH_dynamicallyAssignedBaseClass_CheetahModuTemplate':CheetahModuTemplate}
+		
+			# if I can't read the template class, i'll try to create one
+			if(os.access(module_path, os.F_OK) and not needs_recompile):
+				#load module and instantiate template
+				execfile(module_path, moduleGlobals)
+				self.template_class = moduleGlobals[module_name]
+			# if I know I will be able to save a template class
+			elif(needs_recompile and (os.access(module_path, os.W_OK) or not os.access(module_path, os.F_OK))):
+				pysrc = CheetahModuTemplate.compile(file=open(template_path),
+												returnAClass=False,
+												moduleName=module_name,
+												className=module_name,
+												baseclass=CheetahModuTemplate,
+												moduleGlobals=moduleGlobals)
+				module_file = open(module_path, 'w')
+				module_file.write(pysrc)
+				module_file.close()
+		
+				exec(pysrc, moduleGlobals)
+				self.template_class = moduleGlobals[module_name]
+			else:
+				self.template_class = CheetahModuTemplate.compile(file=open(template_path),
+															baseclass=CheetahModuTemplate,
+															moduleGlobals=moduleGlobals)
+		finally:
+			cheetah_lock.release()
 		
 		return str(self.template_class(searchList=[self.data]))
 	
