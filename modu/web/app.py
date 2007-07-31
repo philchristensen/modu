@@ -37,14 +37,14 @@ def handler(env, start_response):
 				persist.activate_store(req)
 				session.activate_session(req)
 			else:
-				raise404(env['REQUEST_URI'])
+				raise404("No such application: %s" % env['REQUEST_URI'])
 			
 			check_for_file(req)
 			
 			tree = application.get_tree()
 			rsrc = tree.parse(req['modu.path'])
 			if not(rsrc):
-				raise404(env['REQUEST_URI'])
+				raise404("No such resource: %s" % env['REQUEST_URI'])
 			
 			req['modu.tree'] = tree
 			
@@ -146,6 +146,14 @@ def get_application(req):
 
 def raise200(headers, content):
 	raise web.HTTPStatus('200 OK', headers, content)
+
+
+def raise301(url):
+	raise web.HTTPStatus('301 Moved Permanently', [('Location', url)], [''])
+
+
+def raise302(url):
+	raise web.HTTPStatus('302 Found', [('Location', url)], [''])
 
 
 def raise404(path=None):

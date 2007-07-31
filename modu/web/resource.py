@@ -164,6 +164,8 @@ cheetah_lock = threading.BoundedSemaphore()
 class CheetahTemplateContent(TemplateContent):
 	"""http://www.cheetahtemplate.org"""
 	def get_content(self, req):
+		self.set_slot('base_path', req['modu.app'].base_path)
+		
 		template = self.get_template(req)
 		template_path = req['modu.approot'] + '/template/' + template
 		module_name = re.sub(r'\W+', '_', template)

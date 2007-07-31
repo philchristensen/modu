@@ -132,6 +132,8 @@ class WSGIResource(resource.Resource):
 		request.finish()
 	
 	def _finish(self, response, request):
+		request.setResponseCode(response.code)
+		
 		for key, values in response.headers.getAllRawHeaders():
 			for value in values:
 				request.setHeader(key, value)
