@@ -6,16 +6,16 @@
 # See LICENSE for details
 
 from twisted.enterprise import adbapi
-from modu.persist import mysql
+
 from modu.util import url
 
-def connect(db_url, threaded=False, **kwargs):
+def connect(db_url, async=False, **kwargs):
 	dsn = get_dsn(db_url)
 	kwargs.update(dsn)
-	if(threaded):
+	if(async):
 		return adbapi.ConnectionPool(**kwargs)
 	else:
-		return ThreadlessConnectionPool(**kwargs)
+		return SynchronousConnectionPool(**kwargs)
 
 def get_dsn(db_url):
 	dsn = url.urlparse(db_url)
@@ -57,7 +57,12 @@ def fix_mysqldb(connection):
 		connection.character_set_name = instancemethod(_yes_utf8_really, connection, connection.__class__)
 
 
-class ThreadlessConnectionPool(adbapi.ConnectionPool):
+class SynchronousConnectionPool(adbapi.ConnectionPool):
+	def __init__(self, dbapiName, *connargs, **connkw):
+		adbapi.ConnectionPool.__init__(self, dbapiName, *connargs, **connkw)
+		from twisted.internet import reactor
+		reactor.removeSystemEventTrigger(self.startID)
+	
 	def runInteraction(self, interaction, *args, **kw):
 		return self._runInteraction(interaction, *args, **kw)
 	

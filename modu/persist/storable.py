@@ -24,6 +24,13 @@ def cached(timeout):
 				func.expires = time.time() + timeout
 			return result
 		return __cached
+	try:
+		# see if it's an int
+		int(timeout)
+	except TypeError:
+		func = timeout
+		timeout = 0
+		return _cached(func)
 	return _cached
 
 class Storable(object):
