@@ -105,7 +105,8 @@ def check_for_file(req):
 		else:
 			return
 	except OSError:
-		raise403('Cannot stat: %s' % req['REQUEST_URI'])
+		#raise403('Cannot stat: %s' % req['REQUEST_URI'])
+		return
 	
 	headers = (('Content-Type', content_type), ('Content-Length', size))
 	content = req['wsgi.file_wrapper'](open(true_path))

@@ -156,16 +156,16 @@ class Storable(object):
 		"""
 		object.__setattr__(self, '_factory', factory)
 	
-	def get_factory(self, factory):
+	def get_factory(self):
 		"""
 		Returns the factory that last loaded or saved this object.
 		Newly created, unsaved objects have no factory.
 		"""
 		return object.__getattribute__(self, '_factory')
 	
-	def get_factory(self, factory):
+	def get_store(self):
 		"""
-		Convenience method to get the factory for this object,
+		Convenience method to get the store for this object,
 		and provide meaningful messages after developer error.
 		"""
 		factory = object.__getattribute__(self, '_factory')

@@ -61,7 +61,8 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 	def __init__(self, dbapiName, *connargs, **connkw):
 		adbapi.ConnectionPool.__init__(self, dbapiName, *connargs, **connkw)
 		from twisted.internet import reactor
-		reactor.removeSystemEventTrigger(self.startID)
+		if(self.startID):
+			reactor.removeSystemEventTrigger(self.startID)
 	
 	def runInteraction(self, interaction, *args, **kw):
 		return self._runInteraction(interaction, *args, **kw)
