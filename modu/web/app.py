@@ -71,7 +71,12 @@ def configure_request(env):
 	
 	# once the previous line is gone, this next
 	# block should be able to be moved elsewhere
-	uri = env['REQUEST_URI']
+	if(env['REQUEST_URI'].find('?') < 0):
+		uri = env['REQUEST_URI']
+	else:
+		# twisted.web2.wsgi includes the query string in the request_uri
+		uri, qs = env['REQUEST_URI'].split('?')
+	
 	if(uri.startswith(env['SCRIPT_NAME'])):
 		env['PATH_INFO'] = uri[len(env['SCRIPT_NAME']):]
 	else:
@@ -131,6 +136,8 @@ def get_application(req):
 	try:
 		if not(host in host_tree):
 			_scan_sites(req)
+		if not(host in host_tree):
+			return None
 		
 		host_node = host_tree[host]
 		
