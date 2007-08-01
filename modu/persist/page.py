@@ -9,7 +9,6 @@ from modu.persist import Store
 
 class Paginator(object):
 	def __init__(self, calc_found=True):
-		self.store = Store.get_store()
 		self.calc_found = calc_found
 		
 		self.page = 1
@@ -18,17 +17,17 @@ class Paginator(object):
 		self.start_range = 0
 		self.end_range = 0
 	
-	def get_results(self, *args, **kwargs):
+	def get_results(self, store, *args, **kwargs):
 		if(self.calc_found):
 			kwargs['__select_keyword'] = 'SQL_CALC_FOUND_ROWS'
 		
 		kwargs['__limit'] = self.get_limit()
 		
-		results = self.store.load(*args, **kwargs)
+		results = store.load(*args, **kwargs)
 		self.start_range = ((self.page - 1) * self.per_page) + 1
 		
 		if(self.calc_found):
-			found_result = self.store.pool.runQuery("SELECT FOUND_ROWS() AS found_rows")
+			found_result = store.pool.runQuery("SELECT FOUND_ROWS() AS found_rows")
 			self.total_results = found_result[0]['found_rows']
 			self.end_range = self.start_range + len(results) - 1
 		else:

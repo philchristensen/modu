@@ -243,16 +243,6 @@ class Storable(object):
 		resaved, creating a new record.
 		"""
 		object.__setattr__(self, '_id', 0)
-	
-	def save(self):
-		from modu.persist import Store
-		store = Store.get_store()
-		store.save(self)
-	
-	def destroy(self):
-		from modu.persist import Store
-		store = Store.get_store()
-		store.destroy(self)
 
 class IFactory(interface.Interface):
 	def set_store(self, store):

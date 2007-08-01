@@ -44,7 +44,7 @@ class PaginatorTestCase(unittest.TestCase):
 		if not(self.store):
 			pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
 			self.store = persist.Store(pool)
-			self.store.debug_file = sys.stderr
+			#self.store.debug_file = sys.stderr
 		
 		global TEST_TABLES
 		for sql in TEST_TABLES.split(";"):
@@ -69,7 +69,7 @@ class PaginatorTestCase(unittest.TestCase):
 	
 	def test_paginate_calc(self):
 		p = page.Paginator()
-		pages = p.get_results('page', {})
+		pages = p.get_results(self.store, 'page', {})
 		
 		self.failUnlessEqual(p.total_results, 105, "Paginator has incorrect total results: %d" % p.total_results)
 		self.failUnlessEqual(p.start_range, 1, "Paginator has incorrect start range: %d" % p.start_range)
@@ -78,7 +78,7 @@ class PaginatorTestCase(unittest.TestCase):
 		
 		p = page.Paginator()
 		p.page = 2
-		pages = p.get_results('page', {})
+		pages = p.get_results(self.store, 'page', {})
 		
 		self.failUnlessEqual(p.total_results, 105, "Paginator has incorrect total results: %d" % p.total_results)
 		self.failUnlessEqual(p.start_range, 11, "Paginator has incorrect start range: %d" % p.start_range)
@@ -87,7 +87,7 @@ class PaginatorTestCase(unittest.TestCase):
 		
 		p = page.Paginator()
 		p.per_page = 25
-		pages = p.get_results('page', {})
+		pages = p.get_results(self.store, 'page', {})
 		
 		self.failUnlessEqual(p.total_results, 105, "Paginator has incorrect total results: %d" % p.total_results)
 		self.failUnlessEqual(p.start_range, 1, "Paginator has incorrect start range: %d" % p.start_range)
@@ -97,7 +97,7 @@ class PaginatorTestCase(unittest.TestCase):
 		p = page.Paginator()
 		p.page = 4
 		p.per_page = 25
-		pages = p.get_results('page', {})
+		pages = p.get_results(self.store, 'page', {})
 		
 		self.failUnlessEqual(p.total_results, 105, "Paginator has incorrect total results: %d" % p.total_results)
 		self.failUnlessEqual(p.start_range, 76, "Paginator has incorrect start range: %d" % p.start_range)
@@ -107,7 +107,7 @@ class PaginatorTestCase(unittest.TestCase):
 		p = page.Paginator()
 		p.page = 5
 		p.per_page = 25
-		pages = p.get_results('page', {})
+		pages = p.get_results(self.store, 'page', {})
 		
 		self.failUnlessEqual(p.total_results, 105, "Paginator has incorrect total results: %d" % p.total_results)
 		self.failUnlessEqual(p.start_range, 101, "Paginator has incorrect start range: %d" % p.start_range)
@@ -116,7 +116,7 @@ class PaginatorTestCase(unittest.TestCase):
 	
 	def test_paginate_nocalc(self):
 		p = page.Paginator(False)
-		pages = p.get_results('page', {})
+		pages = p.get_results(self.store, 'page', {})
 		
 		self.failUnlessEqual(str(p.total_results), '10+', "Paginator has incorrect total results: %s" % p.total_results)
 		self.failUnlessEqual(p.start_range, 1, "Paginator has incorrect start range: %d" % p.start_range)
@@ -125,7 +125,7 @@ class PaginatorTestCase(unittest.TestCase):
 		
 		p = page.Paginator(False)
 		p.page = 2
-		pages = p.get_results('page', {})
+		pages = p.get_results(self.store, 'page', {})
 		
 		self.failUnlessEqual(str(p.total_results), '20+', "Paginator has incorrect total results: %s" % p.total_results)
 		self.failUnlessEqual(p.start_range, 11, "Paginator has incorrect start range: %d" % p.start_range)
@@ -134,7 +134,7 @@ class PaginatorTestCase(unittest.TestCase):
 		
 		p = page.Paginator(False)
 		p.per_page = 25
-		pages = p.get_results('page', {})
+		pages = p.get_results(self.store, 'page', {})
 		
 		self.failUnlessEqual(str(p.total_results), '25+', "Paginator has incorrect total results: %s" % p.total_results)
 		self.failUnlessEqual(p.start_range, 1, "Paginator has incorrect start range: %d" % p.start_range)
@@ -144,7 +144,7 @@ class PaginatorTestCase(unittest.TestCase):
 		p = page.Paginator(False)
 		p.page = 4
 		p.per_page = 25
-		pages = p.get_results('page', {})
+		pages = p.get_results(self.store, 'page', {})
 		
 		self.failUnlessEqual(str(p.total_results), '100+', "Paginator has incorrect total results: %s" % p.total_results)
 		self.failUnlessEqual(p.start_range, 76, "Paginator has incorrect start range: %d" % p.start_range)
@@ -154,7 +154,7 @@ class PaginatorTestCase(unittest.TestCase):
 		p = page.Paginator(False)
 		p.page = 5
 		p.per_page = 25
-		pages = p.get_results('page', {})
+		pages = p.get_results(self.store, 'page', {})
 		
 		self.failUnlessEqual(p.total_results, 105, "Paginator has incorrect total results: %s" % p.total_results)
 		self.failUnlessEqual(p.start_range, 101, "Paginator has incorrect start range: %d" % p.start_range)

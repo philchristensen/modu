@@ -36,7 +36,7 @@ class StorableTestCase(unittest.TestCase):
 		if not(self.store):
 			pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
 			self.store = persist.Store(pool)
-			self.debug_file = sys.stderr
+			#self.debug_file = sys.stderr
 		self.store.ensure_factory('autoinc_table', guid_table=None)
 		
 		global TEST_TABLES

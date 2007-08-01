@@ -94,7 +94,7 @@ class DbSessionTestCase(unittest.TestCase):
 		usr.last = 'User'
 		usr.crypt = RAW("ENCRYPT('%s')" % 'password')
 		
-		store = Store.get_store()
+		store = self.req['modu.store']
 		store.ensure_factory('user')
 		store.save(usr)
 		

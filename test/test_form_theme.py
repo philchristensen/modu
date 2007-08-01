@@ -8,7 +8,6 @@
 # See LICENSE for details
 
 from modu.util import form, theme
-from modu.web import wsgi
 
 from twisted.trial import unittest
 import sys

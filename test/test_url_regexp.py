@@ -16,7 +16,7 @@ class URLRegExpTestCase(unittest.TestCase):
 		result = url.urlparse('http://user:password@example.com:1234/a/long/path;params?one=1&two=2#ch01');
 		self.failUnlessEqual(result['scheme'], 'http', "Didn't find 'scheme' where I expected")
 		self.failUnlessEqual(result['user'], 'user', "Didn't find 'user' where I expected")
-		self.failUnlessEqual(result['password'], 'password', "Didn't find 'password' where I expected")
+		self.failUnlessEqual(result['passwd'], 'password', "Didn't find 'password' where I expected")
 		self.failUnlessEqual(result['host'], 'example.com', "Didn't find 'host' where I expected")
 		self.failUnlessEqual(result['port'], '1234', "Didn't find 'port' where I expected")
 		self.failUnlessEqual(result['path'], '/a/long/path', "Didn't find 'path' where I expected")
@@ -26,9 +26,9 @@ class URLRegExpTestCase(unittest.TestCase):
 	
 	def test_dsn(self):
 		result = url.urlparse('MySQLdb://user:password@localhost/database');
-		self.failUnlessEqual(result['scheme'], 'mysql', "Didn't find 'scheme' where I expected")
+		self.failUnlessEqual(result['scheme'], 'MySQLdb', "Didn't find 'scheme' where I expected")
 		self.failUnlessEqual(result['user'], 'user', "Didn't find 'user' where I expected")
-		self.failUnlessEqual(result['password'], 'password', "Didn't find 'password' where I expected")
+		self.failUnlessEqual(result['passwd'], 'password', "Didn't find 'password' where I expected")
 		self.failUnlessEqual(result['host'], 'localhost', "Didn't find 'host' where I expected")
 		self.failUnlessEqual(result['path'], '/database', "Didn't find 'path' where I expected")
 	

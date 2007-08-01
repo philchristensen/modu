@@ -13,12 +13,8 @@ layer and object/relational mapping API.
 @type DEFAULT_STORE_NAME: str
 """
 
-from __future__ import generators
-
-import MySQLdb, warnings
-from MySQLdb import cursors, converters
-
 from modu.persist import storable
+import thread
 
 DEFAULT_STORE_NAME = '__default__'
 
@@ -26,14 +22,12 @@ def activate_store(req):
 	app = req['modu.app']
 	if('modu.db_pool' in req and app.initialize_store):
 		# FIXME: this will need to change under a threaded environ
-		store = Store.get_store()
-		if not(store):
-			if(app.debug_store):
-				debug_file = req['wsgi.errors']
-			else:
-				debug_file = None
-			store = Store(req['modu.db_pool'])
-			store.debug_file = debug_file
+		store = Store(req['modu.db_pool'])
+		if(app.debug_store):
+			debug_file = req['wsgi.errors']
+		else:
+			debug_file = None
+		store.debug_file = debug_file
 		req['modu.store'] = store
 
 
@@ -194,6 +188,9 @@ def interp(query, args):
 	@rtype: str
 	"""
 	#FIXME: an unfortunate MySQLdb dependency, for now
+	import MySQLdb
+	from MySQLdb import converters
+
 	conv_dict = converters.conversions.copy()
 	# This is only used in build_replace/insert()
 	conv_dict[RAW] = Raw2Literal
@@ -230,7 +227,7 @@ class RAW:
 class Store(object):
 	"""
 	persist.Store is the routing point for most interactions with the Storable
-	persistence layer. You create a single Store object for any given runtime,
+	persistence layer. You create a single Store object for any given thread,
 	and load any desired objects through this interface, after registering
 	factories for each table you wish to load objects from.
 	
@@ -259,6 +256,9 @@ class Store(object):
 		
 		@returns: requested Store, or None
 		"""
+		
+		name += '-%d' % thread.get_ident()
+		
 		if(hasattr(cls, '_stores')):
 			if(name in cls._stores):
 				return cls._stores[name]
@@ -288,6 +288,7 @@ class Store(object):
 		
 		self._factories = {}
 		
+		name += '-%d' % thread.get_ident()
 		if(name in self._stores):
 			raise RuntimeError("There is already a Store instance by the name '%s'." % name)
 		self._stores[name] = self
