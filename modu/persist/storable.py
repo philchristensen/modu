@@ -33,6 +33,32 @@ def cached(timeout):
 		return _cached(func)
 	return _cached
 
+def cachedmethod(timeout):
+	def _cached(func):
+		if not(hasattr(func, 'expires')):
+			func.expires = {}
+			func.cache = {}
+		def __cached(self, *args, **kwargs):
+			if(timeout and func.expires.get(repr(self), 0) < time.time()):
+				if(repr(self) in func.cache):
+					del func.cache[repr(self)]
+			if(repr(self) in func.cache):
+				return func.cache[repr(self)]
+			result = func(self, *args, **kwargs)
+			if(result):
+				func.cache[repr(self)] = result
+				func.expires[repr(self)] = time.time() + timeout
+			return result
+		return __cached
+	try:
+		# see if it's an int
+		int(timeout)
+	except TypeError:
+		func = timeout
+		timeout = 0
+		return _cached(func)
+	return _cached
+
 class Storable(object):
 	"""
 	A Storable object represents a single standardized result from a

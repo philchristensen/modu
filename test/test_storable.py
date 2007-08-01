@@ -56,7 +56,7 @@ class StorableTestCase(unittest.TestCase):
 		if not(self.store):
 			pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
 			self.store = persist.Store(pool)
-			self.store.debug_file = sys.stderr
+			#self.store.debug_file = sys.stderr
 		
 		global TEST_TABLES
 		for sql in TEST_TABLES.split(";"):
@@ -150,11 +150,9 @@ class StorableTestCase(unittest.TestCase):
 		s.title = 'Old School'
 		
 		s.populate_related_items()
-		print s.get_related_storables()
 		# at this point, the related items are saved,
 		# so we can DESTROY them! RARRRRGH!!!
 		self.store.save(s)
-		print s.get_related_storables()
 		self.store.destroy(s, True)
 	
 		orig = self.store.load_one('page', {'code':'url-code'})
@@ -216,16 +214,20 @@ class StorableTestCase(unittest.TestCase):
 		u = self.store.load_one('page', {'id':s.get_id()});
 		self.failUnlessEqual(u.title, t.title, "Got cached object when not expected.")
 	
-	def test_cache_decorator(self):
+	def test_cached_decorator(self):
 		s = TestStorable()
 		
-		four = s.sample_cached_function()
+		result = s.sample_cached_function()
+		self.failUnlessEqual(result, repr(s), "s.sample_cached_function didn't return the cached string")
 		self.failUnless(s._sample_calc_ran, "sample_calc hasn't run")
-		self.failUnlessEqual(four, 4, "sample_cached_function didn't return 4")
 		s._sample_calc_ran = False
 		four = s.sample_cached_function()
 		
 		self.failIf(s._sample_calc_ran, "sample_calc ran again")
+		
+		t = TestStorable()
+		result = t.sample_cached_function()
+		self.failUnlessEqual(result, repr(t), "t.sample_cached_function didn't return the cached string")
 
 
 class TestStorable(storable.Storable):
@@ -258,13 +260,13 @@ class TestStorable(storable.Storable):
 		
 		self._related = [page1, page2, page3]
 	
-	@storable.cached
+	@storable.cachedmethod
 	def sample_cached_function(self):
 		return self.sample_calc()
 	
 	def sample_calc(self):
 		self._sample_calc_ran = True
-		return 2 + 2
+		return repr(self)
 	
 	def sample_function(self):
 		return True
