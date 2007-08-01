@@ -21,8 +21,9 @@ DEFAULT_STORE_NAME = '__default__'
 def activate_store(req):
 	app = req['modu.app']
 	if('modu.db_pool' in req and app.initialize_store):
-		# FIXME: this will need to change under a threaded environ
-		store = Store(req['modu.db_pool'])
+		store = Store.get_store()
+		if not(store):
+			store = Store(req['modu.db_pool'])
 		if(app.debug_store):
 			debug_file = req['wsgi.errors']
 		else:

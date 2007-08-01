@@ -17,6 +17,8 @@ from modu.web import twist, app
 
 import os
 
+app.try_lucene_threads()
+
 class Options(usage.Options):
 	optParameters = [["port", "p", 8888, "Port to use for web server."]
 					]
