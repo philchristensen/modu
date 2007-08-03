@@ -21,9 +21,9 @@ class RootResource(resource.CheetahTemplateResource):
 	def prepare_content(self, req):
 		tree = req['modu.tree']
 		session = req['modu.session']
-		if(tree.unparsed_path):
-			if(tree.unparsed_path[0] == 'status' and len(tree.unparsed_path) >= 2):
-				selected_file = urllib.unquote(tree.unparsed_path[1])
+		if(tree.postpath):
+			if(tree.postpath[0] == 'status' and len(tree.postpath) >= 2):
+				selected_file = urllib.unquote(tree.postpath[1])
 				if('modu.file' in session):
 					info_dict = session['modu.file']
 					if(selected_file in info_dict):
@@ -47,7 +47,7 @@ class RootResource(resource.CheetahTemplateResource):
 	
 	def get_template(self, req):
 		tree = req['modu.tree']
-		if(tree.unparsed_path and tree.unparsed_path[0] == 'status'):
+		if(tree.postpath and tree.postpath[0] == 'status'):
 			return 'status.html.tmpl'
 		else:
 			return 'page.html.tmpl'

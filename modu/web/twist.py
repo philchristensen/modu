@@ -9,7 +9,7 @@ import urllib, os, sys
 
 from twisted.internet import defer
 from twisted.web import resource, server, util
-from twisted.web2 import wsgi
+from twisted.web2 import wsgi, stream
 from twisted.python import log
 
 headerNameTranslation = ''.join([c.isalnum() and c.upper() or '_' for c in map(chr, range(256))])
@@ -23,13 +23,12 @@ def createCGIEnvironment(request):
 	
 	env = {} #dict(os.environ)
 	# MUST provide:
-	clength = request.headers.get('content-length', False)
+	clength = request.received_headers.get('content-length', False)
 	if clength:
 		env["CONTENT_LENGTH"] = clength
 	
-	ctype = request.headers['content-type']
-	if ctype:
-		env["CONTENT_TYPE"] = ctype
+	if('content-type' in request.received_headers):
+		env["CONTENT_TYPE"] = request.received_headers['content-type']
 	
 	env["GATEWAY_INTERFACE"] = "CGI/1.1"
 	
@@ -89,8 +88,8 @@ def createCGIEnvironment(request):
 	env["SERVER_PORT_SECURE"] = ("0", "1")[scheme == "https"]
 	
 	# Propagate HTTP headers
-	for title in request.headers:
-		header = request.headers[title]
+	for title in request.received_headers:
+		header = request.received_headers[title]
 		envname = title.translate(headerNameTranslation)
 		# Don't send headers we already sent otherwise, and don't
 		# send authorization headers, because that's a security
@@ -157,10 +156,12 @@ class WSGIHandler(wsgi.WSGIHandler):
 		env = createCGIEnvironment(request)
 		env['wsgi.version']      = (1, 0)
 		env['wsgi.url_scheme']   = env['REQUEST_SCHEME']
-		env['wsgi.input']        = wsgi.InputStream(request.content)
+		env['wsgi.input']        = request.content
 		env['wsgi.errors']       = wsgi.ErrorStream()
 		env['wsgi.multithread']  = True
 		env['wsgi.multiprocess'] = False
 		env['wsgi.run_once']     = False
 		env['wsgi.file_wrapper'] = wsgi.FileWrapper
+		
 		self.environment = env
+

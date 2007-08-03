@@ -23,8 +23,8 @@ class URLNode(object):
 		self.children = {}
 		self.leaf_data = None
 		self.parsed_data = []
-		self.parsed_path = []
-		self.unparsed_path = []
+		self.prepath = []
+		self.postpath = []
 		self.leaf_data = leaf_data
 	
 	def __str__(self):
@@ -58,28 +58,28 @@ class URLNode(object):
 					node.leaf_data = data
 	
 	def parse(self, fragment):
-		self.unparsed_path = filter(None, fragment.split('/'))
+		self.postpath = filter(None, fragment.split('/'))
 		
 		node = self
-		while(self.unparsed_path):
-			segment = self.unparsed_path.pop(0)
+		while(self.postpath):
+			segment = self.postpath.pop(0)
 			if(segment not in node.children):
-				self.unparsed_path.insert(0, segment)
+				self.postpath.insert(0, segment)
 				self.parsed_data = node.leaf_data
 				return self.parsed_data
 				
-			self.parsed_path.append(segment)
+			self.prepath.append(segment)
 			node = node.children[segment]
 		
 		self.parsed_data = node.leaf_data
 		return self.parsed_data
 	
 	def get_data_at(self, fragment):
-		unparsed_path = filter(None, fragment.split('/'))
+		postpath = filter(None, fragment.split('/'))
 		
 		node = self
-		while(unparsed_path):
-			segment = unparsed_path.pop(0)
+		while(postpath):
+			segment = postpath.pop(0)
 			if(segment not in node.children):
 				return node.leaf_data
 			

@@ -36,6 +36,7 @@ class FormNode(object):
 		self.submit = self._submit
 		self.validate = self._validate
 		self.theme = theme.Theme
+		self.data = {}
 	
 	def __getattr__(self, name):
 		if(name in self.attributes):
@@ -79,6 +80,16 @@ class FormNode(object):
 	def __contains__(self, key):
 		return key in self.children
 	
+	def find_submit_buttons(self):
+		submits = []
+		for name in self.children:
+			element = self.children[name]
+			if(element.type == 'submit'):
+				submits.append(element)
+			elif(element.children):
+				submits.extend(element.find_submit_buttons())
+		return submits
+	
 	def iterkeys(self):
 		def __weighted_cmp(a, b):
 			a = self.children[a]
@@ -95,8 +106,12 @@ class FormNode(object):
 		return default
 	
 	def execute(self, req):
-		if(self.validate(req, self)):
-			self.submit(req, self)
+		self.data = NestedFieldStorage(req)
+		for submit in self.find_submit_buttons():
+			if(self.name in self.data and submit.name in self.data[self.name]):
+				if(self.validate(req, self)):
+					self.submit(req, self)
+					break
 	
 	def render(self, req):
 		thm = self.theme(req)
@@ -214,6 +229,7 @@ class NestedFieldStorage(cgi.FieldStorage):
 	
 	def read_multi(self, environ, keep_blank_values, strict_parsing):
 		"""Internal: read a part that is itself multipart."""
+		#self.req.log_error('read_multi()')
 		ib = self.innerboundary
 		if not cgi.valid_boundary(ib):
 			raise ValueError, 'Invalid boundary in multipart form: %r' % (ib,)

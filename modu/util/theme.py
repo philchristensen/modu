@@ -18,7 +18,8 @@ class Theme(object):
 			content += "\n"
 		
 		attribs = form.attrib('attributes', {})
-		attribs['name'] = form.name
+		attribs['name'] = form.name.replace('-', '_')
+		attribs['id'] = form.name
 		attribs['enctype'] = form.attrib('enctype', 'application/x-www-form-urlencoded')
 		attribs['method'] = form.attrib('method', 'post')
 		return tags.form(**attribs)["\n" + content]
@@ -38,7 +39,7 @@ class Theme(object):
 		if(hasattr(element, 'help')):
 			content += tags.div(_class='form-help')[element.help]
 		
-		return tags.div(_class='form-item')[content]
+		return tags.div(_class='form-item', _id='form-item-%s' % element.name)[content]
 	
 	def form_markup(self, form_id, element):
 		return element.attrib('value', '')
