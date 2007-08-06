@@ -81,6 +81,11 @@ class FormNode(object):
 		return key in self.children
 	
 	def find_submit_buttons(self):
+		"""
+		This method descends down the form tree looking for
+		form elements of the type 'submit', and returns an
+		array of results.
+		"""
 		submits = []
 		for name in self.children:
 			element = self.children[name]
@@ -106,6 +111,12 @@ class FormNode(object):
 		return default
 	
 	def execute(self, req):
+		"""
+		This function parses any available POST data, and identifies
+		whether or not a submit button was pressed. If so, it begins
+		the validation process, then, if successful, initiates the
+		submission process.
+		"""
 		self.data = NestedFieldStorage(req)
 		for submit in self.find_submit_buttons():
 			if(self.name in self.data and submit.name in self.data[self.name]):
@@ -114,6 +125,10 @@ class FormNode(object):
 					break
 	
 	def render(self, req):
+		"""
+		This method calls the appropriate theme functions against
+		this form and request, and returns HTML for display.
+		"""
 		thm = self.theme(req)
 		return thm.form(self)
 	
@@ -138,14 +153,19 @@ class FormNode(object):
 		return result
 	
 	def _submit(self, form):
+		"""
+		Forms have no default bahavior for submission, so if no
+		submit attribute has been set on this form, an error is raised.
+		"""
 		raise NotImplementedError("FormNode('%s')::submit" % self.name)
+
 
 class NestedFieldStorage(cgi.FieldStorage):
 	"""
 	NestedFieldStorage allows you to use a dict-like syntax for
 	naming your form elements. This allows related values to be
 	grouped together, and retrieved as a single dict.
-
+	
 	(who'd'a thunk it, stealing from PHP...)
 	"""
 	def __init__(self, req, parent=None, fp=None, headers=None, outerboundary="",
@@ -159,6 +179,7 @@ class NestedFieldStorage(cgi.FieldStorage):
 			environ = req
 		cgi.FieldStorage.__init__(self, fp, headers, outerboundary,
 									environ, keep_blank_values, strict_parsing)
+	
 	
 	def parse_field(self, key, value):
 		original_key = key

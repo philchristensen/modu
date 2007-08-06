@@ -11,6 +11,9 @@ from zope import interface
 from zope.interface import implements
 
 def cached(timeout):
+	"""
+	Function decorator to enable caching for singleton functions.
+	"""
 	def _cached(func):
 		func.expires = 0
 		def __cached(*args, **kwargs):
@@ -34,6 +37,9 @@ def cached(timeout):
 	return _cached
 
 def cachedmethod(timeout):
+	"""
+	Function decorator to enable caching for instance methods.
+	"""
 	def _cached(func):
 		if not(hasattr(func, 'expires')):
 			func.expires = {}
@@ -112,7 +118,8 @@ class Storable(object):
 		bookkeeping variables are updated.
 		
 		All other attributes are assumed to be SQL column names,
-		and therefore must not begin with an underscore.
+		unless they begin with an underscore. Undersore-prefixed
+		attributes can be used to store non-persistent data.
 		"""
 		if(key.startswith('_')):
 			_dict = object.__getattribute__(self, '__dict__')
@@ -133,11 +140,11 @@ class Storable(object):
 		except:
 			pass
 		
-		if(key.startswith('_')):
-			_dict = object.__getattribute__(self, '__dict__')
+		_dict = object.__getattribute__(self, '__dict__')
+		_data = object.__getattribute__(self, '_data')
+		if(key.startswith('_') and key in _dict):
 			return _dict[key]
-		else:
-			_data = object.__getattribute__(self, '_data')
+		elif(key in _data):
 			return _data[key]
 			
 		raise AttributeError('No such attribute "%s" on %r' % (key, self))

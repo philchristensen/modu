@@ -61,6 +61,7 @@ class Tag(object):
 	def __eq__(self, other):
 		return str(self) == str(other)
 
+
 class _tag(str):
 	"""_tag is a string subclass. Instances of _tag, which are constructed
 	with a string, will construct Tag instances in response to __call__
@@ -71,6 +72,7 @@ class _tag(str):
 	
 	def __getitem__(self, children):
 		return Tag(self)[children]
+
 
 _tags = [
 'a','abbr','acronym','address','applet','area','b','base','basefont','bdo','big','blockquote',
