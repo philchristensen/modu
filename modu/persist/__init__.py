@@ -52,7 +52,12 @@ def build_insert(table, data):
 	keys = data.keys()
 	keys.sort()
 	values = [data[key] for key in keys]
-	query = 'INSERT INTO `%s` (`%s`) VALUES (%s)' % (table, '`, `'.join(keys), ', '.join(['%s'] * len(data)))
+	dot_index = table.find('.')
+	if(dot_index == -1):
+		table = '`%s`' % table
+	else:
+		table = table.replace('.', '`') + '`'
+	query = 'INSERT INTO %s (`%s`) VALUES (%s)' % (table, '`, `'.join(keys), ', '.join(['%s'] * len(data)))
 	return interp(query, values)
 
 
@@ -76,7 +81,12 @@ def build_replace(table, data):
 	keys = data.keys()
 	keys.sort()
 	values = [data[key] for key in keys]
-	query = 'REPLACE INTO `%s` SET ' % table
+	dot_index = table.find('.')
+	if(dot_index == -1):
+		table = '`%s`' % table
+	else:
+		table = table.replace('.', '`') + '`'
+	query = 'REPLACE INTO %s SET ' % table
 	query += ', '.join(['`%s` = %%s'] * len(data)) % tuple(keys)
 	return interp(query, values)
 
@@ -104,10 +114,15 @@ def build_select(table, data):
 	
 	@seealso: L{build_where()}
 	"""
-	if('__select_keyword' in data):
-		query = "SELECT %s * FROM `%s` " % (data['__select_keyword'], table)
+	dot_index = table.find('.')
+	if(dot_index == -1):
+		table = '`%s`' % table
 	else:
-		query = "SELECT * FROM `%s` " % table
+		table = table.replace('.', '`') + '`'
+	if('__select_keyword' in data):
+		query = "SELECT %s * FROM %s " % (data['__select_keyword'], table)
+	else:
+		query = "SELECT * FROM %s " % table
 	
 	return query + build_where(data)
 
