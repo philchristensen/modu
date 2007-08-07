@@ -22,6 +22,10 @@ class Theme(object):
 		attribs['id'] = form.name
 		attribs['enctype'] = form.attrib('enctype', 'application/x-www-form-urlencoded')
 		attribs['method'] = form.attrib('method', 'post')
+		
+		action = form.attrib('action', None)
+		if(action):
+			attribs['action'] = action
 		return tags.form(**attribs)["\n" + content]
 	
 	def form_element(self, form_id, element):

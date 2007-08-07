@@ -38,8 +38,8 @@ def get_dsn(db_url):
 		dsn['cp_openfun'] = fix_mysqldb
 		from MySQLdb import cursors
 		dsn['cursorclass'] = cursors.SSDictCursor
-		dsn['use_unicode'] = True
-		dsn['charset'] = 'utf8'
+		#dsn['use_unicode'] = True
+		#dsn['charset'] = 'utf8'
 
 	dsn['dbapiName'] = dsn['scheme']
 	del dsn['scheme']
