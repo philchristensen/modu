@@ -49,3 +49,12 @@ class Paginator(object):
 		else:
 			# request one extra so we know there's more
 			return '%d,%d' % (start, self.per_page + 1)
+	
+	def has_next(self):
+		if(self.calc_found):
+			return self.end_range < self.total_results
+		else:
+			return str(self.total_results).endswith('+')
+	
+	def has_previous(self):
+		return self.start_range > 1

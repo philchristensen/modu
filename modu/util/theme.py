@@ -113,3 +113,20 @@ class Theme(object):
 	
 	def form_image(self, form_id, element):
 		pass
+	
+	def page_guide(self, pages):
+		if(pages.has_previous()):
+			prev = tags.span()[tags.a(href="?page=%d" % (pages.page - 1))['&lt;&lt; Previous']]
+		else:
+			prev = tags.span()['&lt;&lt; Previous']
+		
+		if(pages.has_next()):
+			next = tags.span()[tags.a(href="?page=%d" % (pages.page + 1))['Next &gt;&gt;']]
+		else:
+			next = tags.span()['Next &gt;&gt;']
+		
+		return tags.div(_class='page-guide')[[
+			tags.div()['Items %d &ndash; %d of %s shown.' %
+				(pages.start_range, pages.end_range, pages.total_results)],
+			tags.div()[prev, ' | ', next]
+		]]
