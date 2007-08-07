@@ -269,7 +269,7 @@ class IFactory(interface.Interface):
 	
 	def get_store(self, id):
 		"""
-		Load an object based on its ID.
+		Get the store this factory is registered with, if possible.
 		"""
 	
 	def get_items(self, attribs):

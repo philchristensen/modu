@@ -38,6 +38,8 @@ def get_dsn(db_url):
 		dsn['cp_openfun'] = fix_mysqldb
 		from MySQLdb import cursors
 		dsn['cursorclass'] = cursors.SSDictCursor
+		dsn['use_unicode'] = True
+		dsn['charset'] = 'utf8'
 
 	dsn['dbapiName'] = dsn['scheme']
 	del dsn['scheme']
@@ -61,8 +63,8 @@ def fix_mysqldb(connection):
 	import MySQLdb
 	if(LooseVersion(MySQLdb.__version__) < LooseVersion('1.2.2')):
 		def _yes_utf8_really(self):
-			return 'utf-8'
-		
+			return 'utf8'
+		print 'Fixed broken MySQLdb client'
 		instancemethod = type(_DummyClass._dummy_method)
 		
 		connection.character_set_name = instancemethod(_yes_utf8_really, connection, connection.__class__)

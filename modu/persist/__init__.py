@@ -14,7 +14,7 @@ layer and object/relational mapping API.
 """
 
 from modu.persist import storable
-import thread
+import thread, types
 
 DEFAULT_STORE_NAME = '__default__'
 
@@ -206,10 +206,14 @@ def interp(query, args):
 	#FIXME: an unfortunate MySQLdb dependency, for now
 	import MySQLdb
 	from MySQLdb import converters
-
+	
+	def UnicodeConverter(s, d):
+		return converters.string_literal(s.encode('utf8', 'replace'))
+	
 	conv_dict = converters.conversions.copy()
 	# This is only used in build_replace/insert()
 	conv_dict[RAW] = Raw2Literal
+	conv_dict[types.UnicodeType] = UnicodeConverter
 	return query % MySQLdb.escape_sequence(args, conv_dict)
 
 
