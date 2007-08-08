@@ -165,6 +165,7 @@ class CheetahTemplateContent(TemplateContent):
 	"""http://www.cheetahtemplate.org"""
 	def get_content(self, req):
 		self.set_slot('base_path', req['modu.app'].base_path)
+		self.set_slot('request', req)
 		
 		template = self.get_template(req)
 		template_path = req['modu.approot'] + '/template/' + template
