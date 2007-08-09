@@ -122,7 +122,13 @@ class Theme(object):
 		if(url.find('?') == -1):
 			url += '?'
 		else:
-			url += '&'
+			from cgi import parse_qs
+			from urllib import urlencode
+			stub, query = url.split('?')
+			query = parse_qs(query)
+			if('page' in query):
+				del query['page']
+			url = '%s?%s&' % (stub, urlencode(query, True))
 		
 		if(pages.has_previous()):
 			prev = tags.span()[tags.a(href="%spage=%d" % (url, pages.page - 1))['&lt;&lt; Previous']]
