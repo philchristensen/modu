@@ -136,13 +136,7 @@ class WSGIResource(resource.Resource):
 		return server.NOT_DONE_YET
 	
 	def _write(self, content, request):
-		if(hasattr(content, 'read')):
-			b = content.read(8192)
-			while(b):
-				request.write(b)
-				b = content.read(8192)
-		else:
-			request.write(content)
+		request.write(content)
 		request.finish()
 	
 	def _finish(self, response, request):
@@ -151,6 +145,15 @@ class WSGIResource(resource.Resource):
 		for key, values in response.headers.getAllRawHeaders():
 			for value in values:
 				request.setHeader(key, value)
+		
+		if(isinstance(response.stream, stream.FileStream)):
+			response.stream.useMMap = False
+			b = response.stream.read()
+			while(b):
+				request.write(b)
+				b = response.stream.read()
+			request.finish()
+			return
 		
 		content = response.stream.read()
 		if(isinstance(content, defer.Deferred)):

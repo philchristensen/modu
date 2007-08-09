@@ -21,6 +21,8 @@ host_tree_lock = threading.BoundedSemaphore()
 db_pool = None
 db_pool_lock = threading.BoundedSemaphore()
 
+mimetypes_init = False
+
 def handler(env, start_response):
 	req = None
 	try:
@@ -39,7 +41,7 @@ def handler(env, start_response):
 			else:
 				raise404("No such application: %s" % env['REQUEST_URI'])
 			
-			check_for_file(req['PATH_TRANSLATED'], req['wsgi.file_wrapper'])
+			check_for_file(req['PATH_TRANSLATED'], req)
 			
 			tree = application.get_tree()
 			rsrc = tree.parse(req.path)
@@ -93,7 +95,7 @@ def configure_request(env):
 	return Request(env)
 
 
-def check_for_file(true_path, file_wrapper):
+def check_for_file(true_path, req):
 	content_type = None
 	size = None
 	try:
@@ -102,17 +104,21 @@ def check_for_file(true_path, file_wrapper):
 		# only direct file access under the webroot
 		if(stat.S_ISREG(finfo.st_mode)):
 			try:
-				content_type = mimetypes.guess_type(true_path)[0]
+				if(not mimetypes_init and req.app.magic_mime_file):
+					mimetypes.init([req.app.magic_mime_file])
+				content_type = mimetypes.guess_type(true_path, False)[0]
+				if(content_type is None):
+					content_type = 'application/octet-stream'
 				size = finfo.st_size
 			except IOError:
 				raise403('Cannot discern type: %s' % req['REQUEST_URI'])
 		else:
 			return
 	except OSError:
-		#raise403('Cannot stat: %s' % req['REQUEST_URI'])
 		return
 	
 	headers = (('Content-Type', content_type), ('Content-Length', size))
+	file_wrapper = req['wsgi.file_wrapper']
 	content = file_wrapper(open(true_path))
 	raise200(headers, content)
 
@@ -327,6 +333,7 @@ class Application(object):
 		self.debug_store = False
 		self.enable_anonymous_users = True
 		self.disable_session_users = False
+		self.magic_mime_file = None
 		
 		_dict['_site_tree'] = url.URLNode()
 		_dict['_response_headers'] = []
