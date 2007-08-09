@@ -58,11 +58,11 @@ class Resource(object):
 		
 		cnt.prepare_content(req)
 		
-		req['modu.app'].add_header('Content-Type', cnt.get_content_type(req))
+		req.app.add_header('Content-Type', cnt.get_content_type(req))
 		
 		content = cnt.get_content(req)
 		
-		req['modu.app'].add_header('Content-Length', len(content))
+		req.app.add_header('Content-Length', len(content))
 		
 		return content
 	
@@ -164,18 +164,18 @@ cheetah_lock = threading.BoundedSemaphore()
 class CheetahTemplateContent(TemplateContent):
 	"""http://www.cheetahtemplate.org"""
 	def get_content(self, req):
-		self.set_slot('base_path', req['modu.app'].base_path)
+		self.set_slot('base_path', req.app.base_path)
 		self.set_slot('request', req)
 		
 		template = self.get_template(req)
-		template_path = req['modu.approot'] + '/template/' + template
+		template_path = req.approot + '/template/' + template
 		module_name = re.sub(r'\W+', '_', template)
-		module_path = req['modu.approot'] + '/template/' + module_name + '.py'
+		module_path = req.approot + '/template/' + module_name + '.py'
 		
 		# because we have to manage moduTemplateDirectory on the class instance
 		cheetah_lock.acquire()
 		try:
-			CheetahModuTemplate.moduTemplateDirectory = req['modu.approot'] + '/template/'
+			CheetahModuTemplate.moduTemplateDirectory = req.approot + '/template/'
 		
 			try:
 				needs_recompile = (os.stat(template_path).st_mtime > os.stat(module_path).st_mtime)
@@ -228,7 +228,7 @@ class ZPTemplateContent(TemplateContent):
 				if not context.has_key('args'):
 					context['args'] = args
 				return self.pt_render(extra_context=context)
-		template_file = open(req['modu.approot'] + '/template/' + self.get_template(req))
+		template_file = open(req.approot + '/template/' + self.get_template(req))
 		self.template = ZPTmoduTemplate()
 		self.template.write(template_file.read())
 		return self.template(context={'here':self.data})
@@ -244,7 +244,7 @@ class CherryTemplateContent(TemplateContent):
 	"""http://cherrytemplate.python-hosting.com"""
 	def get_content(self, req):
 		from cherrytemplate import renderTemplate
-		self.data['_template_path'] = req['modu.approot'] + '/template/' + self.get_template(req)
+		self.data['_template_path'] = req.approot + '/template/' + self.get_template(req)
 		self.data['_renderTemplate'] = renderTemplate
 		return eval('_renderTemplate(file=_template_path)', self.data)
 	

@@ -287,7 +287,7 @@ class MagicFile(file):
 		
 		self.req = req
 		self.client_filename = filename
-		session = self.req['modu.session']
+		session = self.req.session
 		if('modu.file' not in session):
 			session['modu.file'] = {}
 		
@@ -299,7 +299,7 @@ class MagicFile(file):
 		# loaded, since we need to update the access time. So writing
 		# the pickled data repeatedly (as we update the bytes written)
 		# is really only a bad thing because of the pickling overhead.
-		session = self.req['modu.session']
+		session = self.req.session
 		file_state = session['modu.file'][self.client_filename]
 		
 		file_state['bytes_written'] += len(data)
@@ -309,7 +309,7 @@ class MagicFile(file):
 	
 	def seek(self, offset, whence=0):
 		#self.req.log_error('file was sought')
-		session = self.req['modu.session']
+		session = self.req.session
 		session['modu.file'][self.client_filename]['complete'] = 1
 		super(MagicFile, self).seek(offset, whence)
 

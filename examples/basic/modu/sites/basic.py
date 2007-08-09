@@ -36,7 +36,7 @@ class RootResource(resource.TemplateResource):
 		return 'text/plain'
 	
 	def get_template(self, req):
-		output = "This is the web root at: " + req['modu.path'] + "\n"
+		output = "This is the web root at: " + req.path + "\n"
 		
 		for key in dir(req['modpython.request']):
 			item = getattr(req['modpython.request'], key)

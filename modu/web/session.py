@@ -31,21 +31,21 @@ CLEANUP_CHANCE = 1000
 def activate_session(req):
 	# FIXME: We assume that any session class requires database access, and pass
 	# the db connection as the second paramter to the session class constructor
-	app = req['modu.app']
+	app = req.app
 	session_class = app.session_class
 	db_url = app.db_url
 	if(db_url and session_class):
-		req['modu.session'] = session_class(req, req['modu.db_pool'])
+		req['modu.session'] = session_class(req, req.db_pool)
 		if(app.debug_session):
-			req.log_error('session contains: ' + str(req['modu.session']))
+			req.log_error('session contains: ' + str(req.session))
 		if(app.disable_session_users):
 			if(app.enable_anonymous_users):
 				req['modu.user'] = user.AnonymousUser()
 			else:
 				req['modu.user'] = None
 		else:
-			req['modu.user'] = req['modu.session'].get_user()
-			if(req['modu.user'] is None and app.enable_anonymous_users):
+			req['modu.user'] = req.session.get_user()
+			if(req.user is None and app.enable_anonymous_users):
 				req['modu.user'] = user.AnonymousUser()
 
 def generate_token(entropy=None):
@@ -112,7 +112,7 @@ class BaseSession(dict):
 		
 		self._accessed = time.time()
 		
-		if(req['modu.app'].debug_session):
+		if(req.app.debug_session):
 			req.log_error('session contains: ' + str(self))
 
 		if(random.randint(1, CLEANUP_CHANCE) == 1):
@@ -133,7 +133,7 @@ class BaseSession(dict):
 		cookie_data = self._cookie.output()
 		for header in cookie_data.split("\n"):
 			header, data = header.split(":")
-			self._req['modu.app'].add_header(header, data)
+			self._req.app.add_header(header, data)
 	
 	def invalidate(self):
 		"""
@@ -173,7 +173,7 @@ class BaseSession(dict):
 					"_accessed": self._accessed, 
 					"_timeout" : self._timeout,
 					"_user_id" : self._user_id}
-			if(self._req['modu.app'].debug_session):
+			if(self._req.app.debug_session):
 				self._req.log_error('session cleanliness is: ' + str(self.is_clean()))
 			self.do_save(result)
 	
@@ -302,7 +302,7 @@ class DbUserSession(BaseSession):
 			return self._user
 		
 		if(self._user_id is not None):
-			store = self._req['modu.store']
+			store = self._req.store
 			if not(store.has_factory('user')):
 				store.ensure_factory('user', self.user_class)
 			self._user = store.load_one('user', {'id':self._user_id})

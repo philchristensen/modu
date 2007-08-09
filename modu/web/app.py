@@ -42,7 +42,7 @@ def handler(env, start_response):
 			check_for_file(req)
 			
 			tree = application.get_tree()
-			rsrc = tree.parse(req['modu.path'])
+			rsrc = tree.parse(req.path)
 			if not(rsrc):
 				raise404("No such resource: %s" % env['REQUEST_URI'])
 			
@@ -55,7 +55,7 @@ def handler(env, start_response):
 			content = rsrc.get_response(req)
 		finally:
 			if(req and 'modu.session' in req):
-				req['modu.session'].save()
+				req.session.save()
 	except web.HTTPStatus, http:
 		start_response(http.status, http.headers)
 		return http.content
@@ -149,6 +149,16 @@ def get_application(req):
 		host_tree_lock.release()
 	
 	return copy.deepcopy(app)
+
+
+def redirect(url, permanent=False):
+	"""
+	Because I want to, that's why.
+	"""
+	if(permanent):
+		raise301(url)
+	else:
+		raise302(url)
 
 
 def raise200(headers, content):
@@ -279,10 +289,8 @@ class Request(dict):
 		self.update(env)
 	
 	def __getattr__(self, key):
-		if(key in self):
-			return self[key]
-		elif(key.find('_') != -1):
-			return self[key.replace('_', '.')]
+		if('modu.%s' % key in self):
+			return self['modu.%s' % key]
 		raise AttributeError(key)
 	
 	def log_error(self, data):

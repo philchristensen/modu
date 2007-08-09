@@ -23,6 +23,11 @@ class SQLTestCase(unittest.TestCase):
 		expecting = "INSERT INTO `table` (`col1`, `col2`) VALUES (ENCRYPT('something'), 'col2_data')"
 		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 	
+	def test_build_insert_dot_syntax(self):
+		sql = persist.build_insert('db.table', {'col2':'col2_data', 'col1':persist.RAW("ENCRYPT('something')")});
+		expecting = "INSERT INTO db.`table` (`col1`, `col2`) VALUES (ENCRYPT('something'), 'col2_data')"
+		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+	
 	def test_build_insert_raw(self):
 		sql = persist.build_insert('table', {'col2':'col2_data', 'col1':'col1_data'});
 		expecting = "INSERT INTO `table` (`col1`, `col2`) VALUES ('col1_data', 'col2_data')"
@@ -36,6 +41,11 @@ class SQLTestCase(unittest.TestCase):
 	def test_build_replace_raw(self):
 		sql = persist.build_replace('table', {'col2':'col2_data', 'col1':persist.RAW("ENCRYPT('something')")});
 		expecting = "REPLACE INTO `table` SET `col1` = ENCRYPT('something'), `col2` = 'col2_data'"
+		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+	
+	def test_build_select_dot_syntax(self):
+		sql = persist.build_select('db.table', {'t.col2':'col2_data', 's.col1':'col1_data'});
+		expecting = "SELECT * FROM db.`table` WHERE s.`col1` = 'col1_data' AND t.`col2` = 'col2_data'"
 		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 	
 	def test_build_select(self):

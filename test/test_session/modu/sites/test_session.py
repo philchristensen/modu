@@ -57,7 +57,7 @@ class DbSessionTestCase(unittest.TestCase):
 	req = None
 	
 	def setUp(self):
-		pool = self.req['modu.db_pool']
+		pool = self.req.db_pool
 		
 		global TEST_TABLES
 		for sql in TEST_TABLES.split(";"):
@@ -65,23 +65,23 @@ class DbSessionTestCase(unittest.TestCase):
 				pool.runOperation(sql)
 	
 	def test_create(self):
-		sess = session.DbUserSession(self.req, self.req['modu.db_pool'])
+		sess = session.DbUserSession(self.req, self.req.db_pool)
 		sess['test_data'] = 'test'
 		sess.save()
 		
-		saved_sess = session.DbUserSession(self.req, self.req['modu.db_pool'], sid=sess.id())
+		saved_sess = session.DbUserSession(self.req, self.req.db_pool, sid=sess.id())
 		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
 		#self.failUnlessEqual(int(saved_sess._created), int(sess._created), "Session created date changed during save/load cycle.")
 	
 	def test_noclobber(self):
 		sessid = session.generate_token()
-		sess = session.DbUserSession(self.req, self.req['modu.db_pool'], sessid)
-		sess2 = session.DbUserSession(self.req, self.req['modu.db_pool'], sessid)
+		sess = session.DbUserSession(self.req, self.req.db_pool, sessid)
+		sess2 = session.DbUserSession(self.req, self.req.db_pool, sessid)
 		sess['test_data'] = 'something'
 		sess.save()
 		sess2.save()
 		
-		saved_sess = session.DbUserSession(self.req, self.req['modu.db_pool'], sid=sess.id())
+		saved_sess = session.DbUserSession(self.req, self.req.db_pool, sid=sess.id())
 		self.failUnlessEqual(saved_sess['test_data'], 'something', "Session data was not saved properly.")
 		
 		sess.delete()
@@ -94,15 +94,15 @@ class DbSessionTestCase(unittest.TestCase):
 		usr.last = 'User'
 		usr.crypt = RAW("ENCRYPT('%s')" % 'password')
 		
-		store = self.req['modu.store']
+		store = self.req.store
 		store.ensure_factory('user')
 		store.save(usr)
 		
-		sess = session.DbUserSession(self.req, self.req['modu.db_pool'])
+		sess = session.DbUserSession(self.req, self.req.db_pool)
 		sess.set_user(usr)
 		sess.save()
 		
-		saved_sess = session.DbUserSession(self.req, self.req['modu.db_pool'], sid=sess.id())
+		saved_sess = session.DbUserSession(self.req, self.req.db_pool, sid=sess.id())
 		saved_user = saved_sess.get_user()
 		self.failUnlessEqual(saved_sess._user_id, sess._user_id, "Found user_id %s when expecting %d." % (saved_sess._user_id, sess._user_id))
 		self.failUnlessEqual(saved_user.get_id(), usr.get_id(), "User ID changed during save/load cycle.")

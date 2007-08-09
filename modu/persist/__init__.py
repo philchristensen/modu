@@ -19,11 +19,11 @@ import thread, types
 DEFAULT_STORE_NAME = '__default__'
 
 def activate_store(req):
-	app = req['modu.app']
+	app = req.app
 	if('modu.db_pool' in req and app.initialize_store):
 		store = Store.get_store()
 		if not(store):
-			store = Store(req['modu.db_pool'])
+			store = Store(req.db_pool)
 		if(app.debug_store):
 			debug_file = req['wsgi.errors']
 		else:
@@ -56,7 +56,7 @@ def build_insert(table, data):
 	if(dot_index == -1):
 		table = '`%s`' % table
 	else:
-		table = table.replace('.', '`') + '`'
+		table = table.replace('.', '.`') + '`'
 	query = 'INSERT INTO %s (`%s`) VALUES (%s)' % (table, '`, `'.join(keys), ', '.join(['%s'] * len(data)))
 	return interp(query, values)
 
@@ -85,7 +85,7 @@ def build_replace(table, data):
 	if(dot_index == -1):
 		table = '`%s`' % table
 	else:
-		table = table.replace('.', '`') + '`'
+		table = table.replace('.', '.`') + '`'
 	query = 'REPLACE INTO %s SET ' % table
 	query += ', '.join(['`%s` = %%s'] * len(data)) % tuple(keys)
 	return interp(query, values)
@@ -118,7 +118,7 @@ def build_select(table, data):
 	if(dot_index == -1):
 		table = '`%s`' % table
 	else:
-		table = table.replace('.', '`') + '`'
+		table = table.replace('.', '.`') + '`'
 	if('__select_keyword' in data):
 		query = "SELECT %s * FROM %s " % (data['__select_keyword'], table)
 	else:
@@ -163,18 +163,23 @@ def build_where(data):
 		if(key.startswith('_')):
 			continue
 		value = data[key]
+		dot_index = key.find('.')
+		if(dot_index == -1):
+			key = '`%s`' % key
+		else:
+			key = key.replace('.', '.`') + '`'
 		if(isinstance(value, list) or isinstance(value, tuple)):
-			criteria.append('`%s` IN (%s)' % (key, ', '.join(['%s'] * len(value))))
+			criteria.append('%s IN (%s)' % (key, ', '.join(['%s'] * len(value))))
 			values.extend(value)
 		elif(isinstance(value, RAW)):
-			criteria.append('`%s`%s' % (key, value.value))
+			criteria.append('%s%s' % (key, value.value))
 		elif(value is None):
-			criteria.append('ISNULL(`%s`)' % key)
+			criteria.append('ISNULL(%s)' % key)
 		elif(isinstance(value, NOT)):
-			criteria.append('`%s` <> %%s' % key)
+			criteria.append('%s <> %%s' % key)
 			values.append(value.value)
 		else:
-			criteria.append('`%s` = %%s' % key)
+			criteria.append('%s = %%s' % key)
 			values.append(value)
 	
 	if(criteria):
