@@ -14,6 +14,15 @@ from twisted.python import log
 
 headerNameTranslation = ''.join([c.isalnum() and c.upper() or '_' for c in map(chr, range(256))])
 
+# Python 2.4.2 (only) has a broken mmap that leaks a fd every time you call it.
+if sys.version_info[0:3] != (2,4,2):
+	try:
+		import mmap
+	except ImportError:
+		mmap = None
+else:
+	mmap = None
+
 def createCGIEnvironment(request):
 	# See http://hoohoo.ncsa.uiuc.edu/cgi/env.html for CGI interface spec
 	# http://cgi-spec.golux.com/draft-coar-cgi-v11-03-clean.html for a better one
@@ -127,7 +136,13 @@ class WSGIResource(resource.Resource):
 		return server.NOT_DONE_YET
 	
 	def _write(self, content, request):
-		request.write(content)
+		if(hasattr(content, 'read')):
+			b = content.read(8192)
+			while(b):
+				request.write(b)
+				b = content.read(8192)
+		else:
+			request.write(content)
 		request.finish()
 	
 	def _finish(self, response, request):

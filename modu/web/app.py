@@ -39,7 +39,7 @@ def handler(env, start_response):
 			else:
 				raise404("No such application: %s" % env['REQUEST_URI'])
 			
-			check_for_file(req)
+			check_for_file(req['PATH_TRANSLATED'], req['wsgi.file_wrapper'])
 			
 			tree = application.get_tree()
 			rsrc = tree.parse(req.path)
@@ -93,8 +93,7 @@ def configure_request(env):
 	return Request(env)
 
 
-def check_for_file(req):
-	true_path = req['PATH_TRANSLATED']
+def check_for_file(true_path, file_wrapper):
 	content_type = None
 	size = None
 	try:
@@ -114,7 +113,7 @@ def check_for_file(req):
 		return
 	
 	headers = (('Content-Type', content_type), ('Content-Length', size))
-	content = req['wsgi.file_wrapper'](open(true_path))
+	content = file_wrapper(open(true_path))
 	raise200(headers, content)
 
 
