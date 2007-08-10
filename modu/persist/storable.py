@@ -8,7 +8,7 @@
 import time, copy, sys
 
 from zope import interface
-from zope.interface import implements
+from zope.interface import implements, Interface
 
 def cached(timeout):
 	"""
@@ -65,6 +65,43 @@ def cachedmethod(timeout):
 		return _cached(func)
 	return _cached
 
+class IStorable(Interface):
+	def set_id(self, id):
+		pass
+	
+	def get_id(self, id):
+		pass
+	
+	def touch(self):
+		pass
+	
+	def clean(self):
+		pass
+	
+	def is_dirty(self):
+		pass
+	
+	def set_factory(self, factory):
+		pass
+	
+	def get_factory(self):
+		pass
+	
+	def get_store(self):
+		pass
+	
+	def load_data(self, data):
+		pass
+	
+	def get_data(self):
+		pass
+	
+	def get_related_storables(self):
+		pass
+	
+	def reset_id(self):
+		pass
+
 class Storable(object):
 	"""
 	A Storable object represents a single standardized result from a
@@ -81,6 +118,8 @@ class Storable(object):
 	can override the instantiation process to implement more advanced
 	persistence mechanisms.
 	"""
+	implements(IStorable)
+	
 	def __init__(self, table):
 		"""
 		When creating a new (unsaved) Storable object, you'll need to
