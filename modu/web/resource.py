@@ -260,7 +260,7 @@ class IAccessControl(interface.Interface):
 	An access controlled object can look at a request and determine if
 	the user is allowed access or not.
 	"""
-	def check_access(self, req, throws=True):
+	def check_access(self, req):
 		"""
 		Is this request allowed access?
 		"""

@@ -42,12 +42,9 @@ def handler(env, start_response):
 			
 			check_for_file(req['PATH_TRANSLATED'], req)
 			
-			tree = application.get_tree()
-			rsrc = tree.parse(req.path)
+			rsrc = req.app.tree.parse(req.path)
 			if not(rsrc):
 				raise404("No such resource: %s" % env['REQUEST_URI'])
-			
-			req['modu.tree'] = tree
 			
 			if(resource.IResourceDelegate.providedBy(rsrc)):
 				rsrc = rsrc.get_delegate(req)
@@ -319,6 +316,7 @@ class Application(object):
 	"""
 	def __init__(self, site):
 		_dict = self.__dict__
+		_dict['_response_headers'] = []
 		_dict['config'] = {}
 		
 		self.base_domain = 'localhost'
@@ -332,10 +330,8 @@ class Application(object):
 		self.enable_anonymous_users = True
 		self.disable_session_users = False
 		self.magic_mime_file = None
-		
-		_dict['_site_tree'] = url.URLNode()
-		_dict['_response_headers'] = []
-		_dict['_site'] = site
+		self.tree = url.URLNode()
+		self.site = site
 		
 		site.initialize(self)
 	
@@ -355,13 +351,13 @@ class Application(object):
 			raise TypeError('%r does not implement IResource' % rsrc)
 		
 		for path in rsrc.get_paths():
-			self._site_tree.register(path, rsrc)
+			self.tree.register(path, rsrc)
 	
 	def get_tree(self):
 		"""
 		Return this site's URLNode tree
 		"""
-		return copy.deepcopy(self._site_tree)
+		return self.tree
 	
 	def add_header(self, header, data):
 		"""

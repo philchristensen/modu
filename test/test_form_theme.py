@@ -18,7 +18,7 @@ EXPECTED_SUBMIT = '<input name="node-form[submit]" type="submit" value="submit" 
 
 EXPECTED_LABEL = '<label>%s</label>'
 EXPECTED_HELP = '<div class="form-help">%s</div>'
-EXPECTED_ELEMENT = '<div class="form-item">%s</div>';
+EXPECTED_ELEMENT = '<div class="form-item" id="form-item-%s">%s</div>';
 
 class FormThemeTestCase(unittest.TestCase):
 	def setUp(self):
@@ -57,7 +57,7 @@ class FormThemeTestCase(unittest.TestCase):
 		title = self.form['title']
 		
 		titlefield_result = self.theme.form_element('node-form', title)
-		titlefield_check = EXPECTED_ELEMENT % ((EXPECTED_LABEL % title.label) + EXPECTED_TITLE + (EXPECTED_HELP % title.help))
+		titlefield_check = EXPECTED_ELEMENT % ('title', (EXPECTED_LABEL % title.label) + EXPECTED_TITLE + (EXPECTED_HELP % title.help))
 		self.failUnlessEqual(titlefield_result, titlefield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (titlefield_result, titlefield_check));
 
 	def test_body(self):
@@ -70,7 +70,7 @@ class FormThemeTestCase(unittest.TestCase):
 		body = self.form['body']
 		
 		bodyfield_result = self.theme.form_element('node-form', body)
-		bodyfield_check = EXPECTED_ELEMENT % ((EXPECTED_LABEL % body.label) + EXPECTED_BODY + (EXPECTED_HELP % body.help))
+		bodyfield_check = EXPECTED_ELEMENT % ('body', (EXPECTED_LABEL % body.label) + EXPECTED_BODY + (EXPECTED_HELP % body.help))
 		self.failUnlessEqual(bodyfield_result, bodyfield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (bodyfield_result, bodyfield_check));
 	
 	def test_submit(self):
@@ -83,6 +83,6 @@ class FormThemeTestCase(unittest.TestCase):
 		submit = self.form['submit']
 		
 		submitfield_result = self.theme.form_element('node-form', submit)
-		submitfield_check = EXPECTED_ELEMENT % EXPECTED_SUBMIT
+		submitfield_check = EXPECTED_ELEMENT % ('submit', EXPECTED_SUBMIT)
 		self.failUnlessEqual(submitfield_result, submitfield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (submitfield_result, submitfield_check));
 
