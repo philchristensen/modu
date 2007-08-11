@@ -9,18 +9,29 @@ from twisted.enterprise import adbapi
 
 from modu.util import url
 
-def connect(db_url, async=False, **kwargs):
+def connect(db_url=None, async=False, *args, **kwargs):
 	"""
 	Accepts a DSN specified as a URL, and returns a new
 	connection pool object. If `async` is False (the default),
 	all database requests are made synchronously.
 	"""
-	dsn = get_dsn(db_url)
-	kwargs.update(dsn)
+	if(db_url is not None):
+		dsn = get_dsn(db_url)
+		
+		dbapiName = dsn['dbapiName']
+		del dsn['dbapiName']
+		
+		globs = {}
+		exec('from modu.persist import adbapi_%s as db_driver' % dbapiName, globs)
+		dargs, dkwargs = globs['db_driver'].process_dsn(dsn)
+		kwargs.update(dkwargs)
+		args = list(args)
+		args.extend(dargs)
+	
 	if(async):
-		return adbapi.ConnectionPool(**kwargs)
+		return adbapi.ConnectionPool(dbapiName, *dargs, **dkwargs)
 	else:
-		return SynchronousConnectionPool(**kwargs)
+		return SynchronousConnectionPool(dbapiName, *dargs, **dkwargs)
 
 def get_dsn(db_url):
 	"""
@@ -34,13 +45,6 @@ def get_dsn(db_url):
 		if(dsn[key] is None):
 			del dsn[key]
 	
-	if(dsn['scheme'] == 'MySQLdb'):
-		dsn['cp_openfun'] = fix_mysqldb
-		from MySQLdb import cursors
-		dsn['cursorclass'] = cursors.SSDictCursor
-		#dsn['use_unicode'] = True
-		#dsn['charset'] = 'utf8'
-
 	dsn['dbapiName'] = dsn['scheme']
 	del dsn['scheme']
 	
@@ -53,22 +57,6 @@ def get_dsn(db_url):
 	dsn['cp_max'] = 15
 	
 	return dsn
-
-def fix_mysqldb(connection):
-	"""
-	This function takes a MySQLdb connection object and replaces
-	character_set_name() if the version of MySQLdb < 1.2.2.
-	"""
-	from distutils.version import LooseVersion
-	import MySQLdb
-	if(LooseVersion(MySQLdb.__version__) < LooseVersion('1.2.2')):
-		def _yes_utf8_really(self):
-			return 'utf8'
-		print 'Fixed broken MySQLdb client'
-		instancemethod = type(_DummyClass._dummy_method)
-		
-		connection.character_set_name = instancemethod(_yes_utf8_really, connection, connection.__class__)
-
 
 class SynchronousConnectionPool(adbapi.ConnectionPool):
 	"""
@@ -86,12 +74,17 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 	
 	def runWithConnection(self, func, *args, **kw):
 		return self._runWithConnection(func, *args, **kw)
-
-
-class _DummyClass(object):
-	"""
-	Dummy class used to override an instance method on MySQLdb connection object.
-	@seealso C{fix_mysqldb()}
-	"""
-	def _dummy_method(self):
-		pass
+	
+	def _runInteraction(self, interaction, *args, **kw):
+		conn = adbapi.Connection(self)
+		trans = adbapi.Transaction(self, conn)
+		try:
+			result = interaction(trans, *args, **kw)
+			if(result and isinstance(result[0], (list, tuple))):
+				result = [dict(zip([c[0] for c in trans._cursor.description], item)) for item in result]
+			trans.close()
+			conn.commit()
+			return result
+		except:
+			conn.rollback()
+			raise

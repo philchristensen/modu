@@ -7,7 +7,7 @@
 
 import re
 
-URL_REGEXP = r'(?P<scheme>[+a-z]+)\:(\/\/)?'
+URL_REGEXP = r'(?P<scheme>[+a-z0-9]+)\:(\/\/)?'
 URL_REGEXP += r'((?P<user>\w+?)(\:(?P<passwd>\w+?))?\@)?'
 URL_REGEXP += r'(?P<host>[\._\-a-z0-9]+)(\:(?P<port>\d+))?'
 URL_REGEXP += r'(?P<path>/[^\s;?#]*)(;(?P<params>[^\s?#]*))?'

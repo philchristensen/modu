@@ -285,7 +285,7 @@ class DbUserSession(BaseSession):
 	
 	def do_save(self, dict):
 		if(self.is_clean()):
-			self._pool.runOperation("UPDATE session s SET s.user_id = %s, s.created = %s, s.accessed = %s, s.timeout = %s WHERE s.id = %s",
+			self._pool.runOperation("UPDATE session SET user_id = %s, created = %s, accessed = %s, timeout = %s WHERE id = %s",
 						[self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], self.id()])
 		else:
 			self._pool.runOperation("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
