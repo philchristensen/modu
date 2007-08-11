@@ -18,7 +18,7 @@ class RootResource(resource.CheetahTemplateResource):
 	
 	def prepare_content(self, req):
 		self.set_slot('request', req)
-		self.set_slot('request_data', str(req['wsgi.input']))
+		self.set_slot('request_data', str(req['wsgi.input'].read()))
 	
 	def get_content_type(self, req):
 		return 'text/html'

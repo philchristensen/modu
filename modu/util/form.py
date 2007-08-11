@@ -80,21 +80,6 @@ class FormNode(object):
 	def __contains__(self, key):
 		return key in self.children
 	
-	def find_submit_buttons(self):
-		"""
-		This method descends down the form tree looking for
-		form elements of the type 'submit', and returns an
-		array of results.
-		"""
-		submits = []
-		for name in self.children:
-			element = self.children[name]
-			if(element.type == 'submit'):
-				submits.append(element)
-			elif(element.children):
-				submits.extend(element.find_submit_buttons())
-		return submits
-	
 	def iterkeys(self):
 		def __weighted_cmp(a, b):
 			a = self.children[a]
@@ -110,6 +95,21 @@ class FormNode(object):
 			return self.attributes[name]
 		return default
 	
+	def find_submit_buttons(self):
+		"""
+		This method descends down the form tree looking for
+		form elements of the type 'submit', and returns an
+		array of results.
+		"""
+		submits = []
+		for name in self.children:
+			element = self.children[name]
+			if(element.type == 'submit'):
+				submits.append(element)
+			elif(element.children):
+				submits.extend(element.find_submit_buttons())
+		return submits
+	
 	def execute(self, req):
 		"""
 		This function parses any available POST data, and identifies
@@ -119,6 +119,8 @@ class FormNode(object):
 		"""
 		self.data = NestedFieldStorage(req)
 		for submit in self.find_submit_buttons():
+			# NOTE: This assumes the browser sends the submit button's name
+			# in the submit POST data. This may not work
 			if(self.name in self.data and submit.name in self.data[self.name]):
 				if(self.validate(req, self)):
 					self.submit(req, self)
@@ -312,6 +314,7 @@ class MagicFile(file):
 		session = self.req.session
 		session['modu.file'][self.client_filename]['complete'] = 1
 		super(MagicFile, self).seek(offset, whence)
+
 
 class DictField(dict):
 	def __init__(self, value=None):

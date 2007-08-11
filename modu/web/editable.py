@@ -75,6 +75,7 @@ class definition(dict):
 		# iterate through definition to define form element
 		# load storable content
 		frm = form.FormNode(self.name)(**attribs)
+		frm(type=self['type'], title=self['title'])
 		return frm
 
 sample_itemdef = itemdef(

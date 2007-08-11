@@ -30,8 +30,7 @@ def handler(env, start_response):
 			application = get_application(env)
 			
 			if(application):
-				env['modu.app'] = application
-				req = configure_request(env)
+				req = configure_request(env, application)
 				
 				if(application.db_url):
 					req['modu.db_pool'] = _acquire_db(application.db_url, env['wsgi.multithread'])
@@ -66,10 +65,10 @@ def handler(env, start_response):
 	return [content]
 
 
-def configure_request(env):
-	# Hopefully the next release of mod_python
-	# will let us ditch this line
-	env['SCRIPT_NAME'] = env['modu.app'].base_path
+def configure_request(env, application):
+	env['modu.app'] = application
+	
+	env['SCRIPT_NAME'] = application.base_path
 	
 	# once the previous line is gone, this next
 	# block should be able to be moved elsewhere
@@ -88,8 +87,7 @@ def configure_request(env):
 	env['modu.path'] = env['PATH_INFO']
 	
 	approot = env['modu.approot']
-	webroot = env['modu.app'].webroot
-	webroot = os.path.join(approot, webroot)
+	webroot = os.path.join(approot, application.webroot)
 	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['modu.path'])
 	
 	return Request(env)
@@ -238,7 +236,7 @@ def try_lucene_threads():
 def _scan_sites(req):
 	global host_tree
 	
-	if(req.get('SCRIPT_FILENAME', '') not in sys.path):
+	if(req.get('SCRIPT_FILENAME', sys.path[0]) not in sys.path):
 		sys.path.append(req['SCRIPT_FILENAME'])
 	
 	import modu.sites
