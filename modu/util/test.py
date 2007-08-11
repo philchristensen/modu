@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # modu
 # Copyright (C) 2007 Phil Christensen
 #
@@ -12,7 +10,7 @@ try:
 except ImportError:
 	import StringIO
 
-import unittest, socket
+import unittest, socket, urllib
 
 from modu.web import resource
 
@@ -25,7 +23,7 @@ class TestResource(resource.CheetahTemplateResource):
 		return ['/']
 	
 	def prepare_content(self, req):
-		stream = cStringIO.StringIO()
+		stream = StringIO.StringIO()
 		runner = unittest.TextTestRunner(stream=stream, descriptions=1, verbosity=1)
 		loader = unittest.TestLoader()
 		
@@ -43,7 +41,7 @@ class TestResource(resource.CheetahTemplateResource):
 	def get_template(self, req):
 		return 'page.html.tmpl' 
 
-def generate_test_wsgi_environment(post={}):
+def generate_test_wsgi_environment(post_data={}, multipart=True):
 	"""
 	Set REQUEST_URI
 	Set SCRIPT_NAME to app.base_path
@@ -54,12 +52,23 @@ def generate_test_wsgi_environment(post={}):
 	environ['wsgi.file_wrapper'] = file
 
 	input_data = StringIO.StringIO()
-	if(post):
-		for name,value in post.iteritems():
-			input_data.write("------TestingFormBoundaryJe0Hll5QdEhCQiZj\n")
-			input_data.write("Content-Disposition: form-data; name=\"%s\"\n\n" % name)
-			input_data.write("%s\n" % value)
-		input_data.write("------TestingFormBoundaryJe0Hll5QdEhCQiZj--\n")
+	if(post_data):
+		if(multipart):
+			for name,value in post_data.iteritems():
+				input_data.write("------TestingFormBoundaryJe0Hll5QdEhCQiZj\n")
+				input_data.write("Content-Disposition: form-data; name=\"%s\"\n\n" % name)
+				input_data.write("%s\n" % value)
+			input_data.write("------TestingFormBoundaryJe0Hll5QdEhCQiZj--\n")
+			environ['CONTENT_TYPE'] = 'multipart/form-data; boundary=----TestingFormBoundaryJe0Hll5QdEhCQiZj'
+		else:
+			input_data.write(urllib.urlencode(post_data))
+			environ['CONTENT_TYPE'] = 'application/x-www-form-urlencoded'
+		environ['CONTENT_LENGTH'] = input_data.tell()
+		input_data.seek(0)
+		environ['REQUEST_METHOD'] = 'POST'
+	else:
+		environ['REQUEST_METHOD'] = 'GET'
+	
 	environ['wsgi.input'] = input_data
 	
 	environ['GATEWAY_INTERFACE'] = 'CGI/1.1'
@@ -74,7 +83,6 @@ def generate_test_wsgi_environment(post={}):
 	environ['REMOTE_ADDR'] = '127.0.0.1'
 	environ['REMOTE_HOST'] = socket.gethostname()
 	environ['REMOTE_PORT'] = '56546'
-	environ['REQUEST_METHOD'] = 'GET'
 	environ['REQUEST_SCHEME'] = 'http'
 	environ['SCRIPT_NAME'] = ''
 	environ['SERVER_NAME'] = 'localhost'

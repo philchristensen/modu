@@ -236,7 +236,7 @@ class NestedFieldStorage(cgi.FieldStorage):
 	
 	def read_urlencoded(self):
 		"""Internal: read data in query string format."""
-		#self.req.log_error('read_urlencoded()')
+		#print ('read_urlencoded()',)
 		qs = self.fp.read(self.length)
 		self.list = list = []
 		for key, value in cgi.parse_qsl(qs, self.keep_blank_values,
@@ -252,7 +252,7 @@ class NestedFieldStorage(cgi.FieldStorage):
 	
 	def read_multi(self, environ, keep_blank_values, strict_parsing):
 		"""Internal: read a part that is itself multipart."""
-		#self.req.log_error('read_multi()')
+		#print ('read_multi()',)
 		ib = self.innerboundary
 		if not cgi.valid_boundary(ib):
 			raise ValueError, 'Invalid boundary in multipart form: %r' % (ib,)

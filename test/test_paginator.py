@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # modu
 # Copyright (C) 2007 Phil Christensen
 #
