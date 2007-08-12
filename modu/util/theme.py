@@ -48,7 +48,7 @@ class Theme(object):
 	def form_markup(self, form_id, element):
 		return element.attrib('value', '')
 	
-	def form_text(self, form_id, element):
+	def form_textfield(self, form_id, element):
 		attribs = element.attrib('attributes', {})
 		attribs['name'] = '%s[%s]' % (form_id, element.name)
 		attribs['size'] = element.attrib('size', 30)

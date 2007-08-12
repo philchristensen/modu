@@ -7,7 +7,7 @@
 
 import os, sys
 
-__path__ = [os.path.abspath(os.path.join(x, 'modu', 'editable', 'datatypes')) for x in sys.path]
+__path__ = [os.path.abspath(os.path.join(x, 'modu', 'datatypes')) for x in sys.path]
 
 __all__ = []
 

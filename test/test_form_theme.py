@@ -48,7 +48,7 @@ class FormThemeTestCase(unittest.TestCase):
 	def test_title(self):
 		title = self.form['title']
 		
-		title_result = self.theme.form_text('node-form', title)
+		title_result = self.theme.form_textfield('node-form', title)
 		self.failUnlessEqual(title_result, EXPECTED_TITLE, 'Basic "title" field misrendered as \n`%s`, not \n`%s`' % (title_result, EXPECTED_TITLE));
 		
 	def test_title_field(self):

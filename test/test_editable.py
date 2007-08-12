@@ -7,9 +7,9 @@
 
 from twisted.trial import unittest
 
-from modu import editable
+from modu.web import editable, app
 from modu.persist import storable
-from modu.util import form, theme
+from modu.util import form, theme, test
 
 class EditableTestCase(unittest.TestCase):
 	def setUp(self):
@@ -34,8 +34,8 @@ class EditableTestCase(unittest.TestCase):
 		return req
 	
 	def test_basic(self):
-		test_string_itemdef = itemdef(
-			name			= definition(
+		test_string_itemdef = editable.itemdef(
+			name			= editable.definition(
 								type		= 'StringField',
 								title		= 'Name'
 							)
@@ -46,7 +46,7 @@ class EditableTestCase(unittest.TestCase):
 		
 		itemdef_form = test_string_itemdef.get_detail_form(test_storable)
 		
-		reference_form = form.FormNode('test')
+		reference_form = form.FormNode('test-form')
 		reference_form['name'](type='textfield', title='Name', value='Test Name')
 		
 		req = self.get_request()
