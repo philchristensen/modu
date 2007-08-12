@@ -24,7 +24,7 @@ def fix_mysqldb(connection):
 	if(LooseVersion(MySQLdb.__version__) < LooseVersion('1.2.2')):
 		def _yes_utf8_really(self):
 			return 'utf8'
-		print 'Fixed broken MySQLdb client'
+		
 		instancemethod = type(_DummyClass._dummy_method)
 		
 		connection.character_set_name = instancemethod(_yes_utf8_really, connection, connection.__class__)

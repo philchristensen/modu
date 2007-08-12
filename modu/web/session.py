@@ -310,6 +310,7 @@ class DbUserSession(BaseSession):
 		return self._user
 	
 	def set_user(self, user):
+		self.touch()
 		self._user = user
 		if(self._user):
 			self._user_id = self._user.get_id()

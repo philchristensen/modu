@@ -21,7 +21,6 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 		pass
 	
 	def get_request(self, post_data, multipart):
-		# Test form-encoded
 		environ = test.generate_test_wsgi_environment(post_data, multipart)
 		environ['REQUEST_URI'] = '/app-test/test-resource'
 		environ['SCRIPT_FILENAME'] = ''
