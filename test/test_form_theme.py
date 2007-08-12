@@ -22,7 +22,7 @@ class FormThemeTestCase(unittest.TestCase):
 	def setUp(self):
 		self.form = form.FormNode('node-form')
 		self.form(enctype='multipart/form-data')
-		self.form['title'](type='text',
+		self.form['title'](type='textfield',
 					 label='Title',
 					 weight=-20,
 					 size=30,
