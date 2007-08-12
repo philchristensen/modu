@@ -36,19 +36,24 @@ class Tag(object):
 		keys = self.attributes.keys()
 		keys.sort()
 		for key in keys:
-			value = self.attributes[key]
-			if(value is None):
-				fragments += ' %s' % key
-			else:
-				output += ' %s="%s"' % (key, value)
+			if not(key.startswith('_')):
+				value = self.attributes[key]
+				if(value is None):
+					fragments += ' %s' % key
+				else:
+					output += ' %s="%s"' % (key, value)
 		output += fragments
 		if(self.children):
 			output += '>'
 			for child in self.children:
 				output += str(child)
-			output += '</%s>' % self.tag
+			if not(self.attributes.get('_no_close', False)):
+				output += '</%s>' % self.tag
 		else:
-			output += ' />'
+			if(self.attributes.get('_no_close', False)):
+				output += '>'
+			else:
+				output += ' />'
 		
 		return output
 	

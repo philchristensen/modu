@@ -16,6 +16,11 @@ class TagsTestCase(unittest.TestCase):
 	def tearDown(self):
 		pass
 	
+	def test_a_stub(self):
+		tag = tags.a(href='http://www.example.com', __no_close=True)
+		expected = '<a href="http://www.example.com">'
+		self.assertEqual(str(tag), expected, "Got '%s' instead of '%s'" % (str(tag), expected))
+	
 	def test_input(self):
 		tag = tags.input(_class='inputfield', type='password', size=30)
 		expected = '<input class="inputfield" size="30" type="password" />'

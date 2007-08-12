@@ -51,6 +51,14 @@ class FormThemeTestCase(unittest.TestCase):
 		title_result = self.theme.form_textfield('node-form', title)
 		self.failUnlessEqual(title_result, EXPECTED_TITLE, 'Basic "title" field misrendered as \n`%s`, not \n`%s`' % (title_result, EXPECTED_TITLE));
 		
+	def test_prefix_suffix(self):
+		title = self.form['title']
+		title(prefix='##PREFIX##', suffix='##SUFFIX##')
+		
+		titlefield_result = self.theme.form_element('node-form', title)
+		titlefield_check = EXPECTED_ELEMENT % ('title', (EXPECTED_LABEL % title.label) + ('##PREFIX##%s##SUFFIX##' % EXPECTED_TITLE) + (EXPECTED_HELP % title.help))
+		self.failUnlessEqual(titlefield_result, titlefield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (titlefield_result, titlefield_check));
+		
 	def test_title_field(self):
 		title = self.form['title']
 		
@@ -69,7 +77,7 @@ class FormThemeTestCase(unittest.TestCase):
 		
 		bodyfield_result = self.theme.form_element('node-form', body)
 		bodyfield_check = EXPECTED_ELEMENT % ('body', (EXPECTED_LABEL % body.label) + EXPECTED_BODY + (EXPECTED_HELP % body.help))
-		self.failUnlessEqual(bodyfield_result, bodyfield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (bodyfield_result, bodyfield_check));
+		self.failUnlessEqual(bodyfield_result, bodyfield_check, '"body" form field misrendered as \n`%s`, not \n`%s`' % (bodyfield_result, bodyfield_check));
 	
 	def test_submit(self):
 		submit = self.form['submit']

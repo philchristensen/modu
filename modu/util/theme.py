@@ -38,7 +38,19 @@ class Theme(object):
 		else:
 			theme_func = self.form_markup
 		
+		prefix = element.attrib('prefix', False)
+		if(callable(prefix)):
+			content += prefix(element)
+		elif(prefix):
+			content += str(prefix)
+		
 		content += theme_func(form_id, element)
+		
+		suffix = element.attrib('suffix', False)
+		if(callable(suffix)):
+			content += suffix(element)
+		elif(suffix):
+			content += str(suffix)
 		
 		if(hasattr(element, 'help')):
 			content += tags.div(_class='form-help')[element.help]
@@ -47,6 +59,11 @@ class Theme(object):
 	
 	def form_markup(self, form_id, element):
 		return element.attrib('value', '')
+	
+	def form_label(self, form_id, element):
+		attribs = element.attrib('attributes', {})
+		value = element.attrib('value', element.attrib('default_value', ''))
+		return tags.label(**attribs)[value]
 	
 	def form_textfield(self, form_id, element):
 		attribs = element.attrib('attributes', {})
@@ -102,7 +119,7 @@ class Theme(object):
 		else:
 			option_data = [(i,option_data[i]) for i in range(len(option_data))]
 		options = map(lambda(i): tags.option(value=i[0])[i[1]], option_data)
-		return tags.select(type='radio', **attribs)["\n".join(options)]
+		return tags.select(**attribs)[options]
 	
 	def form_timestamp(self, form_id, element):
 		style = element.attrib('style', 'date')

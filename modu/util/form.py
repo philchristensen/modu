@@ -84,7 +84,7 @@ class FormNode(object):
 		def __weighted_cmp(a, b):
 			a = self.children[a]
 			b = self.children[b]
-			return cmp(a.weight, b.weight)
+			return cmp(a.attributes.get('weight', 0), b.attributes.get('weight', 0))
 		
 		keys = self.children.keys()
 		keys.sort(__weighted_cmp)

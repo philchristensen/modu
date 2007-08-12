@@ -7,15 +7,28 @@
 
 from twisted import plugin
 
-from zope.interface import classProvides, implements
+from zope.interface import classProvides
 
-from modu.web.editable import IDatatype
+from modu.web.editable import IDatatype, Field
 from modu.util import form
 
-class StringField(object):
+class LabelField(Field):
 	classProvides(plugin.IPlugin, IDatatype)
 	
-	def get_form_element(self, name, style, definition, storable):
-		reference_form = form.FormNode(name)
-		reference_form(type='textfield', title=definition['title'], value=getattr(storable, name))
-		return reference_form
+	def get_element(self, name, style, definition, storable):
+		frm = form.FormNode(name)
+		frm(type='label', label=definition['label'], value=getattr(storable, name))
+		return frm
+
+
+class StringField(Field):
+	classProvides(plugin.IPlugin, IDatatype)
+	
+	def get_element(self, name, style, definition, storable):
+		frm = form.FormNode(name)
+		frm(label=definition['label'], value=getattr(storable, name))
+		if(style == 'list'):
+			frm(type='label')
+		else:
+			frm(type='textfield')
+		return frm
