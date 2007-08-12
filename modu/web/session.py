@@ -35,7 +35,7 @@ def activate_session(req):
 	session_class = app.session_class
 	db_url = app.db_url
 	if(db_url and session_class):
-		req['modu.session'] = session_class(req, req.db_pool)
+		req['modu.session'] = session_class(req, req.pool)
 		if(app.debug_session):
 			req.log_error('session contains: ' + str(req.session))
 		if(app.disable_session_users):

@@ -18,8 +18,8 @@ from zope import interface
 host_tree = {}
 host_tree_lock = threading.BoundedSemaphore()
 
-db_pool = None
-db_pool_lock = threading.BoundedSemaphore()
+pool = None
+pool_lock = threading.BoundedSemaphore()
 
 mimetypes_init = False
 
@@ -33,14 +33,14 @@ def handler(env, start_response):
 				req = configure_request(env, application)
 				
 				if(application.db_url):
-					req['modu.db_pool'] = _acquire_db(application.db_url, env['wsgi.multithread'])
-				
-				persist.activate_store(req)
-				session.activate_session(req)
+					req['modu.pool'] = _acquire_db(application.db_url, env['wsgi.multithread'])
 			else:
 				raise404("No such application: %s" % env['REQUEST_URI'])
 			
 			check_for_file(req['PATH_TRANSLATED'], req)
+			
+			persist.activate_store(req)
+			session.activate_session(req)
 			
 			rsrc = req.app.tree.parse(req.path)
 			if not(rsrc):
@@ -253,17 +253,17 @@ def _scan_sites(req):
 
 
 def _acquire_db(db_url, threaded=True):
-	global db_pool, db_pool_lock
+	global pool, pool_lock
 	
-	db_pool_lock.acquire()
+	pool_lock.acquire()
 	try:
-		if not(db_pool):
+		if not(pool):
 			from modu.persist import adbapi
-			db_pool = adbapi.connect(db_url)
+			pool = adbapi.connect(db_url)
 	finally:
-		db_pool_lock.release()
+		pool_lock.release()
 	
-	return db_pool
+	return pool
 
 
 class ISite(interface.Interface):

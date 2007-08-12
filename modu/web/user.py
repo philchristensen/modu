@@ -12,10 +12,11 @@ class User(storable.Storable):
 		super(User, self).__init__('user')
 	
 	def is_allowed(self, perm):
-		return False
+		# perm can be string or array of strings
+		return True
 	
 	def has_role(self, role):
-		return False
+		return True
 
 class AnonymousUser(User):
 	def get_data(self):

@@ -20,10 +20,10 @@ DEFAULT_STORE_NAME = '__default__'
 
 def activate_store(req):
 	app = req.app
-	if('modu.db_pool' in req and app.initialize_store):
+	if('modu.pool' in req and app.initialize_store):
 		store = Store.get_store()
 		if not(store):
-			store = Store(req.db_pool)
+			store = Store(req.pool)
 		if(app.debug_store):
 			debug_file = req['wsgi.errors']
 		else:

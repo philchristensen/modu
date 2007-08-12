@@ -44,7 +44,7 @@ class EditableTestCase(unittest.TestCase):
 		test_storable = storable.Storable('test')
 		test_storable.name = 'Test Name'
 		
-		itemdef_form = test_string_itemdef.get_detail_form(test_storable)
+		itemdef_form = test_string_itemdef.get_form('detail', test_storable)
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['name'](type='textfield', label='Name', value='Test Name')
@@ -70,7 +70,7 @@ class EditableTestCase(unittest.TestCase):
 		test_storable = storable.Storable('test')
 		test_storable.linked_name = 'Linked Name'
 		
-		itemdef_form = test_string_itemdef.get_detail_form(test_storable)
+		itemdef_form = test_string_itemdef.get_form('detail', test_storable)
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['linked_name'](type='label', label='Name', value='Linked Name',
@@ -95,7 +95,7 @@ class EditableTestCase(unittest.TestCase):
 		test_storable = storable.Storable('test')
 		test_storable.user_type = 'user'
 		
-		itemdef_form = test_string_itemdef.get_detail_form(test_storable)
+		itemdef_form = test_string_itemdef.get_form('detail', test_storable)
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['user_type'](type='select', label='Type', value='user', options=options)

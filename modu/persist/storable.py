@@ -8,7 +8,7 @@
 import time, copy, sys
 
 from zope import interface
-from zope.interface import implements, Interface
+from zope.interface import implements, Interface, Attribute
 
 def cached(timeout):
 	"""

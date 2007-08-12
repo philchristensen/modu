@@ -11,6 +11,7 @@ from twisted import plugin
 
 from modu.util import form, tags
 from modu.persist import storable
+from modu.web.user import AnonymousUser
 
 datatype_cache = {}
 
@@ -31,16 +32,11 @@ class IDatatype(Interface):
 
 
 class IEditable(storable.IStorable):
-	def get_itemdef(self):
-		"""
-		Return an object/datastructure representing the
+	__itemdef__ = Attribute("""
+		Contains an object/datastructure representing the
 		fields and behaviors for this object's editable
 		forms.
-		
-		Maybe this should be a class variable instead?
-		If it were, we could use something cool like
-		descriptors to implement magic.
-		"""
+	""")
 
 
 class Field(object):
@@ -54,7 +50,7 @@ class Field(object):
 
 class itemdef(dict):
 	def __init__(self, __config=None, **fields):
-		for name, field in fields.iteritems():
+		for name, field in fields.items():
 			if not(isinstance(field, definition)):
 				raise ValueError("'%s' is not a valid definition." % name)
 			field.name = name
@@ -68,31 +64,27 @@ class itemdef(dict):
 		self.update(fields)
 	
 	
-	def get_detail_form(self, storable):
+	def get_form(self, style, storable, user=None):
 		"""
 		Return a FormNode that represents this item
 		"""
+		if(user is None):
+			user = AnonymousUser()
 		frm = form.FormNode('%s-form' % storable.get_table())
-		for name, field in self.iteritems():
-			if(name.startswith('_')):
-				continue
-			frm.children[name] = field.get_detail_element(storable)
+		if(user.is_allowed(self.get('acl', self.config.get('default_acl', [])))):
+			for name, field in self.items():
+				if(name.startswith('_')):
+					continue
+				if(style == 'list' and not field.get('list', False)):
+					continue
+				if(style == 'detail' and not field.get('detail', True)):
+					continue
+				if not(user.is_allowed(field.get('acl', self.config.get('default_acl', [])))):
+					continue
+				frm.children[name] = field.get_element(style, storable)
 		# set special array stuff, like pre and postwrite (as callbacks)
 		return frm
 	
-	
-	def get_list_form(self, storable):
-		"""
-		Return a FormNode that represents this item
-		"""
-		frm = form.FormNode(form_name)
-		for name, field in self.iteritems():
-			frm.children[name] = field.get_list_element(storable)
-			if(name.startswith('_')):
-				continue
-		# set special array stuff, like pre and postwrite (as callbacks)
-		# set frm.theme to a special list-drawing theme
-		return frm
 	
 	def get_item_url(self, storable):
 		return self.config.get('item_url', 'http://www.example.com')
@@ -105,18 +97,11 @@ class definition(dict):
 		self.update(params)
 	
 	
-	def get_list_element(self, storable):
+	def get_element(self, style, storable):
 		"""
 		Return a FormNode that represents this field in the resulting form.
 		"""
-		return datatype_cache[self['type']].get_form_element(self.name, 'list', self, storable)
-	
-	
-	def get_detail_element(self, storable):
-		"""
-		Return a FormNode that represents this field in the resulting form.
-		"""
-		return datatype_cache[self['type']].get_form_element(self.name, 'detail', self, storable)
+		return datatype_cache[self['type']].get_form_element(self.name, style, self, storable)
 
 
 __load_datatypes()

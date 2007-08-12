@@ -122,9 +122,15 @@ class FormNode(object):
 			# NOTE: This assumes the browser sends the submit button's name
 			# in the submit POST data. This may not work
 			if(self.name in self.data and submit.name in self.data[self.name]):
+				self._load_data()
 				if(self.validate(req, self)):
 					self.submit(req, self)
 					break
+	
+	def _load_data(self):
+		form_data = self.data[self.name]
+		for key in form_data:
+			self.children[key].attributes['value'] = form_data[key].value
 	
 	def render(self, req):
 		"""
@@ -262,6 +268,7 @@ class NestedFieldStorage(cgi.FieldStorage):
 		# Throw first part away
 		while not part.done:
 			headers = rfc822.Message(self.fp)
+			print 'headers are: %s' % headers
 			part = NestedFieldStorage(self.req, self, self.fp, headers, ib,
 						 environ, keep_blank_values, strict_parsing)
 			
@@ -294,6 +301,7 @@ class MagicFile(file):
 			session['modu.file'] = {}
 		
 		session['modu.file'][self.client_filename] = {'bytes_written':0, 'total_bytes':self.req['CONTENT_LENGTH']}
+		session.touch()
 		session.save()
 	
 	def write(self, data):
@@ -303,8 +311,9 @@ class MagicFile(file):
 		# is really only a bad thing because of the pickling overhead.
 		session = self.req.session
 		file_state = session['modu.file'][self.client_filename]
-		
+		print "writing: %d bytes" % len(data)
 		file_state['bytes_written'] += len(data)
+		session.touch()
 		session.save()
 		
 		super(MagicFile, self).write(data)

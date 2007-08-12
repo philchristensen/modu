@@ -32,3 +32,16 @@ class StringField(Field):
 		else:
 			frm(type='textfield')
 		return frm
+
+
+class PasswordField(Field):
+	classProvides(plugin.IPlugin, IDatatype)
+	
+	def get_element(self, name, style, definition, storable):
+		frm = form.FormNode(name)
+		frm(label=definition['label'], value=getattr(storable, name))
+		if(style == 'list'):
+			frm(type='markup', value='********')
+		else:
+			frm(type='password')
+		return frm

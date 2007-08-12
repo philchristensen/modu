@@ -60,6 +60,9 @@ class Theme(object):
 	def form_markup(self, form_id, element):
 		return element.attrib('value', '')
 	
+	def form_fieldset(self, form_id, element):
+		return ''.join([self.form_element(child) for child in element.children])
+	
 	def form_label(self, form_id, element):
 		attribs = element.attrib('attributes', {})
 		value = element.attrib('value', element.attrib('default_value', ''))

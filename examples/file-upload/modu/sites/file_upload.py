@@ -19,7 +19,7 @@ class RootResource(resource.CheetahTemplateResource):
 		return ['/']
 	
 	def prepare_content(self, req):
-		tree = req.tree
+		tree = req.app.tree
 		session = req.session
 		if(tree.postpath):
 			if(tree.postpath[0] == 'status' and len(tree.postpath) >= 2):
@@ -46,7 +46,7 @@ class RootResource(resource.CheetahTemplateResource):
 		return 'text/html'
 	
 	def get_template(self, req):
-		tree = req.tree
+		tree = req.app.tree
 		if(tree.postpath and tree.postpath[0] == 'status'):
 			return 'status.html.tmpl'
 		else:
@@ -58,6 +58,6 @@ class FileUploadSite(object):
 	def initialize(self, application):
 		application.base_path = '/modu/examples/file-upload'
 		application.initialize_store = False
-		#application.debug_session = True
+		application.debug_session = True
 		application.disable_session_users = True
 		application.activate(RootResource())

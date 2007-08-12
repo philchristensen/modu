@@ -17,7 +17,7 @@ import os, time
 def sample_form(req):
 	frm = form.FormNode('node-form')
 	frm(enctype='multipart/form-data')
-	frm['title'](type='text',
+	frm['title'](type='textfield',
 				 label='Title',
 				 weight=-20,
 				 size=30,
@@ -43,14 +43,12 @@ class RootResource(resource.CheetahTemplateResource):
 	def prepare_content(self, req):
 		frm = sample_form(req)
 		frm.submit = self.submit_form
-		self.set_slot('form', frm.render(req))
 		self.set_slot('result_data', '(none)')
-		if(req.has_form_data()):
-			frm.execute(req)
+		frm.execute(req)
+		self.set_slot('form', frm.render(req))
 	
 	def submit_form(self, req, frm):
-		data = form.NestedFieldStorage(req)
-		self.set_slot('result_data', str(data['node-form']))
+		self.set_slot('result_data', str(frm.data))
 	
 	def get_content_type(self, req):
 		return 'text/html'
