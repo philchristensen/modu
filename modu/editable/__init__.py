@@ -5,8 +5,6 @@
 #
 # See LICENSE for details
 
-import os, sys
-
 from zope.interface import implements, Interface, Attribute
 
 from twisted import plugin
@@ -14,9 +12,14 @@ from twisted import plugin
 from modu.util import form
 from modu.persist import storable
 
-__path__ = [os.path.abspath(os.path.join(x, 'modu', 'editable')) for x in sys.path]
+datatype_cache = {}
 
-__all__ = []
+def __load_datatypes():
+	import modu.editable.datatypes
+	for datatype_class in plugin.getPlugins(IDatatype, modu.editable.datatypes):
+		datatype = datatype_class()
+		datatype_cache[datatype_class.__name__] = datatype
+
 
 class IDatatype(Interface):
 	def get_form_element(style, definition, storable):
@@ -24,13 +27,6 @@ class IDatatype(Interface):
 		Take the given definition, and return a FormNode populated
 		with data from the provided storable.
 		"""
-
-
-datatype_cache = {}
-import modu.editable
-for datatype_class in plugin.getPlugins(IDatatype, modu.editable):
-	datatype = datatype_class()
-	datatype_cache[datatype_class.__name__] = datatype
 
 
 class IEditable(storable.IStorable):
@@ -99,14 +95,4 @@ class definition(dict):
 		return datatype_cache[self['type']].get_form_element(self.name, 'detail', self, storable)
 
 
-sample_itemdef = itemdef(
-	__config		= definition(
-						postwrite_callback			= 'user_postwrite',
-						prewrite_callback			= 'user_prewrite'
-					),
-	
-	id				= definition(
-						postwrite_callback			= 'user_postwrite',
-						prewrite_callback			= 'user_prewrite'
-					)
-)
+__load_datatypes()
