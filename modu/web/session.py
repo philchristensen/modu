@@ -152,15 +152,15 @@ class BaseSession(dict):
 		if result is None:
 			return False
 		
-		if (time.time() - result["_accessed"]) > result["_timeout"]:
+		if (time.time() - result["accessed"]) > result["timeout"]:
 			return False
 		
-		self._created  = result["_created"]
-		self._accessed = result["_accessed"]
-		self._timeout  = result["_timeout"]
-		self._user_id = result.get("_user_id", None)
-		if(result["_data"]):
-			self.update(result["_data"])
+		self._created  = result["created"]
+		self._accessed = result["accessed"]
+		self._timeout  = result["timeout"]
+		self._user_id = result.get("user_id", None)
+		if(result["data"]):
+			self.update(result["data"])
 		return True
 	
 	def save(self):
@@ -168,11 +168,11 @@ class BaseSession(dict):
 		Save the session data for this object's session ID
 		"""
 		if self._valid:
-			result = {"_data"	   : self.copy(), 
-					"_created" : self._created, 
-					"_accessed": self._accessed, 
-					"_timeout" : self._timeout,
-					"_user_id" : self._user_id}
+			result = {"data" : self.copy(), 
+					"created" : self._created, 
+					"accessed": self._accessed, 
+					"timeout" : self._timeout,
+					"user_id" : self._user_id}
 			if(self._req.app.debug_session):
 				self._req.log_error('session cleanliness is: ' + str(self.is_clean()))
 			self.do_save(result)
@@ -269,27 +269,30 @@ class DbUserSession(BaseSession):
 		BaseSession.__init__(self, req, sid)
 	
 	def do_load(self):
-		record = self._pool.runQuery("SELECT s.* FROM session s WHERE id = %s", [self.id()])
+		load_query = persist.build_select('session', {'id':self.id()})
+		record = self._pool.runQuery(load_query)
 		
 		if(record):
 			record = record[0]
-			result = {'_created':record['created'], '_accessed':record['accessed'],
-					  '_timeout':record['timeout'], '_user_id':record['user_id']}
+			record['id'] = self.id()
 			if(record['data']):
-				result['_data'] = cPickle.loads(record['data'].tostring())
+				record['data'] = cPickle.loads(record['data'].tostring())
 			else:
-				result['_data'] = None
-			return result
+				record['data'] = None
+			return record
 		else:
 			return None
 	
-	def do_save(self, dict):
+	def do_save(self, attribs):
 		if(self.is_clean()):
-			self._pool.runOperation("UPDATE session SET user_id = %s, created = %s, accessed = %s, timeout = %s WHERE id = %s",
-						[self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], self.id()])
+			del attribs['data']
+			update_query = persist.build_update('session', attribs, {'id':self.id()})
+			self._pool.runOperation(update_query)
 		else:
-			self._pool.runOperation("REPLACE INTO session (id, user_id, created, accessed, timeout, data) VALUES (%s, %s, %s, %s, %s, %s)",
-						[self.id(), self._user_id, dict['_created'], dict['_accessed'], dict['_timeout'], cPickle.dumps(dict['_data'], 1)])
+			attribs['id'] = self.id()
+			attribs['data'] = cPickle.dumps(attribs['data'], 1)
+			insert_query = persist.build_insert('session', attribs)
+			self._pool.runOperation(insert_query)
 	
 	def do_delete(self):
 		self._pool.runOperation("DELETE FROM session WHERE id = %s", [self.id()])

@@ -49,14 +49,10 @@ def build_insert(table, data):
 	@returns: an SQL query
 	@rtype: str
 	"""
+	table = escape_dot_syntax(table)
 	keys = data.keys()
 	keys.sort()
 	values = [data[key] for key in keys]
-	dot_index = table.find('.')
-	if(dot_index == -1):
-		table = '`%s`' % table
-	else:
-		table = table.replace('.', '.`') + '`'
 	query = 'INSERT INTO %s (`%s`) VALUES (%s)' % (table, '`, `'.join(keys), ', '.join(['%s'] * len(data)))
 	return interp(query, values)
 
@@ -78,22 +74,57 @@ def build_replace(table, data):
 	@returns: an SQL query
 	@rtype: str
 	"""
+	table = escape_dot_syntax(table)
+	query_stub = 'REPLACE INTO %s ' % table
+	return query_stub + build_set(data)
+
+def build_set(data):
+	"""
+	Given a dictionary, construct a SET clause. Keys are sorted alphabetically
+	before output, so the result of passing a semantically identical dictionary
+	should be the same every time.
+	
+	@param data: a column name to value map
+	@type data: dict
+	
+	@returns: an SQL fragment
+	@rtype: str
+	"""
 	keys = data.keys()
 	keys.sort()
 	values = [data[key] for key in keys]
-	dot_index = table.find('.')
-	if(dot_index == -1):
-		table = '`%s`' % table
-	else:
-		table = table.replace('.', '.`') + '`'
-	query = 'REPLACE INTO %s SET ' % table
-	query += ', '.join(['`%s` = %%s'] * len(data)) % tuple(keys)
-	return interp(query, values)
+	set_clause = 'SET %s' % (', '.join(['`%s` = %%s'] * len(data)) % tuple(keys))
+	return interp(set_clause, values)
+
+
+def build_update(table, data, constraints):
+	"""
+	Given a table name, a dictionary, and a set of constraints, construct an UPDATE
+	query. Keys are sorted alphabetically before output, so the result of passing
+	a semantically identical dictionary should be the same every time.
+	
+	@param table: the desired table name
+	@type table: str
+	
+	@param data: a column name to value map
+	@type data: dict
+	
+	@param constraints: a column name to value map
+	@type constraints: dict
+	
+	@returns: an SQL query
+	@rtype: str
+	
+	@seealso: L{build_where()}
+	"""
+	table = escape_dot_syntax(table)
+	query_stub = 'UPDATE %s ' % table
+	return query_stub + build_set(data) + ' ' + build_where(constraints)
 
 
 def build_select(table, data):
 	"""
-	Given a table name and a dictionary, construct an SELECT query. Keys are
+	Given a table name and a dictionary, construct a SELECT query. Keys are
 	sorted alphabetically before output, so the result of passing a semantically
 	identical dictionary should be the same every time.
 	
@@ -114,17 +145,35 @@ def build_select(table, data):
 	
 	@seealso: L{build_where()}
 	"""
-	dot_index = table.find('.')
-	if(dot_index == -1):
-		table = '`%s`' % table
-	else:
-		table = table.replace('.', '.`') + '`'
+	table = escape_dot_syntax(table)
 	if('__select_keyword' in data):
 		query = "SELECT %s * FROM %s " % (data['__select_keyword'], table)
 	else:
 		query = "SELECT * FROM %s " % table
 	
 	return query + build_where(data)
+
+
+def build_delete(table, constraints):
+	"""
+	Given a table name, and a set of constraints, construct a DELETE query.
+	Keys are sorted alphabetically before output, so the result of passing
+	a semantically identical dictionary should be the same every time.
+	
+	@param table: the desired table name
+	@type table: str
+	
+	@param constraints: a column name to value map
+	@type constraints: dict
+	
+	@returns: an SQL query
+	@rtype: str
+	
+	@seealso: L{build_where()}
+	"""
+	table = escape_dot_syntax(table)
+	query_stub = 'DELETE FROM %s ' % table
+	return query_stub + build_where(constraints)
 
 
 def build_where(data):
@@ -163,11 +212,7 @@ def build_where(data):
 		if(key.startswith('_')):
 			continue
 		value = data[key]
-		dot_index = key.find('.')
-		if(dot_index == -1):
-			key = '`%s`' % key
-		else:
-			key = key.replace('.', '.`') + '`'
+		key = escape_dot_syntax(key)
 		if(isinstance(value, list) or isinstance(value, tuple)):
 			criteria.append('%s IN (%s)' % (key, ', '.join(['%s'] * len(value))))
 			values.extend(value)
@@ -191,6 +236,21 @@ def build_where(data):
 		query += ' LIMIT %s' % data['__limit']
 	
 	return interp(query, values)
+
+
+def escape_dot_syntax(key):
+	"""
+	Take a table name and check for dot syntax. Escape
+	the table name properly with quotes; this currently
+	only supports the MySQL syntax, but will hopefully
+	be abstracted away soon.
+	"""
+	dot_index = key.find('.')
+	if(dot_index == -1):
+		key = '`%s`' % key
+	else:
+		key = key.replace('.', '.`') + '`'
+	return key
 
 
 def interp(query, args):
@@ -557,13 +617,9 @@ class Store(object):
 		Internal function that is responsible for doing the
 		actual destruction.
 		"""
-		delete_query = "DELETE FROM `%s` WHERE `id` = %%s" % storable.get_table()
+		delete_query = build_delete(storable.get_table(), {'id':storable.get_id()})
 
-		query = interp(delete_query, [storable.get_id()])
-		
-		self.log(query)
-		
-		self.pool.runOperation(query)
+		self.pool.runOperation(delete_query)
 		storable.reset_id()
 	
 	def log(self, message):

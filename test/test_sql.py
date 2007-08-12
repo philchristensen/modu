@@ -16,6 +16,11 @@ class SQLTestCase(unittest.TestCase):
 	def tearDown(self):
 		pass
 	
+	def test_build_delete(self):
+		sql = persist.build_delete('table', {'col1':'col1_data', 'col2':'col2_data'});
+		expecting = "DELETE FROM `table` WHERE `col1` = 'col1_data' AND `col2` = 'col2_data'"
+		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+	
 	def test_build_insert(self):
 		sql = persist.build_insert('table', {'col2':'col2_data', 'col1':persist.RAW("ENCRYPT('something')")});
 		expecting = "INSERT INTO `table` (`col1`, `col2`) VALUES (ENCRYPT('something'), 'col2_data')"
