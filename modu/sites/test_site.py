@@ -62,3 +62,15 @@ class BasicTestSite(object):
 		application.activate(TestAccessControlResource())
 
 
+class StoreTestSite(object):
+	classProvides(plugin.IPlugin, app.ISite)
+	
+	def initialize(self, application):
+		application.base_domain = '____store-test-domain____:1234567'
+		application.base_path = '/app-test'
+		application.session_class = None
+		application.activate(TestResource())
+		application.activate(TestDelegateResource())
+		application.activate(TestAccessControlResource())
+
+

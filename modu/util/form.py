@@ -268,7 +268,6 @@ class NestedFieldStorage(cgi.FieldStorage):
 		# Throw first part away
 		while not part.done:
 			headers = rfc822.Message(self.fp)
-			print 'headers are: %s' % headers
 			part = NestedFieldStorage(self.req, self, self.fp, headers, ib,
 						 environ, keep_blank_values, strict_parsing)
 			

@@ -33,7 +33,7 @@ def handler(env, start_response):
 				req = configure_request(env, application)
 				
 				if(application.db_url):
-					req['modu.pool'] = _acquire_db(application.db_url, env['wsgi.multithread'])
+					req['modu.pool'] = acquire_db(application.db_url, env['wsgi.multithread'])
 			else:
 				raise404("No such application: %s" % env['REQUEST_URI'])
 			
@@ -230,6 +230,20 @@ def try_lucene_threads():
 		pass
 
 
+def acquire_db(db_url, threaded=True):
+	global pool, pool_lock
+	
+	pool_lock.acquire()
+	try:
+		if not(pool):
+			from modu.persist import adbapi
+			pool = adbapi.connect(db_url)
+	finally:
+		pool_lock.release()
+	
+	return pool
+
+
 def _scan_sites(req):
 	global host_tree
 	
@@ -250,20 +264,6 @@ def _scan_sites(req):
 		
 		host_node = host_tree.setdefault(domain, url.URLNode())
 		host_node.register(app.base_path, app, clobber=True)
-
-
-def _acquire_db(db_url, threaded=True):
-	global pool, pool_lock
-	
-	pool_lock.acquire()
-	try:
-		if not(pool):
-			from modu.persist import adbapi
-			pool = adbapi.connect(db_url)
-	finally:
-		pool_lock.release()
-	
-	return pool
 
 
 class ISite(interface.Interface):

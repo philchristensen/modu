@@ -14,6 +14,13 @@ EXPECTED_TITLE = '<input name="node-form[title]" size="30" type="text" value="" 
 EXPECTED_BODY = '<textarea cols="30" name="node-form[body]" rows="10"></textarea>'
 EXPECTED_SUBMIT = '<input name="node-form[submit]" type="submit" value="submit" />'
 
+EXPECTED_CATEGORY = '<select name="node-form[category]">'
+EXPECTED_CATEGORY += '<option selected="selected" value="bio">Biography</option>'
+EXPECTED_CATEGORY += '<option value="drama">Drama</option>'
+EXPECTED_CATEGORY += '<option value="horror">Horror</option>'
+EXPECTED_CATEGORY += '<option value="sci-fi">Science Fiction</option>'
+EXPECTED_CATEGORY += '</select>'
+
 EXPECTED_LABEL = '<label>%s</label>'
 EXPECTED_HELP = '<div class="form-help">%s</div>'
 EXPECTED_ELEMENT = '<div class="form-item" id="form-item-%s">%s</div>';
@@ -34,6 +41,15 @@ class FormThemeTestCase(unittest.TestCase):
 					cols=30,
 					rows=10,
 					help='Enter the body text as HTML.'
+					)
+		self.form['category'](type='select',
+					label='Category',
+					options={'drama':'Drama', 'sci-fi':'Science Fiction', 'bio':'Biography', 'horror':'Horror'},
+					value='bio',
+					weight=0,
+					cols=30,
+					rows=10,
+					help='Select the category.'
 					)
 		self.form['submit'](type='submit',
 					value='submit',
@@ -66,6 +82,12 @@ class FormThemeTestCase(unittest.TestCase):
 		titlefield_check = EXPECTED_ELEMENT % ('title', (EXPECTED_LABEL % title.label) + EXPECTED_TITLE + (EXPECTED_HELP % title.help))
 		self.failUnlessEqual(titlefield_result, titlefield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (titlefield_result, titlefield_check));
 
+	def test_category(self):
+		category = self.form['category']
+		
+		category_result = self.theme.form_select('node-form', category)
+		self.failUnlessEqual(category_result, EXPECTED_CATEGORY, 'Basic "category" field misrendered as \n`%s`, not \n`%s`' % (category_result, EXPECTED_CATEGORY));
+		
 	def test_body(self):
 		body = self.form['body']
 		

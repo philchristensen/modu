@@ -20,3 +20,21 @@ class SelectField(Field):
 		frm(type='select', label=definition['label'], value=getattr(storable, name),
 			options=definition.get('options', []))
 		return frm
+
+class ForeignSelectField(Field):
+	classProvides(plugin.IPlugin, IDatatype)
+	
+	def get_element(self, name, style, definition, storable):
+		store = storable.get_store()
+		
+		value = definition['fvalue']
+		label = definition['flabel']
+		table = definition['ftable']
+		
+		results = store.pool.runQuery('SELECT %s, %s FROM %s' % (value, label, table))
+		
+		options = dict([(item[value], item[label]) for item in results])
+		
+		frm = form.FormNode(name)
+		frm(type='select', label=definition['label'], value=getattr(storable, name), options=options)
+		return frm

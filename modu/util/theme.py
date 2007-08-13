@@ -114,14 +114,23 @@ class Theme(object):
 	def form_select(self, form_id, element):
 		attribs = element.attrib('attributes', {})
 		attribs['name'] = '%s[%s]' % (form_id, element.name)
-		attribs['value'] = element.attrib('value', 1)
+		value = element.attrib('value', 1)
 		
 		option_data = element.attrib('options', [])
 		if(isinstance(option_data, dict)):
-			option_data = option_data.items()
+			option_keys = option_data.keys()
 		else:
-			option_data = [(i,option_data[i]) for i in range(len(option_data))]
-		options = map(lambda(i): tags.option(value=i[0])[i[1]], option_data)
+			option_keys = [i for i in range(len(option_data))]
+		
+		def _create_option(k):
+			tag = tags.option(value=k)[option_data[k]]
+			if(k == value):
+				tag(selected='selected')
+			return tag
+		
+		option_keys.sort(element.attrib('sort', None))
+		options = map(_create_option, option_keys)
+		
 		return tags.select(**attribs)[options]
 	
 	def form_timestamp(self, form_id, element):
