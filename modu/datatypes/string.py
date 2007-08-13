@@ -11,6 +11,7 @@ from zope.interface import classProvides
 
 from modu.web.editable import IDatatype, Field
 from modu.util import form
+from modu import persist
 
 class LabelField(Field):
 	classProvides(plugin.IPlugin, IDatatype)
@@ -41,7 +42,7 @@ class PasswordField(Field):
 		frm = form.FormNode(name)
 		frm(label=definition['label'], value=getattr(storable, name))
 		if(style == 'list'):
-			frm(type='markup', value='********')
+			frm(type='label', value='********')
 		else:
 			frm(type='password')
 		return frm

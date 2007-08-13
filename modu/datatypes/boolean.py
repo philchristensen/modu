@@ -11,14 +11,15 @@ from zope.interface import classProvides
 
 from modu.web.editable import IDatatype, Field
 from modu.util import form
+from modu import persist
 
-class SelectField(Field):
+class CheckboxField(Field):
 	classProvides(plugin.IPlugin, IDatatype)
 	
 	def get_element(self, name, style, definition, storable):
 		frm = form.FormNode(name)
-		frm(type='select', label=definition['label'], value=getattr(storable, name),
-			options=definition.get('options', []))
+		frm(type='checkbox', label=definition['label'], value=definition.get('value', 1))
+		if(getattr(storable, name) == definition.get('value', 1)):
+			frm(checked=True)
 		return frm
-
 

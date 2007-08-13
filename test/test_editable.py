@@ -60,8 +60,10 @@ class EditableTestCase(unittest.TestCase):
 			if(sql.strip()):
 				self.store.pool.runOperation(sql)
 	
+	
 	def tearDown(self):
 		pass
+	
 	
 	def get_request(self):
 		environ = test.generate_test_wsgi_environment()
@@ -80,8 +82,32 @@ class EditableTestCase(unittest.TestCase):
 		
 		return req
 	
-	def test_basic(self):
-		test_string_itemdef = editable.itemdef(
+	
+	def test_checkboxfield(self):
+		test_itemdef = editable.itemdef(
+			selected		= editable.definition(
+								type		= 'CheckboxField',
+								label		= 'Selected'
+							)
+		)
+		
+		test_storable = storable.Storable('test')
+		test_storable.selected = 1
+		
+		itemdef_form = test_itemdef.get_form('detail', test_storable)
+		
+		reference_form = form.FormNode('test-form')
+		reference_form['selected'](type='checkbox', label='Selected', checked=True)
+		
+		req = self.get_request()
+		itemdef_form_html = itemdef_form.render(req)
+		reference_form_html = reference_form.render(req)
+		
+		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )	
+	
+	
+	def test_stringfield(self):
+		test_itemdef = editable.itemdef(
 			name			= editable.definition(
 								type		= 'StringField',
 								label		= 'Name'
@@ -91,7 +117,7 @@ class EditableTestCase(unittest.TestCase):
 		test_storable = storable.Storable('test')
 		test_storable.name = 'Test Name'
 		
-		itemdef_form = test_string_itemdef.get_form('detail', test_storable)
+		itemdef_form = test_itemdef.get_form('detail', test_storable)
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['name'](type='textfield', label='Name', value='Test Name')
@@ -102,8 +128,9 @@ class EditableTestCase(unittest.TestCase):
 		
 		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )	
 	
-	def test_link(self):
-		test_string_itemdef = editable.itemdef(
+	
+	def test_linked_labelfield(self):
+		test_itemdef = editable.itemdef(
 			__special		= editable.definition(
 								item_url	= 'http://www.example.com'
 							),
@@ -117,7 +144,7 @@ class EditableTestCase(unittest.TestCase):
 		test_storable = storable.Storable('test')
 		test_storable.linked_name = 'Linked Name'
 		
-		itemdef_form = test_string_itemdef.get_form('detail', test_storable)
+		itemdef_form = test_itemdef.get_form('detail', test_storable)
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['linked_name'](type='label', label='Name', value='Linked Name',
@@ -129,9 +156,10 @@ class EditableTestCase(unittest.TestCase):
 		
 		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )
 	
-	def test_select(self):
+	
+	def test_selectfield(self):
 		options = {'admin':'Administrator', 'user':'User'}
-		test_string_itemdef = editable.itemdef(
+		test_itemdef = editable.itemdef(
 			user_type		= editable.definition(
 								type		= 'SelectField',
 								label		= 'Type',
@@ -142,7 +170,7 @@ class EditableTestCase(unittest.TestCase):
 		test_storable = storable.Storable('test')
 		test_storable.user_type = 'user'
 		
-		itemdef_form = test_string_itemdef.get_form('detail', test_storable)
+		itemdef_form = test_itemdef.get_form('detail', test_storable)
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['user_type'](type='select', label='Type', value='user', options=options)
@@ -154,9 +182,9 @@ class EditableTestCase(unittest.TestCase):
 		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )
 	
 	
-	def test_foreign_select(self):
+	def test_foreign_selectfield(self):
 		options = {'drama':'Drama', 'sci-fi':'Science Fiction', 'bio':'Biography', 'horror':'Horror'}
-		test_string_itemdef = editable.itemdef(
+		test_itemdef = editable.itemdef(
 			category_id		= editable.definition(
 								type		= 'ForeignSelectField',
 								label		= 'Category',
@@ -174,7 +202,7 @@ class EditableTestCase(unittest.TestCase):
 		test_storable.title = "My Title"
 		test_storable.category_id = 'bio'
 		
-		itemdef_form = test_string_itemdef.get_form('detail', test_storable)
+		itemdef_form = test_itemdef.get_form('detail', test_storable)
 		
 		reference_form = form.FormNode('page-form')
 		reference_form['category_id'](type='select', label='Category', value='bio', options=options)
@@ -183,4 +211,35 @@ class EditableTestCase(unittest.TestCase):
 		reference_form_html = reference_form.render(req)
 		
 		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )
+	
+	
+	def test_foreign_labelfield(self):
+		test_itemdef = editable.itemdef(
+			category_id		= editable.definition(
+								type		= 'ForeignLabelField',
+								label		= 'Category',
+								ftable		= 'category',
+								fvalue		= 'code',
+								flabel		= 'title'
+							)
+		)
+		
+		req = self.get_request()
+		req.store.ensure_factory('page')
+		
+		test_storable = storable.Storable('page')
+		test_storable.set_factory(req.store.get_factory('page'))
+		test_storable.title = "My Title"
+		test_storable.category_id = 'bio'
+		
+		itemdef_form = test_itemdef.get_form('detail', test_storable)
+		
+		reference_form = form.FormNode('page-form')
+		reference_form['category_id'](type='label', label='Category', value='Biography')
+		
+		itemdef_form_html = itemdef_form.render(req)
+		reference_form_html = reference_form.render(req)
+		
+		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )
+	
 

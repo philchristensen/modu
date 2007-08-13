@@ -13,6 +13,8 @@ import sys
 EXPECTED_TITLE = '<input name="node-form[title]" size="30" type="text" value="" />'
 EXPECTED_BODY = '<textarea cols="30" name="node-form[body]" rows="10"></textarea>'
 EXPECTED_SUBMIT = '<input name="node-form[submit]" type="submit" value="submit" />'
+EXPECTED_CHECKBOX = '<input name="node-form[checkbox]" type="checkbox" value="1" />'
+EXPECTED_SELECTED_CHECKBOX = '<input name="node-form[checkbox]" type="checkbox" value="1" checked />'
 
 EXPECTED_CATEGORY = '<select name="node-form[category]">'
 EXPECTED_CATEGORY += '<option selected="selected" value="bio">Biography</option>'
@@ -35,6 +37,11 @@ class FormThemeTestCase(unittest.TestCase):
 					 size=30,
 					 help='Enter the title of this entry here.'
 					)
+		self.form['some_label'](type='label',
+					value='this is a label',
+					weight=100
+					)
+		self.form['checkbox'](type='checkbox')
 		self.form['body'](type='textarea',
 					label='Body',
 					weight=0,
@@ -61,6 +68,26 @@ class FormThemeTestCase(unittest.TestCase):
 	def tearDown(self):
 		pass
 	
+	def test_label(self):
+		some_label = self.form['some_label']
+		
+		some_label_result = self.theme.form_label('node-form', some_label)
+		expected_result = EXPECTED_LABEL % 'this is a label'
+		self.failUnlessEqual(some_label_result, expected_result, 'Basic "some_label" field misrendered as \n`%s`, not \n`%s`' % (some_label_result, expected_result));
+		
+	def test_checkbox(self):
+		checkbox = self.form['checkbox']
+		
+		checkbox_result = self.theme.form_checkbox('node-form', checkbox)
+		self.failUnlessEqual(checkbox_result, EXPECTED_CHECKBOX, 'Basic "checkbox" field misrendered as \n`%s`, not \n`%s`' % (checkbox_result, EXPECTED_CHECKBOX));
+		
+	def test_selected_checkbox(self):
+		checkbox = self.form['checkbox']
+		checkbox(checked=True)
+		
+		checkbox_result = self.theme.form_checkbox('node-form', checkbox)
+		self.failUnlessEqual(checkbox_result, EXPECTED_SELECTED_CHECKBOX, 'Basic "checkbox" field misrendered as \n`%s`, not \n`%s`' % (checkbox_result, EXPECTED_SELECTED_CHECKBOX));
+		
 	def test_title(self):
 		title = self.form['title']
 		

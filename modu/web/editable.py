@@ -82,12 +82,45 @@ class itemdef(dict):
 				if not(user.is_allowed(field.get('acl', self.config.get('default_acl', [])))):
 					continue
 				frm.children[name] = field.get_element(style, storable)
-		# set special array stuff, like pre and postwrite (as callbacks)
+		
+		def _validate(req, form):
+			self.validate(req, form, storable)
+		
+		def _submit(req, form):
+			self.submit(req, form, storable)
+		
+		frm.validate = _validate
+		frm.submit = _submit
+		
 		return frm
 	
 	
 	def get_item_url(self, storable):
+		# FIXME: This should return something real, or call a function that can.
 		return self.config.get('item_url', 'http://www.example.com')
+	
+	
+	def validate(self, req, form, storable):
+		# call prewrite_callback
+		# call validate hook on each field, return false if they do
+		pass
+	
+	def submit(self, req, form, storable):
+		postwrite_fields = []
+		for name, definition in self.iteritems():
+			datatype = datatype_cache[definition['type']]
+			if(definition.get('implicit_save', True)):
+				continue
+			elif(datatype.is_postwrite_field()):
+				postwrite_fields.append(name)
+			else:
+				# pass each datatype form data, ask for result
+				# if None, skip this field
+				# update storable data with form
+				pass
+		# handle postwrite fields
+		# call postwrite_callback
+		pass
 
 
 class definition(dict):

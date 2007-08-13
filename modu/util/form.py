@@ -122,15 +122,10 @@ class FormNode(object):
 			# NOTE: This assumes the browser sends the submit button's name
 			# in the submit POST data. This may not work
 			if(self.name in self.data and submit.name in self.data[self.name]):
-				self._load_data()
+				self.load_data(self.data)
 				if(self.validate(req, self)):
 					self.submit(req, self)
 					break
-	
-	def _load_data(self):
-		form_data = self.data[self.name]
-		for key in form_data:
-			self.children[key].attributes['value'] = form_data[key].value
 	
 	def render(self, req):
 		"""
@@ -139,6 +134,19 @@ class FormNode(object):
 		"""
 		thm = self.theme(req)
 		return thm.form(self)
+	
+	def load_data(self, data):
+		"""
+		This function takes a FieldStorage object (more often
+		NestedFieldStorage) and populates this form.
+		"""
+		if(self.name in data):
+			form_data = data[self.name]
+			if(isinstance(form_data, dict)):
+				for key in form_data:
+					self.children[key].load_data(form_data)
+			else:
+				self.attributes['value'] = form_data.value
 	
 	def _validate(self, req, form):
 		"""
@@ -160,7 +168,7 @@ class FormNode(object):
 		
 		return result
 	
-	def _submit(self, form):
+	def _submit(self, req, form):
 		"""
 		Forms have no default bahavior for submission, so if no
 		submit attribute has been set on this form, an error is raised.
