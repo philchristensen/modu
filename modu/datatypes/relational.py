@@ -28,7 +28,7 @@ class ForeignLabelField(Field):
 		
 		results = store.pool.runQuery(foreign_label_query)
 		frm = form.FormNode(name)
-		frm(type='label', label=definition['label'])
+		frm(type='label')
 		
 		if(results):
 			frm(value=results[0][label])
@@ -51,5 +51,5 @@ class ForeignSelectField(Field):
 		options = dict([(item[value], item[label]) for item in results])
 		
 		frm = form.FormNode(name)
-		frm(type='select', label=definition['label'], value=getattr(storable, name), options=options)
+		frm(type='select', value=getattr(storable, name), options=options)
 		return frm

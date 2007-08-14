@@ -11,6 +11,7 @@ from twisted import plugin
 
 from modu.util import form, tags
 from modu.persist import storable
+from modu.web import resource, app
 from modu.web.user import AnonymousUser
 
 datatype_cache = {}
@@ -32,16 +33,55 @@ class IDatatype(Interface):
 
 
 class IEditable(storable.IStorable):
-	__itemdef__ = Attribute("""
+	def get_itemdef(self):
+		"""
 		Contains an object/datastructure representing the
 		fields and behaviors for this object's editable
 		forms.
-	""")
+		"""
+
+
+class EditorResource(resource.CheetahTemplateResource):
+	def get_paths(self):
+		return ['/edit']
+	
+	def prepare_content(self, req):
+		if not(len(req.app.tree.postpath) >= 2):
+			app.raise404('/'.join(req.app.tree.postpath))
+		if not(req.store.has_factory(req.app.tree.postpath[0])):
+			app.raise404('/'.join(req.app.tree.postpath))
+		
+		item = req.store.load_one(req.app.tree.postpath[0], {'id':int(req.app.tree.postpath[1])})
+		if not(IEditable.providedBy(item)):
+			app.raise500('%r is does not implement the IEditable interface.')
+		
+		form = item.get_itemdef().get_form('detail', item)
+		form.execute(req)
+		self.set_slot('form', form.render(req))
+	
+	def get_content_type(self, req):
+		return 'text/html'
+	
+	def get_template(self, req):
+		return 'editable-detail.html.tmpl' 
 
 
 class Field(object):
+	inherited_attributes = ['weight', 'help', 'label']
+	
 	def get_form_element(self, name, style, definition, storable):
 		frm = self.get_element(name, style, definition, storable)
+		
+		classes = [self.__class__]
+		while(classes):
+			for cls in classes:
+				if not(hasattr(cls, 'inherited_attributes')):
+					continue
+				for name in cls.inherited_attributes:
+					if(name in definition and name not in frm.attributes):
+						frm.attributes[name] = definition[name]
+			classes = cls.__bases__
+		
 		if(definition.get('link', False)):
 			href = definition.itemdef.get_item_url(storable)
 			frm(prefix=tags.a(href=href, __no_close=True), suffix='</a>')

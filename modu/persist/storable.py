@@ -199,6 +199,8 @@ class Storable(object):
 		unless they begin with an underscore. Undersore-prefixed
 		attributes can be used to store non-persistent data.
 		"""
+		if(key == 'id'):
+			return self.set_id(value)
 		if(key.startswith('_')):
 			_dict = object.__getattribute__(self, '__dict__')
 			_dict[key] = value
@@ -211,6 +213,8 @@ class Storable(object):
 		column does not exist in the chosen table, errors will
 		occur on save.
 		"""
+		if(key == 'id'):
+			return self.get_id()
 		try:
 			func = object.__getattribute__(self, key)
 			if(callable(func)):

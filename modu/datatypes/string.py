@@ -18,7 +18,16 @@ class LabelField(Field):
 	
 	def get_element(self, name, style, definition, storable):
 		frm = form.FormNode(name)
-		frm(type='label', label=definition['label'], value=getattr(storable, name))
+		frm(type='label', value=getattr(storable, name))
+		return frm
+
+
+class DateField(Field):
+	classProvides(plugin.IPlugin, IDatatype)
+	
+	def get_element(self, name, style, definition, storable):
+		frm = form.FormNode(name)
+		frm(type='label', value=getattr(storable, name))
 		return frm
 
 
@@ -27,11 +36,20 @@ class StringField(Field):
 	
 	def get_element(self, name, style, definition, storable):
 		frm = form.FormNode(name)
-		frm(label=definition['label'], value=getattr(storable, name))
+		frm(value=getattr(storable, name))
 		if(style == 'list'):
 			frm(type='label')
 		else:
 			frm(type='textfield')
+		return frm
+
+
+class TextAreaField(Field):
+	classProvides(plugin.IPlugin, IDatatype)
+	
+	def get_element(self, name, style, definition, storable):
+		frm = form.FormNode(name)
+		frm(type='textarea', value=getattr(storable, name))
 		return frm
 
 
@@ -40,7 +58,7 @@ class PasswordField(Field):
 	
 	def get_element(self, name, style, definition, storable):
 		frm = form.FormNode(name)
-		frm(label=definition['label'], value=getattr(storable, name))
+		frm(value=getattr(storable, name))
 		if(style == 'list'):
 			frm(type='label', value='********')
 		else:

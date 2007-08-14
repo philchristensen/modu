@@ -42,6 +42,9 @@ def handler(env, start_response):
 			persist.activate_store(req)
 			session.activate_session(req)
 			
+			if(hasattr(application.site, 'configure_request')):
+				application.site.configure_request(req)
+			
 			rsrc = req.app.tree.parse(req.path)
 			if not(rsrc):
 				raise404("No such resource: %s" % env['REQUEST_URI'])
@@ -200,13 +203,12 @@ def raise401(path=None):
 	raise web.HTTPStatus('401 Unauthorized', [('Content-Type', 'text/html')], [content])
 
 
-def raise500(path=None, exception=None):
+def raise500(message=None):
 	content = tags.h1()['Internal Server Error']
 	content += tags.hr()
 	content += tags.p()['Sorry, an error has occurred:']
-	content += tags.pre()[traceback.format_exc()]
-	if(path):
-		content += tags.strong()[path]
+	if(message):
+		content += tags.strong()[message]
 	raise web.HTTPStatus('500 Internal Server Error', [('Content-Type', 'text/html')], content)
 
 
