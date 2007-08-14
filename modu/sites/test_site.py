@@ -11,7 +11,19 @@ from zope.interface import classProvides, implements
 
 from modu.web import app, resource
 
+"""
+This module contains some ISite implementors and sample
+resource classes used in the testing framework.
+
+Since the ISite implementors don't actually use real (or even valid)
+hostnames, none of these sites should ever activate in normal use.
+"""
+
 class TestResource(resource.Resource):
+	"""
+	This simple resource returns plaintext containing
+	the postpath used in the request.
+	"""
 	implements(resource.IContent)
 	
 	def get_paths(self):
@@ -28,6 +40,10 @@ class TestResource(resource.Resource):
 
 
 class TestDelegateResource(resource.Resource):
+	"""
+	This resource delegate will return an instance of
+	TestResource.
+	"""
 	implements(resource.IResourceDelegate)
 	
 	def get_paths(self):
@@ -39,6 +55,10 @@ class TestDelegateResource(resource.Resource):
 
 
 class TestAccessControlResource(resource.Resource):
+	"""
+	This resource will always return a 401 Unauthorized when
+	requested.
+	"""
 	implements(resource.IResourceDelegate)
 	
 	def get_paths(self):
@@ -49,6 +69,9 @@ class TestAccessControlResource(resource.Resource):
 
 
 class BasicTestSite(object):
+	"""
+	This site activates only the most basic features of modu.
+	"""
 	classProvides(plugin.IPlugin, app.ISite)
 	
 	def initialize(self, application):
@@ -63,6 +86,9 @@ class BasicTestSite(object):
 
 
 class StoreTestSite(object):
+	"""
+	This site activates a database connection and a Store.
+	"""
 	classProvides(plugin.IPlugin, app.ISite)
 	
 	def initialize(self, application):

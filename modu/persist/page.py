@@ -8,7 +8,17 @@
 from modu.persist import Store
 
 class Paginator(object):
+	"""
+	This class provides a wrapper around store.load
+	to allow paginating Storable results.
+	"""
+	
 	def __init__(self, calc_found=True):
+		"""
+		Create a Paginator object. If calc_found is True (the default),
+		this will calculate the true number of results, at the cost of
+		a most expensive DB query.
+		"""
 		self.calc_found = calc_found
 		
 		self.page = 1
@@ -18,6 +28,13 @@ class Paginator(object):
 		self.end_range = 0
 	
 	def get_results(self, store, *args, **kwargs):
+		"""
+		Load objects from the given store. This method will
+		return a maximum of self.per_page results, while
+		setting up all the other variables of the instance.
+		"""
+		# FIXME: Make sure this works reasonably with both
+		# attribute dictionaries and direct queries
 		if(self.calc_found):
 			kwargs['__select_keyword'] = 'SQL_CALC_FOUND_ROWS'
 		
@@ -43,6 +60,11 @@ class Paginator(object):
 		return results
 	
 	def get_limit(self):
+		"""
+		Return the LIMIT clause this class will generate for the
+		next query, so developers can easily write their own
+		complex queries.
+		"""
 		start = ((self.page - 1) * self.per_page)
 		if(self.calc_found):
 			return '%d,%d' % (start, self.per_page)
@@ -51,10 +73,18 @@ class Paginator(object):
 			return '%d,%d' % (start, self.per_page + 1)
 	
 	def has_next(self):
+		"""
+		Return true if this Paginator thinks there are
+		more results.
+		"""
 		if(self.calc_found):
 			return self.end_range < self.total_results
 		else:
 			return str(self.total_results).endswith('+')
 	
 	def has_previous(self):
+		"""
+		Return true if this Paginator thinks we are on
+		a greater page than 1.
+		"""
 		return self.start_range > 1

@@ -96,13 +96,13 @@ class itemdef(dict):
 	
 	
 	def get_item_url(self, storable):
-		# FIXME: This should return something real, or call a function that can.
+		# TODO: This should return something real, or call a function that can.
 		return self.config.get('item_url', 'http://www.example.com')
 	
 	
 	def validate(self, req, form, storable):
-		# call prewrite_callback
-		# call validate hook on each field, return false if they do
+		# TODO: call prewrite_callback
+		# TODO: call validate hook on each field, return false if they do
 		pass
 	
 	def submit(self, req, form, storable):
@@ -114,12 +114,12 @@ class itemdef(dict):
 			elif(datatype.is_postwrite_field()):
 				postwrite_fields.append(name)
 			else:
-				# pass each datatype form data, ask for result
-				# if None, skip this field
-				# update storable data with form
+				# TODO: pass each datatype form data, ask for result
+				# TODO: if None, skip this field
+				# TODO: update storable data with form
 				pass
-		# handle postwrite fields
-		# call postwrite_callback
+		# TODO: handle postwrite fields
+		# TODO: call postwrite_callback
 		pass
 
 

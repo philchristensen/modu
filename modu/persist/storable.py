@@ -10,6 +10,11 @@ import time, copy, sys
 from zope import interface
 from zope.interface import implements, Interface, Attribute
 
+"""
+This module contains the various classes and functions needed to
+create Storable instances and subclasses.
+"""
+
 def cached(timeout):
 	"""
 	Function decorator to enable caching for singleton functions.
@@ -67,40 +72,74 @@ def cachedmethod(timeout):
 
 class IStorable(Interface):
 	def set_id(self, id):
-		pass
+		"""
+		Set the ID/primary key of this item.
+		
+		Note that this method will normally only be called once,
+		so implementors may wish to throw an exception if called
+		more then once between calls to C{reset_id()}
+		"""
 	
-	def get_id(self, id):
-		pass
+	def get_id(self):
+		"""
+		Get the ID/primary key of this item, if available.
+		
+		Unsaved objects will return 0.
+		"""
 	
 	def touch(self):
-		pass
+		"""
+		Mark this object as 'dirty', i.e., requiring persistence.
+		"""
 	
 	def clean(self):
-		pass
+		"""
+		Clean this object, indicating it no longer needs to be saved.
+		"""
 	
 	def is_dirty(self):
-		pass
+		"""
+		Return True if this object needs to be saved.
+		"""
 	
 	def set_factory(self, factory):
-		pass
+		"""
+		This function will normally only be called by the factory that
+		created this item, e.g. storable.set_factory(self).
+		"""
 	
 	def get_factory(self):
-		pass
+		"""
+		Return the factory that created this object.
+		"""
 	
 	def get_store(self):
-		pass
+		"""
+		Return the store this object came from.
+		"""
 	
 	def load_data(self, data):
-		pass
+		"""
+		Load the provided data into this object in some way.
+		"""
 	
 	def get_data(self):
-		pass
+		"""
+		Return the data for this object's record as a dict,
+		column name keyed to column value.
+		"""
 	
 	def get_related_storables(self):
-		pass
+		"""
+		Return a list of items that should be saved along with
+		this object, or deleted along with it.
+		"""
 	
 	def reset_id(self):
-		pass
+		"""
+		Reset this object's id to 0, so it will be assigned a new
+		ID on save. Useful for cloning objects.
+		"""
 
 class Storable(object):
 	"""
@@ -386,9 +425,16 @@ class DefaultFactory(object):
 		return self.guid_table != None
 	
 	def get_primary_key(self):
+		"""
+		Return the name of the column that will contain IDs
+		for objects created by this factory.
+		"""
 		return self.id_col
 	
 	def create_item(self, data):
+		"""
+		Create an object of some kind from the provided data/record.
+		"""
 		if not(self.model_class and self.table):
 			raise NotImplementedError('%s::create_item()' % self.__class__.__name__)
 		if(self.model_class is Storable):
@@ -405,20 +451,35 @@ class DefaultFactory(object):
 		return item
 	
 	def create_item_query(self, data):
+		"""
+		Given `data` as a dict of column => value constraints,
+		create a query that will load some object(s). 
+		"""
 		if not(self.table):
 			raise NotImplementedError('%s::create_item_query()' % self.__class__.__name__)
 		from modu import persist
 		return persist.build_select(self.table, data)
 	
 	def get_item(self, id):
+		"""
+		Load an item directly via its primary key.
+		"""
 		(result) = self.get_items({self.id_col:id})
 		return result
 	
 	def get_items(self, data):
+		"""
+		Given a dict of column => value constraints, load any
+		objects that are returned from the database.
+		"""
 		query = self.create_item_query(data)
 		return self.get_items_by_query(query)
 	
 	def get_items_by_query(self, query):
+		"""
+		Given the provided query, attempt to load each result row
+		as an object created by this factory.
+		"""
 		if(query not in self.cache):
 			result = [self.create_item(record)
 						for record in self.get_item_records(query)]
@@ -429,5 +490,8 @@ class DefaultFactory(object):
 		return self.cache[query]
 	
 	def get_item_records(self, query):
+		"""
+		Query the database and return all the results.
+		"""
 		self.store.log(query)
 		return self.store.pool.runQuery(query)

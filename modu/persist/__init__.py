@@ -19,6 +19,10 @@ import thread, types
 DEFAULT_STORE_NAME = '__default__'
 
 def activate_store(req):
+	"""
+	Examine the req object and its internal modu.app object,
+	and create or fetch a store instance to be used by this request.
+	"""
 	app = req.app
 	if('modu.pool' in req and app.initialize_store):
 		store = Store.get_store()
