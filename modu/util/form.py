@@ -150,12 +150,21 @@ class FormNode(object):
 		"""
 		This function takes a FieldStorage object (more often
 		NestedFieldStorage) and populates this form.
+		
+		This is invoked automatically by C{execute()}. Keep in mind that
+		this means that if a post value *looks* like it belongs to a form
+		(i.e., it is nested under the form's name), that form element will
+		have its 'value' attribute set to the post value.
 		"""
 		if(self.name in data):
 			form_data = data[self.name]
 			if(isinstance(form_data, dict)):
-				for key in form_data:
-					self.children[key].load_data(form_data)
+				if(self.children):
+					for name, child in self.children.items():
+						child.load_data(form_data)
+				else:
+					# this is bad
+					pass
 			else:
 				self.attributes['value'] = form_data.value
 	

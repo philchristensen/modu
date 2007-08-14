@@ -25,10 +25,27 @@ def __load_datatypes():
 
 
 class IDatatype(Interface):
-	def get_form_element(style, definition, storable):
+	def get_form_element(self, style, definition, storable):
 		"""
 		Take the given definition, and return a FormNode populated
 		with data from the provided storable.
+		"""
+	
+	def update_storable(self, req, definition, storable):
+		"""
+		The fields of this storable will already be populated in
+		most scenarios, but this function can be implemented by
+		datatypes who wish to calculate a value based on
+		more complex POST data.
+		"""
+	
+	def is_postwrite_field(self):
+		"""
+		Some fields (particularly file uploads) may need to write their
+		data after all other "standard" data has been written. For example,
+		they may require the Storable id. If this function returns True,
+		the items will be ignored during the regular process and given a
+		chance to write after the main record has been saved.
 		"""
 
 
@@ -89,6 +106,9 @@ class Field(object):
 			href = definition.itemdef.get_item_url(storable)
 			frm(prefix=tags.a(href=href, __no_close=True), suffix='</a>')
 		return frm
+	
+	def update_storable(self, req, definition, storable):
+		pass
 
 
 class itemdef(dict):
@@ -184,12 +204,20 @@ class itemdef(dict):
 			elif(datatype.is_postwrite_field()):
 				postwrite_fields.append(name)
 			else:
-				# TODO: pass each datatype form data, ask for result
-				# TODO: if None, skip this field
-				# TODO: update storable data with form
-				pass
-		# TODO: handle postwrite fields
-		# TODO: call postwrite_callback
+				# update storable data with form
+				datatype.update_storable(req, definition, storable)
+		# save storable data
+		req.store.save(storable)
+		# handle postwrite fields
+		if(postwrite_fields):
+			for name in postwrite_fields:
+				definition = self[name]
+				datatype = datatype_cache[definition['type']]
+				datatype.update_storable(req, definition, storable)
+			req.store.save(storable)
+		# call postwrite_callback
+		if('postwrite_callback' in self.config):
+			self.config['postwrite_callback'](req, form, storable)
 
 
 class definition(dict):

@@ -24,7 +24,7 @@ class ForeignLabelField(Field):
 		table = definition['ftable']
 		
 		foreign_label_query = "SELECT %s, %s FROM %s WHERE %s = %%s" % (value, label, table, value)
-		foreign_label_query = persist.interp(foreign_label_query, [getattr(storable, name)])
+		foreign_label_query = persist.interp(foreign_label_query, [getattr(storable, name, None)])
 		
 		results = store.pool.runQuery(foreign_label_query)
 		frm = form.FormNode(name)
@@ -51,5 +51,5 @@ class ForeignSelectField(Field):
 		options = dict([(item[value], item[label]) for item in results])
 		
 		frm = form.FormNode(name)
-		frm(type='select', value=getattr(storable, name), options=options)
+		frm(type='select', value=getattr(storable, name, None), options=options)
 		return frm

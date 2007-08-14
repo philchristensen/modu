@@ -17,7 +17,7 @@ class SelectField(Field):
 	
 	def get_element(self, name, style, definition, storable):
 		frm = form.FormNode(name)
-		frm(type='select', value=getattr(storable, name), options=definition.get('options', {}))
+		frm(type='select', value=getattr(storable, name, None), options=definition.get('options', {}))
 		return frm
 
 

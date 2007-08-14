@@ -19,7 +19,7 @@ class CheckboxField(Field):
 	def get_element(self, name, style, definition, storable):
 		frm = form.FormNode(name)
 		frm(type='checkbox', value=definition.get('value', 1))
-		if(getattr(storable, name) == definition.get('value', 1)):
+		if(getattr(storable, name, None) == definition.get('value', 1)):
 			frm(checked=True)
 		return frm
 
