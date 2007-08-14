@@ -30,6 +30,16 @@ class EditablePage(storable.Storable):
 				weight		= 0
 			),
 			
+			title			= editable.definition(
+				type		= 'StringField',
+				label		= 'title:',
+				size		= 60,
+				maxlength 	= 64,
+				help		= 'the title of this page.',
+				list		= True,
+				weight		= 3
+			),
+			
 			code			= editable.definition(
 				type		= 'StringField',
 				label		= 'code:',
@@ -43,17 +53,9 @@ class EditablePage(storable.Storable):
 				type		= 'TextAreaField',
 				label		= 'content:',
 				help		= 'the content of the page.',
-				weight		= 2
-			),
-			
-			title			= editable.definition(
-				type		= 'StringField',
-				label		= 'title:',
-				size		= 60,
-				maxlength 	= 64,
-				help		= 'the title of this page.',
-				list		= True,
-				weight		= 3
+				weight		= 2,
+				rows		= 10,
+				cols		= 70
 			),
 			
 			created_date	= editable.definition(

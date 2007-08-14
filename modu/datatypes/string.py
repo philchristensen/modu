@@ -34,6 +34,8 @@ class DateField(Field):
 class StringField(Field):
 	classProvides(plugin.IPlugin, IDatatype)
 	
+	inherited_attributes = ['size', 'maxlength']
+	
 	def get_element(self, name, style, definition, storable):
 		frm = form.FormNode(name)
 		frm(value=getattr(storable, name))
@@ -46,6 +48,8 @@ class StringField(Field):
 
 class TextAreaField(Field):
 	classProvides(plugin.IPlugin, IDatatype)
+	
+	inherited_attributes = ['rows', 'cols']
 	
 	def get_element(self, name, style, definition, storable):
 		frm = form.FormNode(name)

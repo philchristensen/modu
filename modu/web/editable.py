@@ -82,6 +82,9 @@ class Field(object):
 						frm.attributes[name] = definition[name]
 			classes = cls.__bases__
 		
+		for name, value in definition.get('attributes', {}).iteritems():
+			frm.attributes[name] = value
+		
 		if(definition.get('link', False)):
 			href = definition.itemdef.get_item_url(storable)
 			frm(prefix=tags.a(href=href, __no_close=True), suffix='</a>')
