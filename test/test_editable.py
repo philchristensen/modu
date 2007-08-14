@@ -65,8 +65,8 @@ class EditableTestCase(unittest.TestCase):
 		pass
 	
 	
-	def get_request(self):
-		environ = test.generate_test_wsgi_environment()
+	def get_request(self, form_data={}):
+		environ = test.generate_test_wsgi_environment(form_data)
 		environ['REQUEST_URI'] = '/app-test/test-resource'
 		environ['SCRIPT_FILENAME'] = ''
 		environ['HTTP_HOST'] = '____store-test-domain____:1234567'
@@ -98,6 +98,8 @@ class EditableTestCase(unittest.TestCase):
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['selected'](type='checkbox', label='Selected', checked=True)
+		reference_form['save'](type='submit', value='save', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		
 		req = self.get_request()
 		itemdef_form_html = itemdef_form.render(req)
@@ -121,6 +123,8 @@ class EditableTestCase(unittest.TestCase):
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['name'](type='textfield', label='Name', value='Test Name')
+		reference_form['save'](type='submit', value='save', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		
 		req = self.get_request()
 		itemdef_form_html = itemdef_form.render(req)
@@ -149,6 +153,8 @@ class EditableTestCase(unittest.TestCase):
 		reference_form = form.FormNode('test-form')
 		reference_form['linked_name'](type='label', label='Name', value='Linked Name',
 										prefix=tags.a(href='http://www.example.com', __no_close=True), suffix='</a>')
+		reference_form['save'](type='submit', value='save', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		
 		req = self.get_request()
 		itemdef_form_html = itemdef_form.render(req)
@@ -174,6 +180,8 @@ class EditableTestCase(unittest.TestCase):
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['user_type'](type='select', label='Type', value='user', options=options)
+		reference_form['save'](type='submit', value='save', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		
 		req = self.get_request()
 		itemdef_form_html = itemdef_form.render(req)
@@ -206,6 +214,8 @@ class EditableTestCase(unittest.TestCase):
 		
 		reference_form = form.FormNode('page-form')
 		reference_form['category_id'](type='select', label='Category', value='bio', options=options)
+		reference_form['save'](type='submit', value='save', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
@@ -236,10 +246,89 @@ class EditableTestCase(unittest.TestCase):
 		
 		reference_form = form.FormNode('page-form')
 		reference_form['category_id'](type='label', label='Category', value='Biography')
+		reference_form['save'](type='submit', value='save', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
 		
 		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )
 	
-
+	
+	def test_validation(self):
+		self.validation_test_bool = False
+		self.prewrite_callback_bool = False
+		
+		def test_validator(req, form, storable):
+			self.validation_test_bool = True
+			return True
+		
+		def test_prewrite(req, form, storable):
+			self.prewrite_callback_bool = True
+			return True
+		
+		test_itemdef = editable.itemdef(
+			__config		= editable.definition(
+								prewrite_callback = test_prewrite
+							),
+			title			= editable.definition(
+								type		= 'StringField',
+								label		= 'Title',
+								validator	= test_validator
+							)
+		)
+		
+		form_data = {'page-form[title]':'Sample Title', 'page-form[save]':'save'}
+		req = self.get_request(form_data)
+		req.store.ensure_factory('page')
+		
+		test_storable = storable.Storable('page')
+		test_storable.set_factory(req.store.get_factory('page'))
+		test_storable.title = "My Title"
+		test_storable.category_id = 'bio'
+		
+		itemdef_form = test_itemdef.get_form('detail', test_storable)
+		itemdef_form.execute(req)
+		
+		self.failUnless(self.validation_test_bool, "Validation function didn't run")
+		self.failUnless(self.prewrite_callback_bool, "Pre-write callback function didn't run")
+		
+		def test_failed_prewrite(req, form, storable):
+			return False
+		
+		test_itemdef.config['prewrite_callback'] = test_failed_prewrite
+		itemdef_form = test_itemdef.get_form('detail', test_storable)
+		try:
+			itemdef_form.execute(req)
+		except RuntimeError, e:
+			self.fail("Submit callback ran despite pre-write failure")
+		
+		def form_validate(req, form):
+			return bool(form['title'].attributes['value'])
+		
+		def form_submit(req, form):
+			raise RuntimeError('submit')
+		
+		form_data = {'page-form[title]':'', 'page-form[save]':'save'}
+		req = self.get_request(form_data)
+		req.store.ensure_factory('page')
+		
+		test_storable = storable.Storable('page')
+		test_storable.set_factory(req.store.get_factory('page'))
+		test_storable.title = "My Title"
+		test_storable.category_id = 'bio'
+		
+		del test_itemdef['title']['validator']
+		itemdef_form = test_itemdef.get_form('detail', test_storable)
+		itemdef_form['title'].validate = form_validate
+		itemdef_form.submit = form_validate
+		self.validation_test_bool = False
+		self.prewrite_callback_bool = False
+		
+		try:
+			itemdef_form.execute(req)
+		except RuntimeError, e:
+			self.fail("Submit callback ran despite validation failure")
+		
+		self.failIf(self.validation_test_bool, "Deleted validator function ran")
+		self.failIf(self.prewrite_callback_bool, "Pre-write callback function run despite failing validation")

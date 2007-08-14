@@ -473,7 +473,7 @@ class Store(object):
 			return new_id
 		return id
 	
-	def load(self, table, data={}, **kwargs):
+	def load(self, table, data=None, **kwargs):
 		"""
 		Load an object from the requested table.
 		
@@ -496,6 +496,10 @@ class Store(object):
 		@rtype: iterable
 		@raises LookupError: if no factory has been registered for this Storable's table
 		"""
+		if(data is None):
+			data = kwargs
+		else:
+			data.update(kwargs)
 		if(table not in self._factories):
 			raise LookupError('There is no factory registered for the table `%s`' % table)
 		
@@ -517,7 +521,7 @@ class Store(object):
 		
 		return result
 	
-	def load_one(self, table, data={}, **kwargs):
+	def load_one(self, table, data=None, **kwargs):
 		"""
 		Load one item from the store.
 		

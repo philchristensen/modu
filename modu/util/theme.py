@@ -31,7 +31,7 @@ class Theme(object):
 	def form_element(self, form_id, element):
 		content = ''
 		if(hasattr(element, 'label')):
-			content += tags.label()[element.label]
+			content += tags.label(_class="field-label")[element.label]
 		
 		if(element.attrib('type', False)):
 			theme_func = getattr(self, 'form_' + element.type)

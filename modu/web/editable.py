@@ -94,6 +94,11 @@ class Field(object):
 class itemdef(dict):
 	def __init__(self, __config=None, **fields):
 		for name, field in fields.items():
+			# I was pretty sure I knew how kwargs worked, but...
+			if(name == '__config'):
+				__config = field
+				del fields[name]
+			
 			if not(isinstance(field, definition)):
 				raise ValueError("'%s' is not a valid definition." % name)
 			field.name = name
@@ -126,8 +131,12 @@ class itemdef(dict):
 					continue
 				frm.children[name] = field.get_element(style, storable)
 		
+		if(not frm.has_submit_buttons()):
+			frm['save'](type='submit', value='save', weight=1000)
+			frm['cancel'](type='submit', value='cancel', weight=1000)
+		
 		def _validate(req, form):
-			self.validate(req, form, storable)
+			return self.validate(req, form, storable)
 		
 		def _submit(req, form):
 			self.submit(req, form, storable)
@@ -144,9 +153,27 @@ class itemdef(dict):
 	
 	
 	def validate(self, req, form, storable):
-		# TODO: call prewrite_callback
-		# TODO: call validate hook on each field, return false if they do
-		pass
+		if('cancel' in form.data[form.name]):
+			return False
+		
+		# call validate hook on each field, return false if they do
+		for field in form:
+			if(field in self and 'validator' in self[field]):
+				validator = self[field]['validator']
+				if(validator):
+					if not(validator(req, form, storable)):
+						return False
+			else:
+				if not(form[field].validate(req, form)):
+					return False
+		
+		# call prewrite_callback
+		if('prewrite_callback' in self.config):
+			result = self.config['prewrite_callback'](req, form, storable)
+			if(result is False):
+				return False
+		
+		return True
 	
 	def submit(self, req, form, storable):
 		postwrite_fields = []
@@ -163,7 +190,6 @@ class itemdef(dict):
 				pass
 		# TODO: handle postwrite fields
 		# TODO: call postwrite_callback
-		pass
 
 
 class definition(dict):

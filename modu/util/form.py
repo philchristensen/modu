@@ -95,6 +95,16 @@ class FormNode(object):
 			return self.attributes[name]
 		return default
 	
+	def has_submit_buttons(self):
+		for name in self.children:
+			element = self.children[name]
+			if(element.type == 'submit'):
+				return True
+			elif(element.children):
+				if(element.has_submit_buttons()):
+					return True
+		return False
+	
 	def find_submit_buttons(self):
 		"""
 		This method descends down the form tree looking for
@@ -112,18 +122,19 @@ class FormNode(object):
 	
 	def execute(self, req):
 		"""
-		This function parses any available POST data, and identifies
-		whether or not a submit button was pressed. If so, it begins
-		the validation process, then, if successful, initiates the
-		submission process.
+		This function first identifies 	whether or not a submit button
+		was pressed. If so, it begins the validation process, then, if
+		successful, initiates the submission process.
 		"""
 		self.data = NestedFieldStorage(req)
+		
 		for submit in self.find_submit_buttons():
 			# NOTE: This assumes the browser sends the submit button's name
-			# in the submit POST data. This may not work
+			# in the submit POST data. This may not always work.
 			if(self.name in self.data and submit.name in self.data[self.name]):
 				self.load_data(self.data)
-				if(self.validate(req, self)):
+				result = self.validate(req, self)
+				if(result):
 					self.submit(req, self)
 					break
 	
@@ -191,6 +202,7 @@ class NestedFieldStorage(cgi.FieldStorage):
 		self.parent = parent
 		if(fp is None):
 			fp = req['wsgi.input']
+			fp.seek(0)
 		if(environ is None):
 			environ = req
 		cgi.FieldStorage.__init__(self, fp, headers, outerboundary,

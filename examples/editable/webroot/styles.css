@@ -2,7 +2,7 @@ body {
 	font-family: Helvetica, Arial, "MS Trebuchet", sans-serif;
 }
 
-label {
+label.field-label {
 	display: block;
 	font-weight: bold;
 }
@@ -13,4 +13,9 @@ label {
 
 .form-help {
 	font-size: 12px;
+}
+
+#form-item-cancel,
+#form-item-save {
+	display: inline;
 }

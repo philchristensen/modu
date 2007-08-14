@@ -23,7 +23,7 @@ EXPECTED_CATEGORY += '<option value="horror">Horror</option>'
 EXPECTED_CATEGORY += '<option value="sci-fi">Science Fiction</option>'
 EXPECTED_CATEGORY += '</select>'
 
-EXPECTED_LABEL = '<label>%s</label>'
+EXPECTED_LABEL = '<label class="field-label">%s</label>'
 EXPECTED_HELP = '<div class="form-help">%s</div>'
 EXPECTED_ELEMENT = '<div class="form-item" id="form-item-%s">%s</div>';
 
@@ -72,7 +72,7 @@ class FormThemeTestCase(unittest.TestCase):
 		some_label = self.form['some_label']
 		
 		some_label_result = self.theme.form_label('node-form', some_label)
-		expected_result = EXPECTED_LABEL % 'this is a label'
+		expected_result = '<label>this is a label</label>'
 		self.failUnlessEqual(some_label_result, expected_result, 'Basic "some_label" field misrendered as \n`%s`, not \n`%s`' % (some_label_result, expected_result));
 		
 	def test_checkbox(self):

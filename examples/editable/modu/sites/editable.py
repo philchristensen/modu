@@ -37,7 +37,7 @@ class EditablePage(storable.Storable):
 				maxlength 	= 64,
 				help		= 'the title of this page.',
 				list		= True,
-				weight		= 3
+				weight		= 1
 			),
 			
 			code			= editable.definition(
@@ -46,14 +46,14 @@ class EditablePage(storable.Storable):
 				size		= 40,
 				help		= 'the URL code of this page.',
 				list		= True,
-				weight		= 1
+				weight		= 2
 			),
 			
 			content			= editable.definition(
 				type		= 'TextAreaField',
 				label		= 'content:',
 				help		= 'the content of the page.',
-				weight		= 2,
+				weight		= 3,
 				rows		= 10,
 				cols		= 70
 			),
