@@ -5,3 +5,6 @@
 #
 # See LICENSE for details
 
+"""
+modu, a pragmatic web framework.
+"""

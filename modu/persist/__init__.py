@@ -6,8 +6,7 @@
 # See LICENSE for details
 
 """
-The modu.persist package is home to modu's database abstraction
-layer and object/relational mapping API.
+Home to modu's database abstraction layer and object/relational mapping API.
 
 @var DEFAULT_STORE_NAME: the default Store name
 @type DEFAULT_STORE_NAME: str

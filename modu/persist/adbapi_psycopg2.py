@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+Configures psycopg2 driver-specific aspects of the db layer.
+"""
+
 def process_dsn(dsn):
 	"""
 	Take a standard DSN-dict and return the args and

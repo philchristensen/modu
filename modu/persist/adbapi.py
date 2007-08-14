@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+Provides synchronous access to the Twisted adbapi DB layer.
+"""
+
 from twisted.enterprise import adbapi
 
 from modu.util import url

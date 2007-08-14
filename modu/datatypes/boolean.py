@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+Datatypes to manage boolean-type fields.
+"""
+
 from twisted import plugin
 
 from zope.interface import classProvides

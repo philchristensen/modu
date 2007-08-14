@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+Datatypes for managing stringlike data.
+"""
+
 from twisted import plugin
 
 from zope.interface import classProvides

@@ -12,8 +12,7 @@ from zope.interface import classProvides, implements
 from modu.web import app, resource
 
 """
-This module contains some ISite implementors and sample
-resource classes used in the testing framework.
+ISite implementors and sample resource classes used in the testing framework.
 
 Since the ISite implementors don't actually use real (or even valid)
 hostnames, none of these sites should ever activate in normal use.

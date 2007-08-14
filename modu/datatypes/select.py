@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+Datatypes to manage selection interfaces (list selects, radio buttons, etc).
+"""
+
 from twisted import plugin
 
 from zope.interface import classProvides

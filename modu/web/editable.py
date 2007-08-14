@@ -107,8 +107,12 @@ class Field(object):
 			frm(prefix=tags.a(href=href, __no_close=True), suffix='</a>')
 		return frm
 	
-	def update_storable(self, req, definition, storable):
-		pass
+	def update_storable(self, name, req, form, storable):
+		form_name = '%s-form' % storable.get_table()
+		if(form_name in form.data):
+			form_data = form.data[form_name]
+			if(name in form_data):
+				setattr(storable, name, form_data[name].value)
 
 
 class itemdef(dict):
@@ -205,16 +209,18 @@ class itemdef(dict):
 				postwrite_fields.append(name)
 			else:
 				# update storable data with form
-				datatype.update_storable(req, definition, storable)
+				datatype.update_storable(name, req, form, storable)
+		
 		# save storable data
 		req.store.save(storable)
+		
 		# handle postwrite fields
 		if(postwrite_fields):
 			for name in postwrite_fields:
-				definition = self[name]
-				datatype = datatype_cache[definition['type']]
-				datatype.update_storable(req, definition, storable)
+				datatype = datatype_cache[self[name]['type']]
+				datatype.update_storable(name, req, form, storable)
 			req.store.save(storable)
+		
 		# call postwrite_callback
 		if('postwrite_callback' in self.config):
 			self.config['postwrite_callback'](req, form, storable)

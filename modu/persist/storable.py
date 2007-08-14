@@ -5,15 +5,14 @@
 #
 # See LICENSE for details
 
+"""
+Various classes and functions needed to create Storable instances and subclasses.
+"""
+
 import time, copy, sys
 
 from zope import interface
 from zope.interface import implements, Interface, Attribute
-
-"""
-This module contains the various classes and functions needed to
-create Storable instances and subclasses.
-"""
 
 def cached(timeout):
 	"""

@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+Utilities to paginate result sets.
+"""
+
 from modu.persist import Store
 
 class Paginator(object):
