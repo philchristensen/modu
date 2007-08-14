@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+Provides classes for implementing editors for Storable objects.
+"""
+
 from zope.interface import implements, Interface, Attribute
 
 from twisted import plugin
@@ -17,6 +21,9 @@ from modu.web.user import AnonymousUser
 datatype_cache = {}
 
 def __load_datatypes():
+	"""
+	Search the system path for any available IDatatype implementors.
+	"""
 	import modu.datatypes
 	for datatype_class in plugin.getPlugins(IDatatype, modu.datatypes):
 		datatype = datatype_class()
@@ -25,6 +32,11 @@ def __load_datatypes():
 
 
 class IDatatype(Interface):
+	"""
+	I can take a field definition from an Editable itemdef and return a form object.
+	Datatypes can also answer various questions about how that form should be handled.
+	"""
+	
 	def get_form_element(self, style, definition, storable):
 		"""
 		Take the given definition, and return a FormNode populated
@@ -50,6 +62,9 @@ class IDatatype(Interface):
 
 
 class IEditable(storable.IStorable):
+	"""
+	An IEditable is an IStorable that knows about itemdefs.
+	"""
 	def get_itemdef(self):
 		"""
 		Contains an object/datastructure representing the
@@ -59,6 +74,10 @@ class IEditable(storable.IStorable):
 
 
 class EditorResource(resource.CheetahTemplateResource):
+	"""
+	A basic editor resource. Displays editors for any registered
+	IEditable-instantiating Factory.
+	"""
 	def get_paths(self):
 		return ['/edit']
 	
@@ -84,6 +103,10 @@ class EditorResource(resource.CheetahTemplateResource):
 
 
 class Field(object):
+	"""
+	A convenient superclass for all IDatatype implementors.
+	"""
+	
 	inherited_attributes = ['weight', 'help', 'label']
 	
 	def get_form_element(self, name, style, definition, storable):
@@ -116,6 +139,11 @@ class Field(object):
 
 
 class itemdef(dict):
+	"""
+	An itemdef essentially describes the data for a Storable.
+	It can generate an editor form for its Storable, as well
+	as providing behaviors and validation for that form.
+	"""
 	def __init__(self, __config=None, **fields):
 		for name, field in fields.items():
 			# I was pretty sure I knew how kwargs worked, but...
@@ -227,6 +255,10 @@ class itemdef(dict):
 
 
 class definition(dict):
+	"""
+	A definition represents a single field in an itemdef. It may or may not
+	reflect a field of a Storable.
+	"""
 	def __init__(self, **params):
 		self.name = None
 		self.itemdef = None

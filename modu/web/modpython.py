@@ -96,6 +96,11 @@ def get_wsgi_environment(mp_req):
 	return env
 
 class FileWrapper:
+	"""
+	Standard WSGI filewrapper. The mod_python WSGI gateway knows
+	to recognize this class and use sendfile on its filelike object
+	instead of handling it internally.
+	"""
 	def __init__(self, filelike, blksize=8192):
 		self.filelike = filelike
 		self.blksize = blksize
@@ -109,6 +114,9 @@ class FileWrapper:
 		raise IndexError
 
 class InputWrapper(object):
+	"""
+	Mod_Python input wrapper for WSGI.
+	"""
 	def __init__(self, mp_req):
 		self.mp_req = mp_req
 	
@@ -133,6 +141,9 @@ class InputWrapper(object):
 			line = self.readline()
 
 class ErrorWrapper(object):
+	"""
+	Mod_Python error wrapper for WSGI.
+	"""
 	def __init__(self, mp_req):
 		self.mp_req = mp_req
 	

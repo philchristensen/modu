@@ -379,6 +379,11 @@ class IFactory(interface.Interface):
 		"""
 
 class DefaultFactory(object):
+	"""
+	The standard object factory for modu. Can build queries and load objects
+	for most common scenarios.
+	"""
+	
 	implements(IFactory)
 	
 	default_cache_setting = False

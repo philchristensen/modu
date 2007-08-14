@@ -317,6 +317,11 @@ class NestedFieldStorage(cgi.FieldStorage):
 	
 
 class MagicFile(file):
+	"""
+	This wrapper class will log all the bytes written to it into the user's
+	session object. This allows for progressive upload information to be
+	polled for by the client.
+	"""
 	def __init__(self, req, filename, mode='r', bufsize=-1):
 		import tempfile, md5, os.path
 		hashed_filename = os.path.join(tempfile.gettempdir(), md5.new(filename + time.ctime()).hexdigest())
@@ -354,6 +359,9 @@ class MagicFile(file):
 
 
 class DictField(dict):
+	"""
+	Used to provided nested POST data in C{NestedFieldStorage}.
+	"""
 	def __init__(self, value=None):
 		dict.__init__(self)
 		if(value):
