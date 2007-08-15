@@ -136,6 +136,9 @@ class Field(object):
 			form_data = form.data[form_name]
 			if(name in form_data):
 				setattr(storable, name, form_data[name].value)
+	
+	def is_postwrite_field(self):
+		return False
 
 
 class itemdef(dict):
@@ -231,7 +234,7 @@ class itemdef(dict):
 		postwrite_fields = []
 		for name, definition in self.iteritems():
 			datatype = datatype_cache[definition['type']]
-			if(definition.get('implicit_save', True)):
+			if not(definition.get('implicit_save', True)):
 				continue
 			elif(datatype.is_postwrite_field()):
 				postwrite_fields.append(name)

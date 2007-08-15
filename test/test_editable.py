@@ -339,3 +339,43 @@ class EditableTestCase(unittest.TestCase):
 		
 		self.failIf(self.validation_test_bool, "Deleted validator function ran")
 		self.failIf(self.prewrite_callback_bool, "Pre-write callback function run despite failing validation")
+	
+	
+	def test_submit(self):
+		def postwrite_callback(req, form, storable):
+			raise RuntimeError('postwrite')
+		
+		test_itemdef = editable.itemdef(
+			__config		= editable.definition(
+								postwrite_callback = postwrite_callback
+			),
+			title			= editable.definition(
+								type		= 'StringField',
+								label		= 'Title'
+			),
+			bogus			= editable.definition(
+								type		= 'StringField',
+								label		= 'Title',
+								implicit_save	= False
+			)
+		)
+		
+		form_data = {'page-form[title]':'Sample Title', 'page-form[save]':'save'}
+		req = self.get_request(form_data)
+		req.store.ensure_factory('page')
+		
+		test_storable = storable.Storable('page')
+		test_storable.title = "My Title"
+		test_storable.code = 'my-title'
+		test_storable.category_id = 3
+		test_storable.content = 'My Content'
+		test_storable.modified_date = int(time.time())
+		test_storable.created_date = int(time.time())
+		
+		itemdef_form = test_itemdef.get_form('detail', test_storable)
+		
+		self.failUnlessRaises(RuntimeError, itemdef_form.execute, req)
+		
+		self.failUnless(test_storable.get_id(), 'Storable was not saved.')
+		self.failUnlessEqual(test_storable.title, 'Sample Title', 'Storable field `title` was not saved.')
+	
