@@ -5,6 +5,8 @@
 #
 # See LICENSE for details
 
+import time
+
 from twisted.trial import unittest
 
 from modu import persist
@@ -280,13 +282,17 @@ class EditableTestCase(unittest.TestCase):
 							)
 		)
 		
-		from modu.sites.editable import EditablePage
-		
 		form_data = {'page-form[title]':'Sample Title', 'page-form[save]':'save'}
 		req = self.get_request(form_data)
-		req.store.ensure_factory('page', EditablePage, clobber=True)
+		req.store.ensure_factory('page')
 		
-		test_storable = req.store.load('page', _id=1)
+		test_storable = storable.Storable('page')
+		test_storable.title = "My Title"
+		test_storable.code = 'my-title'
+		test_storable.category_id = 3
+		test_storable.content = 'My Content'
+		test_storable.modified_date = int(time.time())
+		test_storable.created_date = int(time.time())
 		
 		itemdef_form = test_itemdef.get_form('detail', test_storable)
 		itemdef_form.execute(req)
