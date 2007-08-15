@@ -191,13 +191,13 @@ class EditableTestCase(unittest.TestCase):
 	
 	
 	def test_foreign_selectfield(self):
-		options = {'drama':'Drama', 'sci-fi':'Science Fiction', 'bio':'Biography', 'horror':'Horror'}
+		options = {1:'Drama', 2:'Science Fiction', 3:'Biography', 4:'Horror'}
 		test_itemdef = editable.itemdef(
 			category_id		= editable.definition(
 								type		= 'ForeignSelectField',
 								label		= 'Category',
 								ftable		= 'category',
-								fvalue		= 'code',
+								fvalue		= 'id',
 								flabel		= 'title'
 							)
 		)
@@ -208,12 +208,14 @@ class EditableTestCase(unittest.TestCase):
 		test_storable = storable.Storable('page')
 		test_storable.set_factory(req.store.get_factory('page'))
 		test_storable.title = "My Title"
-		test_storable.category_id = 'bio'
+		test_storable.category_id = 3
+		test_storable.content = 'Sample content'
+		test_storable.code = 'my-title'
 		
 		itemdef_form = test_itemdef.get_form('detail', test_storable)
 		
 		reference_form = form.FormNode('page-form')
-		reference_form['category_id'](type='select', label='Category', value='bio', options=options)
+		reference_form['category_id'](type='select', label='Category', value=3, options=options)
 		reference_form['save'](type='submit', value='save', weight=1000)
 		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		
@@ -278,14 +280,13 @@ class EditableTestCase(unittest.TestCase):
 							)
 		)
 		
+		from modu.sites.editable import EditablePage
+		
 		form_data = {'page-form[title]':'Sample Title', 'page-form[save]':'save'}
 		req = self.get_request(form_data)
-		req.store.ensure_factory('page')
+		req.store.ensure_factory('page', EditablePage, clobber=True)
 		
-		test_storable = storable.Storable('page')
-		test_storable.set_factory(req.store.get_factory('page'))
-		test_storable.title = "My Title"
-		test_storable.category_id = 'bio'
+		test_storable = req.store.load('page', _id=1)
 		
 		itemdef_form = test_itemdef.get_form('detail', test_storable)
 		itemdef_form.execute(req)

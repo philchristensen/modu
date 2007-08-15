@@ -1,7 +1,7 @@
 # modu
 # Copyright (C) 2007 Phil Christensen
 #
-# $Id: test_session.py 420 2007-08-11 21:43:13Z phil $
+# $Id$
 #
 # See LICENSE for details
 

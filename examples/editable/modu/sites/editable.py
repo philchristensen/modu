@@ -1,7 +1,7 @@
 # modu
 # Copyright (C) 2007 Phil Christensen
 #
-# $Id: wsgi.py 378 2007-07-29 14:52:10Z phil $
+# $Id$
 #
 # See LICENSE for details
 
