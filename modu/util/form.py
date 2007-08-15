@@ -65,8 +65,11 @@ class FormNode(object):
 	
 	def __getitem__(self, key):
 		if(key not in self.children):
-			if(self.parent is not None and self.attributes['type'] != 'fieldset'):
-				raise TypeError('Only forms and fieldsets can have child fields.')
+			if('type' in self.attributes):
+				if(self.parent is not None and self.attributes['type'] != 'fieldset'):
+					raise TypeError('Only forms and fieldsets can have child fields.')
+			else:
+				self.attributes['type'] = 'fieldset'
 			self.children[key] = FormNode(key)
 			self.children[key].parent = self
 		return self.children[key]
@@ -84,13 +87,13 @@ class FormNode(object):
 		def __weighted_cmp(a, b):
 			a = self.children[a]
 			b = self.children[b]
-			return cmp(a.attributes.get('weight', 0), b.attributes.get('weight', 0))
+			return cmp(a.attrib('weight', 0), b.attrib('weight', 0))
 		
 		keys = self.children.keys()
 		keys.sort(__weighted_cmp)
 		return iter(keys)
 	
-	def attrib(self, name, default):
+	def attrib(self, name, default=None):
 		if(name in self.attributes):
 			return self.attributes[name]
 		return default
@@ -137,6 +140,9 @@ class FormNode(object):
 				if(result):
 					self.submit(req, self)
 					break
+	
+	def set_field_error(self, name, error):
+		pass
 	
 	def render(self, req):
 		"""
@@ -217,7 +223,17 @@ class NestedFieldStorage(cgi.FieldStorage):
 		cgi.FieldStorage.__init__(self, fp, headers, outerboundary,
 									environ, keep_blank_values, strict_parsing)
 	
-	
+	def __nonzero__(self):
+		"""
+		Fixes a bug in cgi.py
+		"""
+		if(self.list):
+			return True
+		elif(self.value):
+			return True
+		else:
+			return False
+
 	def parse_field(self, key, value):
 		original_key = key
 		tree = []

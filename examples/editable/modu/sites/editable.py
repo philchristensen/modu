@@ -27,7 +27,7 @@ class EditablePage(storable.Storable):
 				size		= 10,
 				help		= 'the id of this page.',
 				list		= True,
-				weight		= 0
+				weight		= -10
 			),
 			
 			title			= editable.definition(
@@ -37,6 +37,13 @@ class EditablePage(storable.Storable):
 				maxlength 	= 64,
 				help		= 'the title of this page.',
 				list		= True,
+				weight		= 0
+			),
+			
+			password		= editable.definition(
+				type		= 'PasswordField',
+				label		= 'password:',
+				help		= 'a password for this document.',
 				weight		= 1
 			),
 			

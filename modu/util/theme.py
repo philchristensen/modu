@@ -30,19 +30,20 @@ class Theme(object):
 	
 	def form_element(self, form_id, element):
 		content = ''
+		
 		if(hasattr(element, 'label')):
 			content += tags.label(_class="field-label")[element.label]
-		
-		if(element.attrib('type', False)):
-			theme_func = getattr(self, 'form_' + element.type)
-		else:
-			theme_func = self.form_markup
 		
 		prefix = element.attrib('prefix', False)
 		if(callable(prefix)):
 			content += prefix(element)
 		elif(prefix):
 			content += str(prefix)
+		
+		if(element.attrib('type', False)):
+			theme_func = getattr(self, 'form_' + element.type)
+		else:
+			theme_func = self.form_markup
 		
 		content += theme_func(form_id, element)
 		
@@ -61,7 +62,19 @@ class Theme(object):
 		return element.attrib('value', '')
 	
 	def form_fieldset(self, form_id, element):
-		return ''.join([self.form_element(child) for child in element.children])
+		element_style = element.attrib('style', 'full')
+		if(element_style == 'full'):
+			return ''.join([str(self.form_element(form_id, element[child])) for child in element])
+		else:
+			content = ''
+			for child_name in element:
+				child = element[child_name]
+				if(child.attrib('type', False)):
+					theme_func = getattr(self, 'form_' + child.type)
+				else:
+					theme_func = self.form_markup
+				content += theme_func(form_id, child)
+			return content
 	
 	def form_label(self, form_id, element):
 		attribs = element.attrib('attributes', {})
@@ -80,7 +93,7 @@ class Theme(object):
 		attribs['name'] = '%s[%s]' % (form_id, element.name)
 		attribs['size'] = element.attrib('size', 30)
 		attribs['value'] = element.attrib('value', element.attrib('default_value', ''))
-		return tags.input(type='text', **attribs)
+		return tags.input(type='password', **attribs)
 	
 	def form_textarea(self, form_id, element):
 		attribs = element.attrib('attributes', {})

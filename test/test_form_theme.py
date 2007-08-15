@@ -58,6 +58,33 @@ class FormThemeTestCase(unittest.TestCase):
 					rows=10,
 					help='Select the category.'
 					)
+		self.form['advanced'](label='Advanced')
+		self.form['advanced']['text1'](type='textfield',
+					label='Text 1',
+					weight=1,
+					size=30,
+					help='This is the text1 field.'
+					)
+		self.form['advanced']['text2'](type='textfield',
+					label='Text 2',
+					weight=2,
+					size=30,
+					help='This is the text2 field.'
+					)
+		self.form['options'](label='Options', style='brief')
+		self.form['options']['text3'](type='textfield',
+					label='Text 3',
+					weight=1,
+					size=30,
+					help='This is the text3 field.',
+					)
+		self.form['options']['text4'](type='textfield',
+					label='Text 4',
+					weight=2,
+					size=30,
+					help='This is the text4 field.'
+					)
+		
 		self.form['submit'](type='submit',
 					value='submit',
 					weight=100,
@@ -67,6 +94,31 @@ class FormThemeTestCase(unittest.TestCase):
 	
 	def tearDown(self):
 		pass
+	
+	def test_fieldset(self):
+		fieldset = self.form['advanced']
+		fieldset_result = self.theme.form_element('node-form', fieldset)
+		
+		content = ''
+		for field_name in fieldset:
+			field = fieldset[field_name]
+			string_field = '<input name="node-form[%s]" size="30" type="text" value="" />' % field.name
+			content += EXPECTED_ELEMENT % (field_name, (EXPECTED_LABEL % field.label) + string_field + (EXPECTED_HELP % field.help))
+		
+		expected_result = EXPECTED_ELEMENT % (fieldset.name, (EXPECTED_LABEL % 'Advanced') + content)
+		self.failUnlessEqual(fieldset_result, expected_result, 'Fieldset "advanced" misrendered as \n`%s`, not \n`%s`' % (fieldset_result, expected_result));
+	
+	def test_fieldset_brief(self):
+		fieldset = self.form['options']
+		fieldset_result = self.theme.form_element('node-form', fieldset)
+		
+		content = ''
+		for field_name in fieldset:
+			field = fieldset[field_name]
+			content += '<input name="node-form[%s]" size="30" type="text" value="" />' % field.name
+		
+		expected_result = EXPECTED_ELEMENT % (fieldset.name, (EXPECTED_LABEL % 'Options') + content)
+		self.failUnlessEqual(fieldset_result, expected_result, 'Fieldset "options" misrendered as \n`%s`, not \n`%s`' % (fieldset_result, expected_result));
 	
 	def test_label(self):
 		some_label = self.form['some_label']
