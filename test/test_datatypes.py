@@ -14,41 +14,6 @@ from modu.web import editable, app
 from modu.persist import storable, adbapi
 from modu.util import form, test, tags
 
-TEST_TABLES = """
-DROP TABLE IF EXISTS `page`;
-CREATE TABLE IF NOT EXISTS `page` (
-  `id` bigint(20) unsigned NOT NULL default 0,
-  `category_id` bigint(20) NOT NULL default 0,
-  `code` varchar(128) NOT NULL default '',
-  `content` text NOT NULL,
-  `title` varchar(64) NOT NULL default '',
-  `created_date` int(11) NOT NULL default '0',
-  `modified_date` int(11) NOT NULL default '0',
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `code_uni` (`code`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-DROP TABLE IF EXISTS `category`;
-CREATE TABLE IF NOT EXISTS `category` (
-  `id` bigint(20) unsigned NOT NULL default 0,
-  `code` varchar(255) NOT NULL default '',
-  `title` varchar(255) NOT NULL default '',
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `code_uni` (`code`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-INSERT INTO `category` (id, code, title) VALUES
-(1, 'drama', 'Drama'), (2, 'sci-fi', 'Science Fiction'),
-(3, 'bio', 'Biography'), (4, 'horror', 'Horror');
-
-DROP TABLE IF EXISTS `guid`;
-CREATE TABLE IF NOT EXISTS `guid` (
-  `guid` bigint(20) unsigned NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-INSERT INTO `guid` VALUES (5);
-"""
-
 class DatatypesTestCase(unittest.TestCase):
 	def setUp(self):
 		self.store = persist.Store.get_store()
@@ -57,8 +22,7 @@ class DatatypesTestCase(unittest.TestCase):
 			self.store = persist.Store(pool)
 			#self.store.debug_file = sys.stderr
 		
-		global TEST_TABLES
-		for sql in TEST_TABLES.split(";"):
+		for sql in test.TEST_TABLES.split(";"):
 			if(sql.strip()):
 				self.store.pool.runOperation(sql)
 	
@@ -125,6 +89,35 @@ class DatatypesTestCase(unittest.TestCase):
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['name'](type='textfield', label='Name', value='Test Name')
+		reference_form['save'](type='submit', value='save', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1000)
+		
+		req = self.get_request()
+		itemdef_form_html = itemdef_form.render(req)
+		reference_form_html = reference_form.render(req)
+		
+		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )	
+	
+	
+	def test_autocomplete_field(self):
+		test_itemdef = editable.itemdef(
+			name			= editable.definition(
+								type		= 'ForeignAutocompleteField',
+								label		= 'Name',
+								url			= '/autocomplete/url'
+							)
+		)
+		
+		test_storable = storable.Storable('test')
+		test_storable.name = 'Test Name'
+		
+		itemdef_form = test_itemdef.get_form('detail', test_storable)
+		
+		reference_form = form.FormNode('test-form')
+		reference_form['name'](type='textfield', label='Name', value='Test Name',
+								attributes={'id':'test-form-name-autocomplete'},
+								suffix=tags.script(type='text/javascript')
+									['$("test-form-name-autocomplete").autocomplete("/autocomplete/url");'])
 		reference_form['save'](type='submit', value='save', weight=1000)
 		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		

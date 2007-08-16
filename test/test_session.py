@@ -16,10 +16,6 @@ from modu.web.app import ISite
 from zope.interface import classProvides
 from twisted import plugin
 
-"""
-CREATE DATABASE modu;
-GRANT ALL ON modu.* TO modu@localhost IDENTIFIED BY 'modu';
-"""
 
 TEST_TABLES = """
 DROP TABLE IF EXISTS `session`;

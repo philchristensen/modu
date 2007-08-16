@@ -14,7 +14,7 @@ from twisted import plugin
 from zope.interface import classProvides
 
 from modu.web.editable import IDatatype, Field
-from modu.util import form
+from modu.util import form, tags
 from modu import persist
 
 class ForeignLabelField(Field):
@@ -57,3 +57,21 @@ class ForeignSelectField(Field):
 		frm = form.FormNode(name)
 		frm(type='select', value=getattr(storable, name, None), options=options)
 		return frm
+
+
+class ForeignAutocompleteField(Field):
+	classProvides(plugin.IPlugin, IDatatype)
+	
+	inherited_attributes = ['size', 'maxlength']
+	
+	def get_element(self, name, style, definition, storable):
+		form_name = '%s-form' % storable.get_table()
+		ac_id = '%s-%s-autocomplete' % (form_name, name)
+		ac_javascript = '$("#%s").autocomplete("%s");' % (ac_id, definition['url'])
+		ac_support = tags.script(type='text/javascript')[ac_javascript]
+		frm = form.FormNode(name)
+		frm(type='textfield', value=getattr(storable, name, None),
+			suffix=ac_support, attributes={'id':ac_id})
+		return frm
+
+	

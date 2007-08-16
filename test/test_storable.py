@@ -7,46 +7,11 @@
 
 import time, sys, copy
 
+from modu.util import test
 from modu import persist
 from modu.persist import storable, adbapi
 
 from twisted.trial import unittest
-
-"""
-CREATE DATABASE modu;
-GRANT ALL ON modu.* TO modu@localhost IDENTIFIED BY 'modu';
-"""
-
-TEST_TABLES = """
-DROP TABLE IF EXISTS `page`;
-CREATE TABLE IF NOT EXISTS `page` (
-  `id` bigint(20) unsigned NOT NULL default 0,
-  `code` varchar(128) NOT NULL default '',
-  `content` text NOT NULL,
-  `title` varchar(64) NOT NULL default '',
-  `created_date` int(11) NOT NULL default '0',
-  `modified_date` int(11) NOT NULL default '0',
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `code_uni` (`code`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-DROP TABLE IF EXISTS `subpage`;
-CREATE TABLE IF NOT EXISTS `subpage` (
-  `id` bigint(20) unsigned NOT NULL default 0,
-  `code` varchar(128) NOT NULL default '',
-  `content` text NOT NULL,
-  `title` varchar(64) NOT NULL default '',
-  `created_date` int(11) NOT NULL default '0',
-  `modified_date` int(11) NOT NULL default '0',
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `code_uni` (`code`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-DROP TABLE IF EXISTS `guid`;
-CREATE TABLE IF NOT EXISTS `guid` (
-  `guid` bigint(20) unsigned NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-"""
 
 class StorableTestCase(unittest.TestCase):
 	def setUp(self):
@@ -56,8 +21,7 @@ class StorableTestCase(unittest.TestCase):
 			self.store = persist.Store(pool)
 			#self.store.debug_file = sys.stderr
 		
-		global TEST_TABLES
-		for sql in TEST_TABLES.split(";"):
+		for sql in test.TEST_TABLES.split(";"):
 			if(sql.strip()):
 				self.store.pool.runOperation(sql)
 	

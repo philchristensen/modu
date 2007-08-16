@@ -14,7 +14,7 @@ from zope.interface import implements, Interface, Attribute
 from twisted import plugin
 
 from modu.util import form, tags
-from modu.persist import storable
+from modu.persist import storable, interp
 from modu.web import resource, app
 from modu.web.user import AnonymousUser
 
@@ -79,7 +79,7 @@ class EditorResource(resource.CheetahTemplateResource):
 	IEditable-instantiating Factory.
 	"""
 	def get_paths(self):
-		return ['/edit']
+		return ['/edit', '/autocomplete']
 	
 	def prepare_content(self, req):
 		if not(len(req.app.tree.postpath) >= 2):
@@ -87,6 +87,35 @@ class EditorResource(resource.CheetahTemplateResource):
 		if not(req.store.has_factory(req.app.tree.postpath[0])):
 			app.raise404('/'.join(req.app.tree.postpath))
 		
+		if(req.app.tree.prepath[0] == 'autocomplete'):
+			self.prepare_autocomplete(req)
+		else:
+			self.prepare_editor(req)
+	
+	def prepare_autocomplete(self, req):
+		item = req.store.load_one(req.app.tree.postpath[0], {}, __limit=1)
+		if not(IEditable.providedBy(item)):
+			app.raise500('%r is does not implement the IEditable interface.')
+		
+		post_data = form.NestedFieldStorage(req)
+		itemdef = item.get_itemdef()
+		definition = itemdef.get(req.app.tree.postpath[1])
+		
+		value = definition['fvalue']
+		label = definition['flabel']
+		table = definition['ftable']
+		
+		ac_query = "SELECT %s, %s FROM %s WHERE %s LIKE %%s" % (value, label, table, label)
+		ac_query = interp(ac_query, ['%%%s%%' % post_data['q'].value])
+		print ac_query
+		results = req.store.pool.runQuery(ac_query)
+		content = ''
+		for result in results:
+			content += "%s|%d\n" % (result[label], result[value])
+		
+		app.raise200([('Content-Type', 'text/plain')], [content])
+	
+	def prepare_editor(self, req):
 		item = req.store.load_one(req.app.tree.postpath[0], {'id':int(req.app.tree.postpath[1])})
 		if not(IEditable.providedBy(item)):
 			app.raise500('%r is does not implement the IEditable interface.')

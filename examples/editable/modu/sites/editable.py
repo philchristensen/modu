@@ -43,24 +43,35 @@ class EditablePage(storable.Storable):
 			password		= editable.definition(
 				type		= 'PasswordField',
 				label		= 'password:',
-				help		= 'a password for this document.',
+				help		= 'a password for this page.',
 				weight		= 1
 			),
-			
+			 
+			category_id		= editable.definition(
+				type		= 'ForeignAutocompleteField',
+				label		= 'category:',
+				help		= 'a category for this page.',
+				url			= '/editable/autocomplete/page/category_id',
+				fvalue		= 'id',
+				flabel		= 'title',
+				ftable		= 'category',
+				weight		= 2
+			),
+			 
 			code			= editable.definition(
 				type		= 'StringField',
 				label		= 'code:',
 				size		= 40,
 				help		= 'the URL code of this page.',
 				list		= True,
-				weight		= 2
+				weight		= 3
 			),
 			
 			content			= editable.definition(
 				type		= 'TextAreaField',
 				label		= 'content:',
 				help		= 'the content of the page.',
-				weight		= 3,
+				weight		= 4,
 				rows		= 10,
 				cols		= 70
 			),
@@ -71,7 +82,7 @@ class EditablePage(storable.Storable):
 				datatype	= 'timestamp',
 				help		= 'the date this page was created.',
 				list		= True,
-				weight		= 4
+				weight		= 5
 			),
 			
 			modified_date	= editable.definition(
@@ -81,7 +92,7 @@ class EditablePage(storable.Storable):
 				help		= 'the date this page was created.',
 				list		= True,
 				default_now = True,
-				weight		= 5
+				weight		= 6
 			)
 		)
 
