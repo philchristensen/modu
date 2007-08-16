@@ -105,16 +105,16 @@ class PasswordField(Field):
 			entry_name = '%s-entry' % name
 			verify_name = '%s-verify' % name
 			
+			if(form_data[entry_name].value != form_data[verify_name].value):
+				form.set_field_error(name, 'Sorry, those passwords do not match.')
+				#print "%s doesn't match %s" % (form_data[entry_name], form_data[verify_name])
+				return False
+			
 			# If there's nothing in both fields, return False
 			if((not getattr(form_data[entry_name], 'value', None)) and (not getattr(form_data[verify_name], 'value', None))):
 				#print "no passwords in %s" % form_data
 				# Remember, True means "I'm done with it", not "I wrote it"
 				return True
-			
-			if(form_data[entry_name].value != form_data[verify_name].value):
-				form.set_field_error(name, 'Sorry, those passwords do not match.')
-				#print "%s doesn't match %s" % (form_data[entry_name], form_data[verify_name])
-				return False
 			
 			value = form_data[entry_name].value
 		else:

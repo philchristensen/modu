@@ -40,7 +40,15 @@ CREATE TABLE IF NOT EXISTS `category` (
 
 INSERT INTO `category` (id, code, title) VALUES
 (1, 'drama', 'Drama'), (2, 'sci-fi', 'Science Fiction'),
-(3, 'bio', 'Biography'), (4, 'horror', 'Horror');
+(3, 'bio', 'Biography'), (4, 'horror', 'Horror'),
+(5, 'science', 'Science'), (6, 'historical-fiction', 'Historical Fiction'),
+(7, 'self-help', 'Self-Help'), (8, 'romance', 'Romance'),
+(9, 'business', 'Business'), (10, 'technical', 'Technical'),
+(11, 'engineering', 'Engineering'), (12, 'language', 'Lanugage'),
+(13, 'finance', 'Finance'), (14, 'young-readers', 'Young Readers'),
+(15, 'music', 'Music'), (16, 'dance', 'Dance'),
+(17, 'psychology', 'Psychology'), (18, 'astronomy', 'Astronomy'),
+(19, 'physics', 'Physics'), (20, 'politics', 'Politics');
 
 DROP TABLE IF EXISTS `guid`;
 CREATE TABLE IF NOT EXISTS `guid` (

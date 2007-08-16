@@ -104,24 +104,33 @@ class DatatypesTestCase(unittest.TestCase):
 			name			= editable.definition(
 								type		= 'ForeignAutocompleteField',
 								label		= 'Name',
-								url			= '/autocomplete/url'
+								url			= '/autocomplete/url',
+								fvalue		= 'id',
+								flabel		= 'title',
+								ftable		= 'category'
 							)
 		)
 		
+		req = self.get_request()
+		req.store.ensure_factory('test')
+		
 		test_storable = storable.Storable('test')
+		test_storable.set_factory(req.store.get_factory('test'))
 		test_storable.name = 'Test Name'
 		
 		itemdef_form = test_itemdef.get_form('detail', test_storable)
 		
 		reference_form = form.FormNode('test-form')
-		reference_form['name'](type='textfield', label='Name', value='Test Name',
-								attributes={'id':'test-form-name-autocomplete'},
-								suffix=tags.script(type='text/javascript')
-									['$("test-form-name-autocomplete").autocomplete("/autocomplete/url");'])
+		reference_form['name-ac-fieldset'](type='fieldset', style='brief', label='Name')
+		reference_form['name-ac-fieldset']['name-autocomplete'](type='textfield', weight=0,
+								attributes={'id':'test-form-name-autocomplete'})
+		reference_form['name-ac-fieldset']['ac-support'](weight=1, value=tags.script(type='text/javascript')
+									['$("#test-form-name-autocomplete").autocomplete("/autocomplete/url", {onItemSelect:get_ac_callback("test-form-name-ac-callback"), autoFill:1, selectFirst:1, selectOnly:1});'])
+		reference_form['name-ac-fieldset']['name'](type='hidden', weight=2, value=0,
+								attributes={'id':'test-form-name-ac-callback'})
 		reference_form['save'](type='submit', value='save', weight=1000)
 		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		
-		req = self.get_request()
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
 		
@@ -186,7 +195,7 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_foreign_selectfield(self):
-		options = {1:'Drama', 2:'Science Fiction', 3:'Biography', 4:'Horror'}
+		options = {1:'Drama', 2:'Science Fiction', 3:'Biography', 4:'Horror', 5:'Science', 6:'Historical Fiction', 7:'Self-Help', 8:'Romance', 9:'Business', 10:'Technical', 11:'Engineering', 12:'Lanugage', 13:'Finance', 14:'Young Readers', 15:'Music', 16:'Dance', 17:'Psychology', 18:'Astronomy', 19:'Physics', 20:'Politics'}
 		test_itemdef = editable.itemdef(
 			category_id		= editable.definition(
 								type		= 'ForeignSelectField',
@@ -330,7 +339,7 @@ class DatatypesTestCase(unittest.TestCase):
 		itemdef_form = test_itemdef.get_form('detail', test_storable)
 		itemdef_form.execute(req)
 		
-		self.failIf(test_storable.get_id(), 'Storable was saved.')
+		self.failUnless(test_storable.get_id(), 'Storable was saved.')
 		self.failUnlessEqual(test_storable.title, "My Title", "Title field was overwritten by password datatype")
 		self.failIfEqual(test_storable.title, "Text Before Encryption", "Title field wasn't encrypted by password datatype")
 	

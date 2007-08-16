@@ -165,7 +165,6 @@ class Field(object):
 		form_name = '%s-form' % storable.get_table()
 		if(form_name in form.data):
 			form_data = form.data[form_name]
-			print 'checking for %s in %s' % (name, form_data)
 			if(name in form_data):
 				setattr(storable, name, form_data[name].value)
 		return True
@@ -266,7 +265,6 @@ class itemdef(dict):
 	def submit(self, req, form, storable):
 		postwrite_fields = []
 		for name, definition in self.iteritems():
-			print 'checking %s...' % name
 			datatype = datatype_cache[definition['type']]
 			if not(definition.get('implicit_save', True)):
 				continue
@@ -276,7 +274,6 @@ class itemdef(dict):
 				# update storable data with form
 				result = datatype.update_storable(name, req, form, definition, storable)
 				if(result == False):
-					print 'an error occurred in %s' % name
 					return
 		
 		# save storable data
