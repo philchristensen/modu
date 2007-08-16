@@ -81,6 +81,12 @@ class Theme(object):
 		value = element.attrib('value', element.attrib('default_value', ''))
 		return tags.label(**attribs)[value]
 	
+	def form_hidden(self, form_id, element):
+		attribs = element.attrib('attributes', {})
+		attribs['name'] = '%s[%s]' % (form_id, element.name)
+		attribs['value'] = element.attrib('value', element.attrib('default_value', ''))
+		return tags.input(type='hidden', **attribs)
+	
 	def form_textfield(self, form_id, element):
 		attribs = element.attrib('attributes', {})
 		attribs['name'] = '%s[%s]' % (form_id, element.name)

@@ -139,7 +139,8 @@ class FormNode(object):
 				result = self.validate(req, self)
 				if(result):
 					self.submit(req, self)
-					break
+					return True
+		return False
 	
 	def set_field_error(self, name, error):
 		pass

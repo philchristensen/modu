@@ -97,7 +97,6 @@ class EditorResource(resource.CheetahTemplateResource):
 		if not(IEditable.providedBy(item)):
 			app.raise500('%r is does not implement the IEditable interface.')
 		
-		post_data = form.NestedFieldStorage(req)
 		itemdef = item.get_itemdef()
 		definition = itemdef.get(req.app.tree.postpath[1])
 		
@@ -106,9 +105,10 @@ class EditorResource(resource.CheetahTemplateResource):
 		table = definition['ftable']
 		
 		ac_query = "SELECT %s, %s FROM %s WHERE %s LIKE %%s" % (value, label, table, label)
-		ac_query = interp(ac_query, ['%%%s%%' % post_data['q'].value])
-		print ac_query
-		results = req.store.pool.runQuery(ac_query)
+		
+		post_data = form.NestedFieldStorage(req)
+		results = req.store.pool.runQuery(ac_query, ['%%%s%%' % post_data['q'].value])
+		
 		content = ''
 		for result in results:
 			content += "%s|%d\n" % (result[label], result[value])
@@ -121,7 +121,9 @@ class EditorResource(resource.CheetahTemplateResource):
 			app.raise500('%r is does not implement the IEditable interface.')
 		
 		form = item.get_itemdef().get_form('detail', item)
-		form.execute(req)
+		if(form.execute(req)):
+			form = item.get_itemdef().get_form('detail', item)
+		
 		self.set_slot('form', form.render(req))
 	
 	def get_content_type(self, req):
@@ -163,6 +165,7 @@ class Field(object):
 		form_name = '%s-form' % storable.get_table()
 		if(form_name in form.data):
 			form_data = form.data[form_name]
+			print 'checking for %s in %s' % (name, form_data)
 			if(name in form_data):
 				setattr(storable, name, form_data[name].value)
 		return True
@@ -263,6 +266,7 @@ class itemdef(dict):
 	def submit(self, req, form, storable):
 		postwrite_fields = []
 		for name, definition in self.iteritems():
+			print 'checking %s...' % name
 			datatype = datatype_cache[definition['type']]
 			if not(definition.get('implicit_save', True)):
 				continue
@@ -272,6 +276,7 @@ class itemdef(dict):
 				# update storable data with form
 				result = datatype.update_storable(name, req, form, definition, storable)
 				if(result == False):
+					print 'an error occurred in %s' % name
 					return
 		
 		# save storable data

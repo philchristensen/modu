@@ -95,7 +95,7 @@ class PasswordField(Field):
 		
 		# There should be either a fieldset or a field at the regular name
 		if(form_name not in form.data):
-			print '%s or %s not found in %s' % (form_name, name, form.data)
+			#print '%s or %s not found in %s' % (form_name, name, form.data)
 			return False
 		
 		form_data = form.data[form_name]
@@ -108,7 +108,8 @@ class PasswordField(Field):
 			# If there's nothing in both fields, return False
 			if((not getattr(form_data[entry_name], 'value', None)) and (not getattr(form_data[verify_name], 'value', None))):
 				#print "no passwords in %s" % form_data
-				return False
+				# Remember, True means "I'm done with it", not "I wrote it"
+				return True
 			
 			if(form_data[entry_name].value != form_data[verify_name].value):
 				form.set_field_error(name, 'Sorry, those passwords do not match.')
