@@ -70,7 +70,7 @@ class ForeignAutocompleteField(Field):
 		ac_cb_id = '%s-%s-ac-callback' % (form_name, name)
 		
 		ac_javascript = '$("#%s").autocomplete("%s", '
-		ac_javascript += '{onItemSelect:get_ac_callback("%s"), autoFill:1, selectFirst:1, selectOnly:1, minChars:3});'
+		ac_javascript += '{onItemSelect:get_ac_callback("%s"), autoFill:1, selectFirst:1, selectOnly:1, minChars:1});'
 		ac_javascript = ac_javascript % (ac_id, definition['url'], ac_cb_id)
 		ac_javascript = tags.script(type='text/javascript')[ac_javascript]
 		
