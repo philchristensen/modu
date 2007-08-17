@@ -72,7 +72,7 @@ class EditableTestCase(unittest.TestCase):
 							)
 		)
 		
-		form_data = {'page-form[title]':'Sample Title', 'page-form[save]':'save'}
+		form_data = [('page-form[title]','Sample Title'), ('page-form[save]','save')]
 		req = self.get_request(form_data)
 		req.store.ensure_factory('page')
 		
@@ -106,7 +106,7 @@ class EditableTestCase(unittest.TestCase):
 		def form_submit(req, form):
 			raise RuntimeError('submit')
 		
-		form_data = {'page-form[title]':'', 'page-form[save]':'save'}
+		form_data = [('page-form[title]',''), ('page-form[save]','save')]
 		req = self.get_request(form_data)
 		req.store.ensure_factory('page')
 		
@@ -150,7 +150,7 @@ class EditableTestCase(unittest.TestCase):
 			)
 		)
 		
-		form_data = {'page-form[title]':'Sample Title', 'page-form[save]':'save'}
+		form_data = [('page-form[title]','Sample Title'), ('page-form[save]','save')]
 		req = self.get_request(form_data)
 		req.store.ensure_factory('page')
 		

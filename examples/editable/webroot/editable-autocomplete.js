@@ -11,5 +11,6 @@ function add_foreign_item(autocomplete_id, select_id){
 		
 		autocomplete = document.getElementById(autocomplete_id);
 		autocomplete.value = '';
+		autocomplete.focus()
 	};
 }

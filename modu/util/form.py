@@ -236,6 +236,7 @@ class NestedFieldStorage(cgi.FieldStorage):
 			return False
 
 	def parse_field(self, key, value):
+		#print 'parse field got %s: %s' % (key, value)
 		original_key = key
 		tree = []
 		
@@ -253,6 +254,7 @@ class NestedFieldStorage(cgi.FieldStorage):
 			try:
 				while(tree):
 					fragment = tree.pop(0)
+					#print 'key is %s, fragment is %s, value is %s, tree is %s' % (key, fragment, value, tree)
 					if(fragment in node):
 						if(tree):
 							if(isinstance(node[fragment], dict)):
@@ -260,14 +262,22 @@ class NestedFieldStorage(cgi.FieldStorage):
 							else:
 								raise ValueError('bad naming scheme')
 						else:
-							raise ValueError('bad naming scheme')
+							if(isinstance(node[fragment], dict)):
+								raise ValueError('bad naming scheme')
+							elif(isinstance(node[fragment].value, list)):
+								node[fragment].value.append(value.value)
+							else:
+								node[fragment].value = [node[fragment].value, value.value]
 					else:
 						if(node == self.__nested_table_cache):
+							#print 'found a new entry'
 							new = True
 						if(tree):
+							#print 'found a new namespace'
 							node[fragment] = DictField()
 							node = node[fragment]
 						else:
+							#print 'adding %s to namespace %s as %s' % (value, node, fragment)
 							node[fragment] = value
 							#self.req.log_error('node is now: ' + str(node))
 			except ValueError:
@@ -333,6 +343,16 @@ class NestedFieldStorage(cgi.FieldStorage):
 			return tempfile.TemporaryFile("w+b")
 	
 
+class DictField(dict):
+	"""
+	Used to provided nested POST data in C{NestedFieldStorage}.
+	"""
+	def __init__(self, value=None):
+		dict.__init__(self)
+		if(value):
+			self.update(value)
+
+
 class MagicFile(file):
 	"""
 	This wrapper class will log all the bytes written to it into the user's
@@ -373,13 +393,3 @@ class MagicFile(file):
 		session = self.req.session
 		session['modu.file'][self.client_filename]['complete'] = 1
 		super(MagicFile, self).seek(offset, whence)
-
-
-class DictField(dict):
-	"""
-	Used to provided nested POST data in C{NestedFieldStorage}.
-	"""
-	def __init__(self, value=None):
-		dict.__init__(self)
-		if(value):
-			self.update(value)

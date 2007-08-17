@@ -26,6 +26,11 @@ class SQLTestCase(unittest.TestCase):
 		expecting = "INSERT INTO `table` (`col1`, `col2`) VALUES (ENCRYPT('something'), 'col2_data')"
 		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 	
+	def test_build_multiple_insert(self):
+		sql = persist.build_insert('table', [{'col2':'col2_data', 'col1':persist.RAW("ENCRYPT('something')")}, {'col2':'col2_data', 'col1':persist.RAW("ENCRYPT('something')")}]);
+		expecting = "INSERT INTO `table` (`col1`, `col2`) VALUES (ENCRYPT('something'), 'col2_data'), (ENCRYPT('something'), 'col2_data')"
+		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+	
 	def test_build_insert_dot_syntax(self):
 		sql = persist.build_insert('db.table', {'col2':'col2_data', 'col1':persist.RAW("ENCRYPT('something')")});
 		expecting = "INSERT INTO db.`table` (`col1`, `col2`) VALUES (ENCRYPT('something'), 'col2_data')"

@@ -52,11 +52,24 @@ def build_insert(table, data):
 	@returns: an SQL query
 	@rtype: str
 	"""
+	if not(data):
+		raise ValueError("`data` argument to build_insert() is empty.")
+	if not(isinstance(data, (list, tuple))):
+		data = [data]
+	
 	table = escape_dot_syntax(table)
-	keys = data.keys()
+	keys = data[0].keys()
 	keys.sort()
-	values = [data[key] for key in keys]
-	query = 'INSERT INTO %s (`%s`) VALUES (%s)' % (table, '`, `'.join(keys), ', '.join(['%s'] * len(data)))
+	
+	values = []
+	query = 'INSERT INTO %s (`%s`) VALUES ' % (table, '`, `'.join(keys))
+	for index in range(len(data)):
+		row = data[index]
+		values.extend([row[key] for key in keys])
+		query += '(' + ', '.join(['%s'] * len(row)) + ')'
+		if(index < len(data) - 1):
+			query += ', '
+	
 	return interp(query, values)
 
 

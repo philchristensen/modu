@@ -82,7 +82,7 @@ def generate_test_wsgi_environment(post_data={}, multipart=True):
 	input_data = StringIO.StringIO()
 	if(post_data):
 		if(multipart):
-			for name,value in post_data.iteritems():
+			for name,value in post_data:
 				input_data.write("------TestingFormBoundaryJe0Hll5QdEhCQiZj\n")
 				input_data.write("Content-Disposition: form-data; name=\"%s\"\n\n" % name)
 				input_data.write("%s\n" % value)

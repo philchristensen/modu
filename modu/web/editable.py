@@ -263,17 +263,18 @@ class itemdef(dict):
 		return True
 	
 	def submit(self, req, form, storable):
-		postwrite_fields = []
+		postwrite_fields = {}
 		for name, definition in self.iteritems():
 			datatype = datatype_cache[definition['type']]
 			if not(definition.get('implicit_save', True)):
 				continue
 			elif(datatype.is_postwrite_field()):
-				postwrite_fields.append(name)
+				postwrite_fields[name] = datatype
 			else:
 				# update storable data with form
 				result = datatype.update_storable(name, req, form, definition, storable)
 				if(result == False):
+					#print '%s datatype returned false.' % name
 					return
 		
 		# save storable data
@@ -281,9 +282,8 @@ class itemdef(dict):
 		
 		# handle postwrite fields
 		if(postwrite_fields):
-			for name in postwrite_fields:
-				datatype = datatype_cache[self[name]['type']]
-				datatype.update_storable(name, req, form, definition, storable)
+			for name, datatype in postwrite_fields.items():
+				datatype.update_storable(name, req, form, self[name], storable)
 			req.store.save(storable)
 		
 		# call postwrite_callback

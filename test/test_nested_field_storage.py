@@ -34,7 +34,7 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 		return app.configure_request(environ, application)
 	
 	def test_basic(self):
-		post_data = {"test[one][two][three]":"value 3", 'test_basic':'test_basic'}
+		post_data = [("test[one][two][three]","value 3"), ('test_basic','test_basic')]
 		
 		for name, style in encodings:
 			req = self.get_request(post_data, style)
@@ -42,8 +42,22 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 			self.assertEqual(fields['test']['one']['two']['three'].value, 'value 3', 'Did not find "value 3" where expected in %s test.' % name)
 			self.assertEqual(len(fields.__dict__['list']), 2, 'Found %d fields in  %s test of NestedFieldStorage::list, expected 2.' % (len(fields.__dict__['list']), name))
 	
+	def test_list(self):
+		post_data = [("test[one][two][three]","value 1"), ("test[one][two][three]","value 2"), ("test[one][two][three]","value 3"), ('test_list','test_list')]
+		
+		for name, style in encodings:
+			req = self.get_request(post_data, style)
+			fields = form.NestedFieldStorage(req)
+			value = fields['test']['one']['two']['three'].value
+			self.failUnless(isinstance(value, list), "Didn't get list back from multivalue post.")
+			
+			expected = ['value 1', 'value 2', 'value 3']
+			value.sort()
+			self.assertEqual(value, expected, 'Found %s instead of %s where expected in %s test.' % (value, expected, name))
+			self.assertEqual(len(fields.__dict__['list']), 2, 'Found %d fields in  %s test of NestedFieldStorage::list, expected 2.' % (len(fields.__dict__['list']), name))
+	
 	def test_broken(self):
-		post_data = {"test[one]":"value 1", "test[one][two][three]":"value 3", 'test_broken':'test_broken'}
+		post_data = [("test[one]","value 1"), ("test[one][two][three]","value 3"), ('test_broken','test_broken')]
 		
 		for name, style in encodings:
 			req = self.get_request(post_data, style)
@@ -54,7 +68,7 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 			self.assertEqual(len(fields.__dict__['list']), 3, 'Found %d fields in %s test of NestedFieldStorage::list, expected 3.' % (len(fields.__dict__['list']), name))
 	
 	def test_normal(self):
-		post_data = {'test_normal':'test_normal', 'sample-form[title]':'title field data', 'sample-form[body]':'body field data'}
+		post_data = [('test_normal','test_normal'), ('sample-form[title]','title field data'), ('sample-form[body]','body field data')]
 		
 		for name, style in encodings:
 			req = self.get_request(post_data, style)

@@ -7,6 +7,7 @@
 
 from modu.web import app, resource
 from modu.web.app import ISite
+from modu.util import form
 from zope.interface import classProvides
 from twisted import plugin
 
@@ -17,8 +18,11 @@ class RootResource(resource.CheetahTemplateResource):
 		return ['/']
 	
 	def prepare_content(self, req):
+		frm = form.NestedFieldStorage(req)
+		
 		self.set_slot('request', req)
-		self.set_slot('request_data', str(req['wsgi.input'].read()))
+		#self.set_slot('request_data', req['wsgi.input'].getvalue())
+		self.set_slot('request_data', str(frm['form-data']['options'].value))
 	
 	def get_content_type(self, req):
 		return 'text/html'

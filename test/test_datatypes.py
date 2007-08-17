@@ -262,9 +262,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_password_field(self):
-		post_data = {'page-form[title-entry]':'Text Before Encryption',
-					'page-form[title-verify]':'Text Before Encryption',
-					'page-form[save]':'save'}
+		post_data = [('page-form[title-entry]', 'Text Before Encryption'),
+					 ('page-form[title-verify]','Text Before Encryption'),
+					 ('page-form[save]','save')]
 		test_itemdef = editable.itemdef(
 			title		= editable.definition(
 								type		= 'PasswordField',
@@ -296,9 +296,9 @@ class DatatypesTestCase(unittest.TestCase):
 		test_storable.content = 'Sample content'
 		test_storable.code = 'my-title'
 		
-		post_data = {'page-form[title-entry]':'Text Before Encryption',
-					'page-form[title-verify]':'',
-					'page-form[save]':'save'}
+		post_data = [('page-form[title-entry]', 'Text Before Encryption'),
+					 ('page-form[title-verify]',''),
+					 ('page-form[save]','save')]
 		test_itemdef = editable.itemdef(
 			title		= editable.definition(
 								type		= 'PasswordField',
@@ -323,9 +323,9 @@ class DatatypesTestCase(unittest.TestCase):
 		test_storable.content = 'Sample content'
 		test_storable.code = 'my-title'
 		
-		post_data = {'page-form[title-entry]':'',
-					'page-form[title-verify]':'',
-					'page-form[save]':'save'}
+		post_data = [('page-form[title-entry]', ''),
+					 ('page-form[title-verify]',''),
+					 ('page-form[save]','save')]
 		test_itemdef = editable.itemdef(
 			title		= editable.definition(
 								type		= 'PasswordField',
@@ -345,8 +345,8 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_password_field_noverify(self):
-		post_data = {'page-form[title]':'Text Before Encryption',
-					'page-form[save]':'save'}
+		post_data = [('page-form[title]', 'Text Before Encryption'),
+					 ('page-form[save]','save')]
 		test_itemdef = editable.itemdef(
 			title		= editable.definition(
 								type		= 'PasswordField',
@@ -374,9 +374,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_password_field_noencrypt(self):
-		post_data = {'page-form[title-entry]':'Text Before Encryption',
-					'page-form[title-verify]':'Text Before Encryption',
-					'page-form[save]':'save'}
+		post_data = [('page-form[title-entry]', 'Text Before Encryption'),
+					 ('page-form[title-verify]','Text Before Encryption'),
+					 ('page-form[save]','save')]
 		test_itemdef = editable.itemdef(
 			title		= editable.definition(
 								type		= 'PasswordField',
@@ -401,6 +401,6 @@ class DatatypesTestCase(unittest.TestCase):
 		self.failUnless(test_storable.get_id(), 'Storable was not saved.')
 		self.failIfEqual(test_storable.title, "My Title", "Title field wasn't overwritten by password datatype")
 		self.failUnlessEqual(test_storable.title, "Text Before Encryption", "Title field wasn't encrypted by password datatype")
-
+	
 
 

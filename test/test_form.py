@@ -52,7 +52,7 @@ class FormTestCase(unittest.TestCase):
 		self.failUnlessEqual(frm['title-area'].children['title'], frm['title-area']['title'], "Didn't find nested child.")
 	
 	def test_validation(self):
-		form_data = {'test-form[title]':'Sample Title', 'test-form[submit]':'submit'}
+		form_data = [('test-form[title]','Sample Title'), ('test-form[submit]','submit')]
 		req = self.get_request(form_data)
 		
 		frm = form.FormNode('test-form')
