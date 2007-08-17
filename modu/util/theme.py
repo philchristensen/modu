@@ -34,6 +34,15 @@ class Theme(object):
 		if(hasattr(element, 'label')):
 			content += tags.label(_class="field-label")[element.label]
 		
+		content += self._form_element(form_id, element)
+		
+		if(hasattr(element, 'help')):
+			content += tags.div(_class='form-help')[element.help]
+		
+		return tags.div(_class='form-item', _id='form-item-%s' % element.name)[content]
+	
+	def _form_element(self, form_id, element):
+		content = ''
 		prefix = element.attrib('prefix', False)
 		if(callable(prefix)):
 			content += prefix(element)
@@ -53,10 +62,7 @@ class Theme(object):
 		elif(suffix):
 			content += str(suffix)
 		
-		if(hasattr(element, 'help')):
-			content += tags.div(_class='form-help')[element.help]
-		
-		return tags.div(_class='form-item', _id='form-item-%s' % element.name)[content]
+		return content
 	
 	def form_markup(self, form_id, element):
 		return element.attrib('value', '')
@@ -68,12 +74,7 @@ class Theme(object):
 		else:
 			content = ''
 			for child_name in element:
-				child = element[child_name]
-				if(child.attrib('type', False)):
-					theme_func = getattr(self, 'form_' + child.type)
-				else:
-					theme_func = self.form_markup
-				content += theme_func(form_id, child)
+				content += self._form_element(form_id, element[child_name])
 			return content
 	
 	def form_label(self, form_id, element):
@@ -133,6 +134,9 @@ class Theme(object):
 	def form_select(self, form_id, element):
 		attribs = element.attrib('attributes', {})
 		attribs['name'] = '%s[%s]' % (form_id, element.name)
+		attribs['size'] = element.attrib('size', 1)
+		if('multiple' in element.attributes):
+			attribs['multiple'] = element.multiple
 		value = element.attrib('value', 1)
 		
 		option_data = element.attrib('options', [])
@@ -149,6 +153,9 @@ class Theme(object):
 		
 		option_keys.sort(element.attrib('sort', None))
 		options = map(_create_option, option_keys)
+		
+		if not(options):
+			options = ' '
 		
 		return tags.select(**attribs)[options]
 	

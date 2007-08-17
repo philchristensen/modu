@@ -98,7 +98,7 @@ class EditorResource(resource.CheetahTemplateResource):
 			app.raise500('%r is does not implement the IEditable interface.')
 		
 		itemdef = item.get_itemdef()
-		definition = itemdef.get(req.app.tree.postpath[1])
+		definition = itemdef[req.app.tree.postpath[1]]
 		
 		value = definition['fvalue']
 		label = definition['flabel']

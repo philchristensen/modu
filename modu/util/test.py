@@ -50,6 +50,12 @@ INSERT INTO `category` (id, code, title) VALUES
 (17, 'psychology', 'Psychology'), (18, 'astronomy', 'Astronomy'),
 (19, 'physics', 'Physics'), (20, 'politics', 'Politics');
 
+DROP TABLE IF EXISTS `page_category`;
+CREATE TABLE IF NOT EXISTS `page_category` (
+  `page_id` bigint(20) unsigned NOT NULL,
+  `category_id` bigint(20) unsigned NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 DROP TABLE IF EXISTS `guid`;
 CREATE TABLE IF NOT EXISTS `guid` (
   `guid` bigint(20) unsigned NOT NULL

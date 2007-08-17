@@ -58,6 +58,20 @@ class EditablePage(storable.Storable):
 				weight		= 2
 			),
 			 
+			other_categories= editable.definition(
+				type		= 'ForeignMultipleAutocompleteField',
+				label		= 'other categories:',
+				help		= 'additional categories for this page.',
+				url			= '/editable/autocomplete/page/other_categories',
+				fvalue		= 'id',
+				flabel		= 'title',
+				ftable		= 'category',
+				ntof		= 'page_category',
+				ntof_f_id	= 'category_id',
+				ntof_n_id	= 'page_id',
+				weight		= 2
+			),
+			 
 			code			= editable.definition(
 				type		= 'StringField',
 				label		= 'code:',

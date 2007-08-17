@@ -125,7 +125,7 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['name-ac-fieldset']['name-autocomplete'](type='textfield', weight=0,
 								attributes={'id':'test-form-name-autocomplete'})
 		reference_form['name-ac-fieldset']['ac-support'](weight=1, value=tags.script(type='text/javascript')
-									['$("#test-form-name-autocomplete").autocomplete("/autocomplete/url", {onItemSelect:get_ac_callback("test-form-name-ac-callback"), autoFill:1, selectFirst:1, selectOnly:1});'])
+									['$("#test-form-name-autocomplete").autocomplete("/autocomplete/url", {onItemSelect:get_ac_callback("test-form-name-ac-callback"), autoFill:1, selectFirst:1, selectOnly:1, minChars:1});'])
 		reference_form['name-ac-fieldset']['name'](type='hidden', weight=2, value=0,
 								attributes={'id':'test-form-name-ac-callback'})
 		reference_form['save'](type='submit', value='save', weight=1000)
