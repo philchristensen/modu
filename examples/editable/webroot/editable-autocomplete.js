@@ -4,6 +4,13 @@ function select_foreign_item(ac_cb_id){
 	};
 }
 
+function select_all_foreign_items(select_id){
+	foreign_select = document.getElementById(select_id);
+	for(index in foreign_select.options){
+		foreign_select.options[index].selected = true;
+	}
+}
+
 function add_foreign_item(autocomplete_id, select_id){
 	return function(li){
 		foreign_select = document.getElementById(select_id);
@@ -14,3 +21,4 @@ function add_foreign_item(autocomplete_id, select_id){
 		autocomplete.focus()
 	};
 }
+

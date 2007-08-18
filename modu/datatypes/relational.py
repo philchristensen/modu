@@ -132,6 +132,7 @@ class ForeignMultipleAutocompleteField(Field):
 					multiple=None, suffix='<br/>', attributes={'id':select_id})
 		
 		ac_js = '$("#%s").autocomplete("%s", {onItemSelect:add_foreign_item("%s", "%s"), autoFill:1, selectFirst:1, selectOnly:1, minChars:1});' % (ac_id, d['url'], ac_id, select_id)
+		ac_js += "\nadd_submit_hook(\"select_all_foreign_items('%s');\");" % select_id
 		ac_controls = tags.script(type='text/javascript')[ac_js]
 		
 		ac_field = form.FormNode('%s-autocomplete' % name)

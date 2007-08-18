@@ -121,6 +121,7 @@ class EditorResource(resource.CheetahTemplateResource):
 			app.raise500('%r is does not implement the IEditable interface.')
 		
 		form = item.get_itemdef().get_form('detail', item)
+		form.attributes['onSubmit'] = 'return form_submit();'
 		if(form.execute(req)):
 			form = item.get_itemdef().get_form('detail', item)
 		
@@ -219,7 +220,7 @@ class itemdef(dict):
 				frm.children[name] = field.get_element(style, storable)
 		
 		if(not frm.has_submit_buttons()):
-			frm['save'](type='submit', value='save', weight=1000)
+			frm['save'](type='submit', value='save', weight=1000, attributes={'onClick':'form_submit(); return true;'})
 			frm['cancel'](type='submit', value='cancel', weight=1000)
 		
 		def _validate(req, form):
@@ -265,6 +266,8 @@ class itemdef(dict):
 	def submit(self, req, form, storable):
 		postwrite_fields = {}
 		for name, definition in self.iteritems():
+			if(definition['type'] not in datatype_cache):
+				raise UnknownDatatypeException(definition['type'])
 			datatype = datatype_cache[definition['type']]
 			if not(definition.get('implicit_save', True)):
 				continue
@@ -306,7 +309,12 @@ class definition(dict):
 		"""
 		Return a FormNode that represents this field in the resulting form.
 		"""
+		if(self['type'] not in datatype_cache):
+			raise UnknownDatatypeException(self['type'])
 		return datatype_cache[self['type']].get_form_element(self.name, style, self, storable)
 
+
+class UnknownDatatypeException(Exception):
+	pass
 
 __load_datatypes()
