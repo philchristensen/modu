@@ -273,22 +273,24 @@ class Request(dict):
 		self.jit_handlers = {}
 	
 	def __getattr__(self, key):
-		if('modu.%s' % key in self):
-			return self['modu.%s' % key]
+		modu_key = 'modu.%s' % key
+		if(modu_key in self.jit_handlers or modu_key in self):
+			return self[modu_key]
 		raise AttributeError(key)
 	
 	def __getitem__(self, key):
 		self.handle_jit(key)
 		return dict.__getitem__(self, key)
 	
-	# def __contains__(self, key):
-	# 	if(key in self.jit_handlers):
-	# 		return True
-	# 	return dict.__contains__(self, key)
+	def __contains__(self, key):
+		if(key in self.jit_handlers):
+			return True
+		return dict.__contains__(self, key)
 	
 	def handle_jit(self, key):
 		if(not dict.__contains__(self, key) and key in self.jit_handlers):
 			handler = self.jit_handlers[key]
+			print 'running %r for %s' % (handler, key)
 			handler(self)
 	
 	def set_jit(self, key, handler):

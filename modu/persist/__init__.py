@@ -23,7 +23,7 @@ def activate_store(req):
 	and create or fetch a store instance to be used by this request.
 	"""
 	app = req.app
-	if(req.get('modu.pool') and app.initialize_store):
+	if('modu.pool' in req and app.initialize_store):
 		store = Store.get_store()
 		if not(store):
 			store = Store(req.pool)

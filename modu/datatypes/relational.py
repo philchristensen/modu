@@ -127,16 +127,19 @@ class ForeignMultipleAutocompleteField(Field):
 		ac_id = '%s-%s-autocomplete' % (form_name, name)
 		select_id = '%s-foreign-select' % name
 		
-		select_frm = form.FormNode(name)
-		select_frm(type='select', options=options, size=d.get('size', 5),
-					multiple=None, suffix='<br/>', attributes={'id':select_id})
+		hidden_options = ''
+		for value in options:
+			hidden_options += tags.input(type='hidden', name='%s[%s]' % (form_name, name), value=value)
 		
-		ac_js = '$("#%s").autocomplete("%s", {onItemSelect:add_foreign_item("%s", "%s"), autoFill:1, selectFirst:1, selectOnly:1, minChars:1});' % (ac_id, d['url'], ac_id, select_id)
-		ac_js += "\nadd_submit_hook(\"select_all_foreign_items('%s');\");" % select_id
+		select_frm = form.FormNode('%s-select-view' % name)
+		select_frm(type='select', options=options, size=d.get('size', 5),
+					multiple=None, suffix=hidden_options + '<br/>', attributes={'id':select_id})
+		
+		ac_js = '$("#%s").autocomplete("%s", {onItemSelect:add_foreign_item("%s", "%s"), autoFill:1, selectFirst:1, selectOnly:1, minChars:1});' % (ac_id, d['url'], form_name, name)
 		ac_controls = tags.script(type='text/javascript')[ac_js]
 		
 		ac_field = form.FormNode('%s-autocomplete' % name)
-		ac_field(type='textfield', weight=0, attributes={'id':ac_id}, suffix=ac_controls)
+		ac_field(type='textfield', weight=10, attributes={'id':ac_id}, suffix=ac_controls)
 		
 		frm = form.FormNode('%s-ac-fieldset' % name)(type='fieldset', style='brief')
 		frm.children[select_frm.name] = select_frm

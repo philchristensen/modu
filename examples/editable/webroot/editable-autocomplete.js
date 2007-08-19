@@ -4,19 +4,23 @@ function select_foreign_item(ac_cb_id){
 	};
 }
 
-function select_all_foreign_items(select_id){
-	foreign_select = document.getElementById(select_id);
-	for(index in foreign_select.options){
-		foreign_select.options[index].selected = true;
-	}
-}
-
-function add_foreign_item(autocomplete_id, select_id){
+function add_foreign_item(form_name, field_name){
 	return function(li){
-		foreign_select = document.getElementById(select_id);
-		foreign_select.options[foreign_select.options.length] = new Option(li.innerHTML, li.extra[0]);
+		var value = li.extra[0];
 		
-		autocomplete = document.getElementById(autocomplete_id);
+		var foreign_select_id = field_name + '-foreign-select'
+		var foreign_select = document.getElementById(foreign_select_id);
+		foreign_select.options[foreign_select.options.length] = new Option(li.innerHTML, value);
+		
+		var hidden_value = document.createElement('input');
+		hidden_value.setAttribute('type', 'hidden');
+		hidden_value.setAttribute('name', form_name + '[' + field_name + ']');
+		hidden_value.setAttribute('value', value);
+		
+		foreign_select.parentNode.insertBefore(hidden_value, foreign_select.nextSibling)
+		
+		var autocomplete_id = form_name + '-' + field_name + '-autocomplete'
+		var autocomplete = document.getElementById(autocomplete_id);
 		autocomplete.value = '';
 		autocomplete.focus()
 	};
