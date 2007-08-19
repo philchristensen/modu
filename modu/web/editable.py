@@ -220,7 +220,7 @@ class itemdef(dict):
 				frm.children[name] = field.get_element(style, storable)
 		
 		if(not frm.has_submit_buttons()):
-			frm['save'](type='submit', value='save', weight=1000, attributes={'onClick':'form_submit(); return true;'})
+			frm['save'](type='submit', value='save', weight=1000) #, attributes={'onClick':'form_submit(); return true;'})
 			frm['cancel'](type='submit', value='cancel', weight=1000)
 		
 		def _validate(req, form):

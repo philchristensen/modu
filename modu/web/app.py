@@ -24,23 +24,20 @@ pool_lock = threading.BoundedSemaphore()
 mimetypes_init = False
 
 def handler(env, start_response):
-	req = None
+	req = {}
 	try:
 		try:
 			application = get_application(env)
 			
 			if(application):
 				req = configure_request(env, application)
-				
-				if(application.db_url):
-					req['modu.pool'] = acquire_db(application.db_url, env['wsgi.multithread'])
 			else:
 				raise404("No such application: %s" % env['REQUEST_URI'])
 			
-			check_for_file(req['PATH_TRANSLATED'], req)
-			
-			persist.activate_store(req)
-			session.activate_session(req)
+			req.set_jit('modu.pool', activate_pool)
+			req.set_jit('modu.store', persist.activate_store)
+			req.set_jit('modu.session', session.activate_session)
+			req.set_jit('modu.user', session.activate_session)
 			
 			if(hasattr(application.site, 'configure_request')):
 				application.site.configure_request(req)
@@ -55,14 +52,14 @@ def handler(env, start_response):
 				rsrc.check_access(req)
 			content = rsrc.get_response(req)
 		finally:
-			if(req and 'modu.session' in req):
+			if(req.get('modu.session')):
 				req.session.save()
 	except web.HTTPStatus, http:
 		start_response(http.status, http.headers)
 		return http.content
 	
 	start_response('200 OK', application.get_headers())
-	return [content]
+	return content
 
 
 def configure_request(env, application):
@@ -91,34 +88,6 @@ def configure_request(env, application):
 	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['modu.path'])
 	
 	return Request(env)
-
-
-def check_for_file(true_path, req):
-	content_type = None
-	size = None
-	try:
-		finfo = os.stat(true_path)
-		# note that there's no support for directory indexes,
-		# only direct file access under the webroot
-		if(stat.S_ISREG(finfo.st_mode)):
-			try:
-				if(not mimetypes_init and req.app.magic_mime_file):
-					mimetypes.init([req.app.magic_mime_file])
-				content_type = mimetypes.guess_type(true_path, False)[0]
-				if(content_type is None):
-					content_type = 'application/octet-stream'
-				size = finfo.st_size
-			except IOError:
-				raise403('Cannot discern type: %s' % req['REQUEST_URI'])
-		else:
-			return
-	except OSError:
-		return
-	
-	headers = (('Content-Type', content_type), ('Content-Length', size))
-	file_wrapper = req['wsgi.file_wrapper']
-	content = file_wrapper(open(true_path))
-	raise200(headers, content)
 
 
 def get_application(req):
@@ -232,9 +201,13 @@ def try_lucene_threads():
 		pass
 
 
-def acquire_db(db_url, threaded=True):
+def activate_pool(req):
+	if(req.app.db_url):
+		req['modu.pool'] = acquire_db(req.app.db_url)
+
+
+def acquire_db(db_url):
 	global pool, pool_lock
-	
 	pool_lock.acquire()
 	try:
 		if not(pool):
@@ -246,11 +219,11 @@ def acquire_db(db_url, threaded=True):
 	return pool
 
 
-def _scan_sites(req):
+def _scan_sites(env):
 	global host_tree
 	
-	if(req.get('SCRIPT_FILENAME', sys.path[0]) not in sys.path):
-		sys.path.append(req['SCRIPT_FILENAME'])
+	if(env.get('SCRIPT_FILENAME', sys.path[0]) not in sys.path):
+		sys.path.append(env['SCRIPT_FILENAME'])
 	
 	import modu.sites
 	reload(modu.sites)
@@ -259,10 +232,18 @@ def _scan_sites(req):
 		site = site_plugin()
 		app = Application(site)
 		
+		# We can't set up the default file resource if we
+		# don't know where we are
+		if('SCRIPT_FILENAME' in env):
+			root = app.tree.get_data_at('/')
+			webroot = os.path.join(env['SCRIPT_FILENAME'], app.webroot)
+			file_root = resource.FileResource(['/'], webroot, root)
+			app.tree.register('/', file_root, clobber=True)
+		
 		domain = app.base_domain
 		if(domain.find(':') == -1):
-			req['wsgi.errors'].write('No port specified in ISite %r, assuming %s' % (site, req['SERVER_PORT']))
-			domain += ':' + req['SERVER_PORT']
+			env['wsgi.errors'].write('No port specified in ISite %r, assuming %s' % (site, env['SERVER_PORT']))
+			domain += ':' + env['SERVER_PORT']
 		
 		host_node = host_tree.setdefault(domain, url.URLNode())
 		host_node.register(app.base_path, app, clobber=True)
@@ -289,11 +270,29 @@ class Request(dict):
 	def __init__(self, env={}):
 		dict.__init__(self)
 		self.update(env)
+		self.jit_handlers = {}
 	
 	def __getattr__(self, key):
 		if('modu.%s' % key in self):
 			return self['modu.%s' % key]
 		raise AttributeError(key)
+	
+	def __getitem__(self, key):
+		self.handle_jit(key)
+		return dict.__getitem__(self, key)
+	
+	# def __contains__(self, key):
+	# 	if(key in self.jit_handlers):
+	# 		return True
+	# 	return dict.__contains__(self, key)
+	
+	def handle_jit(self, key):
+		if(not dict.__contains__(self, key) and key in self.jit_handlers):
+			handler = self.jit_handlers[key]
+			handler(self)
+	
+	def set_jit(self, key, handler):
+		self.jit_handlers[key] = handler
 	
 	def log_error(self, data):
 		self['wsgi.errors'].write(data)

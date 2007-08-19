@@ -57,7 +57,7 @@ class AppTestCase(unittest.TestCase):
 		rsrc = application.tree.parse(req.path)
 		self.failIf(rsrc is None, 'Resource retrieval failed.')
 		
-		self.failUnlessEqual(rsrc.get_response(req), 'this/is/a/long/path', "Did not find expected content")
+		self.failUnlessEqual(rsrc.get_response(req), ['this/is/a/long/path'], "Did not find expected content")
 		
 		environ['REQUEST_URI'] = '/app-test/test-delegate/this/is/a/long/path'
 		application = app.get_application(environ)
@@ -68,7 +68,7 @@ class AppTestCase(unittest.TestCase):
 		rsrc = rsrc.get_delegate(req)
 		self.failIf(rsrc is None, 'Resource retrieval failed.')
 		
-		self.failUnlessEqual(rsrc.get_response(req), 'this/is/a/long/path', "Did not find expected content")
+		self.failUnlessEqual(rsrc.get_response(req), ['this/is/a/long/path'], "Did not find expected content")
 
 		environ['REQUEST_URI'] = '/app-test/test-access'
 		application = app.get_application(environ)

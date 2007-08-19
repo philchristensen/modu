@@ -5,19 +5,19 @@
 #
 # See LICENSE for details
 
-from zope import interface
-from zope.interface import implements
-
-import os, re, threading
+import os, re, threading, stat, mimetypes
 
 try:
 	import cPickle as pickle
 except:
 	import pickle
 
+from zope import interface
+from zope.interface import implements
+
 class IResource(interface.Interface):
 	"""
-	This class defines something that reacts when a path is req.
+	This class defines something that reacts when a path is requested.
 	"""
 	def get_paths(self):
 		"""
@@ -30,7 +30,7 @@ class IResource(interface.Interface):
 		"""
 
 
-class IResourceDelegate(IResource):
+class IResourceDelegate(interface.Interface):
 	"""
 	Classes that implement this object can emulate a Resource by
 	returning some arbitrary Resource object.
@@ -64,10 +64,61 @@ class Resource(object):
 		
 		req.app.add_header('Content-Length', len(content))
 		
-		return content
+		return [content]
 	
 	def get_paths(self):
 		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
+
+
+class FileResource(object):
+	implements(IResource, IResourceDelegate)
+	
+	def __init__(self, paths, root, alternate=None):
+		self.paths = paths
+		self.alternate = alternate
+		self.root = root
+	
+	def get_response(self, req):
+		req.app.add_header('Content-Type', self.content_type)
+		req.app.add_header('Content-Length', self.size)
+		file_wrapper = req['wsgi.file_wrapper']
+		return file_wrapper(open(self.true_path))
+	
+	def get_delegate(self, req):
+		self.content_type = None
+		self.size = None
+		self.true_path = os.path.join(self.root, req.path[1:])
+		
+		try:
+			finfo = os.stat(self.true_path)
+			# note that there's no support for directory indexes,
+			# only direct file access under the webroot
+			if(stat.S_ISREG(finfo.st_mode)):
+				from modu.web import app
+				try:
+					if(not app.mimetypes_init and req.app.magic_mime_file):
+						mimetypes.init([req.app.magic_mime_file])
+					self.content_type = mimetypes.guess_type(self.true_path, False)[0]
+					if(self.content_type is None):
+						self.content_type = 'application/octet-stream'
+					self.size = finfo.st_size
+				except IOError:
+					app.raise403('Cannot discern type: %s' % req['REQUEST_URI'])
+			else:
+				return self._return_alternate(req)
+		except OSError:
+			return self._return_alternate(req)
+		
+		return self
+	
+	def _return_alternate(self, req):
+		if(self.alternate):
+			return self.alternate
+		from modu.web import app
+		app.raise404(req['REQUEST_URI'])
+	
+	def get_paths(self):
+		return self.paths
 
 
 class IContent(interface.Interface):
@@ -222,6 +273,9 @@ class CheetahTemplateContent(TemplateContent):
 class ZPTemplateContent(TemplateContent):
 	"""http://zpt.sourceforge.net"""
 	def get_content(self, req):
+		self.set_slot('base_path', req.app.base_path)
+		self.set_slot('request', req)
+		
 		from ZopePageTemplates import PageTemplate
 		class ZPTmoduTemplate(PageTemplate):
 			def __call__(self, context={}, *args):
@@ -243,6 +297,9 @@ class ZPTemplateContent(TemplateContent):
 class CherryTemplateContent(TemplateContent):
 	"""http://cherrytemplate.python-hosting.com"""
 	def get_content(self, req):
+		self.set_slot('base_path', req.app.base_path)
+		self.set_slot('request', req)
+		
 		from cherrytemplate import renderTemplate
 		self.data['_template_path'] = req.approot + '/template/' + self.get_template(req)
 		self.data['_renderTemplate'] = renderTemplate
@@ -270,8 +327,6 @@ class RoleBasedAccessControl(object):
 	implements(IAccessControl)
 	
 	def check_access(self, req):
-		if('modu.user' in req):
-			pass
 		return False
 	
 	def get_perms(self, req):
