@@ -121,7 +121,6 @@ class EditorResource(resource.CheetahTemplateResource):
 			app.raise500('%r is does not implement the IEditable interface.')
 		
 		form = item.get_itemdef().get_form('detail', item)
-		form.attributes['onSubmit'] = 'return form_submit();'
 		if(form.execute(req)):
 			form = item.get_itemdef().get_form('detail', item)
 		

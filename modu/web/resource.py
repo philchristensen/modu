@@ -88,7 +88,7 @@ class FileResource(object):
 		self.content_type = None
 		self.size = None
 		self.true_path = os.path.join(self.root, '/'.join(req.app.tree.postpath))
-		print self.true_path
+		
 		try:
 			finfo = os.stat(self.true_path)
 			# note that there's no support for directory indexes,

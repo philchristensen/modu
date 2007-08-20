@@ -51,8 +51,18 @@ class ForeignSelectField(Field):
 		value = definition['fvalue']
 		label = definition['flabel']
 		table = definition['ftable']
+		where = definition.get('fwhere', '')
 		
-		results = store.pool.runQuery('SELECT %s, %s FROM %s' % (value, label, table))
+		if(callable(where)):
+			where = where(storable)
+		elif(isinstance(where, dict)):
+			where = persist.build_where(where)
+		
+		foreign_query = 'SELECT %s, %s FROM %s ' % (value, label, table)
+		if(where):
+			foreign_query += where
+		
+		results = store.pool.runQuery(foreign_query)
 		
 		options = dict([(item[value], item[label]) for item in results])
 		
@@ -111,13 +121,25 @@ class ForeignMultipleAutocompleteField(Field):
 			mlabel = 'm.%s' % mlabel
 		mlabel = d.get('flabel_sql', mlabel)
 		
+		where = d.get('fwhere', '')
+		
+		if(callable(where)):
+			where = where(storable)
+		elif(isinstance(where, dict)):
+			where = persist.build_where(where)
+		
+		limit = 'LIMIT %d' % d.get('limit_choices', 20)
+		
 		ntom_query = """SELECT m.%s AS value, %s AS label
 						FROM %s m
 						INNER JOIN %s n2m ON m.%s = n2m.%s AND n2m.%s = %%s
-						ORDER BY label""" % (d['fvalue'], mlabel,
+						%s
+						ORDER BY label
+						%s""" % (d['fvalue'], mlabel,
 										  d['ftable'],
 										  d['ntof'], d.get('f_id', 'id'),
-										  d['ntof_f_id'], d['ntof_n_id'])
+										  d['ntof_f_id'], d['ntof_n_id'],
+										  where, limit)
 		
 		store = storable.get_store()
 		results = store.pool.runQuery(ntom_query, storable.get_id())
@@ -135,7 +157,8 @@ class ForeignMultipleAutocompleteField(Field):
 		select_frm(type='select', options=options, size=d.get('size', 5),
 					multiple=None, suffix=hidden_options + '<br/>', attributes={'id':select_id})
 		
-		ac_js = '$("#%s").autocomplete("%s", {onItemSelect:add_foreign_item("%s", "%s"), autoFill:1, selectFirst:1, selectOnly:1, minChars:1});' % (ac_id, d['url'], form_name, name)
+		prefs = 'autoFill:1, selectFirst:1, selectOnly:1, minChars:%d, maxItemsToShow:%d' % (d.get('min_chars', 3), d.get('max_choices', 10))
+		ac_js = '$("#%s").autocomplete("%s", {onItemSelect:add_foreign_item("%s", "%s"), %s});' % (ac_id, d['url'], form_name, name, prefs)
 		ac_controls = tags.script(type='text/javascript')[ac_js]
 		
 		ac_field = form.FormNode('%s-autocomplete' % name)

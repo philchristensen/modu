@@ -148,7 +148,7 @@ class Theme(object):
 		def _create_option(k):
 			tag = tags.option(value=k)[option_data[k]]
 			if(k == value):
-				tag(selected='selected')
+				tag(selected=None)
 			return tag
 		
 		option_keys.sort(element.attrib('sort', None))

@@ -510,8 +510,9 @@ class Store(object):
 		"""
 		if(data is None):
 			data = kwargs
-		else:
+		elif(isinstance(data, dict)):
 			data.update(kwargs)
+		
 		if(table not in self._factories):
 			raise LookupError('There is no factory registered for the table `%s`' % table)
 		
