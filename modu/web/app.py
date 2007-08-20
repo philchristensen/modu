@@ -290,7 +290,6 @@ class Request(dict):
 	def handle_jit(self, key):
 		if(not dict.__contains__(self, key) and key in self.jit_handlers):
 			handler = self.jit_handlers[key]
-			print 'running %r for %s' % (handler, key)
 			handler(self)
 	
 	def set_jit(self, key, handler):

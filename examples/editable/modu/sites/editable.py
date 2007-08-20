@@ -10,7 +10,7 @@ from zope.interface import classProvides, implements
 from twisted import plugin
 
 from modu.web.app import ISite
-from modu.web import editable
+from modu.web import editable, resource
 from modu.persist import storable
 
 class EditablePage(storable.Storable):
@@ -118,6 +118,13 @@ class EditableSite(object):
 		application.base_path = '/editable'
 		application.base_domain = 'localhost'
 		application.activate(editable.EditorResource())
+		
+		import os.path
+		
+		modu_path = os.path.realpath('%s/../../../..' % os.path.dirname(__file__))
+		application.activate(resource.FileResource(['/assets'], os.path.join(modu_path, 'assets')))
+		application.activate(resource.FileResource(['/jquery'], os.path.join(modu_path, 'jquery')))
+		print application.tree
 		
 	def configure_request(self, req):
 		req.store.ensure_factory('page', EditablePage)
