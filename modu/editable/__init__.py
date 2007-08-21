@@ -14,6 +14,9 @@ from zope.interface import Interface
 from modu.persist import storable
 from modu.util import tags
 
+class IItemdef(Interface):
+	pass
+
 class IDatatype(Interface):
 	"""
 	I can take a field definition from an Editable itemdef and return a form object.
@@ -42,9 +45,3 @@ class IDatatype(Interface):
 		the items will be ignored during the regular process and given a
 		chance to write after the main record has been saved.
 		"""
-
-
-class UnknownDatatypeException(Exception):
-	pass
-
-

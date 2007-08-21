@@ -9,9 +9,25 @@
 Contains classes needed to define a basic itemdef.
 """
 
+from zope.interface import classProvides, implements
+
+from twisted import plugin
+
+from modu import editable
 from modu.util import form, tags
 from modu.persist import storable, interp
 from modu.web.user import AnonymousUser
+
+def get_itemdefs(): 
+	""" 
+	Search the system path for any available IItemdef implementors. 
+	""" 
+	import modu.itemdefs
+	itemdefs = {}
+	for itemdef in plugin.getPlugins(editable.IItemdef, modu.itemdefs): 
+		itemdefs[itemdef.name] = itemdef
+	return itemdefs
+
 
 class itemdef(dict):
 	"""
@@ -19,6 +35,9 @@ class itemdef(dict):
 	It can generate an editor form for its Storable, as well
 	as providing behaviors and validation for that form.
 	"""
+	
+	implements(editable.IItemdef, plugin.IPlugin)
+	
 	def __init__(self, __config=None, **fields):
 		for name, field in fields.items():
 			# I was pretty sure I knew how kwargs worked, but...
