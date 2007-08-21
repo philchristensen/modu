@@ -10,7 +10,7 @@ import time
 from twisted.trial import unittest
 
 from modu import persist
-from modu.datatypes import string, relational, boolean, select
+from modu.editable.datatypes import string, relational, boolean, select
 from modu.web import app
 from modu.editable import define
 from modu.persist import storable, adbapi

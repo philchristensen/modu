@@ -12,7 +12,7 @@ from twisted import plugin
 from modu.web.app import ISite
 from modu.web import resource
 from modu.persist import storable
-from modu.datatypes import string, relational
+from modu.editable.datatypes import string, relational
 
 class EditablePage(storable.Storable):
 	def __init__(self):

@@ -12,7 +12,7 @@ from twisted.trial import unittest
 from modu import persist
 from modu.web import app
 from modu.editable import define
-from modu.datatypes import string
+from modu.editable.datatypes import string
 from modu.persist import storable, adbapi
 from modu.util import form, test
 
