@@ -10,7 +10,9 @@ import time
 from twisted.trial import unittest
 
 from modu import persist
-from modu.web import editable, app
+from modu.datatypes import string, relational, boolean, select
+from modu.web import app
+from modu.editable import define
 from modu.persist import storable, adbapi
 from modu.util import form, test, tags
 
@@ -50,9 +52,8 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_checkboxfield(self):
-		test_itemdef = editable.itemdef(
-			selected		= editable.definition(
-								type		= 'CheckboxField',
+		test_itemdef = define.itemdef(
+			selected		= boolean.CheckboxField(
 								label		= 'Selected'
 							)
 		)
@@ -75,9 +76,8 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_stringfield(self):
-		test_itemdef = editable.itemdef(
-			name			= editable.definition(
-								type		= 'StringField',
+		test_itemdef = define.itemdef(
+			name			= string.StringField(
 								label		= 'Name'
 							)
 		)
@@ -100,9 +100,8 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_autocomplete_field(self):
-		test_itemdef = editable.itemdef(
-			name			= editable.definition(
-								type		= 'ForeignAutocompleteField',
+		test_itemdef = define.itemdef(
+			name			= relational.ForeignAutocompleteField(
 								label		= 'Name',
 								url			= '/autocomplete/url',
 								fvalue		= 'id',
@@ -125,7 +124,7 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['name-ac-fieldset']['name-autocomplete'](type='textfield', weight=0,
 								attributes={'id':'test-form-name-autocomplete'})
 		reference_form['name-ac-fieldset']['ac-support'](weight=1, value=tags.script(type='text/javascript')
-									['$("#test-form-name-autocomplete").autocomplete("/autocomplete/url", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, selectOnly:1, minChars:1});'])
+									['$("#test-form-name-autocomplete").autocomplete("/autocomplete/url", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, selectOnly:1, minChars:3, maxItemsToShow:10});'])
 		reference_form['name-ac-fieldset']['name'](type='hidden', weight=2, value=0,
 								attributes={'id':'test-form-name-ac-callback'})
 		reference_form['save'](type='submit', value='save', weight=1000)
@@ -138,12 +137,11 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_linked_labelfield(self):
-		test_itemdef = editable.itemdef(
-			__special		= editable.definition(
+		test_itemdef = define.itemdef(
+			__special		= define.definition(
 								item_url	= 'http://www.example.com'
 							),
-			linked_name		= editable.definition(
-								type		= 'LabelField',
+			linked_name		= string.LabelField(
 								label		= 'Name',
 								link		= True
 							)
@@ -169,9 +167,8 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	def test_selectfield(self):
 		options = {'admin':'Administrator', 'user':'User'}
-		test_itemdef = editable.itemdef(
-			user_type		= editable.definition(
-								type		= 'SelectField',
+		test_itemdef = define.itemdef(
+			user_type		= select.SelectField(
 								label		= 'Type',
 								options		= options
 							)
@@ -196,9 +193,8 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	def test_foreign_selectfield(self):
 		options = {1:'Drama', 2:'Science Fiction', 3:'Biography', 4:'Horror', 5:'Science', 6:'Historical Fiction', 7:'Self-Help', 8:'Romance', 9:'Business', 10:'Technical', 11:'Engineering', 12:'Lanugage', 13:'Finance', 14:'Young Readers', 15:'Music', 16:'Dance', 17:'Psychology', 18:'Astronomy', 19:'Physics', 20:'Politics'}
-		test_itemdef = editable.itemdef(
-			category_id		= editable.definition(
-								type		= 'ForeignSelectField',
+		test_itemdef = define.itemdef(
+			category_id		= relational.ForeignSelectField(
 								label		= 'Category',
 								ftable		= 'category',
 								fvalue		= 'id',
@@ -230,9 +226,8 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_foreign_labelfield(self):
-		test_itemdef = editable.itemdef(
-			category_id		= editable.definition(
-								type		= 'ForeignLabelField',
+		test_itemdef = define.itemdef(
+			category_id		= relational.ForeignLabelField(
 								label		= 'Category',
 								ftable		= 'category',
 								fvalue		= 'code',
@@ -265,9 +260,8 @@ class DatatypesTestCase(unittest.TestCase):
 		post_data = [('page-form[title-entry]', 'Text Before Encryption'),
 					 ('page-form[title-verify]','Text Before Encryption'),
 					 ('page-form[save]','save')]
-		test_itemdef = editable.itemdef(
-			title		= editable.definition(
-								type		= 'PasswordField',
+		test_itemdef = define.itemdef(
+			title		= string.PasswordField(
 								label		= 'Encrypted Title'
 							)
 		)
@@ -299,9 +293,8 @@ class DatatypesTestCase(unittest.TestCase):
 		post_data = [('page-form[title-entry]', 'Text Before Encryption'),
 					 ('page-form[title-verify]',''),
 					 ('page-form[save]','save')]
-		test_itemdef = editable.itemdef(
-			title		= editable.definition(
-								type		= 'PasswordField',
+		test_itemdef = define.itemdef(
+			title		= string.PasswordField(
 								label		= 'Encrypted Title'
 							)
 		)
@@ -326,9 +319,8 @@ class DatatypesTestCase(unittest.TestCase):
 		post_data = [('page-form[title-entry]', ''),
 					 ('page-form[title-verify]',''),
 					 ('page-form[save]','save')]
-		test_itemdef = editable.itemdef(
-			title		= editable.definition(
-								type		= 'PasswordField',
+		test_itemdef = define.itemdef(
+			title		= string.PasswordField(
 								label		= 'Encrypted Title'
 							)
 		)
@@ -347,9 +339,8 @@ class DatatypesTestCase(unittest.TestCase):
 	def test_password_field_noverify(self):
 		post_data = [('page-form[title]', 'Text Before Encryption'),
 					 ('page-form[save]','save')]
-		test_itemdef = editable.itemdef(
-			title		= editable.definition(
-								type		= 'PasswordField',
+		test_itemdef = define.itemdef(
+			title		= string.PasswordField(
 								label		= 'Encrypted Title',
 								verify		= False
 							)
@@ -377,9 +368,8 @@ class DatatypesTestCase(unittest.TestCase):
 		post_data = [('page-form[title-entry]', 'Text Before Encryption'),
 					 ('page-form[title-verify]','Text Before Encryption'),
 					 ('page-form[save]','save')]
-		test_itemdef = editable.itemdef(
-			title		= editable.definition(
-								type		= 'PasswordField',
+		test_itemdef = define.itemdef(
+			title		= string.PasswordField(
 								label		= 'Encrypted Title',
 								encrypt		= False
 							)

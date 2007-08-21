@@ -9,21 +9,19 @@
 Datatypes to manage boolean-type fields.
 """
 
-from twisted import plugin
+from zope.interface import implements
 
-from zope.interface import classProvides
-
-from modu.web.editable import IDatatype, Field
+from modu.editable import IDatatype, define
 from modu.util import form
 from modu import persist
 
-class CheckboxField(Field):
-	classProvides(plugin.IPlugin, IDatatype)
+class CheckboxField(define.definition):
+	implements(IDatatype)
 	
-	def get_element(self, name, style, definition, storable):
-		frm = form.FormNode(name)
-		frm(type='checkbox', value=definition.get('value', 1))
-		if(getattr(storable, name, None) == definition.get('value', 1)):
+	def get_element(self, style, storable):
+		frm = form.FormNode(self.name)
+		frm(type='checkbox', value=self.get('value', 1))
+		if(getattr(storable, self.name, None) == self.get('value', 1)):
 			frm(checked=True)
 		return frm
 

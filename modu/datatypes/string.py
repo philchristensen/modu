@@ -9,40 +9,38 @@
 Datatypes for managing stringlike data.
 """
 
-from twisted import plugin
+from zope.interface import implements
 
-from zope.interface import classProvides
-
-from modu.web.editable import IDatatype, Field
+from modu.editable import IDatatype, define
 from modu.util import form
 from modu import persist
 
-class LabelField(Field):
-	classProvides(plugin.IPlugin, IDatatype)
+class LabelField(define.definition):
+	implements(IDatatype)
 	
-	def get_element(self, name, style, definition, storable):
-		frm = form.FormNode(name)
-		frm(type='label', value=getattr(storable, name, None))
+	def get_element(self, style, storable):
+		frm = form.FormNode(self.name)
+		frm(type='label', value=getattr(storable, self.name, None))
 		return frm
 
 
-class DateField(Field):
-	classProvides(plugin.IPlugin, IDatatype)
+class DateField(define.definition):
+	implements(IDatatype)
 	
-	def get_element(self, name, style, definition, storable):
-		frm = form.FormNode(name)
-		frm(type='label', value=getattr(storable, name, None))
+	def get_element(self, style, storable):
+		frm = form.FormNode(self.name)
+		frm(type='label', value=getattr(storable, self.name, None))
 		return frm
 
 
-class StringField(Field):
-	classProvides(plugin.IPlugin, IDatatype)
+class StringField(define.definition):
+	implements(IDatatype)
 	
 	inherited_attributes = ['size', 'maxlength']
 	
-	def get_element(self, name, style, definition, storable):
-		frm = form.FormNode(name)
-		frm(value=getattr(storable, name, None))
+	def get_element(self, style, storable):
+		frm = form.FormNode(self.name)
+		frm(value=getattr(storable, self.name, None))
 		if(style == 'list'):
 			frm(type='label')
 		else:
@@ -50,39 +48,39 @@ class StringField(Field):
 		return frm
 
 
-class TextAreaField(Field):
-	classProvides(plugin.IPlugin, IDatatype)
+class TextAreaField(define.definition):
+	implements(IDatatype)
 	
 	inherited_attributes = ['rows', 'cols']
 	
-	def get_element(self, name, style, definition, storable):
-		frm = form.FormNode(name)
-		frm(type='textarea', value=getattr(storable, name, None))
+	def get_element(self, style, storable):
+		frm = form.FormNode(self.name)
+		frm(type='textarea', value=getattr(storable, self.name, None))
 		return frm
 
 
-class PasswordField(Field):
-	classProvides(plugin.IPlugin, IDatatype)
+class PasswordField(define.definition):
+	implements(IDatatype)
 	
-	def get_element(self, name, style, definition, storable):
-		entry_frm = form.FormNode(name)
-		entry_frm(value=getattr(storable, name, None))
+	def get_element(self, style, storable):
+		entry_frm = form.FormNode(self.name)
+		entry_frm(value=getattr(storable, self.name, None))
 		
-		if(definition.get('obfuscate', True)):
+		if(self.get('obfuscate', True)):
 			entry_frm(type='password')
 		else:
 			entry_frm(type='textfield')
 		
-		if(definition.get('verify', True)):
+		if(self.get('verify', True)):
 			entry_frm.name += '-entry'
 			entry_frm.attributes['value'] = ''
-			verify_frm = form.FormNode('%s-verify' % name)
-			if(definition.get('obfuscate', True)):
+			verify_frm = form.FormNode('%s-verify' % self.name)
+			if(self.get('obfuscate', True)):
 				verify_frm(type='password')
 			else:
 				verify_frm(type='textfield')
 			
-			frm = form.FormNode(name)(type='fieldset', style='brief')
+			frm = form.FormNode(self.name)(type='fieldset', style='brief')
 			frm.children['entry'] = entry_frm
 			frm.children['verify'] = verify_frm
 		else:
@@ -90,7 +88,7 @@ class PasswordField(Field):
 		
 		return frm
 	
-	def update_storable(self, name, req, form, definition, storable):
+	def update_storable(self, req, form, storable):
 		form_name = '%s-form' % storable.get_table()
 		
 		# There should be either a fieldset or a field at the regular name
@@ -101,12 +99,12 @@ class PasswordField(Field):
 		form_data = form.data[form_name]
 		
 		# if 'verify' is in the definition, we expect a fieldset
-		if(definition.get('verify', True)):
-			entry_name = '%s-entry' % name
-			verify_name = '%s-verify' % name
+		if(self.get('verify', True)):
+			entry_name = '%s-entry' % self.name
+			verify_name = '%s-verify' % self.name
 			
 			if(form_data[entry_name].value != form_data[verify_name].value):
-				form.set_field_error(name, 'Sorry, those passwords do not match.')
+				form.set_field_error(self.name, 'Sorry, those passwords do not match.')
 				#print "%s doesn't match %s" % (form_data[entry_name], form_data[verify_name])
 				return False
 			
@@ -118,15 +116,15 @@ class PasswordField(Field):
 			
 			value = form_data[entry_name].value
 		else:
-			if(name not in form_data):
+			if(self.name not in form_data):
 				#print '%s not found in %s' % (name, form_data)
 				return False
 			else:
-				value = form_data[name].value
+				value = form_data[self.name].value
 		
-		if(definition.get('encrypt', True)):
-			setattr(storable, name, persist.RAW("ENCRYPT('%s')" % value))
+		if(self.get('encrypt', True)):
+			setattr(storable, self.name, persist.RAW("ENCRYPT('%s')" % value))
 		else:
-			setattr(storable, name, value)
+			setattr(storable, self.name, value)
 		
 		return True

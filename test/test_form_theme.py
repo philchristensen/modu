@@ -17,7 +17,7 @@ EXPECTED_CHECKBOX = '<input name="node-form[checkbox]" type="checkbox" value="1"
 EXPECTED_SELECTED_CHECKBOX = '<input name="node-form[checkbox]" type="checkbox" value="1" checked />'
 
 EXPECTED_CATEGORY = '<select name="node-form[category]" size="1">'
-EXPECTED_CATEGORY += '<option selected="selected" value="bio">Biography</option>'
+EXPECTED_CATEGORY += '<option value="bio" selected>Biography</option>'
 EXPECTED_CATEGORY += '<option value="drama">Drama</option>'
 EXPECTED_CATEGORY += '<option value="horror">Horror</option>'
 EXPECTED_CATEGORY += '<option value="sci-fi">Science Fiction</option>'

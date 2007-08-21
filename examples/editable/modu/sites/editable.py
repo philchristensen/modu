@@ -10,19 +10,17 @@ from zope.interface import classProvides, implements
 from twisted import plugin
 
 from modu.web.app import ISite
-from modu.web import editable, resource
+from modu.web import resource
 from modu.persist import storable
+from modu.datatypes import string, relational
 
 class EditablePage(storable.Storable):
-	implements(editable.IEditable)
-	
 	def __init__(self):
 		super(EditablePage, self).__init__('page')
 
 	def get_itemdef(self):
-		return editable.itemdef(
-			id				= editable.definition(
-				type		= 'LabelField',
+		return define.itemdef(
+			id				= string.LabelField(
 				label		= 'id:',
 				size		= 10,
 				help		= 'the id of this page.',
@@ -30,8 +28,7 @@ class EditablePage(storable.Storable):
 				weight		= -10
 			),
 			
-			title			= editable.definition(
-				type		= 'StringField',
+			title			= string.StringField(
 				label		= 'title:',
 				size		= 60,
 				maxlength 	= 64,
@@ -40,15 +37,14 @@ class EditablePage(storable.Storable):
 				weight		= 0
 			),
 			
-			password		= editable.definition(
+			password		= string.PasswordField(
 				type		= 'PasswordField',
 				label		= 'password:',
 				help		= 'a password for this page.',
 				weight		= 1
 			),
 			 
-			category_id		= editable.definition(
-				type		= 'ForeignAutocompleteField',
+			category_id		= relational.ForeignAutocompleteField(
 				label		= 'category:',
 				help		= 'a category for this page.',
 				url			= '/editable/autocomplete/page/category_id',
@@ -58,8 +54,7 @@ class EditablePage(storable.Storable):
 				weight		= 2
 			),
 			 
-			other_categories= editable.definition(
-				type		= 'ForeignMultipleAutocompleteField',
+			other_categories= relational.ForeignMultipleAutocompleteField(
 				label		= 'other categories:',
 				help		= 'additional categories for this page.',
 				url			= '/editable/autocomplete/page/other_categories',
@@ -72,8 +67,7 @@ class EditablePage(storable.Storable):
 				weight		= 2
 			),
 			 
-			code			= editable.definition(
-				type		= 'StringField',
+			code			= string.StringField(
 				label		= 'code:',
 				size		= 40,
 				help		= 'the URL code of this page.',
@@ -81,8 +75,7 @@ class EditablePage(storable.Storable):
 				weight		= 3
 			),
 			
-			content			= editable.definition(
-				type		= 'TextAreaField',
+			content			= string.TextAreaField(
 				label		= 'content:',
 				help		= 'the content of the page.',
 				weight		= 4,
@@ -90,8 +83,7 @@ class EditablePage(storable.Storable):
 				cols		= 70
 			),
 			
-			created_date	= editable.definition(
-				type		= 'DateField',
+			created_date	= string.DateField(
 				label		= 'created date:',
 				datatype	= 'timestamp',
 				help		= 'the date this page was created.',
@@ -99,8 +91,7 @@ class EditablePage(storable.Storable):
 				weight		= 5
 			),
 			
-			modified_date	= editable.definition(
-				type		= 'DateField',
+			modified_date	= string.DateField(
 				label		= 'modified date:',
 				datatype	= 'timestamp',
 				help		= 'the date this page was created.',

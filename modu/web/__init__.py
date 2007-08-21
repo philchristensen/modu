@@ -17,6 +17,10 @@ class HTTPStatus(Exception):
 	def __init__(self, status, headers, content):
 		self.status = status
 		self.headers = headers
-		self.content = content
+		if(isinstance(content, str)):
+			self.content = [content]
+		else:
+			self.content = content
+		
 		Exception.__init__(self, status)
 

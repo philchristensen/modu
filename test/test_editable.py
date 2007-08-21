@@ -10,7 +10,9 @@ import time
 from twisted.trial import unittest
 
 from modu import persist
-from modu.web import editable, app
+from modu.web import app
+from modu.editable import define
+from modu.datatypes import string
 from modu.persist import storable, adbapi
 from modu.util import form, test
 
@@ -61,12 +63,11 @@ class EditableTestCase(unittest.TestCase):
 			self.prewrite_callback_bool = True
 			return True
 		
-		test_itemdef = editable.itemdef(
-			__config		= editable.definition(
+		test_itemdef = define.itemdef(
+			__config		= define.definition(
 								prewrite_callback = test_prewrite
 							),
-			title			= editable.definition(
-								type		= 'StringField',
+			title			= string.StringField(
 								label		= 'Title',
 								validator	= test_validator
 							)
@@ -135,16 +136,14 @@ class EditableTestCase(unittest.TestCase):
 		def postwrite_callback(req, form, storable):
 			raise RuntimeError('postwrite')
 		
-		test_itemdef = editable.itemdef(
-			__config		= editable.definition(
+		test_itemdef = define.itemdef(
+			__config		= define.definition(
 								postwrite_callback = postwrite_callback
 			),
-			title			= editable.definition(
-								type		= 'StringField',
+			title			= string.StringField(
 								label		= 'Title'
 			),
-			bogus			= editable.definition(
-								type		= 'StringField',
+			bogus			= string.StringField(
 								label		= 'Title',
 								implicit_save	= False
 			)
