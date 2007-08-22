@@ -18,15 +18,27 @@ from modu.util import form, tags
 from modu.persist import storable, interp
 from modu.web.user import AnonymousUser
 
+def itemdef_cmp(a, b):
+	return cmp(a.get('weight', 0), b.get('weight', 0))
+
+
+def get_itemdef_layout(user):
+	layout = {}
+	for itemdef in get_itemdefs():
+		acl = itemdef.config.get('acl', 'view item')
+		if('acl' not in itemdef.config or user.is_allowed(acl)):
+			tab = itemdef.config.get('category', 'other')
+			layout.setdefault(tab, []).append(itemdef)
+			layout[tab].sort(itemdef_cmp)
+	return layout
+
+
 def get_itemdefs(): 
 	""" 
 	Search the system path for any available IItemdef implementors. 
 	""" 
 	import modu.itemdefs
-	itemdefs = {}
-	for itemdef in plugin.getPlugins(editable.IItemdef, modu.itemdefs): 
-		itemdefs[itemdef.name] = itemdef
-	return itemdefs
+	return list(plugin.getPlugins(editable.IItemdef, modu.itemdefs))
 
 
 class itemdef(dict):
@@ -52,8 +64,10 @@ class itemdef(dict):
 		
 		if(__config):
 			self.config = __config
+			self.name = self.config.get('name', None)
 		else:
 			self.config = definition()
+			self.name = None
 		
 		self.update(fields)
 	
@@ -65,7 +79,7 @@ class itemdef(dict):
 		if(user is None):
 			user = AnonymousUser()
 		frm = form.FormNode('%s-form' % storable.get_table())
-		if(user.is_allowed(self.get('acl', self.config.get('default_acl', [])))):
+		if(user.is_allowed(self.get('acl', self.config.get('acl', [])))):
 			for name, field in self.items():
 				if(name.startswith('_')):
 					continue
@@ -73,7 +87,7 @@ class itemdef(dict):
 					continue
 				if(style == 'detail' and not field.get('detail', True)):
 					continue
-				if not(user.is_allowed(field.get('acl', self.config.get('default_acl', [])))):
+				if not(user.is_allowed(field.get('acl', self.config.get('acl', [])))):
 					continue
 				frm.children[name] = field.get_form_element(style, storable)
 		

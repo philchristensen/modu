@@ -609,6 +609,8 @@ class Store(object):
 				storable.set_id(new_id)
 				#cur.fetchall()
 			self.pool.runOperation('UNLOCK TABLES')
+		
+		storable.set_factory(factory)
 	
 	def destroy(self, storable, destroy_related_storables=False):
 		"""

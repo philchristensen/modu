@@ -9,9 +9,8 @@ from modu.web import app
 from modu.util import form, test
 
 from twisted.trial import unittest
-from twisted.internet import defer
 
-encodings = {'multipart':True, 'standard':False}.items()
+encodings = (('multipart', True), ('standard', False))
 
 class NestedFieldStorageTestCase(unittest.TestCase):
 	def setUp(self):

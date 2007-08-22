@@ -1,0 +1,9 @@
+* Modify datatypes so that instead of being specified in the definition 
+  itself, they are actually subclasses of definition.
+  - simplify the writing of new types.
+  - no need for datatypes to be plugins in this case
+* get rid of IEditable interface and concept.
+  - Make itemdefs themselves use the plugin system
+  - admin resource can automatically load all itemdefs
+  - nothing is stopping you from either reusing itemdefs between similar 
+    objects, or using different itemdefs depending on the scenario at hand

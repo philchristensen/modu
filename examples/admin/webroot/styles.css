@@ -1,0 +1,21 @@
+body {
+	font-family: Helvetica, Arial, "MS Trebuchet", sans-serif;
+}
+
+label.field-label {
+	display: block;
+	font-weight: bold;
+}
+
+.form-item {
+	margin-bottom: 5px;
+}
+
+.form-help {
+	font-size: 12px;
+}
+
+#form-item-cancel,
+#form-item-save {
+	display: inline;
+}

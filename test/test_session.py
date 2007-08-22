@@ -12,11 +12,6 @@ from modu.util import test
 from modu.web import session, user, app
 from modu import persist
 
-from modu.web.app import ISite
-from zope.interface import classProvides
-from twisted import plugin
-
-
 TEST_TABLES = """
 DROP TABLE IF EXISTS `session`;
 CREATE TABLE `session` (
