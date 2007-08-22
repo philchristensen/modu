@@ -30,6 +30,7 @@ def submit_login(req, form):
 	u = req.store.load_one('user', username=form_data['username'].value, crypt=persist.RAW(encrypt_sql))
 	req.session.set_user(u)
 
+
 class AdminResource(resource.CheetahTemplateResource):
 	def __init__(self, path='/admin', **options):
 		self.path = path
@@ -39,8 +40,8 @@ class AdminResource(resource.CheetahTemplateResource):
 		return [self.path]
 	
 	def prepare_content(self, req):
-		print req
-		if(req['modu.user'] and req['modu.user'].get_id()):
+		user = req['modu.user']
+		if(user and user.get_id()):
 			if(req.app.tree.postpath[0] == 'detail'):
 				self.prepare_detail(req)
 			else:
