@@ -33,6 +33,8 @@ class FormNode(object):
 		self.children = {}
 		self.attributes = {}
 		
+		self.errors = {}
+		
 		self.submit = self._submit
 		self.validate = self._validate
 		self.theme = theme.Theme
@@ -142,8 +144,11 @@ class FormNode(object):
 					return True
 		return False
 	
-	def set_field_error(self, name, error):
-		pass
+	def set_error(self, name, error):
+		self.errors.set_default(name, []).append(error)
+	
+	def has_errors(self):
+		return bool(len(self.errors))
 	
 	def render(self, req):
 		"""

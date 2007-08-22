@@ -104,7 +104,7 @@ class PasswordField(define.definition):
 			verify_name = '%s-verify' % self.name
 			
 			if(form_data[entry_name].value != form_data[verify_name].value):
-				form.set_field_error(self.name, 'Sorry, those passwords do not match.')
+				form.set_error(self.name, 'Sorry, those passwords do not match.')
 				#print "%s doesn't match %s" % (form_data[entry_name], form_data[verify_name])
 				return False
 			
