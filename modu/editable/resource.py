@@ -9,7 +9,7 @@
 Contains resources for configuring a default admin interface.
 """
 
-import os.path
+import os.path, copy
 
 from modu.web import resource, app, user
 from modu.editable import define
@@ -43,6 +43,13 @@ def configure_store(req, itemdef):
 		req.store.ensure_factory(table_name)
 
 
+def clone_itemdef(itemdef):
+	"""
+	Duplicate the provided itemdef in a sane fashion.
+	"""
+	# this may need to be done a bit more delicately
+	return copy.deepcopy(itemdef)
+
 class AdminResource(resource.CheetahTemplateResource):
 	def __init__(self, path='/admin', **options):
 		self.path = path
@@ -62,7 +69,10 @@ class AdminResource(resource.CheetahTemplateResource):
 			
 			if(len(req.app.tree.postpath) > 1):
 				itemdef_name = req.app.tree.postpath[1]
-				selected_itemdef = itemdefs.get(itemdef_name)
+				selected_itemdef = clone_itemdef(itemdefs.get(itemdef_name))
+				# got any better ideas?
+				selected_itemdef.config['base_path'] = req.app.base_path
+				
 				self.set_slot('selected_itemdef', selected_itemdef)
 				
 				if(selected_itemdef):

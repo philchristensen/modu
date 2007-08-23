@@ -146,7 +146,7 @@ class itemdef(dict):
 	
 	def get_item_url(self, storable):
 		# TODO: This should return something real, or call a function that can.
-		return self.config.get('item_url', 'http://www.example.com')
+		return '%s/detail/%s/%d' % (self.config['base_path'], storable.get_table(), storable.get_id())
 	
 	
 	def validate(self, req, form, storable):
