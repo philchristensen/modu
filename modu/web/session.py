@@ -150,13 +150,10 @@ class BaseSession(dict):
 		"""
 		result = self.do_load()
 		if result is None:
-			print 'do_load returned None'
 			return False
 		
-		#FIXME: We need to remove the record when this happens
-		# if (time.time() - result["accessed"]) > result["timeout"]:
-		# 	print 'session expired'
-		# 	return False
+		if (time.time() - result["accessed"]) > result["timeout"]:
+			return False
 		
 		self._created  = result["created"]
 		self._accessed = result["accessed"]
@@ -282,7 +279,6 @@ class DbUserSession(BaseSession):
 				record['data'] = cPickle.loads(record['data'].tostring())
 			else:
 				record['data'] = None
-			print 'record is ' + str(record)
 			return record
 		else:
 			return None

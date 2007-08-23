@@ -52,7 +52,7 @@ def handler(env, start_response):
 				rsrc.check_access(req)
 			content = rsrc.get_response(req)
 		finally:
-			if(req.get('modu.session')):
+			if(req.get('modu.session') is not None):
 				req.session.save()
 	except web.HTTPStatus, http:
 		start_response(http.status, http.headers)

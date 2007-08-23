@@ -20,7 +20,8 @@ import os
 app.try_lucene_threads()
 
 class Options(usage.Options):
-	optParameters = [["port", "p", 8888, "Port to use for web server."]
+	optParameters = [["port", "p", 8888, "Port to use for web server."],
+					 ['logfile', 'l', 'twistd-access.log', 'Path to access log.']
 					]
 
 class UnparsedRequest(server.Request):
@@ -59,7 +60,12 @@ class ModuServiceMaker(object):
 	
 	def makeService(self, config):
 		server.Site.requestFactory = UnparsedRequest
-		site = server.Site(twist.WSGIResource(app.handler))
+		
+		if(config['logfile']):
+			site = server.Site(twist.WSGIResource(app.handler), logPath=config['logfile'])
+		else:
+			site = server.Site(twist.WSGIResource(app.handler))
+		
 		web_service = internet.TCPServer(int(config['port']), site)
 		
 		return web_service
