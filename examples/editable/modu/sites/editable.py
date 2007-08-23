@@ -71,9 +71,9 @@ class EditorResource(resource.CheetahTemplateResource):
 		if not(IEditable.providedBy(item)):
 			app.raise500('%r is does not implement the IEditable interface.')
 		
-		form = item.get_itemdef().get_form('detail', item)
+		form = item.get_itemdef().get_form(item)
 		if(form.execute(req)):
-			form = item.get_itemdef().get_form('detail', item)
+			form = item.get_itemdef().get_form(item)
 		
 		self.set_slot('form', form.render(req))
 	

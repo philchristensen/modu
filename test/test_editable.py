@@ -85,7 +85,7 @@ class EditableTestCase(unittest.TestCase):
 		test_storable.modified_date = int(time.time())
 		test_storable.created_date = int(time.time())
 		
-		itemdef_form = test_itemdef.get_form('detail', test_storable)
+		itemdef_form = test_itemdef.get_form(test_storable)
 		itemdef_form.execute(req)
 		
 		self.failUnless(self.validation_test_bool, "Validation function didn't run")
@@ -95,7 +95,7 @@ class EditableTestCase(unittest.TestCase):
 			return False
 		
 		test_itemdef.config['prewrite_callback'] = test_failed_prewrite
-		itemdef_form = test_itemdef.get_form('detail', test_storable)
+		itemdef_form = test_itemdef.get_form(test_storable)
 		try:
 			itemdef_form.execute(req)
 		except RuntimeError, e:
@@ -117,7 +117,7 @@ class EditableTestCase(unittest.TestCase):
 		test_storable.category_id = 'bio'
 		
 		del test_itemdef['title']['validator']
-		itemdef_form = test_itemdef.get_form('detail', test_storable)
+		itemdef_form = test_itemdef.get_form(test_storable)
 		itemdef_form['title'].validate = form_validate
 		itemdef_form.submit = form_validate
 		self.validation_test_bool = False
@@ -161,7 +161,7 @@ class EditableTestCase(unittest.TestCase):
 		test_storable.modified_date = int(time.time())
 		test_storable.created_date = int(time.time())
 		
-		itemdef_form = test_itemdef.get_form('detail', test_storable)
+		itemdef_form = test_itemdef.get_form(test_storable)
 		
 		self.failUnlessRaises(RuntimeError, itemdef_form.execute, req)
 		

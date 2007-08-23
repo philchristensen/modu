@@ -41,7 +41,7 @@ class StringField(define.definition):
 	def get_element(self, style, storable):
 		frm = form.FormNode(self.name)
 		frm(value=getattr(storable, self.name, None))
-		if(style == 'list'):
+		if(style == 'listing' or self.get('read_only', False)):
 			frm(type='label')
 		else:
 			frm(type='textfield')
@@ -55,7 +55,11 @@ class TextAreaField(define.definition):
 	
 	def get_element(self, style, storable):
 		frm = form.FormNode(self.name)
-		frm(type='textarea', value=getattr(storable, self.name, None))
+		frm(value=getattr(storable, self.name, None))
+		if(style == 'listing' or self.get('read_only', False)):
+			frm(type='label')
+		else:
+			frm(type='textarea')
 		return frm
 
 
@@ -65,6 +69,12 @@ class PasswordField(define.definition):
 	def get_element(self, style, storable):
 		entry_frm = form.FormNode(self.name)
 		entry_frm(value=getattr(storable, self.name, None))
+		
+		if(style == 'listing' or self.get('read_only', False)):
+			entry_frm(type='label')
+			if(self.get('obfuscate', True)):
+				entry_frm(value='********')
+			return frm
 		
 		if(self.get('obfuscate', True)):
 			entry_frm(type='password')

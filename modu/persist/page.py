@@ -43,7 +43,6 @@ class Paginator(object):
 			kwargs['__select_keyword'] = 'SQL_CALC_FOUND_ROWS'
 		
 		kwargs['__limit'] = self.get_limit()
-		
 		results = store.load(*args, **kwargs)
 		self.start_range = ((self.page - 1) * self.per_page) + 1
 		

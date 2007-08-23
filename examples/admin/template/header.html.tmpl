@@ -11,3 +11,22 @@
 	<script type="text/javascript" src="$base_path/assets/editable-autocomplete.js"></script>
 </head>
 <body>
+
+#if $itemdef_layout and len($itemdef_layout)
+<ul id="tab-list">
+	#for $tab, $itemdefs in $itemdef_layout.items()
+	<li class="#if $selected_itemdef in $itemdefs then 'active tab' else 'tab'#">
+		<a href="$base_path/listing/$itemdefs[0].name">$tab</a>
+		<ul class="subtab-list">
+		#for $itemdef in $itemdefs
+			<li><a href="$base_path/listing/$itemdef.name">$itemdef.name</a></li>
+		#end for
+		</ul>
+	</li>
+	#end for
+</ul>
+#end if
+
+#if $user
+<p class="current-user-info">You are currently logged in as $user.username. <a href="?logout=1">Click here to logout.</a></p>
+#end if

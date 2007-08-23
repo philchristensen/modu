@@ -63,8 +63,13 @@ class User(storable.Storable):
 			for role in roles:
 				self._roles[role.name] = role
 
-
 class AnonymousUser(User):
+	def is_allowed(self, permission):
+		return False
+	
+	def has_role(self, role):
+		return False
+	
 	def get_data(self):
 		raise RuntimeError('It is not possible to save the anonymous user object.')
 	

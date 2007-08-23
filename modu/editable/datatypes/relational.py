@@ -65,7 +65,12 @@ class ForeignSelectField(define.definition):
 		options = dict([(item[value], item[label]) for item in results])
 		
 		frm = form.FormNode(self.name)
-		frm(type='select', value=getattr(storable, self.name, None), options=options)
+		if(style == 'listing' or self.get('read_only', False)):
+			foreign_value = getattr(storable, self.name, None)
+			frm(type='label', value=options[foreign_value])
+		else:
+			frm(type='select', value=getattr(storable, self.name, None), options=options)
+
 		return frm
 
 
@@ -103,6 +108,9 @@ class ForeignAutocompleteField(define.definition):
 				ac_field(value=results[0][label])
 			else:
 				value_field(value=0)
+		
+		if(style == 'listing' or self.get('read_only', False)):
+			return FormNode(self.name)(type='label', value=ac_field.attribs('value', ''))
 		
 		frm = form.FormNode('%s-ac-fieldset' % self.name)(type='fieldset', style='brief')
 		frm.children[ac_field.name] = ac_field
@@ -142,6 +150,11 @@ class ForeignMultipleAutocompleteField(define.definition):
 		
 		store = storable.get_store()
 		results = store.pool.runQuery(ntom_query, storable.get_id())
+		
+		if(style == 'listing' or self.get('read_only', False)):
+			label_value = ', '.join([result['label'] for result in results])
+			return FormNode(self.name)(type='label', value=label_value)
+		
 		options = dict([(str(result['value']), result['label']) for result in results])
 		
 		form_name = '%s-form' % storable.get_table()

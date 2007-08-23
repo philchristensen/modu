@@ -145,7 +145,7 @@ class FormNode(object):
 		return False
 	
 	def set_error(self, name, error):
-		self.errors.set_default(name, []).append(error)
+		self.errors.setdefault(name, []).append(error)
 	
 	def has_errors(self):
 		return bool(len(self.errors))

@@ -242,7 +242,6 @@ def _scan_sites(env):
 		
 		domain = app.base_domain
 		if(domain.find(':') == -1):
-			env['wsgi.errors'].write('No port specified in ISite %r, assuming %s' % (site, env['SERVER_PORT']))
 			domain += ':' + env['SERVER_PORT']
 		
 		host_node = host_tree.setdefault(domain, url.URLNode())
@@ -290,7 +289,7 @@ class Request(dict):
 	def handle_jit(self, key):
 		if(not dict.__contains__(self, key) and key in self.jit_handlers):
 			handler = self.jit_handlers[key]
-			print 'activating %s with %r' % (key, handler)
+			#print 'activating %s with %r' % (key, handler)
 			handler(self)
 	
 	def set_jit(self, key, handler):

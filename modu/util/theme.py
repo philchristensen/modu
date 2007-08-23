@@ -121,6 +121,8 @@ class Theme(object):
 		attribs['value'] = element.attrib('value', 1)
 		if(element.attrib('checked', False)):
 			attribs['checked'] = None
+		if(element.attrib('disabled', False)):
+			attribs['disabled'] = None
 		return tags.input(type='checkbox', **attribs)
 	
 	def form_radio(self, form_id, element):

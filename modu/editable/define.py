@@ -9,22 +9,26 @@
 Contains classes needed to define a basic itemdef.
 """
 
+import copy
+
 from zope.interface import classProvides, implements
 
 from twisted import plugin
+from twisted.python import util
 
 from modu import editable
-from modu.util import form, tags
+from modu.util import form, tags, theme
 from modu.persist import storable, interp
 from modu.web.user import AnonymousUser
 
 def itemdef_cmp(a, b):
-	return cmp(a.get('weight', 0), b.get('weight', 0))
+	return cmp(a.config.get('weight', 0), b.config.get('weight', 0))
 
-
-def get_itemdef_layout(user):
-	layout = {}
-	for itemdef in get_itemdefs():
+def get_itemdef_layout(user, itemdefs=None):
+	layout = util.OrderedDict()
+	if(itemdefs is None):
+		itemdefs = get_itemdefs()
+	for name, itemdef in itemdefs.items():
 		acl = itemdef.config.get('acl', 'view item')
 		if('acl' not in itemdef.config or user.is_allowed(acl)):
 			tab = itemdef.config.get('category', 'other')
@@ -38,8 +42,11 @@ def get_itemdefs():
 	Search the system path for any available IItemdef implementors. 
 	""" 
 	import modu.itemdefs
-	return list(plugin.getPlugins(editable.IItemdef, modu.itemdefs))
-
+	itemdefs = {}
+	for itemdef in plugin.getPlugins(editable.IItemdef, modu.itemdefs):
+		if(itemdef.name):
+			itemdefs[itemdef.name] = itemdef
+	return itemdefs
 
 class itemdef(dict):
 	"""
@@ -72,24 +79,21 @@ class itemdef(dict):
 		self.update(fields)
 	
 	
-	def get_form(self, style, storable, user=None):
+	def get_form(self, storable, user=None):
 		"""
 		Return a FormNode that represents this item
 		"""
-		if(user is None):
-			user = AnonymousUser()
 		frm = form.FormNode('%s-form' % storable.get_table())
-		if(user.is_allowed(self.get('acl', self.config.get('acl', [])))):
+		if(user is None or user.is_allowed(self.get('acl', self.config.get('acl', [])))):
 			for name, field in self.items():
 				if(name.startswith('_')):
 					continue
-				if(style == 'list' and not field.get('list', False)):
+				if(not field.get('detail', True)):
 					continue
-				if(style == 'detail' and not field.get('detail', True)):
+				if not(user is None or user.is_allowed(field.get('acl', self.config.get('acl', [])))):
 					continue
-				if not(user.is_allowed(field.get('acl', self.config.get('acl', [])))):
-					continue
-				frm.children[name] = field.get_form_element(style, storable)
+				
+				frm.children[name] = field.get_form_element('detail', storable)
 		
 		if(not frm.has_submit_buttons()):
 			frm['save'](type='submit', value='save', weight=1000)
@@ -105,6 +109,39 @@ class itemdef(dict):
 		frm.submit = _submit
 		
 		return frm
+	
+	
+	def get_listing(self, storables, user=None):
+		"""
+		Return a FormNode that represents this item
+		"""
+		forms = []
+		for index in range(len(storables)):
+			storable = storables[index]
+			frm = form.FormNode('%s-form-%d' % (storable.get_table(), index))
+			if(user is None or user.is_allowed(self.get('acl', self.config.get('acl', [])))):
+				for name, field in self.items():
+					if(name.startswith('_')):
+						continue
+					if(not field.get('listing', False)):
+						continue
+					if not(user is None or user.is_allowed(field.get('acl', self.config.get('acl', [])))):
+						continue
+				
+					frm.children[name] = field.get_form_element('listing', storable)
+			
+			def _validate(req, form):
+				return self.validate(req, form, storable)
+			
+			def _submit(req, form):
+				self.submit(req, form, storable)
+			
+			frm.validate = _validate
+			frm.submit = _submit
+			
+			forms.append(frm)
+		
+		return forms
 	
 	
 	def get_item_url(self, storable):

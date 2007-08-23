@@ -18,6 +18,9 @@ class SelectField(define.definition):
 	implements(IDatatype)
 	
 	def get_element(self, style, storable):
+		if(style == 'listing' or self.get('read_only', False)):
+			return FormNode(self.name)(type='label', value=getattr(storable, self.name, None))
+		
 		frm = form.FormNode(self.name)
 		frm(type='select', value=getattr(storable, self.name, None), options=self.get('options', {}))
 		return frm

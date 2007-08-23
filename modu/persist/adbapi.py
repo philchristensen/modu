@@ -56,7 +56,7 @@ def get_dsn(db_url):
 	del dsn['path']
 	
 	dsn['cp_reconnect'] = True
-	dsn['cp_noisy'] = True
+	dsn['cp_noisy'] = False
 	dsn['cp_min'] = 10
 	dsn['cp_max'] = 15
 	

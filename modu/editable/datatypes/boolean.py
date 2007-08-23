@@ -23,5 +23,9 @@ class CheckboxField(define.definition):
 		frm(type='checkbox', value=self.get('value', 1))
 		if(getattr(storable, self.name, None) == self.get('value', 1)):
 			frm(checked=True)
+		
+		if(style == 'listing' or self.get('read_only', False)):
+			frm(disabled=True)
+		
 		return frm
 
