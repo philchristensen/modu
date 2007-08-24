@@ -244,8 +244,13 @@ def _scan_sites(env):
 		if(domain.find(':') == -1):
 			domain += ':' + env['SERVER_PORT']
 		
+		if not(app.base_path):
+			base_path = '/'
+		else:
+			base_path = app.base_path
+		
 		host_node = host_tree.setdefault(domain, url.URLNode())
-		host_node.register(app.base_path, app, clobber=True)
+		host_node.register(base_path, app, clobber=True)
 
 
 class ISite(interface.Interface):
@@ -322,7 +327,7 @@ class Application(object):
 		_dict['config'] = {}
 		
 		self.base_domain = 'localhost'
-		self.base_path = '/'
+		self.base_path = ''
 		self.db_url = 'MySQLdb://modu:modu@localhost/modu'
 		self.session_class = session.DbUserSession
 		self.initialize_store = True
