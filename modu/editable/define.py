@@ -11,31 +11,14 @@ Contains classes needed to define a basic itemdef.
 
 import copy
 
-from zope.interface import classProvides, implements
+from zope.interface import implements
 
 from twisted import plugin
-from twisted.python import util
 
 from modu import editable
 from modu.util import form, tags, theme
 from modu.persist import storable, interp
 from modu.web.user import AnonymousUser
-
-def itemdef_cmp(a, b):
-	return cmp(a.config.get('weight', 0), b.config.get('weight', 0))
-
-def get_itemdef_layout(user, itemdefs=None):
-	layout = util.OrderedDict()
-	if(itemdefs is None):
-		itemdefs = get_itemdefs()
-	for name, itemdef in itemdefs.items():
-		acl = itemdef.config.get('acl', 'view item')
-		if('acl' not in itemdef.config or user.is_allowed(acl)):
-			tab = itemdef.config.get('category', 'other')
-			layout.setdefault(tab, []).append(itemdef)
-			layout[tab].sort(itemdef_cmp)
-	return layout
-
 
 def get_itemdefs(): 
 	""" 
@@ -47,6 +30,17 @@ def get_itemdefs():
 		if(itemdef.name):
 			itemdefs[itemdef.name] = itemdef
 	return itemdefs
+
+def clone_itemdef(itemdef):
+	"""
+	Duplicate the provided itemdef in a sane fashion.
+	"""
+	# this may need to be done a bit more delicately
+	clone = copy.copy(itemdef)
+	clone.config = copy.copy(clone.config)
+	for name, field in clone.items():
+		field.itemdef = clone
+	return clone
 
 class itemdef(dict):
 	"""

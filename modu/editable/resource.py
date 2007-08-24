@@ -11,6 +11,8 @@ Contains resources for configuring a default admin interface.
 
 import os.path, copy
 
+from twisted.python import util
+
 from modu.web import resource, app, user
 from modu.editable import define
 from modu.util import form, theme, tags
@@ -43,15 +45,30 @@ def configure_store(req, itemdef):
 		req.store.ensure_factory(table_name)
 
 
-def clone_itemdef(itemdef):
-	"""
-	Duplicate the provided itemdef in a sane fashion.
-	"""
-	# this may need to be done a bit more delicately
-	return copy.deepcopy(itemdef)
+def itemdef_cmp(a, b):
+	return cmp(a.config.get('weight', 0), b.config.get('weight', 0))
+
+
+def get_itemdef_layout(req, itemdefs=None):
+	user = req.user
+	layout = util.OrderedDict()
+	if(itemdefs is None):
+		itemdefs = get_itemdefs()
+	for name, itemdef in itemdefs.items():
+		itemdef = define.clone_itemdef(itemdef)
+		itemdef.config['base_path'] = os.path.join(req.app.base_path, '/'.join(req.app.tree.prepath))
+		acl = itemdef.config.get('acl', 'view item')
+		if('acl' not in itemdef.config or user.is_allowed(acl)):
+			cat = itemdef.config.get('category', 'other')
+			layout.setdefault(cat, []).append(itemdef)
+			layout[cat].sort(itemdef_cmp)
+	return layout
+
 
 class AdminResource(resource.CheetahTemplateResource):
-	def __init__(self, path='/admin', **options):
+	def __init__(self, path=None, **options):
+		if(path is None):
+			path = '/admin'
 		self.path = path
 		self.options = options
 	
@@ -64,14 +81,20 @@ class AdminResource(resource.CheetahTemplateResource):
 		if(user and user.get_id()):
 			itemdefs = define.get_itemdefs()
 			
-			self.itemdef_layout = define.get_itemdef_layout(req.user, itemdefs)
+			# get_itemdef_layout adds some data and clones the itemdef
+			self.itemdef_layout = get_itemdef_layout(req, itemdefs)
+			
+			# FIXME: This is inelegant -- we need to get at the cloned itemdef
+			# as it already has some config data in it (because of get_itemdef_layout)
+			itemdefs = dict([(itemdef.name, itemdef) for itemdef in
+								reduce(lambda x, y: x+y, self.itemdef_layout.values())])
+			
 			self.set_slot('itemdef_layout', self.itemdef_layout)
 			
 			if(len(req.app.tree.postpath) > 1):
 				itemdef_name = req.app.tree.postpath[1]
-				selected_itemdef = clone_itemdef(itemdefs.get(itemdef_name))
-				# got any better ideas?
-				selected_itemdef.config['base_path'] = req.app.base_path
+				# we just need to select the right itemdef
+				selected_itemdef = itemdefs.get(itemdef_name)
 				
 				self.set_slot('selected_itemdef', selected_itemdef)
 				
@@ -108,13 +131,21 @@ class AdminResource(resource.CheetahTemplateResource):
 		self.template = 'listing.html.tmpl'
 		table_name = itemdef.config.get('table', itemdef.name)
 		
+		query_data = form.NestedFieldStorage(req)
 		pager = page.Paginator()
+		if('page' in query_data):
+			pager.page = int(query_data['page'].value)
+		else:
+			pager.page = 1
+		pager.per_page = itemdef.config.get('per_page', 25)
+		
 		items = pager.get_results(req.store, table_name, {})
 		forms = itemdef.get_listing(items, req.user)
 		thm = ListingTheme(req)
 		
 		self.set_slot('items', items)
 		self.set_slot('pager', pager)
+		self.set_slot('page_guide', thm.page_guide(pager, os.path.join(req.app.base_path, req.path[1:])))
 		self.set_slot('form', thm.form(forms))
 	
 	def prepare_detail(self, req, itemdef):
@@ -153,7 +184,7 @@ class ListingTheme(theme.Theme):
 			for child in form:
 				row += self.form_element(form.name, form[child])
 			content += tags.tr()[row]
-		content = tags.table()[content]
+		content = tags.table(_id='listing-table')[content]
 		
 		form = form_list[0]
 		attribs = form.attrib('attributes', {})

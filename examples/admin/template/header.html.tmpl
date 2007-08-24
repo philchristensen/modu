@@ -12,21 +12,31 @@
 </head>
 <body>
 
+<div id="navigation">
+#if $user
+<p class="current-user-info">
+	You are currently logged in as $user.username.<br/>
+	<a href="?logout=1">Click here to logout.</a>
+</p>
+#end if
+
 #if $itemdef_layout and len($itemdef_layout)
-<ul id="tab-list">
-	#for $tab, $itemdefs in $itemdef_layout.items()
-	<li class="#if $selected_itemdef in $itemdefs then 'active tab' else 'tab'#">
-		<a href="$base_path/listing/$itemdefs[0].name">$tab</a>
-		<ul class="subtab-list">
+<ul id="nav-list">
+	#for $category, $itemdefs in $itemdef_layout.items()
+	<li>
+		$category
+		<ul class="subnav-list">
 		#for $itemdef in $itemdefs
-			<li><a href="$base_path/listing/$itemdef.name">$itemdef.name</a></li>
+			<li class="#if $selected_itemdef == $itemdef then 'active' else ''#">
+			<a href="$selected_itemdef.config.base_path/listing/$itemdef.name">$itemdef.name</a>
+			</li>
 		#end for
 		</ul>
 	</li>
 	#end for
 </ul>
 #end if
+</div>
 
-#if $user
-<p class="current-user-info">You are currently logged in as $user.username. <a href="?logout=1">Click here to logout.</a></p>
-#end if
+<div id="content">
+
