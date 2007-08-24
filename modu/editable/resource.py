@@ -128,7 +128,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		login_form.submit = submit_login
 		
 		if(login_form.execute(req) and req.session.get_user()):
-			self.prepare_content(req)
+			app.redirect(req.get_path(self.path[1:]))
 		else:
 			self.set_slot('login_form', login_form.render(req))
 	
