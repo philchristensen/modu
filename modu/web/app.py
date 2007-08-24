@@ -304,6 +304,12 @@ class Request(dict):
 		elif(self['QUERY_STRING']):
 			return True
 		return False
+	
+	def get_path(self, *args):
+		if(self.app.base_path == '/'):
+			return '/' + os.path.join(*args)
+		else:
+			return os.path.join(self.app.base_path, *args)
 
 
 class Application(object):

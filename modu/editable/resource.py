@@ -56,7 +56,7 @@ def get_itemdef_layout(req, itemdefs=None):
 		itemdefs = get_itemdefs()
 	for name, itemdef in itemdefs.items():
 		itemdef = define.clone_itemdef(itemdef)
-		itemdef.config['base_path'] = os.path.join(req.app.base_path, '/'.join(req.app.tree.prepath))
+		itemdef.config['base_path'] = req.get_path(*req.app.tree.prepath)
 		acl = itemdef.config.get('acl', 'view item')
 		if('acl' not in itemdef.config or user.is_allowed(acl)):
 			cat = itemdef.config.get('category', 'other')
@@ -106,6 +106,11 @@ class AdminResource(resource.CheetahTemplateResource):
 				else:
 					self.prepare_listing(req, selected_itemdef)
 			else:
+				default_listing = self.options.get('default_listing')
+				if(default_listing):
+					redirect_path = req.get_path(self.path[1:], 'listing', default_listing)
+					app.redirect(redirect_path)
+				
 				app.raise404('There is no item list at the path: %s' % req['REQUEST_URI'])
 		else:
 			self.set_slot('itemdef_layout', None)
@@ -123,7 +128,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		login_form.submit = submit_login
 		
 		if(login_form.execute(req) and req.session.get_user()):
-			self.prepare_listing(req, None)
+			self.prepare_content(req)
 		else:
 			self.set_slot('login_form', login_form.render(req))
 	
@@ -145,7 +150,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		
 		self.set_slot('items', items)
 		self.set_slot('pager', pager)
-		self.set_slot('page_guide', thm.page_guide(pager, os.path.join(req.app.base_path, req.path[1:])))
+		self.set_slot('page_guide', thm.page_guide(pager, req.get_path(req.path[1:])))
 		self.set_slot('form', thm.form(forms))
 	
 	def prepare_detail(self, req, itemdef):
