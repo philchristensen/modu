@@ -215,7 +215,12 @@ cheetah_lock = threading.BoundedSemaphore()
 class CheetahTemplateContent(TemplateContent):
 	"""http://www.cheetahtemplate.org"""
 	def get_content(self, req):
-		self.set_slot('base_path', req.app.base_path)
+		if(req.app.base_path == '/'):
+			base_path = ''
+		else:
+			base_path = req.app.base_path
+		
+		self.set_slot('base_path', base_path)
 		self.set_slot('request', req)
 		
 		template = self.get_template(req)
@@ -273,7 +278,12 @@ class CheetahTemplateContent(TemplateContent):
 class ZPTemplateContent(TemplateContent):
 	"""http://zpt.sourceforge.net"""
 	def get_content(self, req):
-		self.set_slot('base_path', req.app.base_path)
+		if(req.app.base_path == '/'):
+			base_path = ''
+		else:
+			base_path = req.app.base_path
+		
+		self.set_slot('base_path', base_path)
 		self.set_slot('request', req)
 		
 		from ZopePageTemplates import PageTemplate
@@ -297,7 +307,12 @@ class ZPTemplateContent(TemplateContent):
 class CherryTemplateContent(TemplateContent):
 	"""http://cherrytemplate.python-hosting.com"""
 	def get_content(self, req):
-		self.set_slot('base_path', req.app.base_path)
+		if(req.app.base_path == '/'):
+			base_path = ''
+		else:
+			base_path = req.app.base_path
+		
+		self.set_slot('base_path', base_path)
 		self.set_slot('request', req)
 		
 		from cherrytemplate import renderTemplate

@@ -86,6 +86,7 @@ class BaseSession(dict):
 		self._cookie = None
 		self._valid = True
 		self._clean = True
+		self._new = True
 		self._loaded = False
 		
 		self._sid = None
@@ -108,7 +109,8 @@ class BaseSession(dict):
 				self._send_cookie()
 		
 		if(self._sid):
-			self.load()
+			if(self.load()):
+				self._new = False
 		
 		self._accessed = time.time()
 		
@@ -205,6 +207,9 @@ class BaseSession(dict):
 	def is_clean(self):
 		return self._clean
 	
+	def is_new(self):
+		return self._new
+	
 	def __setitem__(self, key, value):
 		if(self._loaded):
 			self.touch()
@@ -284,7 +289,7 @@ class DbUserSession(BaseSession):
 			return None
 	
 	def do_save(self, attribs):
-		if(self.is_clean()):
+		if(self.is_clean() or not self.is_new()):
 			del attribs['data']
 			update_query = persist.build_update('session', attribs, {'id':self.id()})
 			self._pool.runOperation(update_query)
