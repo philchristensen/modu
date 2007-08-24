@@ -113,7 +113,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			self.prepare_login(req)
 	
 	def prepare_login(self, req):
-		self.template = 'login.html.tmpl'
+		self.template = 'admin-login.html.tmpl'
 		
 		login_form = form.FormNode('login')
 		login_form['username'](type='textfield', label='Username')
@@ -128,7 +128,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			self.set_slot('login_form', login_form.render(req))
 	
 	def prepare_listing(self, req, itemdef):
-		self.template = 'listing.html.tmpl'
+		self.template = 'admin-listing.html.tmpl'
 		table_name = itemdef.config.get('table', itemdef.name)
 		
 		query_data = form.NestedFieldStorage(req)
@@ -149,7 +149,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		self.set_slot('form', thm.form(forms))
 	
 	def prepare_detail(self, req, itemdef):
-		self.template = 'detail.html.tmpl'
+		self.template = 'admin-detail.html.tmpl'
 		self.set_slot('form', None)
 		if(len(req.app.tree.postpath) > 2):
 			try:
