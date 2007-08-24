@@ -307,7 +307,7 @@ class Request(dict):
 	
 	def get_path(self, *args):
 		if(self.app.base_path == '/'):
-			return '/' + os.path.join(*args)
+			return os.path.join('', *args)
 		else:
 			return os.path.join(self.app.base_path, *args)
 
