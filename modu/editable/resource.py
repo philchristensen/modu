@@ -108,7 +108,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			else:
 				default_listing = self.options.get('default_listing')
 				if(default_listing):
-					redirect_path = req.get_path(self.path[1:], 'listing', default_listing)
+					redirect_path = req.get_path(self.path, 'listing', default_listing)
 					app.redirect(redirect_path)
 				
 				app.raise404('There is no item list at the path: %s' % req['REQUEST_URI'])
@@ -128,7 +128,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		login_form.submit = submit_login
 		
 		if(login_form.execute(req) and req.session.get_user()):
-			app.redirect(req.get_path(self.path[1:]))
+			app.redirect(req.get_path(self.path))
 		else:
 			self.set_slot('login_form', login_form.render(req))
 	
@@ -150,7 +150,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		
 		self.set_slot('items', items)
 		self.set_slot('pager', pager)
-		self.set_slot('page_guide', thm.page_guide(pager, req.get_path(req.path[1:])))
+		self.set_slot('page_guide', thm.page_guide(pager, req.get_path(req.path)))
 		self.set_slot('form', thm.form(forms))
 	
 	def prepare_detail(self, req, itemdef):

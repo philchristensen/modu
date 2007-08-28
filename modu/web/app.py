@@ -245,7 +245,10 @@ def _scan_sites(env):
 			domain += ':' + env['SERVER_PORT']
 		
 		host_node = host_tree.setdefault(domain, url.URLNode())
-		host_node.register(app.base_path, app, clobber=True)
+		base_path = app.base_path
+		if not(base_path):
+			base_path = '/'
+		host_node.register(base_path, app, clobber=True)
 
 
 class ISite(interface.Interface):
@@ -306,10 +309,18 @@ class Request(dict):
 		return False
 	
 	def get_path(self, *args):
-		if(self.app.base_path == '/'):
-			return os.path.join('', *args)
-		else:
-			return os.path.join(self.app.base_path, *args)
+		def _deslash(fragment):
+			if(fragment.startswith('/')):
+				return fragment[1:]
+			else:
+				return fragment
+		
+		args = map(_deslash, args)
+		result = os.path.join(self.app.base_path, *args)
+		if not(self.app.base_path):
+			result = '/' + result
+		
+		return result
 
 
 class Application(object):

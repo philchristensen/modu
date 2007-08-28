@@ -139,7 +139,6 @@ class itemdef(dict):
 	
 	
 	def get_item_url(self, storable):
-		# TODO: This should return something real, or call a function that can.
 		return '%s/detail/%s/%d' % (self.config['base_path'], storable.get_table(), storable.get_id())
 	
 	
