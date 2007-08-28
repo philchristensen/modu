@@ -8,7 +8,7 @@
 import os, os.path, sys, stat, copy, mimetypes, traceback, threading
 
 from modu.util import url, tags
-from modu.web import session, user, resource
+from modu.web import session, user, resource, static
 from modu import persist, web
 
 from twisted import plugin
@@ -237,7 +237,7 @@ def _scan_sites(env):
 		if('SCRIPT_FILENAME' in env):
 			root = app.tree.get_data_at('/')
 			webroot = os.path.join(env['SCRIPT_FILENAME'], app.webroot)
-			file_root = resource.FileResource(['/'], webroot, root)
+			file_root = static.FileResource(['/'], webroot, root)
 			app.tree.register('/', file_root, clobber=True)
 		
 		domain = app.base_domain

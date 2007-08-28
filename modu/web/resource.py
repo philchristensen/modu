@@ -62,63 +62,14 @@ class Resource(object):
 		
 		content = cnt.get_content(req)
 		
-		req.app.add_header('Content-Length', len(content))
-		
-		return [content]
+		if(isinstance(content, str)):
+			req.app.add_header('Content-Length', len(content))
+			return [content]
+		else:
+			return content
 	
 	def get_paths(self):
 		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
-
-
-class FileResource(object):
-	implements(IResource, IResourceDelegate)
-	
-	def __init__(self, paths, root, alternate=None):
-		self.paths = paths
-		self.alternate = alternate
-		self.root = root
-	
-	def get_response(self, req):
-		req.app.add_header('Content-Type', self.content_type)
-		req.app.add_header('Content-Length', self.size)
-		file_wrapper = req['wsgi.file_wrapper']
-		return file_wrapper(open(self.true_path))
-	
-	def get_delegate(self, req):
-		self.content_type = None
-		self.size = None
-		self.true_path = os.path.join(self.root, '/'.join(req.app.tree.postpath))
-		
-		try:
-			finfo = os.stat(self.true_path)
-			# note that there's no support for directory indexes,
-			# only direct file access under the webroot
-			if(stat.S_ISREG(finfo.st_mode)):
-				from modu.web import app
-				try:
-					if(not app.mimetypes_init and req.app.magic_mime_file):
-						mimetypes.init([req.app.magic_mime_file])
-					self.content_type = mimetypes.guess_type(self.true_path, False)[0]
-					if(self.content_type is None):
-						self.content_type = 'application/octet-stream'
-					self.size = finfo.st_size
-				except IOError:
-					app.raise403('Cannot discern type: %s' % req['REQUEST_URI'])
-			else:
-				return self._return_alternate(req)
-		except OSError:
-			return self._return_alternate(req)
-		
-		return self
-	
-	def _return_alternate(self, req):
-		if(self.alternate):
-			return self.alternate
-		from modu.web import app
-		app.raise404(req['REQUEST_URI'])
-	
-	def get_paths(self):
-		return self.paths
 
 
 class IContent(interface.Interface):

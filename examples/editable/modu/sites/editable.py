@@ -10,7 +10,7 @@ from zope.interface import classProvides
 from twisted import plugin
 
 from modu.web.app import ISite
-from modu.web import resource
+from modu.web import resource, static
 from modu.persist import storable
 from modu.editable.datatypes import string, relational
 
@@ -95,4 +95,4 @@ class EditableSite(object):
 		import os.path, modu
 		
 		modu_assets_path = os.path.join(os.path.dirname(modu.__file__), 'assets')
-		application.activate(resource.FileResource(['/assets'], modu_assets_path))
+		application.activate(static.FileResource(['/assets'], modu_assets_path))

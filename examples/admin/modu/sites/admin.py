@@ -11,7 +11,7 @@ from zope.interface import classProvides
 
 from twisted import plugin
 
-from modu.web import resource, app
+from modu.web import resource, app, static
 from modu.editable.resource import AdminResource
 
 class AdminSite(object):
@@ -24,4 +24,4 @@ class AdminSite(object):
 		
 		import modu
 		modu_assets_path = os.path.join(os.path.dirname(modu.__file__), 'assets')
-		application.activate(resource.FileResource(['/assets'], modu_assets_path))
+		application.activate(static.FileResource(['/assets'], modu_assets_path))
