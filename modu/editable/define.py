@@ -19,6 +19,7 @@ from modu import editable
 from modu.util import form, tags, theme
 from modu.persist import storable, interp
 from modu.web.user import AnonymousUser
+from modu.web import app
 
 def get_itemdefs(): 
 	""" 
@@ -79,6 +80,9 @@ class itemdef(dict):
 		for a field called 'name' instead of the instance variable.
 		"""
 		return self.name
+	
+	def get_table(self):
+		return self.config.get('table', self.name)
 	
 	def get_form(self, storable, user=None):
 		"""
@@ -198,6 +202,9 @@ class itemdef(dict):
 		# call postwrite_callback
 		if('postwrite_callback' in self.config):
 			self.config['postwrite_callback'](req, form, storable)
+		
+		if(req.app.tree.postpath[-1] == 'new'):
+			app.redirect(self.get_item_url(storable))
 
 
 class definition(dict):
@@ -230,7 +237,7 @@ class definition(dict):
 		for name, value in self.get('attributes', {}).iteritems():
 			frm.attributes[name] = value
 		
-		if(self.get('link', False)):
+		if(style == 'listing' and self.get('link', False)):
 			href = self.itemdef.get_item_url(storable)
 			frm(prefix=tags.a(href=href, __no_close=True), suffix='</a>')
 		return frm

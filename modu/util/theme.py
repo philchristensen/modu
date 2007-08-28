@@ -148,13 +148,17 @@ class Theme(object):
 		else:
 			option_keys = [i for i in range(len(option_data))]
 		
+		option_keys.sort(element.attrib('sort', cmp))
+		if(element.attrib('size', 1) == 1):
+			option_keys.insert(0, '')
+			option_data[''] = 'Select...'
+		
 		def _create_option(k):
 			tag = tags.option(value=k)[option_data[k]]
 			if(k == value):
 				tag(selected=None)
 			return tag
 		
-		option_keys.sort(element.attrib('sort', None))
 		options = map(_create_option, option_keys)
 		
 		if not(options):

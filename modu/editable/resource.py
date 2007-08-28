@@ -73,12 +73,16 @@ class AdminResource(resource.CheetahTemplateResource):
 		self.options = options
 	
 	def get_paths(self):
-		return [self.path]
+		return [self.path, '%s/logout' % self.path]
 	
 	def prepare_content(self, req):
 		user = req['modu.user']
 		self.set_slot('user', user)
 		if(user and user.get_id()):
+			if(req.app.tree.prepath[-1] == 'logout'):
+				req.session.set_user(None)
+				app.redirect(req.get_path(self.path))
+			
 			itemdefs = define.get_itemdefs()
 			
 			# get_itemdef_layout adds some data and clones the itemdef
@@ -163,12 +167,20 @@ class AdminResource(resource.CheetahTemplateResource):
 				
 				if(item_id == 'new'):
 					selected_item = storable.Storable(table_name)
+					# we can be sure the factory is there, because configure_store
+					# already took care of it during prepare_content
+					factory = req.store.get_factory(table_name)
+					selected_item.set_factory(factory)
 				else:
 					selected_item = req.store.load_one(table_name, {'id':int(item_id)})
 				
 				frm = itemdef.get_form(selected_item, req.user)
 				if('theme' in itemdef.config):
 					frm.theme = itemdef.config['theme']
+				
+				if(frm.execute(req)):
+					frm = itemdef.get_form(selected_item)
+				
 				self.set_slot('form', frm.render(req))
 				self.set_slot('selected_item', selected_item)
 			except TypeError:

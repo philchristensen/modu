@@ -1,6 +1,8 @@
 #include 'admin-header.html.tmpl'
 
-<h2>Listing $selected_itemdef.get_name() Records</h2>
+<h2>Listing $selected_itemdef.config.get('label', $selected_itemdef.get_name()) Records</h2>
+
+<a href="$selected_itemdef.config['base_path']/detail/$selected_itemdef.get_table()/new">Create New Record</a>
 
 $page_guide
 
