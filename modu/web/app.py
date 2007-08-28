@@ -308,7 +308,7 @@ class Request(dict):
 			return True
 		return False
 	
-	def get_path(self, *args):
+	def get_path(self, *args, **options):
 		def _deslash(fragment):
 			if(fragment.startswith('/')):
 				return fragment[1:]
@@ -317,8 +317,11 @@ class Request(dict):
 		
 		args = map(_deslash, args)
 		result = os.path.join(self.app.base_path, *args)
-		if(result and not self.app.base_path):
-			result = '/' + result
+		if(not self.app.base_path):
+			if(result):
+				result = '/' + result
+			elif(options.get('absolute', False)):
+				result = '/'
 		
 		return result
 

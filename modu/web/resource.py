@@ -168,6 +168,10 @@ class CheetahTemplateContent(TemplateContent):
 	def get_content(self, req):
 		self.set_slot('base_path', req.app.base_path)
 		self.set_slot('request', req)
+		if('modu.user' in req):
+			self.set_slot('user', req['modu.user'])
+		else:
+			self.set_slot('user', None)
 		
 		template = self.get_template(req)
 		template_path = req.approot + '/template/' + template
@@ -226,6 +230,10 @@ class ZPTemplateContent(TemplateContent):
 	def get_content(self, req):
 		self.set_slot('base_path', req.app.base_path)
 		self.set_slot('request', req)
+		if('modu.user' in req):
+			self.set_slot('user', req['modu.user'])
+		else:
+			self.set_slot('user', None)
 		
 		from ZopePageTemplates import PageTemplate
 		class ZPTmoduTemplate(PageTemplate):
@@ -250,7 +258,11 @@ class CherryTemplateContent(TemplateContent):
 	def get_content(self, req):
 		self.set_slot('base_path', req.app.base_path)
 		self.set_slot('request', req)
-		
+		if('modu.user' in req):
+			self.set_slot('user', req['modu.user'])
+		else:
+			self.set_slot('user', None)
+			
 		from cherrytemplate import renderTemplate
 		self.data['_template_path'] = req.approot + '/template/' + self.get_template(req)
 		self.data['_renderTemplate'] = renderTemplate
