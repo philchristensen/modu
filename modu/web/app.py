@@ -317,7 +317,7 @@ class Request(dict):
 		
 		args = map(_deslash, args)
 		result = os.path.join(self.app.base_path, *args)
-		if not(self.app.base_path):
+		if(result and not self.app.base_path):
 			result = '/' + result
 		
 		return result
