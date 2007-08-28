@@ -17,7 +17,7 @@ from modu.web import resource, app, user
 from modu.editable import define
 from modu.util import form, theme, tags
 from modu import persist
-from modu.persist import page
+from modu.persist import page, storable
 
 def validate_login(req, form):
 	if not(form.data[form.name]['username']):
@@ -160,7 +160,11 @@ class AdminResource(resource.CheetahTemplateResource):
 			try:
 				item_id = req.app.tree.postpath[2]
 				table_name = itemdef.config.get('table', itemdef.name)
-				selected_item = req.store.load_one(table_name, {'id':int(item_id)})
+				
+				if(item_id == 'new'):
+					selected_item = storable.Storable(table_name)
+				else:
+					selected_item = req.store.load_one(table_name, {'id':int(item_id)})
 				
 				frm = itemdef.get_form(selected_item, req.user)
 				if('theme' in itemdef.config):
@@ -191,17 +195,20 @@ class ListingTheme(theme.Theme):
 			content += tags.tr()[row]
 		content = tags.table(_id='listing-table')[content]
 		
-		form = form_list[0]
-		attribs = form.attrib('attributes', {})
-		attribs['name'] = form.name.replace('-', '_')
-		attribs['id'] = form.name
-		attribs['enctype'] = form.attrib('enctype', 'application/x-www-form-urlencoded')
-		attribs['method'] = form.attrib('method', 'post')
+		if(len(form_list)):
+			form = form_list[0]
+			attribs = form.attrib('attributes', {})
+			attribs['name'] = form.name.replace('-', '_')
+			attribs['id'] = form.name
+			attribs['enctype'] = form.attrib('enctype', 'application/x-www-form-urlencoded')
+			attribs['method'] = form.attrib('method', 'post')
 		
-		action = form.attrib('action', None)
-		if(action):
-			attribs['action'] = action
-		return tags.form(**attribs)["\n" + content]
+			action = form.attrib('action', None)
+			if(action):
+				attribs['action'] = action
+			return tags.form(**attribs)["\n" + content]
+		
+		return tags.form()["\n" + content]
 	
 	def form_element(self, form_id, element):
 		return tags.td()[self._form_element(form_id, element)]

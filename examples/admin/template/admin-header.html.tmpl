@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC 
 	"-//W3C//DTD XHTML 1.0 Transitional//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 	<title>editable test page</title>
 	<style type="text/css">@import '$base_path/styles.css';</style>
@@ -28,7 +28,7 @@
 		<ul class="subnav-list">
 		#for $itemdef in $itemdefs
 			<li class="#if $selected_itemdef == $itemdef then 'active' else ''#">
-			<a href="$selected_itemdef.config.base_path/listing/$itemdef.name">$itemdef.name</a>
+			<a href="$selected_itemdef.config.base_path/listing/$itemdef.get_name()">$itemdef.get_name()</a>
 			</li>
 		#end for
 		</ul>

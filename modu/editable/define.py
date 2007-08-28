@@ -72,6 +72,13 @@ class itemdef(dict):
 		
 		self.update(fields)
 	
+	def get_name(self):
+		"""
+		This is a convenience function to be used when semi-retarded template
+		engines (**ahem**cheetah**cough**) insist on returning a definition
+		for a field called 'name' instead of the instance variable.
+		"""
+		return self.name
 	
 	def get_form(self, storable, user=None):
 		"""

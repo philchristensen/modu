@@ -20,7 +20,7 @@ class LabelField(define.definition):
 	
 	def get_element(self, style, storable):
 		frm = form.FormNode(self.name)
-		frm(type='label', value=getattr(storable, self.name, None))
+		frm(type='label', value=getattr(storable, self.name, ''))
 		return frm
 
 
@@ -29,7 +29,7 @@ class DateField(define.definition):
 	
 	def get_element(self, style, storable):
 		frm = form.FormNode(self.name)
-		frm(type='label', value=getattr(storable, self.name, None))
+		frm(type='label', value=getattr(storable, self.name, ''))
 		return frm
 
 
@@ -40,7 +40,7 @@ class StringField(define.definition):
 	
 	def get_element(self, style, storable):
 		frm = form.FormNode(self.name)
-		frm(value=getattr(storable, self.name, None))
+		frm(value=getattr(storable, self.name, ''))
 		if(style == 'listing' or self.get('read_only', False)):
 			frm(type='label')
 		else:
@@ -55,7 +55,7 @@ class TextAreaField(define.definition):
 	
 	def get_element(self, style, storable):
 		frm = form.FormNode(self.name)
-		frm(value=getattr(storable, self.name, None))
+		frm(value=getattr(storable, self.name, ''))
 		if(style == 'listing' or self.get('read_only', False)):
 			frm(type='label')
 		else:
@@ -68,7 +68,7 @@ class PasswordField(define.definition):
 	
 	def get_element(self, style, storable):
 		entry_frm = form.FormNode(self.name)
-		entry_frm(value=getattr(storable, self.name, None))
+		entry_frm(value=getattr(storable, self.name, ''))
 		
 		if(style == 'listing' or self.get('read_only', False)):
 			entry_frm(type='label')
@@ -119,7 +119,7 @@ class PasswordField(define.definition):
 				return False
 			
 			# If there's nothing in both fields, return False
-			if((not getattr(form_data[entry_name], 'value', None)) and (not getattr(form_data[verify_name], 'value', None))):
+			if((not getattr(form_data[entry_name], 'value', '')) and (not getattr(form_data[verify_name], 'value', ''))):
 				#print "no passwords in %s" % form_data
 				# Remember, True means "I'm done with it", not "I wrote it"
 				return True

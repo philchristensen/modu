@@ -22,6 +22,7 @@ class Theme(object):
 		attribs['id'] = form.name
 		attribs['enctype'] = form.attrib('enctype', 'application/x-www-form-urlencoded')
 		attribs['method'] = form.attrib('method', 'post')
+		attribs['action'] = form.attrib('action', '')
 		
 		action = form.attrib('action', None)
 		if(action):
