@@ -7,7 +7,7 @@
 
 import os, os.path, sys, stat, copy, mimetypes, traceback, threading
 
-from modu.util import url, tags
+from modu.util import url, tags, message
 from modu.web import session, user, resource, static
 from modu import persist, web
 
@@ -34,10 +34,15 @@ def handler(env, start_response):
 			else:
 				raise404("No such application: %s" % env['REQUEST_URI'])
 			
-			req.set_jit('modu.pool', activate_pool)
-			req.set_jit('modu.store', persist.activate_store)
-			req.set_jit('modu.session', session.activate_session)
-			req.set_jit('modu.user', session.activate_session)
+			if(req.app.db_url):
+				req.set_jit('modu.pool', activate_pool)
+			if(req.app.db_url and application.initialize_store):
+				req.set_jit('modu.store', persist.activate_store)
+			if(req.app.db_url and req.app.session_class):
+				req.set_jit('modu.session', session.activate_session)
+				req.set_jit('modu.user', session.activate_session)
+			if not(req.app.disable_message_queue):
+				req.set_jit('modu.messages', message.activate_queue)
 			
 			if(hasattr(application.site, 'configure_request')):
 				application.site.configure_request(req)
@@ -202,8 +207,7 @@ def try_lucene_threads():
 
 
 def activate_pool(req):
-	if(req.app.db_url):
-		req['modu.pool'] = acquire_db(req.app.db_url)
+	req['modu.pool'] = acquire_db(req.app.db_url)
 
 
 def acquire_db(db_url):
@@ -351,6 +355,7 @@ class Application(object):
 		self.debug_store = False
 		self.enable_anonymous_users = True
 		self.disable_session_users = False
+		self.disable_message_queue = False
 		self.magic_mime_file = None
 		self.tree = url.URLNode()
 		self.site = site

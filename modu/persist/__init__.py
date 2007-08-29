@@ -22,17 +22,15 @@ def activate_store(req):
 	Examine the req object and its internal modu.app object,
 	and create or fetch a store instance to be used by this request.
 	"""
-	app = req.app
-	if('modu.pool' in req and app.initialize_store):
-		store = Store.get_store()
-		if not(store):
-			store = Store(req.pool)
-		if(app.debug_store):
-			debug_file = req['wsgi.errors']
-		else:
-			debug_file = None
-		store.debug_file = debug_file
-		req['modu.store'] = store
+	store = Store.get_store()
+	if not(store):
+		store = Store(req.pool)
+	if(req.app.debug_store):
+		debug_file = req['wsgi.errors']
+	else:
+		debug_file = None
+	store.debug_file = debug_file
+	req['modu.store'] = store
 
 
 def build_insert(table, data):

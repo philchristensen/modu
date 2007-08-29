@@ -123,7 +123,7 @@ class itemdef(dict):
 		forms = []
 		for index in range(len(storables)):
 			storable = storables[index]
-			frm = form.FormNode('%s-form-%d' % (storable.get_table(), index))
+			frm = form.FormNode('%s-row' % storable.get_table())
 			if(user is None or user.is_allowed(self.get('acl', self.config.get('acl', [])))):
 				for name, field in self.items():
 					if(name.startswith('_')):
@@ -203,7 +203,7 @@ class itemdef(dict):
 		if('postwrite_callback' in self.config):
 			self.config['postwrite_callback'](req, form, storable)
 		
-		if(req.app.tree.postpath[-1] == 'new'):
+		if(req.app.tree.postpath and req.app.tree.postpath[-1] == 'new'):
 			app.redirect(self.get_item_url(storable))
 
 

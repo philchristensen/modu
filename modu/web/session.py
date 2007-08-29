@@ -32,21 +32,18 @@ def activate_session(req):
 	# FIXME: We assume that any session class requires database access, and pass
 	# the db connection as the second paramter to the session class constructor
 	app = req.app
-	session_class = app.session_class
-	db_url = app.db_url
-	if(db_url and session_class):
-		req['modu.session'] = session_class(req, req.pool)
-		if(app.debug_session):
-			req.log_error('session contains: ' + str(req.session))
-		if(app.disable_session_users):
-			if(app.enable_anonymous_users):
-				req['modu.user'] = user.AnonymousUser()
-			else:
-				req['modu.user'] = None
+	req['modu.session'] = app.session_class(req, req.pool)
+	if(app.debug_session):
+		req.log_error('session contains: ' + str(req.session))
+	if(app.disable_session_users):
+		if(app.enable_anonymous_users):
+			req['modu.user'] = user.AnonymousUser()
 		else:
-			req['modu.user'] = req.session.get_user()
-			if(req.user is None and app.enable_anonymous_users):
-				req['modu.user'] = user.AnonymousUser()
+			req['modu.user'] = None
+	else:
+		req['modu.user'] = req.session.get_user()
+		if(req.user is None and app.enable_anonymous_users):
+			req['modu.user'] = user.AnonymousUser()
 
 def generate_token(entropy=None):
 	"""

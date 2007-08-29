@@ -88,7 +88,7 @@ class DatatypesTestCase(unittest.TestCase):
 		
 		itemdef_form = test_itemdef.get_listing([test_storable])[0]
 		
-		reference_form = form.FormNode('test-form-0')
+		reference_form = form.FormNode('test-row')
 		reference_form['selected'](type='checkbox', label='Selected', checked=True, disabled=True)
 		
 		req = self.get_request()
@@ -100,28 +100,28 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	def test_linked_labelfield(self):
 		test_itemdef = define.itemdef(
-			__special		= define.definition(
-								item_url	= 'http://www.example.com'
+			# Normally base_path is set by the admin resource
+			__config		= define.definition(
+								base_path = '/admin'
 							),
 			linked_name		= string.LabelField(
 								label		= 'Name',
-								link		= True
+								link		= True,
+								listing		= True
 							)
 		)
 		
 		test_storable = storable.Storable('test')
 		test_storable.linked_name = 'Linked Name'
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_listing([test_storable])
 		
-		reference_form = form.FormNode('test-form')
+		reference_form = form.FormNode('test-row')
 		reference_form['linked_name'](type='label', label='Name', value='Linked Name',
-										prefix=tags.a(href='http://www.example.com', __no_close=True), suffix='</a>')
-		reference_form['save'](type='submit', value='save', weight=1000)
-		reference_form['cancel'](type='submit', value='cancel', weight=1000)
+										prefix=tags.a(href='/admin/detail/test/0', __no_close=True), suffix='</a>')
 		
 		req = self.get_request()
-		itemdef_form_html = itemdef_form.render(req)
+		itemdef_form_html = itemdef_form[0].render(req)
 		reference_form_html = reference_form.render(req)
 		
 		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )
@@ -164,7 +164,7 @@ class DatatypesTestCase(unittest.TestCase):
 		
 		itemdef_form = test_itemdef.get_listing([test_storable])[0]
 		
-		reference_form = form.FormNode('test-form-0')
+		reference_form = form.FormNode('test-row')
 		reference_form['name'](type='label', label='Name', value='Test Name')
 		
 		req = self.get_request()
@@ -219,6 +219,7 @@ class DatatypesTestCase(unittest.TestCase):
 		
 		itemdef_form = test_itemdef.get_form(test_storable)
 		
+		#options = {'admin':'Administrator', 'user':'User'}
 		reference_form = form.FormNode('test-form')
 		reference_form['user_type'](type='select', label='Type', value='user', options=options)
 		reference_form['save'](type='submit', value='save', weight=1000)

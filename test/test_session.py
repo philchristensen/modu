@@ -8,7 +8,7 @@
 from twisted.trial import unittest
 
 from modu.persist import storable, RAW, Store, adbapi
-from modu.util import test
+from modu.util import test, message
 from modu.web import session, user, app
 from modu import persist
 
@@ -86,6 +86,21 @@ class DbSessionTestCase(unittest.TestCase):
 		saved_sess = session.DbUserSession(req, self.store.pool, sid=sess.id())
 		self.failUnlessEqual(saved_sess.id(), sess.id(), "Found sid %s when expecting %s." % (saved_sess.id(), sess.id()))
 		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
+	
+	def test_messages(self):
+		req = self.get_request()
+		req['modu.session'] = sess = session.DbUserSession(req, self.store.pool)
+		req['modu.messages'] = message.Queue(req)
+		
+		req.messages.report('error', 'Sample Error')
+		req.session.save()
+		
+		req = self.get_request()
+		req['modu.session'] = saved_sess = session.DbUserSession(req, self.store.pool, sid=sess.id())
+		req['modu.messages'] = message.Queue(req)
+		
+		self.failUnlessEqual(saved_sess.id(), sess.id(), "Found sid %s when expecting %s." % (saved_sess.id(), sess.id()))
+		self.failUnlessEqual(req.messages.get('error'), ['Sample Error'], "Session data was not saved properly.")
 	
 	def test_noclobber(self):
 		req = self.get_request()

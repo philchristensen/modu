@@ -5,6 +5,8 @@
 #
 # See LICENSE for details
 
+import copy
+
 from modu.util import tags
 
 class Theme(object):
@@ -142,7 +144,7 @@ class Theme(object):
 			attribs['multiple'] = element.multiple
 		value = element.attrib('value', 1)
 		
-		option_data = element.attrib('options', [])
+		option_data = copy.copy(element.attrib('options', []))
 		if(isinstance(option_data, dict)):
 			option_keys = option_data.keys()
 		else:
