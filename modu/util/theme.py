@@ -162,7 +162,7 @@ class Theme(object):
 		
 		def _create_option(k):
 			tag = tags.option(value=k)[option_data[k]]
-			if(k == value):
+			if(str(k) == str(value)):
 				tag(selected=None)
 			return tag
 		

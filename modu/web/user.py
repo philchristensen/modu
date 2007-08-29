@@ -25,7 +25,7 @@ def get_grant_tree(store):
 class User(storable.Storable):
 	def __init__(self):
 		super(User, self).__init__('user')
-		self._roles = {}
+		self._roles = None
 		self._permissions = {}
 	
 	def is_allowed(self, permission):
@@ -48,7 +48,7 @@ class User(storable.Storable):
 		return role in self._roles
 	
 	def __load_roles(self):
-		if(self._roles):
+		if(self._roles is not None):
 			return
 		
 		store = self.get_store()
@@ -59,6 +59,7 @@ class User(storable.Storable):
 							INNER JOIN user_role ur ON (ur.role_id = r.id)
 						WHERE ur.user_id = %d""" % self.get_id()
 		roles = store.load('role', role_query)
+		self._roles = {}
 		if(roles):
 			for role in roles:
 				self._roles[role.name] = role

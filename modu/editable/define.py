@@ -193,6 +193,9 @@ class itemdef(dict):
 		# save storable data
 		req.store.save(storable)
 		
+		if(req.get('modu.messages')):
+			req.messages.report('message', 'Your changes have been saved.')
+		
 		# handle postwrite fields
 		if(postwrite_fields):
 			for name, definition in postwrite_fields.items():

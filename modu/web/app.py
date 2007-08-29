@@ -46,8 +46,8 @@ def handler(env, start_response):
 			
 			if(hasattr(application.site, 'configure_request')):
 				application.site.configure_request(req)
-			
 			rsrc = req.app.tree.parse(req.path)
+			
 			if not(rsrc):
 				raise404("No such resource: %s" % env['REQUEST_URI'])
 			
@@ -57,7 +57,9 @@ def handler(env, start_response):
 				rsrc.check_access(req)
 			content = rsrc.get_response(req)
 		finally:
-			if(req.get('modu.session') is not None):
+			# remember, req.get will return None if the session wasn't used
+			# in this page load
+			if(req.get('modu.session')):
 				req.session.save()
 	except web.HTTPStatus, http:
 		start_response(http.status, http.headers)

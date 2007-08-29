@@ -161,30 +161,36 @@ class AdminResource(resource.CheetahTemplateResource):
 		self.template = 'admin-detail.html.tmpl'
 		self.set_slot('form', None)
 		if(len(req.app.tree.postpath) > 2):
-			try:
-				item_id = req.app.tree.postpath[2]
-				table_name = itemdef.config.get('table', itemdef.name)
-				
-				if(item_id == 'new'):
-					selected_item = storable.Storable(table_name)
-					# we can be sure the factory is there, because configure_store
-					# already took care of it during prepare_content
-					factory = req.store.get_factory(table_name)
-					selected_item.set_factory(factory)
-				else:
+			item_id = req.app.tree.postpath[2]
+			table_name = itemdef.config.get('table', itemdef.name)
+			
+			if(item_id == 'new'):
+				selected_item = storable.Storable(table_name)
+				# we can be sure the factory is there, because configure_store
+				# already took care of it during prepare_content
+				factory = req.store.get_factory(table_name)
+				selected_item.set_factory(factory)
+			else:
+				try:
 					selected_item = req.store.load_one(table_name, {'id':int(item_id)})
-				
-				frm = itemdef.get_form(selected_item, req.user)
-				if('theme' in itemdef.config):
-					frm.theme = itemdef.config['theme']
-				
-				if(frm.execute(req)):
-					frm = itemdef.get_form(selected_item)
-				
-				self.set_slot('form', frm.render(req))
-				self.set_slot('selected_item', selected_item)
-			except TypeError:
-				app.raise404('There is no detail view at the path: %s' % req['REQUEST_URI'])
+				except TypeError:
+					app.raise404('There is no detail view at the path: %s' % req['REQUEST_URI'])
+			
+			frm = itemdef.get_form(selected_item, req.user)
+			if('theme' in itemdef.config):
+				frm.theme = itemdef.config['theme']
+			
+			if(frm.execute(req)):
+				# we regenerate the form because some fields don't know their
+				# value until after the form is saved (e.g., postwrite fields)
+				new_frm = itemdef.get_form(selected_item)
+				new_frm.errors = frm.get_errors()
+				for field, err in frm.errors:
+					req.messages.report('error', err)
+				frm = new_frm
+			
+			self.set_slot('form', frm.render(req))
+			self.set_slot('selected_item', selected_item)
 		else:
 			app.raise404('There is no detail view at the path: %s' % req['REQUEST_URI'])
 	
