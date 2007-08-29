@@ -42,7 +42,12 @@ class Theme(object):
 		if(hasattr(element, 'help')):
 			content += tags.div(_class='form-help')[element.help]
 		
-		return tags.div(_class='form-item', _id='form-item-%s' % element.name)[content]
+		if(element.get_errors()):
+			element_class = 'form-item form-error'
+		else:
+			element_class = 'form-item'
+		
+		return tags.div(_class=element_class, _id='form-item-%s' % element.name)[content]
 	
 	def _form_element(self, form_id, element):
 		content = ''

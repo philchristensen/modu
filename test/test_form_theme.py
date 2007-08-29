@@ -27,6 +27,7 @@ EXPECTED_CATEGORY += '</select>'
 EXPECTED_LABEL = '<label class="field-label">%s</label>'
 EXPECTED_HELP = '<div class="form-help">%s</div>'
 EXPECTED_ELEMENT = '<div class="form-item" id="form-item-%s">%s</div>';
+EXPECTED_ERROR_ELEMENT = '<div class="form-item form-error" id="form-item-%s">%s</div>';
 
 class FormThemeTestCase(unittest.TestCase):
 	def setUp(self):
@@ -160,6 +161,14 @@ class FormThemeTestCase(unittest.TestCase):
 		
 		titlefield_result = self.theme.form_element('node-form', title)
 		titlefield_check = EXPECTED_ELEMENT % ('title', (EXPECTED_LABEL % title.label) + EXPECTED_TITLE + (EXPECTED_HELP % title.help))
+		self.failUnlessEqual(titlefield_result, titlefield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (titlefield_result, titlefield_check));
+
+	def test_errors(self):
+		self.form.set_error('title', 'There is an error in the title field.')
+		title = self.form['title']
+		
+		titlefield_result = self.theme.form_element('node-form', title)
+		titlefield_check = EXPECTED_ERROR_ELEMENT % ('title', (EXPECTED_LABEL % title.label) + EXPECTED_TITLE + (EXPECTED_HELP % title.help))
 		self.failUnlessEqual(titlefield_result, titlefield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (titlefield_result, titlefield_check));
 
 	def test_category(self):

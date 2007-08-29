@@ -145,10 +145,25 @@ class FormNode(object):
 		return False
 	
 	def set_error(self, name, error):
+		if(self.parent):
+			raise RuntimeError('Errors cannot be set directly on child form elements.')
 		self.errors.setdefault(name, []).append(error)
 	
 	def has_errors(self):
-		return bool(len(self.errors))
+		return bool(len(self.get_errors()))
+	
+	def get_errors(self):
+		item = self
+		errors = {}
+		while(True):
+			if(item.parent):
+				item = item.parent
+			else:
+				break
+		if(item == self):
+			return item.errors
+		else:
+			return item.errors.get(self.name)
 	
 	def render(self, req):
 		"""
