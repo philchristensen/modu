@@ -67,7 +67,10 @@ class ForeignSelectField(define.definition):
 		frm = form.FormNode(self.name)
 		if(style == 'listing' or self.get('read_only', False)):
 			foreign_value = getattr(storable, self.name, None)
-			frm(type='label', value=options[foreign_value])
+			if(foreign_value in options):
+				frm(type='label', value=options[foreign_value])
+			else:
+				frm(type='label', value='')
 		else:
 			frm(type='select', value=getattr(storable, self.name, None), options=options)
 

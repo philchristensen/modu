@@ -323,11 +323,8 @@ class Request(dict):
 		
 		args = map(_deslash, args)
 		result = os.path.join(self.app.base_path, *args)
-		if(not self.app.base_path):
-			if(result):
-				result = '/' + result
-			elif(options.get('absolute', False)):
-				result = '/'
+		if(self.app.base_path == '/' and not args):
+			return ''
 		
 		return result
 
@@ -348,7 +345,7 @@ class Application(object):
 		_dict['config'] = {}
 		
 		self.base_domain = 'localhost'
-		self.base_path = ''
+		self.base_path = '/'
 		self.db_url = 'MySQLdb://modu:modu@localhost/modu'
 		self.session_class = session.DbUserSession
 		self.initialize_store = True

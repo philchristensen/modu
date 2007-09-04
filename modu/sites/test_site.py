@@ -84,6 +84,22 @@ class BasicTestSite(object):
 		application.activate(TestAccessControlResource())
 
 
+class BasicRootTestSite(object):
+	"""
+	This site activates only the most basic features of modu.
+	"""
+	classProvides(plugin.IPlugin, app.ISite)
+	
+	def initialize(self, application):
+		application.base_domain = '____basic-test-domain____:1234567'
+		application.db_url = None
+		application.session_class = None
+		application.initialize_store = False
+		application.activate(TestResource())
+		application.activate(TestDelegateResource())
+		application.activate(TestAccessControlResource())
+
+
 class StoreTestSite(object):
 	"""
 	This site activates a database connection and a Store.
