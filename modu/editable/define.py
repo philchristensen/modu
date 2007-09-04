@@ -99,6 +99,7 @@ class itemdef(dict):
 					continue
 				
 				frm.children[name] = field.get_form_element('detail', storable)
+				frm.children[name].parent = frm
 		
 		if(not frm.has_submit_buttons()):
 			frm['save'](type='submit', value='save', weight=1000)

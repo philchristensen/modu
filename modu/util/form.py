@@ -160,6 +160,7 @@ class FormNode(object):
 				item = item.parent
 			else:
 				break
+		
 		if(item == self):
 			return item.errors
 		else:

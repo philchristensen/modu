@@ -32,7 +32,12 @@ def activate_session(req):
 	# FIXME: We assume that any session class requires database access, and pass
 	# the db connection as the second paramter to the session class constructor
 	app = req.app
-	req['modu.session'] = app.session_class(req, req.pool)
+	
+	cookie_params = {}
+	if(hasattr(app, 'session_cookie_params')):
+		cookie_params.update(app.session_cookie_params)
+	
+	req['modu.session'] = app.session_class(req, req.pool, cookie_params=cookie_params)
 	if(app.debug_session):
 		req.log_error('session contains: ' + str(req.session))
 	if(app.disable_session_users):
@@ -78,20 +83,24 @@ class BaseSession(dict):
 	
 	This is where locking should be implemented, one day.
 	"""
-	def __init__(self, req, sid=None):
+	def __init__(self, req, sid=None, cookie_params=None):
 		self._req = req
+		if(isinstance(cookie_params, dict)):
+			self._cookie_params = cookie_params
+		else:
+			self._cookie_params = {}
+		
+		self._sid = None
 		self._cookie = None
 		self._valid = True
 		self._clean = True
 		self._new = True
 		self._loaded = False
-		
-		self._sid = None
-		self._created = time.time()
-		self._timeout = 1800
-		
 		self._user = None
 		self._user_id = None
+		
+		self._created = time.time()
+		self._timeout = 1800
 		
 		if(sid and validate_sid(sid)):
 			self._sid = sid
@@ -103,6 +112,8 @@ class BaseSession(dict):
 				self._cookie = Cookie.SimpleCookie()
 				self._sid = generate_token()
 				self._cookie['sid'] = self._sid
+				for k, v in self._cookie_params.items():
+					self._cookie['sid'][k] = v
 				self._send_cookie()
 		
 		if(self._sid):
@@ -113,7 +124,7 @@ class BaseSession(dict):
 		
 		if(req.app.debug_session):
 			req.log_error('session contains: ' + str(self))
-
+		
 		if(random.randint(1, CLEANUP_CHANCE) == 1):
 			self.cleanup()
 		
@@ -131,6 +142,7 @@ class BaseSession(dict):
 		"""
 		cookie_data = self._cookie.output()
 		for header in cookie_data.split("\n"):
+			print 'header: %s' % header
 			header, data = header.split(":")
 			self._req.app.add_header(header, data)
 	
@@ -152,6 +164,7 @@ class BaseSession(dict):
 			return False
 		
 		if (time.time() - result["accessed"]) > result["timeout"]:
+			self.delete()
 			return False
 		
 		self._created  = result["created"]
@@ -266,9 +279,9 @@ class DbUserSession(BaseSession):
 	"""
 	user_class = user.User
 	
-	def __init__(self, req, pool, sid=None):
+	def __init__(self, req, pool, sid=None, cookie_params=None):
 		self._pool = pool
-		BaseSession.__init__(self, req, sid)
+		BaseSession.__init__(self, req, sid=sid, cookie_params=cookie_params)
 	
 	def do_load(self):
 		load_query = persist.build_select('session', {'id':self.id()})

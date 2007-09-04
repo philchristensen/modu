@@ -184,10 +184,12 @@ class AdminResource(resource.CheetahTemplateResource):
 				# we regenerate the form because some fields don't know their
 				# value until after the form is saved (e.g., postwrite fields)
 				new_frm = itemdef.get_form(selected_item)
-				new_frm.errors = frm.get_errors()
-				for field, err in frm.errors:
-					req.messages.report('error', err)
+				new_frm.errors = frm.errors
 				frm = new_frm
+			else:
+				# If we haven't submitted the form, errors should definitely be empty
+				for field, err in frm.errors.items():
+					req.messages.report('error', err)
 			
 			self.set_slot('form', frm.render(req))
 			self.set_slot('selected_item', selected_item)
