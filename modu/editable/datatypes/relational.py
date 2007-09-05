@@ -122,9 +122,83 @@ class ForeignAutocompleteField(define.definition):
 		return frm
 
 
-class ForeignMultipleAutocompleteField(define.definition):
+class ForeignMultipleSelectField(define.definition):
 	implements(IDatatype)
 	
+	def get_element(self, style, storable):
+		mlabel = self.get('flabel', '')
+		if(mlabel.find('.') == -1):
+			mlabel = 'm.%s' % mlabel
+		mlabel = self.get('flabel_sql', mlabel)
+		
+		where = self.get('fwhere', '')
+		
+		if(callable(where)):
+			where = where(storable)
+		elif(isinstance(where, dict)):
+			where = persist.build_where(where)
+		
+		ntom_query = """SELECT m.%s AS value, %s AS label, IF(n2m.%s, 1, 0) AS selected
+						FROM %s m
+						LEFT JOIN %s n2m ON m.%s = n2m.%s AND n2m.%s = %%s
+						%s
+						ORDER BY label""" % (self['fvalue'], mlabel, self['ntof_f_id'],
+										  self['ftable'],
+										  self['ntof'], self.get('f_id', 'id'),
+										  self['ntof_f_id'], self['ntof_n_id'],
+										  where)
+		
+		store = storable.get_store()
+		results = store.pool.runQuery(ntom_query, storable.get_id())
+
+		if(style == 'listing' or self.get('read_only', False)):
+			label_value = ', '.join([item['label'] for item in results if item['selected']])
+			return form.FormNode(self.name)(type='label', value=label_value)
+		
+		values = [item['value'] for item in results if item['selected']]
+		options = dict([(item['value'], item['label']) for item in results])
+		
+		frm = form.FormNode(self.name)
+		frm(type='select', multiple=True, value=values, options=options)
+		return frm
+	
+	def update_storable(self, req, form, storable):
+		form_data = form.data[form.name]
+		store = storable.get_store()
+		item_id = storable.get_id()
+		
+		delete_query = persist.build_delete(self['ntof'], {self['ntof_n_id']:item_id})
+		store.pool.runOperation(delete_query)
+		
+		if(self.name in form_data):
+			values = form_data[self.name].value
+			if not(isinstance(values, list)):
+				values = [values]
+			data = [{self['ntof_n_id']:item_id, self['ntof_f_id']:val} for val in values]
+			insert_query = persist.build_insert(self['ntof'], data)
+			store.pool.runOperation(insert_query)
+		elif(self.get('required', False)):
+			# A conundrum...
+			# It's got to be a postwrite field, because a new record would
+			# have to be saved before we could insert a record elsewhere with
+			# a foreign key (supposing for a minute we weren't use MySQL, argh)
+			#
+			# This means that it's impossible for this field to stop the writing
+			# of the record at this point, thus 'required' is currently meaningless.
+			#
+			# Should there be a way for a postwrite field to validate separately,
+			# before the write?
+			#
+			# I think the way it was supposed to work in Procuro was that if you
+			# are using GUIDs, you can fill the field at creation time, otherwise
+			# you saw a field that told you to save before editing (lame).
+			return False
+		return True
+	
+	def is_postwrite_field(self):
+		return True
+
+class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 	def get_element(self, style, storable):
 		mlabel = self.get('flabel', '')
 		if(mlabel.find('.') == -1):
@@ -184,40 +258,3 @@ class ForeignMultipleAutocompleteField(define.definition):
 		frm.children[ac_field.name] = ac_field
 		
 		return frm
-	
-	def update_storable(self, req, form, storable):
-		form_data = form.data[form.name]
-		store = storable.get_store()
-		item_id = storable.get_id()
-		
-		delete_query = persist.build_delete(d['ntof'], {self['ntof_n_id']:item_id})
-		store.pool.runOperation(delete_query)
-		
-		print form.data
-		if(name in form_data):
-			values = form_data[name].value
-			if not(isinstance(values, list)):
-				values = [values]
-			data = [{self['ntof_n_id']:item_id, self['ntof_f_id']:val} for val in values]
-			insert_query = persist.build_insert(self['ntof'], data)
-			store.pool.runOperation(insert_query)
-		elif(d.get('required', False)):
-			# A conundrum...
-			# It's got to be a postwrite field, because a new record would
-			# have to be saved before we could insert a record elsewhere with
-			# a foreign key (supposing for a minute we weren't use MySQL, argh)
-			#
-			# This means that it's impossible for this field to stop the writing
-			# of the record at this point, thus 'required' is currently meaningless.
-			#
-			# Should there be a way for a postwrite field to validate separately,
-			# before the write?
-			#
-			# I think the way it was supposed to work in Procuro was that if you
-			# are using GUIDs, you can fill the field at creation time, otherwise
-			# you saw a field that told you to save before editing (lame).
-			return False
-		return True
-	
-	def is_postwrite_field(self):
-		return True

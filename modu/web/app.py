@@ -55,6 +55,7 @@ def handler(env, start_response):
 				rsrc = rsrc.get_delegate(req)
 			if(resource.IAccessControl.providedBy(rsrc)):
 				rsrc.check_access(req)
+			
 			content = rsrc.get_response(req)
 		finally:
 			# remember, req.get will return None if the session wasn't used
@@ -316,6 +317,7 @@ class Request(dict):
 	
 	def get_path(self, *args, **options):
 		def _deslash(fragment):
+			fragment = str(fragment)
 			if(fragment.startswith('/')):
 				return fragment[1:]
 			else:

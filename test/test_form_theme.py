@@ -24,6 +24,13 @@ EXPECTED_CATEGORY += '<option value="horror">Horror</option>'
 EXPECTED_CATEGORY += '<option value="sci-fi">Science Fiction</option>'
 EXPECTED_CATEGORY += '</select>'
 
+EXPECTED_MULTIPLE_CATEGORY = '<select name="node-form[other_category]" size="5" multiple>'
+EXPECTED_MULTIPLE_CATEGORY += '<option value="bio" selected>Biography</option>'
+EXPECTED_MULTIPLE_CATEGORY += '<option value="drama" selected>Drama</option>'
+EXPECTED_MULTIPLE_CATEGORY += '<option value="horror">Horror</option>'
+EXPECTED_MULTIPLE_CATEGORY += '<option value="sci-fi" selected>Science Fiction</option>'
+EXPECTED_MULTIPLE_CATEGORY += '</select>'
+
 EXPECTED_LABEL = '<label class="field-label">%s</label>'
 EXPECTED_HELP = '<div class="form-help">%s</div>'
 EXPECTED_ELEMENT = '<div class="form-item" id="form-item-%s">%s</div>';
@@ -56,9 +63,15 @@ class FormThemeTestCase(unittest.TestCase):
 					options={'drama':'Drama', 'sci-fi':'Science Fiction', 'bio':'Biography', 'horror':'Horror'},
 					value='bio',
 					weight=0,
-					cols=30,
-					rows=10,
 					help='Select the category.'
+					)
+		self.form['other_category'](type='select',
+					label='Other Category',
+					options={'drama':'Drama', 'sci-fi':'Science Fiction', 'bio':'Biography', 'horror':'Horror'},
+					value=['bio', 'drama', 'sci-fi'],
+					weight=0,
+					help='Select the other categories.',
+					multiple=True
 					)
 		self.form['advanced'](label='Advanced')
 		self.form['advanced']['text1'](type='textfield',
@@ -176,6 +189,13 @@ class FormThemeTestCase(unittest.TestCase):
 		
 		category_result = self.theme.form_select('node-form', category)
 		self.failUnlessEqual(category_result, EXPECTED_CATEGORY, 'Basic "category" field misrendered as \n`%s`, not \n`%s`' % (category_result, EXPECTED_CATEGORY));
+		
+	def test_other_category(self):
+		other_category = self.form['other_category']
+		
+		category_result = self.theme.form_select('node-form', other_category)
+		
+		self.failUnlessEqual(category_result, EXPECTED_MULTIPLE_CATEGORY, '"other_category" field misrendered as \n`%s`, not \n`%s`' % (category_result, EXPECTED_MULTIPLE_CATEGORY));
 		
 	def test_body(self):
 		body = self.form['body']

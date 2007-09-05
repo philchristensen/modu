@@ -144,10 +144,16 @@ class Theme(object):
 	def form_select(self, form_id, element):
 		attribs = element.attrib('attributes', {})
 		attribs['name'] = '%s[%s]' % (form_id, element.name)
-		attribs['size'] = element.attrib('size', 1)
-		if('multiple' in element.attributes):
-			attribs['multiple'] = element.multiple
+		if(element.attrib('multiple', False)):
+			attribs['size'] = element.attrib('size', 5)
+			attribs['multiple'] = None
+		else:
+			attribs['size'] = element.attrib('size', 1)
+		
 		value = element.attrib('value', 1)
+		if not(isinstance(value, (list, tuple))):
+			value = [value]
+		value = map(str, value)
 		
 		option_data = copy.copy(element.attrib('options', []))
 		if(isinstance(option_data, dict)):
@@ -156,13 +162,13 @@ class Theme(object):
 			option_keys = [i for i in range(len(option_data))]
 		
 		option_keys.sort(element.attrib('sort', cmp))
-		if(element.attrib('size', 1) == 1):
+		if(attribs['size'] == 1):
 			option_keys.insert(0, '')
 			option_data[''] = 'Select...'
 		
 		def _create_option(k):
 			tag = tags.option(value=k)[option_data[k]]
-			if(str(k) == str(value)):
+			if(str(k) in value):
 				tag(selected=None)
 			return tag
 		
