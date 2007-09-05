@@ -142,7 +142,6 @@ class BaseSession(dict):
 		"""
 		cookie_data = self._cookie.output()
 		for header in cookie_data.split("\n"):
-			print 'header: %s' % header
 			header, data = header.split(":")
 			self._req.app.add_header(header, data)
 	
@@ -188,6 +187,7 @@ class BaseSession(dict):
 			if(self._req.app.debug_session):
 				self._req.log_error('session cleanliness is: ' + str(self.is_clean()))
 			self.do_save(result)
+			self._new = False
 	
 	def delete(self):
 		"""
@@ -327,11 +327,15 @@ class DbUserSession(BaseSession):
 		
 		return self._user
 	
-	def set_user(self, user):
+	def set_user(self, u):
 		self.touch()
-		self._user = user
+		self._user = u
+		self._req['modu.user'] = u
 		if(self._user):
 			self._user_id = self._user.get_id()
 		else:
 			self._user_id = None
+		
+		if(u is None and self._req.app.enable_anonymous_users):
+			self._user = user.AnonymousUser()
 

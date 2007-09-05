@@ -24,7 +24,7 @@ pool_lock = threading.BoundedSemaphore()
 mimetypes_init = False
 
 def handler(env, start_response):
-	req = {}
+	req = None
 	try:
 		try:
 			application = get_application(env)
@@ -60,7 +60,7 @@ def handler(env, start_response):
 		finally:
 			# remember, req.get will return None if the session wasn't used
 			# in this page load
-			if(req.get('modu.session')):
+			if(req.get('modu.session', None) is not None):
 				req.session.save()
 	except web.HTTPStatus, http:
 		start_response(http.status, http.headers)
