@@ -62,7 +62,7 @@ def generate_token(entropy=None):
 	if not(entropy):
 		entropy = random.randint(0, 1)
 	
-	return hashlib.md5(str(time.time() * entropy)).hexdigest()
+	return hashlib.md5(str(int(time.time() * entropy))).hexdigest()
 
 def validate_sid(sid):
 	"""
@@ -99,7 +99,7 @@ class BaseSession(dict):
 		self._user = None
 		self._user_id = None
 		
-		self._created = time.time()
+		self._created = int(time.time())
 		self._timeout = 1800
 		
 		if(sid and validate_sid(sid)):
@@ -120,7 +120,7 @@ class BaseSession(dict):
 			if(self.load()):
 				self._new = False
 		
-		self._accessed = time.time()
+		self._accessed = int(time.time())
 		
 		if(req.app.debug_session):
 			req.log_error('session contains: ' + str(self))
@@ -129,6 +129,10 @@ class BaseSession(dict):
 			self.cleanup()
 		
 		self._loaded = True
+	
+	def debug(self, message):
+		if(self._req.app.debug_session):
+			self._req.log_error(message)
 	
 	def touch(self):
 		"""
@@ -162,7 +166,7 @@ class BaseSession(dict):
 		if result is None:
 			return False
 		
-		if (time.time() - result["accessed"]) > result["timeout"]:
+		if (int(time.time()) - result["accessed"]) > result["timeout"]:
 			self.delete()
 			return False
 		
@@ -184,8 +188,7 @@ class BaseSession(dict):
 					"accessed": self._accessed, 
 					"timeout" : self._timeout,
 					"user_id" : self._user_id}
-			if(self._req.app.debug_session):
-				self._req.log_error('session cleanliness is: ' + str(self.is_clean()))
+			self.debug('session cleanliness is: ' + str(self.is_clean()))
 			self.do_save(result)
 			self._new = False
 	
@@ -299,15 +302,22 @@ class DbUserSession(BaseSession):
 			return None
 	
 	def do_save(self, attribs):
-		if(self.is_clean() or not self.is_new()):
+		attribs['data'] = cPickle.dumps(attribs['data'], 1)
+		if(self.is_clean()):
 			del attribs['data']
 			update_query = persist.build_update('session', attribs, {'id':self.id()})
+			self.debug(update_query)
 			self._pool.runOperation(update_query)
+		elif(self.is_new()):
+			attribs['id'] = self.id()
+			insert_query = persist.build_insert('session', attribs)
+			self.debug(insert_query)
+			self._pool.runOperation(insert_query)
 		else:
 			attribs['id'] = self.id()
-			attribs['data'] = cPickle.dumps(attribs['data'], 1)
-			insert_query = persist.build_insert('session', attribs)
-			self._pool.runOperation(insert_query)
+			replace_query = persist.build_replace('session', attribs)
+			self.debug(replace_query)
+			self._pool.runOperation(replace_query)
 	
 	def do_delete(self):
 		self._pool.runOperation("DELETE FROM session WHERE id = %s", [self.id()])

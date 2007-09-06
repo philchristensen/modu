@@ -87,6 +87,38 @@ class DbSessionTestCase(unittest.TestCase):
 		self.failUnlessEqual(saved_sess.id(), sess.id(), "Found sid %s when expecting %s." % (saved_sess.id(), sess.id()))
 		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
 	
+	def test_modify(self):
+		req = self.get_request()
+		
+		sess = session.DbUserSession(req, self.store.pool)
+		sess['test_data'] = 'test'
+		sess.save()
+		
+		saved_sess = session.DbUserSession(req, self.store.pool, sid=sess.id())
+		saved_sess['test_data'] = 'test test test'
+		saved_sess.save()
+		
+		reloaded_sess = session.DbUserSession(req, self.store.pool, sid=sess.id())
+		
+		self.failUnlessEqual(saved_sess.id(), sess.id(), "Found sid %s when expecting %s." % (saved_sess.id(), sess.id()))
+		self.failUnlessEqual(reloaded_sess['test_data'], 'test test test', "Session data was not saved properly.")
+	
+	def test_delete_item(self):
+		req = self.get_request()
+		
+		sess = session.DbUserSession(req, self.store.pool)
+		sess['test_data'] = 'test'
+		sess.save()
+		
+		saved_sess = session.DbUserSession(req, self.store.pool, sid=sess.id())
+		del saved_sess['test_data']
+		saved_sess.save()
+		
+		reloaded_sess = session.DbUserSession(req, self.store.pool, sid=sess.id())
+		
+		self.failUnlessEqual(saved_sess.id(), sess.id(), "Found sid %s when expecting %s." % (saved_sess.id(), sess.id()))
+		self.failUnlessEqual(reloaded_sess.get('test_data'), None, "Session data was not saved properly.")
+	
 	def test_messages(self):
 		req = self.get_request()
 		req['modu.session'] = sess = session.DbUserSession(req, self.store.pool)
