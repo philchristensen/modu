@@ -25,6 +25,11 @@ class Options(usage.Options):
 					]
 
 class UnparsedRequest(server.Request):
+	"""
+	This Request subclass omits the request body parsing that
+	happens before our code takes over. This lets us use the
+	NestedFieldStorage (or alternative) to parse the body.
+	"""
 	def requestReceived(self, command, path, version):
 		"""Called by channel when all data has been received.
 		

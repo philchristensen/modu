@@ -23,7 +23,7 @@ from modu.web import app
 
 def get_itemdefs(): 
 	""" 
-	Search the system path for any available IItemdef implementors. 
+	Search the system path for any available itemdefs. 
 	""" 
 	import modu.itemdefs
 	itemdefs = {}
@@ -45,7 +45,7 @@ def clone_itemdef(itemdef):
 
 class itemdef(dict):
 	"""
-	An itemdef essentially describes the data for a Storable.
+	An itemdef describes the data of a Storable.
 	It can generate an editor form for its Storable, as well
 	as providing behaviors and validation for that form.
 	"""
@@ -53,6 +53,9 @@ class itemdef(dict):
 	implements(editable.IItemdef, plugin.IPlugin)
 	
 	def __init__(self, __config=None, **fields):
+		"""
+		Create a new itemdef by specificying a list of fields.
+		"""
 		for name, field in fields.items():
 			# I was pretty sure I knew how kwargs worked, but...
 			if(name == '__config'):
@@ -82,11 +85,20 @@ class itemdef(dict):
 		return self.name
 	
 	def get_table(self):
+		"""
+		Return the database table used by this itemdef.
+		
+		This can be defined in the config array, but defaults to
+		the name of the itemdef.
+		"""
 		return self.config.get('table', self.name)
 	
 	def get_form(self, storable, user=None):
 		"""
-		Return a FormNode that represents this item
+		Return a FormNode that represents this item in a detail view.
+		
+		If a user object is passed along, the resulting form will only
+		contain fields the provided user is allowed to see.
 		"""
 		frm = form.FormNode('%s-form' % storable.get_table())
 		if(user is None or user.is_allowed(self.get('acl', self.config.get('acl', [])))):
@@ -119,7 +131,10 @@ class itemdef(dict):
 	
 	def get_listing(self, storables, user=None):
 		"""
-		Return a FormNode that represents this item
+		Return a FormNode that represents this item in a list view.
+		
+		This function returns a list of form objects that can be
+		assembled into a list view (one "form" per row).
 		"""
 		forms = []
 		for index in range(len(storables)):
@@ -151,6 +166,10 @@ class itemdef(dict):
 	
 	
 	def get_item_url(self, storable):
+		"""
+		Given the provided storable, return a path that would take you to the item's detail page.
+		"""
+		#TODO: Make this customizable.
 		return '%s/detail/%s/%d' % (self.config['base_path'], storable.get_table(), storable.get_id())
 	
 	

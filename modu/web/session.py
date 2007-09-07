@@ -294,7 +294,10 @@ class DbUserSession(BaseSession):
 			record = record[0]
 			record['id'] = self.id()
 			if(record['data']):
-				record['data'] = cPickle.loads(record['data'].tostring())
+				data = record['data']
+				if(hasattr(data, 'tostring')):
+					data = data.tostring()
+				record['data'] = cPickle.loads(data)
 			else:
 				record['data'] = None
 			return record
