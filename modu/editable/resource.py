@@ -32,7 +32,10 @@ def submit_login(req, form):
 	form_data = form.data[form.name]
 	encrypt_sql = persist.interp(' = ENCRYPT(%s, SUBSTRING(crypt, 1, 2))', [form_data['password'].value])
 	u = req.store.load_one('user', username=form_data['username'].value, crypt=persist.RAW(encrypt_sql))
-	req.session.set_user(u)
+	if(u):
+		req.session.set_user(u)
+	else:
+		req.messages.report('error', "Sorry, that login was incorrect.")
 
 
 def configure_store(req, itemdef):

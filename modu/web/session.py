@@ -332,11 +332,13 @@ class DbUserSession(BaseSession):
 		if(hasattr(self, '_user') and self._user):
 			return self._user
 		
-		if(self._user_id is not None):
+		if(self._user_id):
 			store = self._req.store
 			if not(store.has_factory('user')):
 				store.ensure_factory('user', self.user_class)
 			self._user = store.load_one('user', {'id':self._user_id})
+		elif(self._req.app.enable_anonymous_users):
+			self._user = user.AnonymousUser()
 		
 		return self._user
 	
@@ -344,6 +346,7 @@ class DbUserSession(BaseSession):
 		self.touch()
 		self._user = u
 		self._req['modu.user'] = u
+		
 		if(self._user):
 			self._user_id = self._user.get_id()
 		else:
