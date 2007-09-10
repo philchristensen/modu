@@ -60,6 +60,10 @@ class Paginator(object):
 				results.pop()
 				self.total_results = str(self.end_range) + '+'
 		
+		if not(len(results)):
+			self.start_range = 0
+			self.end_range = 0
+		
 		return results
 	
 	def get_limit(self):

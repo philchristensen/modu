@@ -66,7 +66,7 @@ class ModuServiceMaker(object):
 	def makeService(self, config):
 		server.Site.requestFactory = UnparsedRequest
 		
-		if(config['logfile']):
+		if(config['logfile'] != '-'):
 			site = server.Site(twist.WSGIResource(app.handler), logPath=config['logfile'])
 		else:
 			site = server.Site(twist.WSGIResource(app.handler))

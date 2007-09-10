@@ -224,6 +224,31 @@ class FormNode(object):
 		raise NotImplementedError("FormNode('%s')::submit" % self.name)
 
 
+class FieldStorageDict(dict):
+	"""
+	Sometimes it's convenient to deal with field storage as if
+	it were a real dict.
+	"""
+	
+	def __init__(self, field_storage):
+		self.field_storage = field_storage
+	
+	def __getitem__(self, key):
+		if(key in self.field_storage):
+			return self.field_storage[key].value
+		return dict.__getitem__(self, key)
+	
+	def __contains__(self, key):
+		if(key in self.field_storage):
+			return True
+		return dict.__contains__(self, key)
+	
+	def __len__(self):
+		return len(self.field_storage) + dict.__len__(self)
+	
+	def keys(self):
+		return self.field_storage.keys() + dict.keys(self)
+
 class NestedFieldStorage(cgi.FieldStorage):
 	"""
 	NestedFieldStorage allows you to use a dict-like syntax for

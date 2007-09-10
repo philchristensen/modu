@@ -39,13 +39,19 @@ CREATE TABLE IF NOT EXISTS `role` (
   UNIQUE KEY `name_idx` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
 
+DROP TABLE IF EXISTS `role_permission`;
+CREATE TABLE IF NOT EXISTS `role_permission` (
+  `role_id` bigint(20),
+  `permission_id` bigint(20),
+  PRIMARY KEY (`role_id`, `permission_id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
 DROP TABLE IF EXISTS `permission`;
 CREATE TABLE IF NOT EXISTS `permission` (
   `id` bigint(20),
-  `role_id` bigint(20),
   `name` varchar(255),
   PRIMARY KEY (id),
-  UNIQUE KEY `perm_idx` (`role_id`, `name`)
+  UNIQUE KEY `perm_idx` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
 
 DROP TABLE IF EXISTS `guid`;
@@ -87,11 +93,11 @@ class UserTestCase(unittest.TestCase):
 		self.store.save(r)
 		
 		p = user.Permission()
-		p.role_id = r.get_id()
 		p.name = 'view item'
 		self.store.save(p)
 		
 		self.store.pool.runOperation("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", [u.get_id(), r.get_id()])
+		self.store.pool.runOperation("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", [r.get_id(), p.get_id()])
 		
 		self.failUnless(u.is_allowed('view item'), 'User cannot "view item"')
 	
@@ -107,17 +113,19 @@ class UserTestCase(unittest.TestCase):
 		r.name = 'Authenticated User'
 		self.store.save(r)
 		
+		self.store.pool.runOperation("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", [u.get_id(), r.get_id()])
+
 		p = user.Permission()
-		p.role_id = r.get_id()
 		p.name = 'view item'
 		self.store.save(p)
 		
+		self.store.pool.runOperation("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", [r.get_id(), p.get_id()])
+		
 		p = user.Permission()
-		p.role_id = r.get_id()
 		p.name = 'edit item'
 		self.store.save(p)
 		
-		self.store.pool.runOperation("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", [u.get_id(), r.get_id()])
+		self.store.pool.runOperation("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", [r.get_id(), p.get_id()])
 		
 		self.failUnless(u.is_allowed('view item'), 'User cannot "view item"')
 		self.failUnless(u.is_allowed('edit item'), 'User cannot "edit item"')
@@ -144,14 +152,16 @@ class UserTestCase(unittest.TestCase):
 		self.store.pool.runOperation("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", [u.get_id(), admin_role.get_id()])
 		
 		p = user.Permission()
-		p.role_id = auth_role.get_id()
 		p.name = 'view item'
 		self.store.save(p)
 		
+		self.store.pool.runOperation("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", [auth_role.get_id(), p.get_id()])
+		
 		p = user.Permission()
-		p.role_id = admin_role.get_id()
 		p.name = 'edit item'
 		self.store.save(p)
+		
+		self.store.pool.runOperation("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", [admin_role.get_id(), p.get_id()])
 		
 		self.failUnless(u.is_allowed('view item'), 'User cannot "view item"')
 		self.failUnless(u.is_allowed('edit item'), 'User cannot "edit item"')

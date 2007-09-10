@@ -14,6 +14,7 @@ import copy
 from zope.interface import implements
 
 from twisted import plugin
+from twisted.python import util
 
 from modu import editable
 from modu.util import form, tags, theme
@@ -31,6 +32,27 @@ def get_itemdefs():
 		if(itemdef.name):
 			itemdefs[itemdef.name] = itemdef
 	return itemdefs
+
+
+def itemdef_cmp(a, b):
+	return cmp(a.config.get('weight', 0), b.config.get('weight', 0))
+
+
+def get_itemdef_layout(req, itemdefs=None):
+	user = req.user
+	layout = util.OrderedDict()
+	if(itemdefs is None):
+		itemdefs = get_itemdefs()
+	for name, itemdef in itemdefs.items():
+		itemdef = clone_itemdef(itemdef)
+		itemdef.config['base_path'] = req.get_path(*req.app.tree.prepath)
+		acl = itemdef.config.get('acl', 'view item')
+		if('acl' not in itemdef.config or user.is_allowed(acl)):
+			cat = itemdef.config.get('category', 'other')
+			layout.setdefault(cat, []).append(itemdef)
+			layout[cat].sort(itemdef_cmp)
+	return layout
+
 
 def clone_itemdef(itemdef):
 	"""
@@ -125,6 +147,41 @@ class itemdef(dict):
 		
 		frm.validate = _validate
 		frm.submit = _submit
+		
+		return frm
+	
+	
+	def get_search_form(self, storable, user=None):
+		"""
+		Return a FormNode that represents this item in a detail view.
+		
+		If a user object is passed along, the resulting form will only
+		contain fields the provided user is allowed to see.
+		"""
+		frm = form.FormNode('%s-search-form' % storable.get_table())
+		if(user is None or user.is_allowed(self.get('acl', self.config.get('acl', [])))):
+			for name, field in self.items():
+				if(name.startswith('_')):
+					continue
+				if(not field.get('detail', True)):
+					continue
+				if not(user is None or user.is_allowed(field.get('acl', self.config.get('acl', [])))):
+					continue
+				if not(field.get('search', False)):
+					continue
+				
+				frm.children[name] = field.get_form_element('detail', storable)
+				frm.children[name].parent = frm
+		
+		if(not frm.has_submit_buttons()):
+			frm['search'](type='submit', value='search', weight=1000)
+			frm['clear_search'](type='submit', value='clear search', weight=1000)
+		
+		# search should always work...for now
+		frm.validate = lambda r, f: True
+		# submission doesn't really do much, since the editable
+		# resource will handle that
+		frm.submit = lambda r, f: True
 		
 		return frm
 	

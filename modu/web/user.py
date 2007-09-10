@@ -7,11 +7,15 @@
 
 from modu.persist import storable
 
+# this needs to be cached somehow, but we don't want it to
+# bleed over into other stores or applications
 def get_grant_tree(store):
 	store.ensure_factory('__grant')
 	grant_query = """SELECT CONCAT(r.id, '-', p.id) AS id, r.name AS role, p.name AS permission
 					FROM role r
-						INNER JOIN permission p ON (p.role_id = r.id)
+						INNER JOIN (role_permission rp
+							INNER JOIN permission p ON (rp.permission_id = p.id))
+						ON (rp.role_id = r.id)
 					ORDER BY r.name"""
 	
 	grants = store.load('__grant', grant_query)
@@ -37,9 +41,8 @@ class User(storable.Storable):
 			else:
 				return False
 		else:
-			grant_tree = get_grant_tree(self.get_store())
 			for role in self._roles:
-				if(permission in grant_tree.get(role, [])):
+				if(permission in self._grant_tree.get(role, [])):
 					return True
 			return False
 	
@@ -63,6 +66,9 @@ class User(storable.Storable):
 		if(roles):
 			for role in roles:
 				self._roles[role.name] = role
+		
+		self._grant_tree = get_grant_tree(self.get_store())
+
 
 class AnonymousUser(User):
 	def is_allowed(self, permission):

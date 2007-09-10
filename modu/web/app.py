@@ -24,7 +24,7 @@ pool_lock = threading.BoundedSemaphore()
 mimetypes_init = False
 
 def handler(env, start_response):
-	req = None
+	req = {}
 	try:
 		try:
 			application = get_application(env)

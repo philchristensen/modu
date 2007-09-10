@@ -11,8 +11,6 @@ Contains resources for configuring a default admin interface.
 
 import os.path, copy
 
-from twisted.python import util
-
 from modu.web import resource, app, user
 from modu.editable import define
 from modu.util import form, theme, tags
@@ -48,26 +46,6 @@ def configure_store(req, itemdef):
 		req.store.ensure_factory(table_name)
 
 
-def itemdef_cmp(a, b):
-	return cmp(a.config.get('weight', 0), b.config.get('weight', 0))
-
-
-def get_itemdef_layout(req, itemdefs=None):
-	user = req.user
-	layout = util.OrderedDict()
-	if(itemdefs is None):
-		itemdefs = get_itemdefs()
-	for name, itemdef in itemdefs.items():
-		itemdef = define.clone_itemdef(itemdef)
-		itemdef.config['base_path'] = req.get_path(*req.app.tree.prepath)
-		acl = itemdef.config.get('acl', 'view item')
-		if('acl' not in itemdef.config or user.is_allowed(acl)):
-			cat = itemdef.config.get('category', 'other')
-			layout.setdefault(cat, []).append(itemdef)
-			layout[cat].sort(itemdef_cmp)
-	return layout
-
-
 class AdminResource(resource.CheetahTemplateResource):
 	def __init__(self, path=None, **options):
 		if(path is None):
@@ -89,7 +67,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			itemdefs = define.get_itemdefs()
 			
 			# get_itemdef_layout adds some data and clones the itemdef
-			self.itemdef_layout = get_itemdef_layout(req, itemdefs)
+			self.itemdef_layout = define.get_itemdef_layout(req, itemdefs)
 			
 			# FIXME: This is inelegant -- we need to get at the cloned itemdef
 			# as it already has some config data in it (because of get_itemdef_layout)
@@ -107,11 +85,13 @@ class AdminResource(resource.CheetahTemplateResource):
 				
 				if(selected_itemdef):
 					configure_store(req, selected_itemdef)
-				
-				if(req.app.tree.postpath[0] == 'detail'):
-					self.prepare_detail(req, selected_itemdef)
+					
+					if(req.app.tree.postpath[0] == 'detail'):
+						self.prepare_detail(req, selected_itemdef)
+					else:
+						self.prepare_listing(req, selected_itemdef)
 				else:
-					self.prepare_listing(req, selected_itemdef)
+					app.raise403()
 			else:
 				default_listing = self.options.get('default_listing')
 				if(default_listing):
@@ -151,12 +131,24 @@ class AdminResource(resource.CheetahTemplateResource):
 			pager.page = 1
 		pager.per_page = itemdef.config.get('per_page', 25)
 		
-		items = pager.get_results(req.store, table_name, {})
+		search_storable = storable.Storable(table_name)
+		search_storable.set_factory(req.store.get_factory(table_name))
+		search_form = itemdef.get_search_form(search_storable, req.user)
+		if(search_form.execute(req)):
+			search_data = search_form.data[search_form.name]
+			for submit in search_form.find_submit_buttons():
+				search_data.pop(submit.name, None)
+			data = form.FieldStorageDict(search_data)
+			items = pager.get_results(req.store, table_name, data)
+		else:
+			items = pager.get_results(req.store, table_name, {})
+		
 		forms = itemdef.get_listing(items, req.user)
 		thm = ListingTheme(req)
 		
 		self.set_slot('items', items)
 		self.set_slot('pager', pager)
+		self.set_slot('search_form', search_form.render(req))
 		self.set_slot('page_guide', thm.page_guide(pager, req.get_path(req.path)))
 		self.set_slot('form', thm.form(forms))
 	
