@@ -28,7 +28,7 @@ def validate_login(req, form):
 def submit_login(req, form):
 	req.store.ensure_factory('user', user.User)
 	form_data = form.data[form.name]
-	encrypt_sql = persist.interp(' = ENCRYPT(%s, SUBSTRING(crypt, 1, 2))', [form_data['password'].value])
+	encrypt_sql = persist.interp('%%s = ENCRYPT(%s, SUBSTRING(crypt, 1, 2))', [form_data['password'].value])
 	u = req.store.load_one('user', username=form_data['username'].value, crypt=persist.RAW(encrypt_sql))
 	if(u):
 		req.session.set_user(u)

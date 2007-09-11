@@ -87,8 +87,8 @@ class SQLTestCase(unittest.TestCase):
 		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 
 	def test_build_select_raw(self):
-		sql = persist.build_select('table', {'col1':persist.RAW("= ENCRYPT('something', SUBSTRING(col1,1,2))")});
-		expecting = "SELECT * FROM `table` WHERE `col1`= ENCRYPT('something', SUBSTRING(col1,1,2))"
+		sql = persist.build_select('table', {'col1':persist.RAW("%s = ENCRYPT('something', SUBSTRING(col1,1,2))")});
+		expecting = "SELECT * FROM `table` WHERE `col1` = ENCRYPT('something', SUBSTRING(col1,1,2))"
 		self.failUnlessEqual(sql, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 
 	def test_build_select_not(self):

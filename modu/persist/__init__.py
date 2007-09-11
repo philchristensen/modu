@@ -207,7 +207,7 @@ def build_where(data):
 		- B{list/tuple types}:		result in an IN statement
 		- B{None}					results in an ISNULL statement
 		- B{persist.RAW objects}:	result in directly embedded SQL, such that
-									C{'col1':RAW(" = ENCRYPT('whatever')")} equals
+									C{'col1':RAW("%s = ENCRYPT('whatever')")} equals
 									C{`col1` = ENCRYPT('whatever')}
 		- B{persist.NOT objects}:	result in a NOT statement
 	
@@ -231,7 +231,10 @@ def build_where(data):
 			criteria.append('%s IN (%s)' % (key, ', '.join(['%s'] * len(value))))
 			values.extend(value)
 		elif(isinstance(value, RAW)):
-			criteria.append('%s%s' % (key, value.value))
+			if(value.value.find('%s') != -1):
+				criteria.append(value.value % key)
+			else:
+				criteria.append('%s%s' % (key, value.value))
 		elif(value is None):
 			criteria.append('ISNULL(%s)' % key)
 		elif(isinstance(value, NOT)):

@@ -17,8 +17,6 @@ from twisted.web2 import server, channel, wsgi
 
 from modu.web import app
 
-app.try_lucene_threads()
-
 class ModuwWeb2WSGIResource(wsgi.WSGIResource):
 	def renderHTTP(self, req):
 		# Do stuff with WSGIHandler.
