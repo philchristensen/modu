@@ -189,26 +189,6 @@ def raise500(message=None):
 	raise web.HTTPStatus('500 Internal Server Error', [('Content-Type', 'text/html')], content)
 
 
-def try_lucene_threads():
-	"""
-	GCJ has a bug which results in an awful limitation on
-	apps that use PyLucene. It means that all threads using the
-	Lucene code must be instances of PythonThread, so the
-	Java runtime can keep track of them.
-	
-	This function will attempt to install the PyLucene.PythonThread
-	as Twisted's ThreadPool's threadFactory. If PyLucene isn't
-	installed, or a future version removes the PythonThread class,
-	nothing happens.
-	"""
-	try:
-		from PyLucene import PythonThread
-		from twisted.python.threadpool import ThreadPool
-		ThreadPool.threadFactory = PythonThread
-	except:
-		pass
-
-
 def activate_pool(req):
 	req['modu.pool'] = acquire_db(req.app.db_url)
 
