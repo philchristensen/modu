@@ -314,6 +314,9 @@ class NOT:
 	"""
 	def __init__(self, value):
 		self.value = value
+	
+	def __repr__(self):
+		return "NOT(%s)" % self.value
 
 
 class RAW:
@@ -324,6 +327,9 @@ class RAW:
 	"""
 	def __init__(self, value):
 		self.value = value
+	
+	def __repr__(self):
+		return "RAW(%s)" % self.value
 
 
 class Store(object):

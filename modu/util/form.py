@@ -194,7 +194,10 @@ class FormNode(object):
 					# this is bad
 					pass
 			else:
-				self.attributes['value'] = form_data.value
+				if(hasattr(form_data, 'value')):
+					self.attributes['value'] = form_data.value
+				else:
+					self.attributes['value'] = form_data
 	
 	def _validate(self, req, form):
 		"""

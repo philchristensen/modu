@@ -138,6 +138,7 @@ class itemdef(dict):
 		if(not frm.has_submit_buttons()):
 			frm['save'](type='submit', value='save', weight=1000)
 			frm['cancel'](type='submit', value='cancel', weight=1000)
+			frm['cancel'](type='submit', value='cancel', weight=1000)
 		
 		def _validate(req, form):
 			return self.validate(req, form, storable)
@@ -232,7 +233,7 @@ class itemdef(dict):
 	
 	def validate(self, req, form, storable):
 		if('cancel' in form.data[form.name]):
-			return False
+			app.redirect('%s/listing/%s' % (self.config['base_path'], storable.get_table()))
 		
 		# call validate hook on each field, return false if they do
 		for field in form:
@@ -246,6 +247,8 @@ class itemdef(dict):
 					return False
 		
 		# call prewrite_callback
+		# this seems like a strange place for this, since prewrites aren't
+		# explicitly validation, but i think it's okay for now.
 		if('prewrite_callback' in self.config):
 			result = self.config['prewrite_callback'](req, form, storable)
 			if(result is False):
@@ -331,6 +334,10 @@ class definition(dict):
 				setattr(storable, self.name, form_data[self.name].value)
 		return True
 	
+	
+	def get_search_value(self, value):
+		return value
+
 	
 	def is_postwrite_field(self):
 		return False

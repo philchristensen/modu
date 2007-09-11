@@ -131,14 +131,38 @@ class AdminResource(resource.CheetahTemplateResource):
 			pager.page = 1
 		pager.per_page = itemdef.config.get('per_page', 25)
 		
+		# create a fake storable to make itemdef/form happy
 		search_storable = storable.Storable(table_name)
+		# give it a factory so fields can use its store reference
 		search_storable.set_factory(req.store.get_factory(table_name))
+		# build the form tree
 		search_form = itemdef.get_search_form(search_storable, req.user)
+		# get any saved search data
+		session_search_data = req.session.setdefault('search_form', {}).setdefault(itemdef.name, {})
+		
 		if(search_form.execute(req)):
 			search_data = search_form.data[search_form.name]
+			if('clear_search' in search_data):
+				req.session.setdefault('search_form', {})[itemdef.name] = {}
+				app.redirect(req.get_path(self.path, 'listing', table_name))
+			
 			for submit in search_form.find_submit_buttons():
 				search_data.pop(submit.name, None)
-			data = form.FieldStorageDict(search_data)
+			
+			data = {}
+			for key, value in search_data.items():
+				session_search_data[key] = value.value
+				data[key] = itemdef[key].get_search_value(value.value)
+			
+			items = pager.get_results(req.store, table_name, data)
+		elif(session_search_data):
+			search_data = {search_form.name:session_search_data}
+			search_form.load_data(search_data)
+			
+			data = {}
+			for key, value in session_search_data.items():
+				data[key] = itemdef[key].get_search_value(value)
+			
 			items = pager.get_results(req.store, table_name, data)
 		else:
 			items = pager.get_results(req.store, table_name, {})

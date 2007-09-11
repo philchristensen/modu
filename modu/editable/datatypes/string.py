@@ -22,6 +22,12 @@ class LabelField(define.definition):
 		frm = form.FormNode(self.name)
 		frm(type='label', value=getattr(storable, self.name, ''))
 		return frm
+	
+	def get_search_value(self, value):
+		if(self.get('fulltext_search')):
+			return persist.RAW(persist.interp("MATCH(%%s) AGAINST (%s)", [value]))
+		else:
+			return persist.RAW(persist.interp("INSTR(%%s, %s)", [value]))
 
 
 class DateField(define.definition):
@@ -46,6 +52,12 @@ class StringField(define.definition):
 		else:
 			frm(type='textfield')
 		return frm
+	
+	def get_search_value(self, value):
+		if(self.get('fulltext_search')):
+			return persist.RAW(persist.interp("MATCH(%%s) AGAINST (%s)", [value]))
+		else:
+			return persist.RAW(persist.interp("INSTR(%%s, %s)", [value]))
 
 
 class TextAreaField(define.definition):
@@ -61,6 +73,12 @@ class TextAreaField(define.definition):
 		else:
 			frm(type='textarea')
 		return frm
+	
+	def get_search_value(self, value):
+		if(self.get('fulltext_search')):
+			return persist.RAW(persist.interp("MATCH(%%s) AGAINST (%s)", [value]))
+		else:
+			return persist.RAW(persist.interp("INSTR(%%s, %s)", [value]))
 
 
 class PasswordField(define.definition):

@@ -9,6 +9,8 @@
 Utilities to paginate result sets.
 """
 
+import copy
+
 from modu.persist import Store
 
 class Paginator(object):
@@ -37,6 +39,9 @@ class Paginator(object):
 		return a maximum of self.per_page results, while
 		setting up all the other variables of the instance.
 		"""
+		args = copy.deepcopy(args)
+		kwargs = copy.deepcopy(kwargs)
+		
 		# FIXME: Make sure this works reasonably with both
 		# attribute dictionaries and direct queries
 		if(self.calc_found):
