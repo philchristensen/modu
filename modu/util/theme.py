@@ -92,40 +92,40 @@ class Theme(object):
 	
 	def form_hidden(self, form_id, element):
 		attribs = element.attrib('attributes', {})
-		attribs['name'] = '%s[%s]' % (form_id, element.name)
+		attribs['name'] = element.get_element_name()
 		attribs['value'] = element.attrib('value', element.attrib('default_value', ''))
 		return tags.input(type='hidden', **attribs)
 	
 	def form_textfield(self, form_id, element):
 		attribs = element.attrib('attributes', {})
-		attribs['name'] = '%s[%s]' % (form_id, element.name)
+		attribs['name'] = element.get_element_name()
 		attribs['size'] = element.attrib('size', 30)
 		attribs['value'] = element.attrib('value', element.attrib('default_value', ''))
 		return tags.input(type='text', **attribs)
 	
 	def form_password(self, form_id, element):
 		attribs = element.attrib('attributes', {})
-		attribs['name'] = '%s[%s]' % (form_id, element.name)
+		attribs['name'] = element.get_element_name()
 		attribs['size'] = element.attrib('size', 30)
 		attribs['value'] = element.attrib('value', element.attrib('default_value', ''))
 		return tags.input(type='password', **attribs)
 	
 	def form_textarea(self, form_id, element):
 		attribs = element.attrib('attributes', {})
-		attribs['name'] = '%s[%s]' % (form_id, element.name)
+		attribs['name'] = element.get_element_name()
 		attribs['cols'] = element.attrib('cols', 40)
 		attribs['rows'] = element.attrib('rows', 5)
 		return tags.textarea(**attribs)[element.attrib('value', element.attrib('default_value', ''))]
 	
 	def form_submit(self, form_id, element):
 		attribs = element.attrib('attributes', {})
-		attribs['name'] = '%s[%s]' % (form_id, element.name)
+		attribs['name'] = element.get_element_name()
 		attribs['value'] = element.attrib('value', 'Submit')
 		return tags.input(type='submit', **attribs)
 	
 	def form_checkbox(self, form_id, element):
 		attribs = element.attrib('attributes', {})
-		attribs['name'] = '%s[%s]' % (form_id, element.name)
+		attribs['name'] = element.get_element_name()
 		attribs['value'] = element.attrib('value', 1)
 		if(element.attrib('checked', False)):
 			attribs['checked'] = None
@@ -135,7 +135,7 @@ class Theme(object):
 	
 	def form_radio(self, form_id, element):
 		attribs = element.attrib('attributes', {})
-		attribs['name'] = '%s[%s]' % (form_id, element.name)
+		attribs['name'] = element.get_element_name()
 		attribs['value'] = element.attrib('value', 1)
 		if(element.attrib('selected', False)):
 			attribs['checked'] = None
@@ -143,7 +143,7 @@ class Theme(object):
 	
 	def form_select(self, form_id, element):
 		attribs = element.attrib('attributes', {})
-		attribs['name'] = '%s[%s]' % (form_id, element.name)
+		attribs['name'] = element.get_element_name()
 		if(element.attrib('multiple', False)):
 			attribs['size'] = element.attrib('size', 5)
 			attribs['multiple'] = None

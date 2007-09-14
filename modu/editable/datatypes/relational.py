@@ -116,8 +116,8 @@ class ForeignAutocompleteField(define.definition):
 			return form.FormNode(self.name)(type='label', value=ac_field.attribs('value', ''))
 		
 		frm = form.FormNode('%s-ac-fieldset' % self.name)(type='fieldset', style='brief')
-		frm.children[ac_field.name] = ac_field
-		frm.children[value_field.name] = value_field
+		frm[ac_field.name] = ac_field
+		frm[value_field.name] = value_field
 		
 		return frm
 
@@ -254,7 +254,7 @@ class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 		ac_field(type='textfield', weight=10, attributes={'id':ac_id}, suffix=ac_controls)
 		
 		frm = form.FormNode('%s-ac-fieldset' % self.name)(type='fieldset', style='brief')
-		frm.children[select_frm.name] = select_frm
-		frm.children[ac_field.name] = ac_field
+		frm[select_frm.name] = select_frm
+		frm[ac_field.name] = ac_field
 		
 		return frm

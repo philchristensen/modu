@@ -109,8 +109,8 @@ class PasswordField(define.definition):
 				verify_frm(type='textfield')
 			
 			frm = form.FormNode(self.name)(type='fieldset', style='brief')
-			frm.children['entry'] = entry_frm
-			frm.children['verify'] = verify_frm
+			frm['entry'] = entry_frm
+			frm['verify'] = verify_frm
 		else:
 			frm = entry_frm
 		
@@ -128,21 +128,18 @@ class PasswordField(define.definition):
 		
 		# if 'verify' is in the definition, we expect a fieldset
 		if(self.get('verify', True)):
-			entry_name = '%s-entry' % self.name
-			verify_name = '%s-verify' % self.name
-			
-			if(form_data[entry_name].value != form_data[verify_name].value):
+			if(form_data[self.name]['entry'].value != form_data[self.name]['verify'].value):
 				form.set_error(self.name, 'Sorry, those passwords do not match.')
 				#print "%s doesn't match %s" % (form_data[entry_name], form_data[verify_name])
 				return False
 			
 			# If there's nothing in both fields, return False
-			if((not getattr(form_data[entry_name], 'value', '')) and (not getattr(form_data[verify_name], 'value', ''))):
+			if((not getattr(form_data[self.name]['entry'], 'value', '')) and (not getattr(form_data[self.name]['verify'], 'value', ''))):
 				#print "no passwords in %s" % form_data
 				# Remember, True means "I'm done with it", not "I wrote it"
 				return True
 			
-			value = form_data[entry_name].value
+			value = form_data[self.name]['entry'].value
 		else:
 			if(self.name not in form_data):
 				#print '%s not found in %s' % (name, form_data)

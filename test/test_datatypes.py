@@ -287,12 +287,12 @@ class DatatypesTestCase(unittest.TestCase):
 		itemdef_form = test_itemdef.get_form(test_storable)
 		
 		reference_form = form.FormNode('test-form')
-		reference_form['name-ac-fieldset'](type='fieldset', style='brief', label='Name')
-		reference_form['name-ac-fieldset']['name-autocomplete'](type='textfield', weight=0,
+		reference_form['name'](type='fieldset', style='brief', label='Name')
+		reference_form['name']['name-autocomplete'](type='textfield', weight=0,
 								attributes={'id':'test-form-name-autocomplete'})
-		reference_form['name-ac-fieldset']['ac-support'](weight=1, value=tags.script(type='text/javascript')
+		reference_form['name']['ac-support'](weight=1, value=tags.script(type='text/javascript')
 									['$("#test-form-name-autocomplete").autocomplete("/autocomplete/url", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, selectOnly:1, minChars:3, maxItemsToShow:10});'])
-		reference_form['name-ac-fieldset']['name'](type='hidden', weight=2, value=0,
+		reference_form['name']['name'](type='hidden', weight=2, value=0,
 								attributes={'id':'test-form-name-ac-callback'})
 		reference_form['save'](type='submit', value='save', weight=1000)
 		reference_form['cancel'](type='submit', value='cancel', weight=1000)
@@ -304,8 +304,8 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_password_field(self):
-		post_data = [('page-form[title-entry]', 'Text Before Encryption'),
-					 ('page-form[title-verify]','Text Before Encryption'),
+		post_data = [('page-form[title][entry]', 'Text Before Encryption'),
+					 ('page-form[title][verify]','Text Before Encryption'),
 					 ('page-form[save]','save')]
 		test_itemdef = define.itemdef(
 			title		= string.PasswordField(
@@ -337,8 +337,8 @@ class DatatypesTestCase(unittest.TestCase):
 		test_storable.content = 'Sample content'
 		test_storable.code = 'my-title'
 		
-		post_data = [('page-form[title-entry]', 'Text Before Encryption'),
-					 ('page-form[title-verify]',''),
+		post_data = [('page-form[title][entry]', 'Text Before Encryption'),
+					 ('page-form[title][verify]',''),
 					 ('page-form[save]','save')]
 		test_itemdef = define.itemdef(
 			title		= string.PasswordField(
@@ -363,8 +363,8 @@ class DatatypesTestCase(unittest.TestCase):
 		test_storable.content = 'Sample content'
 		test_storable.code = 'my-title'
 		
-		post_data = [('page-form[title-entry]', ''),
-					 ('page-form[title-verify]',''),
+		post_data = [('page-form[title][entry]', ''),
+					 ('page-form[title][verify]',''),
 					 ('page-form[save]','save')]
 		test_itemdef = define.itemdef(
 			title		= string.PasswordField(
@@ -412,8 +412,8 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_password_field_noencrypt(self):
-		post_data = [('page-form[title-entry]', 'Text Before Encryption'),
-					 ('page-form[title-verify]','Text Before Encryption'),
+		post_data = [('page-form[title][entry]', 'Text Before Encryption'),
+					 ('page-form[title][verify]','Text Before Encryption'),
 					 ('page-form[save]','save')]
 		test_itemdef = define.itemdef(
 			title		= string.PasswordField(

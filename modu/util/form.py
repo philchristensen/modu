@@ -76,6 +76,11 @@ class FormNode(object):
 			self.children[key].parent = self
 		return self.children[key]
 	
+	def __setitem__(self, key, child):
+		self.children[key] = child
+		child.name = key
+		child.parent = self
+	
 	def __len__(self):
 		return len(self.children)
 	
@@ -100,17 +105,17 @@ class FormNode(object):
 			return self.attributes[name]
 		return default
 	
-	def get_form_path(self):
+	def get_element_path(self):
 		path = []
 		node = self
 		while(node is not None):
-			path.append(node.name)
+			path.append(str(node.name))
 			node = node.parent
 		path.reverse()
 		return path
 	
 	def get_element_name(self):
-		path = self.get_form_path()
+		path = self.get_element_path()
 		return '%s[%s]' % (path[0], ']['.join(path[1:]))
 	
 	def has_submit_buttons(self):

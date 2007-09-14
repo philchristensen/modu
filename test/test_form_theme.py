@@ -117,7 +117,7 @@ class FormThemeTestCase(unittest.TestCase):
 		content = ''
 		for field_name in fieldset:
 			field = fieldset[field_name]
-			string_field = '<input name="node-form[%s]" size="30" type="text" value="" />' % field.name
+			string_field = '<input name="%s" size="30" type="text" value="" />' % field.get_element_name()
 			content += EXPECTED_ELEMENT % (field_name, (EXPECTED_LABEL % field.label) + string_field + (EXPECTED_HELP % field.help))
 		
 		expected_result = EXPECTED_ELEMENT % (fieldset.name, (EXPECTED_LABEL % 'Advanced') + content)
@@ -130,7 +130,7 @@ class FormThemeTestCase(unittest.TestCase):
 		content = ''
 		for field_name in fieldset:
 			field = fieldset[field_name]
-			content += '<input name="node-form[%s]" size="30" type="text" value="" />' % field.name
+			content += '<input name="%s" size="30" type="text" value="" />' % field.get_element_name()
 		
 		expected_result = EXPECTED_ELEMENT % (fieldset.name, (EXPECTED_LABEL % 'Options') + content)
 		self.failUnlessEqual(fieldset_result, expected_result, 'Fieldset "options" misrendered as \n`%s`, not \n`%s`' % (fieldset_result, expected_result));

@@ -132,8 +132,7 @@ class itemdef(dict):
 				if not(user is None or user.is_allowed(field.get('acl', self.config.get('acl', [])))):
 					continue
 				
-				frm.children[name] = field.get_form_element('detail', storable)
-				frm.children[name].parent = frm
+				frm[name] = field.get_form_element('detail', storable)
 		
 		if(not frm.has_submit_buttons()):
 			frm['save'](type='submit', value='save', weight=1000)
@@ -171,8 +170,7 @@ class itemdef(dict):
 				if not(field.get('search', False)):
 					continue
 				
-				frm.children[name] = field.get_form_element('detail', storable)
-				frm.children[name].parent = frm
+				frm[name] = field.get_form_element('detail', storable)
 		
 		if(not frm.has_submit_buttons()):
 			frm['search'](type='submit', value='search', weight=1000)
@@ -207,7 +205,7 @@ class itemdef(dict):
 					if not(user is None or user.is_allowed(field.get('acl', self.config.get('acl', [])))):
 						continue
 				
-					frm.children[name] = field.get_form_element('listing', storable)
+					frm[name] = field.get_form_element('listing', storable)
 			
 			def _validate(req, form):
 				return self.validate(req, form, storable)
