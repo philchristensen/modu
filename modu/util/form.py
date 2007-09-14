@@ -100,6 +100,20 @@ class FormNode(object):
 			return self.attributes[name]
 		return default
 	
+	def get_form_path(self):
+		path = []
+		node = self
+		print 'checking'
+		while(node is not None):
+			path.append(node.name)
+			node = node.parent
+		path.reverse()
+		return path
+	
+	def get_element_name(self):
+		path = self.get_form_path()
+		return '%s[%s]' % (path[0], ']['.join(path[1:]))
+	
 	def has_submit_buttons(self):
 		for name in self.children:
 			element = self.children[name]

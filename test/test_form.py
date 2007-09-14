@@ -43,6 +43,13 @@ class FormTestCase(unittest.TestCase):
 		self.failUnlessEqual(frm['title'].attributes['title'], 'Title', "Didn't find correct title.")
 		self.failUnlessEqual(frm.attributes['enctype'], 'multipart/form-data', "Didn't find correct enctype.")
 	
+	def test_form_path(self):
+		frm = form.FormNode('test-form')
+		frm['one']['two']['three']['four'](type='text')
+		result = '/'.join(frm['one']['two']['three']['four'].get_form_path())
+		expecting = 'test-form/one/two/three/four'
+		self.failUnlessEqual(result, expecting, "Form path was incorrect, got '%s' when expecting '%s'" % (result, expecting))
+	
 	def test_fieldset(self):
 		frm = form.FormNode('test-form')
 		frm['title-area'](type='fieldset', collapsed=False, collapsible=True, title='Title Area')

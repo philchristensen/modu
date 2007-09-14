@@ -104,6 +104,12 @@ class ITemplate(interface.Interface):
 		Set a slot in the template to the provided key and value.
 		"""
 	
+	def get_slot(self, key, default=None):
+		"""
+		Return the value of the slot with the provided key.
+		If the item doesn't exist, and default isn't provided, throw an exception.
+		"""
+	
 	def get_template(self, req):
 		"""
 		Get an opaque value representing the template. For most template engines
@@ -125,6 +131,13 @@ class TemplateContent(object):
 		if not(hasattr(self, 'data')):
 			self.data = {}
 		self.data[name] = value
+	
+	def get_slot(self, name, default=None):
+		if(not hasattr(self, 'data') or name not in self.data):
+			if(default is not None):
+				return default
+			raise KeyError(name)
+		return self.data[name]
 	
 	def get_content(self, req):
 		import string
@@ -168,6 +181,7 @@ class CheetahTemplateContent(TemplateContent):
 	def get_content(self, req):
 		self.set_slot('base_path', req.get_path())
 		self.set_slot('request', req)
+		self.set_slot('header_content', self.get_slot('header_content', ''))
 		if('modu.user' in req):
 			self.set_slot('user', req['modu.user'])
 		else:
@@ -230,6 +244,7 @@ class ZPTemplateContent(TemplateContent):
 	def get_content(self, req):
 		self.set_slot('base_path', req.get_path())
 		self.set_slot('request', req)
+		self.set_slot('header_content', self.get_slot('header_content', ''))
 		if('modu.user' in req):
 			self.set_slot('user', req['modu.user'])
 		else:
@@ -258,6 +273,7 @@ class CherryTemplateContent(TemplateContent):
 	def get_content(self, req):
 		self.set_slot('base_path', req.get_path())
 		self.set_slot('request', req)
+		self.set_slot('header_content', self.get_slot('header_content', ''))
 		if('modu.user' in req):
 			self.set_slot('user', req['modu.user'])
 		else:

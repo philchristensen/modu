@@ -5,9 +5,9 @@
 #
 # See LICENSE for details
 
-import copy
+import copy, UserDict
 
-from modu.util import tags
+from modu.util import tags, OrderedDict
 
 class Theme(object):
 	def __init__(self, req):
@@ -76,7 +76,7 @@ class Theme(object):
 		return element.attrib('value', '')
 	
 	def form_fieldset(self, form_id, element):
-		element_style = element.attrib('style', 'full')
+		element_style = element.attrib('style', 'brief')
 		if(element_style == 'full'):
 			return ''.join([str(self.form_element(form_id, element[child])) for child in element])
 		else:
@@ -156,12 +156,14 @@ class Theme(object):
 		value = map(str, value)
 		
 		option_data = copy.copy(element.attrib('options', []))
-		if(isinstance(option_data, dict)):
+		if(isinstance(option_data, (dict, UserDict.UserDict))):
 			option_keys = option_data.keys()
 		else:
 			option_keys = [i for i in range(len(option_data))]
 		
-		option_keys.sort(element.attrib('sort', cmp))
+		if not(isinstance(option_data, OrderedDict)):
+			option_keys.sort(element.attrib('sort', cmp))
+		
 		if(attribs['size'] == 1):
 			option_keys.insert(0, '')
 			option_data[''] = 'Select...'

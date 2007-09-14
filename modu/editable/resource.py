@@ -25,6 +25,7 @@ def validate_login(req, form):
 	return not form.has_errors()
 	
 
+
 def submit_login(req, form):
 	req.store.ensure_factory('user', user.User)
 	form_data = form.data[form.name]
@@ -53,8 +54,10 @@ class AdminResource(resource.CheetahTemplateResource):
 		self.path = path
 		self.options = options
 	
+	
 	def get_paths(self):
 		return [self.path, '%s/logout' % self.path]
+	
 	
 	def prepare_content(self, req):
 		user = req['modu.user']
@@ -104,6 +107,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			self.set_slot('selected_itemdef', None)
 			self.prepare_login(req)
 	
+	
 	def prepare_login(self, req):
 		self.template = 'admin-login.html.tmpl'
 		
@@ -119,8 +123,9 @@ class AdminResource(resource.CheetahTemplateResource):
 		else:
 			self.set_slot('login_form', login_form.render(req))
 	
+	
 	def prepare_listing(self, req, itemdef):
-		self.template = 'admin-listing.html.tmpl'
+		self.template = itemdef.config.get('list_template', 'admin-listing.html.tmpl')
 		table_name = itemdef.config.get('table', itemdef.name)
 		
 		query_data = form.NestedFieldStorage(req)
@@ -176,8 +181,9 @@ class AdminResource(resource.CheetahTemplateResource):
 		self.set_slot('page_guide', thm.page_guide(pager, req.get_path(req.path)))
 		self.set_slot('form', thm.form(forms))
 	
+	
 	def prepare_detail(self, req, itemdef):
-		self.template = 'admin-detail.html.tmpl'
+		self.template = itemdef.config.get('detail_template', 'admin-detail.html.tmpl')
 		self.set_slot('form', None)
 		if(len(req.app.tree.postpath) > 2):
 			item_id = req.app.tree.postpath[2]
@@ -215,12 +221,14 @@ class AdminResource(resource.CheetahTemplateResource):
 		else:
 			app.raise404('There is no detail view at the path: %s' % req['REQUEST_URI'])
 	
+	
 	def get_content_type(self, req):
 		return 'text/html'
 	
+	
 	def get_template(self, req):
 		return self.template
-
+	
 
 class ListingTheme(theme.Theme):
 	def form(self, form_list):
@@ -248,6 +256,7 @@ class ListingTheme(theme.Theme):
 			return tags.form(**attribs)["\n" + content]
 		
 		return tags.form()["\n" + content]
+	
 	
 	def form_element(self, form_id, element):
 		return tags.td()[self._form_element(form_id, element)]
