@@ -72,8 +72,7 @@ class FormNode(object):
 					raise TypeError('Only forms and fieldsets can have child fields.')
 			else:
 				self.attributes['type'] = 'fieldset'
-			self.children[key] = FormNode(key)
-			self.children[key].parent = self
+			self[key] = FormNode(key)(weight=len(self.children))
 		return self.children[key]
 	
 	def __setitem__(self, key, child):
