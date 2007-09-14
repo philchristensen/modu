@@ -73,7 +73,7 @@ class FormThemeTestCase(unittest.TestCase):
 					help='Select the other categories.',
 					multiple=True
 					)
-		self.form['advanced'](label='Advanced')
+		self.form['advanced'](label='Advanced', style='full')
 		self.form['advanced']['text1'](type='textfield',
 					label='Text 1',
 					weight=1,

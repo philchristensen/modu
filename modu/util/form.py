@@ -103,7 +103,6 @@ class FormNode(object):
 	def get_form_path(self):
 		path = []
 		node = self
-		print 'checking'
 		while(node is not None):
 			path.append(node.name)
 			node = node.parent
