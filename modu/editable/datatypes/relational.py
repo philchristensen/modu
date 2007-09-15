@@ -53,7 +53,7 @@ class ForeignSelectField(define.definition):
 		
 		if(callable(where)):
 			where = where(storable)
-		elif(isinstance(where, dict)):
+		if(isinstance(where, dict)):
 			where = persist.build_where(where)
 		
 		foreign_query = 'SELECT %s, %s FROM %s ' % (value, label, table)
@@ -135,7 +135,7 @@ class ForeignMultipleSelectField(define.definition):
 		
 		if(callable(where)):
 			where = where(storable)
-		elif(isinstance(where, dict)):
+		if(isinstance(where, dict)):
 			where = persist.build_where(where)
 		
 		ntom_query = """SELECT m.%s AS value, %s AS label, IF(n2m.%s, 1, 0) AS selected
@@ -144,7 +144,7 @@ class ForeignMultipleSelectField(define.definition):
 						%s
 						ORDER BY label""" % (self['fvalue'], mlabel, self['ntof_f_id'],
 										  self['ftable'],
-										  self['ntof'], self.get('f_id', 'id'),
+										  self['ntof'], self.get('fvalue', 'id'),
 										  self['ntof_f_id'], self['ntof_n_id'],
 										  where)
 		
@@ -221,7 +221,7 @@ class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 						ORDER BY label
 						%s""" % (self['fvalue'], mlabel,
 										  self['ftable'],
-										  self['ntof'], self.get('f_id', 'id'),
+										  self['ntof'], self.get('fvalue', 'id'),
 										  self['ntof_f_id'], self['ntof_n_id'],
 										  where, limit)
 		

@@ -5,11 +5,15 @@
 #
 # See LICENSE for details
 
+"""
+An itemdef for the test database table 'page'.
+"""
+
 from modu.editable import define
 from modu.editable.datatypes import string, relational
 
 __itemdef__ = define.itemdef(
-	__config		= define.definition(
+	__config		= dict(
 		name		= 'page',
 		category	= 'content'
 	),

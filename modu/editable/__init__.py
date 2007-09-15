@@ -15,6 +15,12 @@ from modu.persist import storable
 from modu.util import tags
 
 class IItemdef(Interface):
+	"""
+	An itemdef is a special object that defines a form for a database table.
+	
+	This interface is mostly a tag to detect itemdefs via
+	the Twisted plugin system.
+	"""
 	pass
 
 class IDatatype(Interface):

@@ -64,7 +64,7 @@ class EditableTestCase(unittest.TestCase):
 			return True
 		
 		test_itemdef = define.itemdef(
-			__config		= define.definition(
+			__config		= dict(
 								prewrite_callback = test_prewrite
 							),
 			title			= string.StringField(
@@ -137,7 +137,7 @@ class EditableTestCase(unittest.TestCase):
 			raise RuntimeError('postwrite')
 		
 		test_itemdef = define.itemdef(
-			__config		= define.definition(
+			__config		= dict(
 								postwrite_callback = postwrite_callback
 			),
 			title			= string.StringField(

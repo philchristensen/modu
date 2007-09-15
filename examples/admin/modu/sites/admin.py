@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+An example site configuration for the AdminResource tool.
+"""
+
 import os.path
 
 from zope.interface import classProvides

@@ -5,6 +5,13 @@
 #
 # See LICENSE for details
 
+"""
+A site config and simple resources for the most basic project.
+
+The default webroot contains some files to test the default
+webroot functionality.
+"""
+
 from modu.web import resource
 from modu.web.app import ISite
 
@@ -38,19 +45,16 @@ class RootResource(resource.TemplateResource):
 	def get_template(self, req):
 		output = "This is the web root at: " + req.path + "\n"
 		
-		for key in dir(req['modpython.request']):
-			item = getattr(req['modpython.request'], key)
-			output += key + ': ' + str(item) + "\n"
-		
-		output += '\n\n'
-		
 		for key in req:
 			output += key + ': ' + str(req[key]) + "\n"
 		
-		from mod_python import apache
-		output += '\n\n'
-		for name in dir(apache):
-			output += name + ': ' + str(getattr(apache, name)) + "\n"
+		try:
+			from mod_python import apache
+			output += '\n\n'
+			for name in dir(apache):
+				output += name + ': ' + str(getattr(apache, name)) + "\n"
+		except:
+			pass
 		
 		return output 
 

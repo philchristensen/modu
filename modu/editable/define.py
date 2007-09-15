@@ -35,17 +35,38 @@ def get_itemdefs():
 
 
 def itemdef_cmp(a, b):
+	"""
+	A comparator function for sorting itemdefs.
+	"""
 	return cmp(a.config.get('weight', 0), b.config.get('weight', 0))
 
 
 def get_itemdef_layout(req, itemdefs=None):
+	"""
+	Returns an OrderedDict instance containing the itemdef tree.
+	
+	Normally this is rendered as a navigation menu, and also provides
+	templates with access to the other non-current itemdefs. At this
+	point, the base_path config variable is set (and, if supplied in
+	the itemdef as a callable, invoked).
+	
+	The result has also been filtered to contain only the itemdefs and
+	definitions that the req.user has access to. The data iteself is a
+	clone, so modifications will have no effect.
+	"""
 	user = req.user
 	layout = util.OrderedDict()
 	if(itemdefs is None):
 		itemdefs = get_itemdefs()
 	for name, itemdef in itemdefs.items():
 		itemdef = clone_itemdef(itemdef)
-		itemdef.config['base_path'] = req.get_path(*req.app.tree.prepath)
+		
+		default_path = req.get_path(*req.app.tree.prepath)
+		base_path = itemdef.get('base_path', default_path)
+		if(callable(base_path)):
+			base_path = base_path(req)
+		itemdef.config['base_path'] = base_path
+		
 		acl = itemdef.config.get('acl', 'view item')
 		if('acl' not in itemdef.config or user.is_allowed(acl)):
 			cat = itemdef.config.get('category', 'other')
@@ -83,6 +104,7 @@ class itemdef(dict):
 			if(name == '__config'):
 				__config = field
 				del fields[name]
+				continue
 			
 			if not(isinstance(field, definition)):
 				raise ValueError("'%s' is not a valid definition." % name)
@@ -98,6 +120,7 @@ class itemdef(dict):
 		
 		self.update(fields)
 	
+	
 	def get_name(self):
 		"""
 		This is a convenience function to be used when semi-retarded template
@@ -105,6 +128,7 @@ class itemdef(dict):
 		for a field called 'name' instead of the instance variable.
 		"""
 		return self.name
+	
 	
 	def get_table(self):
 		"""
@@ -115,6 +139,19 @@ class itemdef(dict):
 		"""
 		return self.config.get('table', self.name)
 	
+	
+	def allows(self, user, access='view'):
+		"""
+		A convenience function to check if a user is allowed to access this itemdef.
+		
+		TODO: Implement view/edit acl support.
+		"""
+		if(user is None):
+			# Should the default be off or on?
+			return True
+		return user.is_allowed(self.config.get('acl', []))
+	
+	
 	def get_form(self, storable, user=None):
 		"""
 		Return a FormNode that represents this item in a detail view.
@@ -123,13 +160,13 @@ class itemdef(dict):
 		contain fields the provided user is allowed to see.
 		"""
 		frm = form.FormNode('%s-form' % storable.get_table())
-		if(user is None or user.is_allowed(self.get('acl', self.config.get('acl', [])))):
+		if(self.allows(user)):
 			for name, field in self.items():
 				if(name.startswith('_')):
 					continue
 				if(not field.get('detail', True)):
 					continue
-				if not(user is None or user.is_allowed(field.get('acl', self.config.get('acl', [])))):
+				if not(field.allows(user)):
 					continue
 				
 				frm[name] = field.get_form_element('detail', storable)
@@ -153,19 +190,19 @@ class itemdef(dict):
 	
 	def get_search_form(self, storable, user=None):
 		"""
-		Return a FormNode that represents this item in a detail view.
+		Return a FormNode that represents this item in a search view.
 		
 		If a user object is passed along, the resulting form will only
-		contain fields the provided user is allowed to see.
+		contain search fields the provided user is allowed to see.
 		"""
 		frm = form.FormNode('%s-search-form' % storable.get_table())
-		if(user is None or user.is_allowed(self.get('acl', self.config.get('acl', [])))):
+		if(self.allows(user)):
 			for name, field in self.items():
 				if(name.startswith('_')):
 					continue
 				if(not field.get('detail', True)):
 					continue
-				if not(user is None or user.is_allowed(field.get('acl', self.config.get('acl', [])))):
+				if not(field.allows(user)):
 					continue
 				if not(field.get('search', False)):
 					continue
@@ -193,19 +230,21 @@ class itemdef(dict):
 		assembled into a list view (one "form" per row).
 		"""
 		forms = []
+		if not(self.allows(user)):
+			return forms
+		
 		for index in range(len(storables)):
 			storable = storables[index]
 			frm = form.FormNode('%s-row' % storable.get_table())
-			if(user is None or user.is_allowed(self.get('acl', self.config.get('acl', [])))):
-				for name, field in self.items():
-					if(name.startswith('_')):
-						continue
-					if(not field.get('listing', False)):
-						continue
-					if not(user is None or user.is_allowed(field.get('acl', self.config.get('acl', [])))):
-						continue
+			for name, field in self.items():
+				if(name.startswith('_')):
+					continue
+				if(not field.get('listing', False)):
+					continue
+				if not(field.allows(user)):
+					continue
 				
-					frm[name] = field.get_form_element('listing', storable)
+				frm[name] = field.get_form_element('listing', storable)
 			
 			def _validate(req, form):
 				return self.validate(req, form, storable)
@@ -230,6 +269,9 @@ class itemdef(dict):
 	
 	
 	def validate(self, req, form, storable):
+		"""
+		The validation function for forms generated from this itemdef.
+		"""
 		if('cancel' in form.data[form.name]):
 			app.redirect('%s/listing/%s' % (self.config['base_path'], storable.get_table()))
 		
@@ -254,7 +296,11 @@ class itemdef(dict):
 		
 		return True
 	
+	
 	def submit(self, req, form, storable):
+		"""
+		The submit function for forms generated from this itemdef.
+		"""
 		postwrite_fields = {}
 		for name, definition in self.iteritems():
 			if not(definition.get('implicit_save', True)):
@@ -290,10 +336,13 @@ class itemdef(dict):
 
 class definition(dict):
 	"""
-	A definition represents a single field in an itemdef. It may or may not
-	reflect a field of a Storable.
+	A definition represents a single field in an itemdef.
+	
+	This is an abstract class.
 	"""
 	
+	# inherited attributes will be automatically set on the resulting
+	# form node instance only if they are not already defined.
 	inherited_attributes = ['weight', 'help', 'label']
 	
 	def __init__(self, **params):
@@ -302,7 +351,24 @@ class definition(dict):
 		self.update(params)
 	
 	
+	def allows(self, user, access='view'):
+		"""
+		A convenience function to check if a user is allowed to access this field.
+		
+		TODO: Implement view/edit acl support.
+		"""
+		if(user is None):
+			return True
+		return user.is_allowed(self.get('acl', []))
+	
+	
 	def get_form_element(self, style, storable):
+		"""
+		Get a FormNode element that represents this field.
+		
+		The parent itemdef class will call this function, which will
+		call the get_element() method, and set a few default values.
+		"""
 		frm = self.get_element(style, storable)
 		
 		classes = [self.__class__]
@@ -324,7 +390,17 @@ class definition(dict):
 		return frm
 	
 	
+	def get_element(self, style, storable):
+		"""
+		Render a FormNode element for this field definition.
+		"""
+		raise NotImplementedError('definition::get_element()');
+	
+	
 	def update_storable(self, req, form, storable):
+		"""
+		Given the posted data in req, update provided storable with this field's content.
+		"""
 		form_name = '%s-form' % storable.get_table()
 		if(form_name in form.data):
 			form_data = form.data[form_name]
@@ -334,9 +410,20 @@ class definition(dict):
 	
 	
 	def get_search_value(self, value):
+		"""
+		Convert the value in this field to a search value.
+		
+		The value returned by this function will be included in the
+		constraint array that is rendered to SQL. The most common
+		reason to override this field is to return a RAW SQL value,
+		or other non-string constraint.
+		"""
 		return value
-
+	
 	
 	def is_postwrite_field(self):
+		"""
+		Should this field be written normally, or after the main write to the database?
+		"""
 		return False
 

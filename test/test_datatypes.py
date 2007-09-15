@@ -101,7 +101,7 @@ class DatatypesTestCase(unittest.TestCase):
 	def test_linked_labelfield(self):
 		test_itemdef = define.itemdef(
 			# Normally base_path is set by the admin resource
-			__config		= define.definition(
+			__config		= dict(
 								base_path = '/admin'
 							),
 			linked_name		= string.LabelField(

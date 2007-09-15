@@ -16,12 +16,18 @@ from modu.util import form
 from modu import persist
 
 class CheckboxField(define.definition):
+	"""
+	Displays a field as an HTML checkbox.
+	
+	Provides modified update behavior to deal with the fact that checkboxes
+	only submit form data when checked.
+	"""
 	implements(IDatatype)
 	
 	def get_element(self, style, storable):
 		frm = form.FormNode(self.name)
-		frm(type='checkbox', value=self.get('value', 1))
-		if(str(getattr(storable, self.name, None)) == str(self.get('value', 1))):
+		frm(type='checkbox', value=self.get('checked_value', 1))
+		if(str(getattr(storable, self.name, None)) == str(self.get('checked_value', 1))):
 			frm(checked=True)
 		
 		if(style == 'listing' or self.get('read_only', False)):
@@ -36,6 +42,6 @@ class CheckboxField(define.definition):
 			if(self.name in form_data):
 				setattr(storable, self.name, form_data[self.name].value)
 			else:
-				setattr(storable, self.name, self.get('novalue', 0))
+				setattr(storable, self.name, self.get('unchecked_value', 0))
 		return True
 
