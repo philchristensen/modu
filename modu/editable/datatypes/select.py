@@ -17,7 +17,7 @@ from modu.util import form
 class SelectField(define.definition):
 	implements(IDatatype)
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		if(style == 'listing' or self.get('read_only', False)):
 			return form.FormNode(self.name)(type='label', value=getattr(storable, self.name, None))
 		

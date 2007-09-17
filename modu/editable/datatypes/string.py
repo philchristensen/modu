@@ -18,7 +18,7 @@ from modu import persist
 class LabelField(define.definition):
 	implements(IDatatype)
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		frm = form.FormNode(self.name)
 		frm(type='label', value=getattr(storable, self.name, ''))
 		return frm
@@ -33,7 +33,7 @@ class LabelField(define.definition):
 class DateField(define.definition):
 	implements(IDatatype)
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		frm = form.FormNode(self.name)
 		frm(type='label', value=getattr(storable, self.name, ''))
 		return frm
@@ -44,7 +44,7 @@ class StringField(define.definition):
 	
 	inherited_attributes = ['size', 'maxlength']
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		frm = form.FormNode(self.name)
 		frm(value=getattr(storable, self.name, ''))
 		if(style == 'listing' or self.get('read_only', False)):
@@ -65,7 +65,7 @@ class TextAreaField(define.definition):
 	
 	inherited_attributes = ['rows', 'cols']
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		frm = form.FormNode(self.name)
 		frm(value=getattr(storable, self.name, ''))
 		if(style == 'listing' or self.get('read_only', False)):
@@ -84,7 +84,7 @@ class TextAreaField(define.definition):
 class PasswordField(define.definition):
 	implements(IDatatype)
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		entry_frm = form.FormNode(self.name)
 		entry_frm(value=getattr(storable, self.name, ''))
 		

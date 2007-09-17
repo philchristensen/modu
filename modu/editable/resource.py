@@ -91,6 +91,8 @@ class AdminResource(resource.CheetahTemplateResource):
 					
 					if(req.app.tree.postpath[0] == 'detail'):
 						self.prepare_detail(req, selected_itemdef)
+					elif(req.app.tree.postpath[0] == 'autocomplete'):
+						self.prepare_autocomplete(req, selected_itemdef)
 					else:
 						self.prepare_listing(req, selected_itemdef)
 				else:
@@ -141,7 +143,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		# give it a factory so fields can use its store reference
 		search_storable.set_factory(req.store.get_factory(table_name))
 		# build the form tree
-		search_form = itemdef.get_search_form(search_storable, req.user)
+		search_form = itemdef.get_search_form(req, search_storable, req.user)
 		# get any saved search data
 		session_search_data = req.session.setdefault('search_form', {}).setdefault(itemdef.name, {})
 		
@@ -172,7 +174,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		else:
 			items = pager.get_results(req.store, table_name, {})
 		
-		forms = itemdef.get_listing(items, req.user)
+		forms = itemdef.get_listing(req, items, req.user)
 		thm = ListingTheme(req)
 		
 		self.set_slot('items', items)
@@ -201,7 +203,7 @@ class AdminResource(resource.CheetahTemplateResource):
 				except TypeError:
 					app.raise404('There is no detail view at the path: %s' % req['REQUEST_URI'])
 			
-			frm = itemdef.get_form(selected_item, req.user)
+			frm = itemdef.get_form(req, selected_item, req.user)
 			if('theme' in itemdef.config):
 				frm.theme = itemdef.config['theme']
 			
@@ -220,6 +222,37 @@ class AdminResource(resource.CheetahTemplateResource):
 			self.set_slot('selected_item', selected_item)
 		else:
 			app.raise404('There is no detail view at the path: %s' % req['REQUEST_URI'])
+	
+	
+	def prepare_autocomplete(self, req, itemdef):
+		definition = itemdef[req.app.tree.postpath[2]]
+		post_data = form.NestedFieldStorage(req)
+		results = []
+		
+		if('q' in post_data):
+			partial = post_data['q'].value
+		else:
+			partial = None
+		
+		# This needs to be reworked. Callback functions should return a dict,
+		# and this whole API needs to be reviewed and refactored.
+		if(partial):
+			value = definition['fvalue']
+			label = definition['flabel']
+			table = definition['ftable']
+			
+			if(definition.get('autocomplete_callback')):
+				results = definition['autocomplete_callback'](req, partial, definition)
+			else:
+				ac_query = "SELECT %s, %s FROM %s WHERE %s LIKE %%s" % (value, label, table, label)
+				
+				results = req.store.pool.runQuery(ac_query, ['%%%s%%' % partial])
+		
+		content = ''
+		for result in results:
+			content += "%s|%d\n" % (result[label], result[value])
+		
+		app.raise200([('Content-Type', 'text/plain')], [content])
 	
 	
 	def get_content_type(self, req):

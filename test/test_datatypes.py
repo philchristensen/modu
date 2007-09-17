@@ -14,7 +14,7 @@ from modu.editable.datatypes import string, relational, boolean, select
 from modu.web import app
 from modu.editable import define
 from modu.persist import storable, adbapi
-from modu.util import form, test, tags
+from modu.util import form, test, tags, queue
 
 class DatatypesTestCase(unittest.TestCase):
 	def setUp(self):
@@ -46,6 +46,7 @@ class DatatypesTestCase(unittest.TestCase):
 		
 		req = app.configure_request(environ, application)
 		req['modu.pool'] = app.acquire_db(application.db_url)
+		queue.activate_content_queue(req)
 		persist.activate_store(req)
 		
 		return req
@@ -58,17 +59,18 @@ class DatatypesTestCase(unittest.TestCase):
 							)
 		)
 		
+		req = self.get_request()
+		
 		test_storable = storable.Storable('test')
 		test_storable.selected = 1
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_form(req, test_storable)
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['selected'](type='checkbox', label='Selected', checked=True)
 		reference_form['save'](type='submit', value='save', weight=1000)
 		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		
-		req = self.get_request()
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
 		
@@ -83,15 +85,16 @@ class DatatypesTestCase(unittest.TestCase):
 							)
 		)
 		
+		req = self.get_request()
+		
 		test_storable = storable.Storable('test')
 		test_storable.selected = 1
 		
-		itemdef_form = test_itemdef.get_listing([test_storable])[0]
+		itemdef_form = test_itemdef.get_listing(req, [test_storable])[0]
 		
 		reference_form = form.FormNode('test-row')
 		reference_form['selected'](type='checkbox', label='Selected', checked=True, disabled=True)
 		
-		req = self.get_request()
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
 		
@@ -111,16 +114,17 @@ class DatatypesTestCase(unittest.TestCase):
 							)
 		)
 		
+		req = self.get_request()
+		
 		test_storable = storable.Storable('test')
 		test_storable.linked_name = 'Linked Name'
 		
-		itemdef_form = test_itemdef.get_listing([test_storable])
+		itemdef_form = test_itemdef.get_listing(req, [test_storable])
 		
 		reference_form = form.FormNode('test-row')
 		reference_form['linked_name'](type='label', label='Name', value='Linked Name',
 										prefix=tags.a(href='/admin/detail/test/0', __no_close=True), suffix='</a>')
 		
-		req = self.get_request()
 		itemdef_form_html = itemdef_form[0].render(req)
 		reference_form_html = reference_form.render(req)
 		
@@ -134,17 +138,18 @@ class DatatypesTestCase(unittest.TestCase):
 							)
 		)
 		
+		req = self.get_request()
+		
 		test_storable = storable.Storable('test')
 		test_storable.name = 'Test Name'
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_form(req, test_storable)
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['name'](type='textfield', label='Name', value='Test Name')
 		reference_form['save'](type='submit', value='save', weight=1000)
 		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		
-		req = self.get_request()
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
 		
@@ -159,15 +164,16 @@ class DatatypesTestCase(unittest.TestCase):
 							)
 		)
 		
+		req = self.get_request()
+		
 		test_storable = storable.Storable('test')
 		test_storable.name = 'Test Name'
 		
-		itemdef_form = test_itemdef.get_listing([test_storable])[0]
+		itemdef_form = test_itemdef.get_listing(req, [test_storable])[0]
 		
 		reference_form = form.FormNode('test-row')
 		reference_form['name'](type='label', label='Name', value='Test Name')
 		
-		req = self.get_request()
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
 		
@@ -192,7 +198,7 @@ class DatatypesTestCase(unittest.TestCase):
 		test_storable.title = "My Title"
 		test_storable.category_id = 'bio'
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_form(req, test_storable)
 		
 		reference_form = form.FormNode('page-form')
 		reference_form['category_id'](type='label', label='Category', value='Biography')
@@ -214,10 +220,12 @@ class DatatypesTestCase(unittest.TestCase):
 							)
 		)
 		
+		req = self.get_request()
+		
 		test_storable = storable.Storable('test')
 		test_storable.user_type = 'user'
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_form(req, test_storable)
 		
 		#options = {'admin':'Administrator', 'user':'User'}
 		reference_form = form.FormNode('test-form')
@@ -225,7 +233,6 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['save'](type='submit', value='save', weight=1000)
 		reference_form['cancel'](type='submit', value='cancel', weight=1000)
 		
-		req = self.get_request()
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
 		
@@ -253,7 +260,7 @@ class DatatypesTestCase(unittest.TestCase):
 		test_storable.content = 'Sample content'
 		test_storable.code = 'my-title'
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_form(req, test_storable)
 		
 		reference_form = form.FormNode('page-form')
 		reference_form['category_id'](type='select', label='Category', value=3, options=options)
@@ -284,14 +291,14 @@ class DatatypesTestCase(unittest.TestCase):
 		test_storable.set_factory(req.store.get_factory('test'))
 		test_storable.name = 'Test Name'
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_form(req, test_storable)
 		
 		reference_form = form.FormNode('test-form')
 		reference_form['name'](type='fieldset', style='brief', label='Name')
 		reference_form['name']['name-autocomplete'](type='textfield', weight=0,
 								attributes={'id':'test-form-name-autocomplete'})
 		reference_form['name']['ac-support'](weight=1, value=tags.script(type='text/javascript')
-									['$("#test-form-name-autocomplete").autocomplete("/autocomplete/url", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, selectOnly:1, minChars:3, maxItemsToShow:10});'])
+									['$("#test-form-name-autocomplete").autocomplete("/app-test/autocomplete/url", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, selectOnly:1, minChars:3, maxItemsToShow:10});'])
 		reference_form['name']['name'](type='hidden', weight=2, value=0,
 								attributes={'id':'test-form-name-ac-callback'})
 		reference_form['save'](type='submit', value='save', weight=1000)
@@ -323,7 +330,7 @@ class DatatypesTestCase(unittest.TestCase):
 		test_storable.content = 'Sample content'
 		test_storable.code = 'my-title'
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_form(req, test_storable)
 		itemdef_form.execute(req)
 		
 		self.failUnless(test_storable.get_id(), 'Storable was not saved.')
@@ -349,7 +356,7 @@ class DatatypesTestCase(unittest.TestCase):
 		req = self.get_request(post_data)
 		req.store.ensure_factory('page')
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_form(req, test_storable)
 		itemdef_form.execute(req)
 		
 		self.failIf(test_storable.get_id(), 'Storable was saved.')
@@ -375,7 +382,7 @@ class DatatypesTestCase(unittest.TestCase):
 		req = self.get_request(post_data)
 		req.store.ensure_factory('page')
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_form(req, test_storable)
 		itemdef_form.execute(req)
 		
 		self.failUnless(test_storable.get_id(), 'Storable was saved.')
@@ -403,7 +410,7 @@ class DatatypesTestCase(unittest.TestCase):
 		test_storable.content = 'Sample content'
 		test_storable.code = 'my-title'
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_form(req, test_storable)
 		itemdef_form.execute(req)
 		
 		self.failUnless(test_storable.get_id(), 'Storable was not saved.')
@@ -432,7 +439,7 @@ class DatatypesTestCase(unittest.TestCase):
 		test_storable.content = 'Sample content'
 		test_storable.code = 'my-title'
 		
-		itemdef_form = test_itemdef.get_form(test_storable)
+		itemdef_form = test_itemdef.get_form(req, test_storable)
 		itemdef_form.execute(req)
 		
 		self.failUnless(test_storable.get_id(), 'Storable was not saved.')

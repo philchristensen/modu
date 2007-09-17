@@ -152,7 +152,7 @@ class itemdef(dict):
 		return user.is_allowed(self.config.get('acl', []))
 	
 	
-	def get_form(self, storable, user=None):
+	def get_form(self, req, storable, user=None):
 		"""
 		Return a FormNode that represents this item in a detail view.
 		
@@ -169,7 +169,7 @@ class itemdef(dict):
 				if not(field.allows(user)):
 					continue
 				
-				frm[name] = field.get_form_element('detail', storable)
+				frm[name] = field.get_form_element(req, 'detail', storable)
 		
 		if(not frm.has_submit_buttons()):
 			frm['save'](type='submit', value='save', weight=1000)
@@ -188,7 +188,7 @@ class itemdef(dict):
 		return frm
 	
 	
-	def get_search_form(self, storable, user=None):
+	def get_search_form(self, req, storable, user=None):
 		"""
 		Return a FormNode that represents this item in a search view.
 		
@@ -207,7 +207,7 @@ class itemdef(dict):
 				if not(field.get('search', False)):
 					continue
 				
-				frm[name] = field.get_form_element('detail', storable)
+				frm[name] = field.get_form_element(req, 'detail', storable)
 		
 		if(not frm.has_submit_buttons()):
 			frm['search'](type='submit', value='search', weight=1000)
@@ -222,7 +222,7 @@ class itemdef(dict):
 		return frm
 	
 	
-	def get_listing(self, storables, user=None):
+	def get_listing(self, req, storables, user=None):
 		"""
 		Return a FormNode that represents this item in a list view.
 		
@@ -244,7 +244,7 @@ class itemdef(dict):
 				if not(field.allows(user)):
 					continue
 				
-				frm[name] = field.get_form_element('listing', storable)
+				frm[name] = field.get_form_element(req, 'listing', storable)
 			
 			def _validate(req, form):
 				return self.validate(req, form, storable)
@@ -362,14 +362,14 @@ class definition(dict):
 		return user.is_allowed(self.get('acl', []))
 	
 	
-	def get_form_element(self, style, storable):
+	def get_form_element(self, req, style, storable):
 		"""
 		Get a FormNode element that represents this field.
 		
 		The parent itemdef class will call this function, which will
 		call the get_element() method, and set a few default values.
 		"""
-		frm = self.get_element(style, storable)
+		frm = self.get_element(req, style, storable)
 		
 		classes = [self.__class__]
 		while(classes):
@@ -390,7 +390,7 @@ class definition(dict):
 		return frm
 	
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		"""
 		Render a FormNode element for this field definition.
 		"""

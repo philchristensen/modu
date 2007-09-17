@@ -7,7 +7,7 @@
 
 import os, os.path, sys, stat, copy, mimetypes, traceback, threading
 
-from modu.util import url, tags, message
+from modu.util import url, tags, queue
 from modu.web import session, user, resource, static
 from modu import persist, web
 
@@ -42,7 +42,9 @@ def handler(env, start_response):
 				req.set_jit('modu.session', session.activate_session)
 				req.set_jit('modu.user', session.activate_session)
 			if not(req.app.disable_message_queue):
-				req.set_jit('modu.messages', message.activate_queue)
+				req.set_jit('modu.messages', queue.activate_messages)
+			
+			req.set_jit('modu.content', queue.activate_content_queue)
 			
 			if(hasattr(application.site, 'configure_request')):
 				application.site.configure_request(req)

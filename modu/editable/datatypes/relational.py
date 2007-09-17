@@ -18,7 +18,7 @@ from modu import persist
 class ForeignLabelField(define.definition):
 	implements(IDatatype)
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		store = storable.get_store()
 		
 		value = self['fvalue']
@@ -43,7 +43,7 @@ class ForeignSelectField(define.definition):
 	
 	inherited_attributes = ['size']
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		store = storable.get_store()
 		
 		value = self['fvalue']
@@ -80,7 +80,7 @@ class ForeignSelectField(define.definition):
 class ForeignAutocompleteField(define.definition):
 	implements(IDatatype)
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		form_name = '%s-form' % storable.get_table()
 		ac_id = '%s-%s-autocomplete' % (form_name, self.name)
 		ac_cb_id = '%s-%s-ac-callback' % (form_name, self.name)
@@ -88,7 +88,7 @@ class ForeignAutocompleteField(define.definition):
 		prefs = 'autoFill:1, selectFirst:1, selectOnly:1, minChars:%d, maxItemsToShow:%d' % (self.get('min_chars', 3), self.get('max_choices', 10))
 		ac_javascript = '$("#%s").autocomplete("%s", '
 		ac_javascript += '{onItemSelect:select_foreign_item("%s"), %s});'
-		ac_javascript = ac_javascript % (ac_id, self['url'], ac_cb_id, prefs)
+		ac_javascript = ac_javascript % (ac_id, req.get_path(self['url']), ac_cb_id, prefs)
 		ac_javascript = tags.script(type='text/javascript')[ac_javascript]
 		
 		ac_field = form.FormNode('%s-autocomplete' % self.name)
@@ -115,6 +115,18 @@ class ForeignAutocompleteField(define.definition):
 		if(style == 'listing' or self.get('read_only', False)):
 			return form.FormNode(self.name)(type='label', value=ac_field.attribs('value', ''))
 		
+		req.content.report('header', tags.style(type="text/css")[
+			"""@import '%s';""" % req.get_path('/assets/jquery/jquery.autocomplete.css')])
+		req.content.report('header', tags.style(type="text/css",
+			src=req.get_path("/assets/jquery/jquery.autocomplete.css"))[''])
+
+		req.content.report('header', tags.script(type="text/javascript",
+			src=req.get_path("/assets/jquery/jquery-1.2.1.js"))[''])
+		req.content.report('header', tags.script(type="text/javascript",
+			src=req.get_path("/assets/jquery/jquery.autocomplete.js"))[''])
+		req.content.report('header', tags.script(type="text/javascript",
+			src=req.get_path("/assets/editable-autocomplete.js"))[''])
+		
 		frm = form.FormNode('%s-ac-fieldset' % self.name)(type='fieldset', style='brief')
 		frm[ac_field.name] = ac_field
 		frm[value_field.name] = value_field
@@ -125,7 +137,7 @@ class ForeignAutocompleteField(define.definition):
 class ForeignMultipleSelectField(define.definition):
 	implements(IDatatype)
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		mlabel = self.get('flabel', '')
 		if(mlabel.find('.') == -1):
 			mlabel = 'm.%s' % mlabel
@@ -199,7 +211,7 @@ class ForeignMultipleSelectField(define.definition):
 		return True
 
 class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		mlabel = self.get('flabel', '')
 		if(mlabel.find('.') == -1):
 			mlabel = 'm.%s' % mlabel
@@ -247,11 +259,23 @@ class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 					multiple=None, suffix=hidden_options + '<br/>', attributes={'id':select_id})
 		
 		prefs = 'autoFill:1, selectFirst:1, selectOnly:1, minChars:%d, maxItemsToShow:%d' % (self.get('min_chars', 3), self.get('max_choices', 10))
-		ac_js = '$("#%s").autocomplete("%s", {onItemSelect:add_foreign_item("%s", "%s"), %s});' % (ac_id, self['url'], form_name, self.name, prefs)
+		ac_js = '$("#%s").autocomplete("%s", {onItemSelect:add_foreign_item("%s", "%s"), %s});' % (ac_id, req.get_path(self['url']), form_name, self.name, prefs)
 		ac_controls = tags.script(type='text/javascript')[ac_js]
 		
 		ac_field = form.FormNode('%s-autocomplete' % self.name)
 		ac_field(type='textfield', weight=10, attributes={'id':ac_id}, suffix=ac_controls)
+		
+		req.content.report('header', tags.style(type="text/css")[
+			"""@import '%s';""" % req.get_path('/assets/jquery/jquery.autocomplete.css')])
+		req.content.report('header', tags.style(type="text/css",
+			src=req.get_path("/assets/jquery/jquery.autocomplete.css"))[''])
+		
+		req.content.report('header', tags.script(type="text/javascript",
+			src=req.get_path("/assets/jquery/jquery-1.2.1.js"))[''])
+		req.content.report('header', tags.script(type="text/javascript",
+			src=req.get_path("/assets/jquery/jquery.autocomplete.js"))[''])
+		req.content.report('header', tags.script(type="text/javascript",
+			src=req.get_path("/assets/editable-autocomplete.js"))[''])
 		
 		frm = form.FormNode('%s-ac-fieldset' % self.name)(type='fieldset', style='brief')
 		frm[select_frm.name] = select_frm

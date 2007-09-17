@@ -140,9 +140,14 @@ class TemplateContent(object):
 		return self.data[name]
 	
 	def get_content(self, req):
-		import string
-		engine = string.Template(self.get_template(req))
-		return engine.safe_substitute(self.data)
+		self.set_slot('base_path', req.get_path())
+		self.set_slot('request', req)
+		if('modu.content' in req):
+			self.set_slot('header_content', "\n".join([str(i) for i in req.content.get('header')]))
+		if('modu.user' in req):
+			self.set_slot('user', req['modu.user'])
+		else:
+			self.set_slot('user', None)
 	
 	def get_content_type(self, req):
 		return 'text/html'
@@ -179,13 +184,7 @@ cheetah_lock = threading.BoundedSemaphore()
 class CheetahTemplateContent(TemplateContent):
 	"""http://www.cheetahtemplate.org"""
 	def get_content(self, req):
-		self.set_slot('base_path', req.get_path())
-		self.set_slot('request', req)
-		self.set_slot('header_content', self.get_slot('header_content', ''))
-		if('modu.user' in req):
-			self.set_slot('user', req['modu.user'])
-		else:
-			self.set_slot('user', None)
+		super(CheetahTemplateContent, self).get_content(req)
 		
 		template = self.get_template(req)
 		template_path = req.approot + '/template/' + template
@@ -242,13 +241,7 @@ class CheetahTemplateContent(TemplateContent):
 class ZPTemplateContent(TemplateContent):
 	"""http://zpt.sourceforge.net"""
 	def get_content(self, req):
-		self.set_slot('base_path', req.get_path())
-		self.set_slot('request', req)
-		self.set_slot('header_content', self.get_slot('header_content', ''))
-		if('modu.user' in req):
-			self.set_slot('user', req['modu.user'])
-		else:
-			self.set_slot('user', None)
+		super(CheetahTemplateContent, self).get_content(req)
 		
 		from ZopePageTemplates import PageTemplate
 		class ZPTmoduTemplate(PageTemplate):
@@ -271,14 +264,8 @@ class ZPTemplateContent(TemplateContent):
 class CherryTemplateContent(TemplateContent):
 	"""http://cherrytemplate.python-hosting.com"""
 	def get_content(self, req):
-		self.set_slot('base_path', req.get_path())
-		self.set_slot('request', req)
-		self.set_slot('header_content', self.get_slot('header_content', ''))
-		if('modu.user' in req):
-			self.set_slot('user', req['modu.user'])
-		else:
-			self.set_slot('user', None)
-			
+		super(CheetahTemplateContent, self).get_content(req)
+		
 		from cherrytemplate import renderTemplate
 		self.data['_template_path'] = req.approot + '/template/' + self.get_template(req)
 		self.data['_renderTemplate'] = renderTemplate

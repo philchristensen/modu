@@ -24,7 +24,7 @@ class CheckboxField(define.definition):
 	"""
 	implements(IDatatype)
 	
-	def get_element(self, style, storable):
+	def get_element(self, req, style, storable):
 		frm = form.FormNode(self.name)
 		frm(type='checkbox', value=self.get('checked_value', 1))
 		if(str(getattr(storable, self.name, None)) == str(self.get('checked_value', 1))):

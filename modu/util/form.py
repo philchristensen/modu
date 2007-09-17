@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import re, cgi, rfc822, time
+import re, cgi, rfc822, time, copy
 
 try:
 	import cStringIO as StringIO
