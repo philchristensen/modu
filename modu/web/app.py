@@ -48,7 +48,7 @@ def handler(env, start_response):
 			
 			if(hasattr(application.site, 'configure_request')):
 				application.site.configure_request(req)
-			rsrc = req.app.tree.parse(req.path)
+			rsrc = req.get_resource()
 			
 			if not(rsrc):
 				raise404("No such resource: %s" % env['REQUEST_URI'])
@@ -262,6 +262,8 @@ class Request(dict):
 		dict.__init__(self)
 		self.update(env)
 		self.jit_handlers = {}
+		self.prepath = []
+		self.postpath = []
 	
 	def __getattr__(self, key):
 		modu_key = 'modu.%s' % key
@@ -287,6 +289,12 @@ class Request(dict):
 	def set_jit(self, key, handler):
 		self.jit_handlers[key] = handler
 	
+	def get_resource(self):
+		rsrc = self.app.tree.parse(self.path)
+		self.prepath = self.app.tree.prepath
+		self.postpath = self.app.tree.postpath
+		return rsrc
+	
 	def log_error(self, data):
 		self['wsgi.errors'].write(data)
 	
@@ -299,13 +307,16 @@ class Request(dict):
 	
 	def get_path(self, *args, **options):
 		def _deslash(fragment):
+			if(isinstance(fragment, (list, tuple))):
+				return '/'.join(fragment)
+			
 			fragment = str(fragment)
 			if(fragment.startswith('/')):
 				return fragment[1:]
 			else:
 				return fragment
 		
-		args = map(_deslash, args)
+		args = [_deslash(a) for a in args]
 		result = os.path.join(self.app.base_path, *args)
 		if(self.app.base_path == '/' and not args):
 			return ''

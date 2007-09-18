@@ -23,23 +23,23 @@ class EditorResource(resource.CheetahTemplateResource):
 		return ['/edit', '/autocomplete']
 	
 	def prepare_content(self, req):
-		if not(len(req.app.tree.postpath) >= 2):
-			app.raise404('/'.join(req.app.tree.postpath))
-		if not(req.store.has_factory(req.app.tree.postpath[0])):
-			app.raise500('No registered factory for %s' % req.app.tree.postpath[0])
+		if not(len(req.postpath) >= 2):
+			app.raise404('/'.join(req.postpath))
+		if not(req.store.has_factory(req.postpath[0])):
+			app.raise500('No registered factory for %s' % req.postpath[0])
 		
-		if(req.app.tree.prepath[0] == 'autocomplete'):
+		if(req.prepath[0] == 'autocomplete'):
 			self.prepare_autocomplete(req)
 		else:
 			self.prepare_editor(req)
 	
 	def prepare_autocomplete(self, req):
-		item = req.store.load_one(req.app.tree.postpath[0], {}, __limit=1)
+		item = req.store.load_one(req.postpath[0], {}, __limit=1)
 		if not(IEditable.providedBy(item)):
 			app.raise500('%r is does not implement the IEditable interface.')
 		
 		itemdef = item.get_itemdef()
-		definition = itemdef[req.app.tree.postpath[1]]
+		definition = itemdef[req.postpath[1]]
 		post_data = form.NestedFieldStorage(req)
 		results = []
 		
@@ -67,7 +67,7 @@ class EditorResource(resource.CheetahTemplateResource):
 		app.raise200([('Content-Type', 'text/plain')], [content])
 	
 	def prepare_editor(self, req):
-		item = req.store.load_one(req.app.tree.postpath[0], {'id':int(req.app.tree.postpath[1])})
+		item = req.store.load_one(req.postpath[0], {'id':int(req.postpath[1])})
 		if not(IEditable.providedBy(item)):
 			app.raise500('%r is does not implement the IEditable interface.')
 		

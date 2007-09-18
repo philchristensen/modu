@@ -84,11 +84,12 @@ class ForeignAutocompleteField(define.definition):
 		form_name = '%s-form' % storable.get_table()
 		ac_id = '%s-%s-autocomplete' % (form_name, self.name)
 		ac_cb_id = '%s-%s-ac-callback' % (form_name, self.name)
+		ac_url = req.get_path(req.prepath, 'autocomplete', storable.get_table(), self.name)
 		
 		prefs = 'autoFill:1, selectFirst:1, selectOnly:1, minChars:%d, maxItemsToShow:%d' % (self.get('min_chars', 3), self.get('max_choices', 10))
 		ac_javascript = '$("#%s").autocomplete("%s", '
 		ac_javascript += '{onItemSelect:select_foreign_item("%s"), %s});'
-		ac_javascript = ac_javascript % (ac_id, req.get_path(self['url']), ac_cb_id, prefs)
+		ac_javascript = ac_javascript % (ac_id, ac_url, ac_cb_id, prefs)
 		ac_javascript = tags.script(type='text/javascript')[ac_javascript]
 		
 		ac_field = form.FormNode('%s-autocomplete' % self.name)
@@ -249,6 +250,7 @@ class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 		form_name = '%s-form' % storable.get_table()
 		ac_id = '%s-%s-autocomplete' % (form_name, self.name)
 		select_id = '%s-foreign-select' % self.name
+		ac_url = req.get_path(req.prepath, 'autocomplete', storable.get_table(), self.name)
 		
 		hidden_options = ''
 		for value in options:
@@ -259,7 +261,7 @@ class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 					multiple=None, suffix=hidden_options + '<br/>', attributes={'id':select_id})
 		
 		prefs = 'autoFill:1, selectFirst:1, selectOnly:1, minChars:%d, maxItemsToShow:%d' % (self.get('min_chars', 3), self.get('max_choices', 10))
-		ac_js = '$("#%s").autocomplete("%s", {onItemSelect:add_foreign_item("%s", "%s"), %s});' % (ac_id, req.get_path(self['url']), form_name, self.name, prefs)
+		ac_js = '$("#%s").autocomplete("%s", {onItemSelect:add_foreign_item("%s", "%s"), %s});' % (ac_id, ac_url, form_name, self.name, prefs)
 		ac_controls = tags.script(type='text/javascript')[ac_js]
 		
 		ac_field = form.FormNode('%s-autocomplete' % self.name)

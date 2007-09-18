@@ -46,7 +46,7 @@ class FileResource(object):
 	def get_delegate(self, req):
 		self.content_type = None
 		self.size = None
-		self.true_path = os.path.join(self.root, '/'.join(req.app.tree.postpath))
+		self.true_path = os.path.join(self.root, '/'.join(req.postpath))
 		
 		try:
 			self.content_type, self.size = get_file_essentials(req, self.true_path)

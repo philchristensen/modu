@@ -27,11 +27,11 @@
 		$request_data
 	</pre>
 	<table>
-	#for $key in $request
+	#for $key in $req
 		<tr>
 			<td><b>$key</b></td>
 			#filter WebSafe
-			<td>$request[$key]</td>
+			<td>$req[$key]</td>
 			#end filter
 		</tr>
 	#end for

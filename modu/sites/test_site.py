@@ -35,7 +35,7 @@ class TestResource(resource.Resource):
 		return 'text/plain'
 	
 	def get_content(self, req):
-		return '/'.join(req.app.tree.postpath)
+		return '/'.join(req.postpath)
 
 
 class TestDelegateResource(resource.Resource):

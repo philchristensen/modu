@@ -63,7 +63,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		user = req['modu.user']
 		self.set_slot('user', user)
 		if(user and user.get_id()):
-			if(req.app.tree.prepath[-1] == 'logout'):
+			if(req.prepath[-1] == 'logout'):
 				req.session.set_user(None)
 				app.redirect(req.get_path(self.path))
 			
@@ -79,8 +79,8 @@ class AdminResource(resource.CheetahTemplateResource):
 			
 			self.set_slot('itemdef_layout', self.itemdef_layout)
 			
-			if(len(req.app.tree.postpath) > 1):
-				itemdef_name = req.app.tree.postpath[1]
+			if(len(req.postpath) > 1):
+				itemdef_name = req.postpath[1]
 				# we just need to select the right itemdef
 				selected_itemdef = itemdefs.get(itemdef_name)
 				
@@ -89,9 +89,9 @@ class AdminResource(resource.CheetahTemplateResource):
 				if(selected_itemdef):
 					configure_store(req, selected_itemdef)
 					
-					if(req.app.tree.postpath[0] == 'detail'):
+					if(req.postpath[0] == 'detail'):
 						self.prepare_detail(req, selected_itemdef)
-					elif(req.app.tree.postpath[0] == 'autocomplete'):
+					elif(req.postpath[0] == 'autocomplete'):
 						self.prepare_autocomplete(req, selected_itemdef)
 					else:
 						self.prepare_listing(req, selected_itemdef)
@@ -187,8 +187,8 @@ class AdminResource(resource.CheetahTemplateResource):
 	def prepare_detail(self, req, itemdef):
 		self.template = itemdef.config.get('detail_template', 'admin-detail.html.tmpl')
 		self.set_slot('form', None)
-		if(len(req.app.tree.postpath) > 2):
-			item_id = req.app.tree.postpath[2]
+		if(len(req.postpath) > 2):
+			item_id = req.postpath[2]
 			table_name = itemdef.config.get('table', itemdef.name)
 			
 			if(item_id == 'new'):
@@ -225,7 +225,7 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def prepare_autocomplete(self, req, itemdef):
-		definition = itemdef[req.app.tree.postpath[2]]
+		definition = itemdef[req.postpath[2]]
 		post_data = form.NestedFieldStorage(req)
 		results = []
 		
@@ -234,23 +234,9 @@ class AdminResource(resource.CheetahTemplateResource):
 		else:
 			partial = None
 		
-		# This needs to be reworked. Callback functions should return a dict,
-		# and this whole API needs to be reviewed and refactored.
-		if(partial):
-			value = definition['fvalue']
-			label = definition['flabel']
-			table = definition['ftable']
-			
-			if(definition.get('autocomplete_callback')):
-				results = definition['autocomplete_callback'](req, partial, definition)
-			else:
-				ac_query = "SELECT %s, %s FROM %s WHERE %s LIKE %%s" % (value, label, table, label)
-				
-				results = req.store.pool.runQuery(ac_query, ['%%%s%%' % partial])
-		
 		content = ''
-		for result in results:
-			content += "%s|%d\n" % (result[label], result[value])
+		if(partial and definition.get('autocomplete_callback')):
+			content = definition['autocomplete_callback'](req, partial, definition)
 		
 		app.raise200([('Content-Type', 'text/plain')], [content])
 	

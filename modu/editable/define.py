@@ -46,9 +46,7 @@ def get_itemdef_layout(req, itemdefs=None):
 	Returns an OrderedDict instance containing the itemdef tree.
 	
 	Normally this is rendered as a navigation menu, and also provides
-	templates with access to the other non-current itemdefs. At this
-	point, the base_path config variable is set (and, if supplied in
-	the itemdef as a callable, invoked).
+	templates with access to the other non-current itemdefs.
 	
 	The result has also been filtered to contain only the itemdefs and
 	definitions that the req.user has access to. The data iteself is a
@@ -60,12 +58,6 @@ def get_itemdef_layout(req, itemdefs=None):
 		itemdefs = get_itemdefs()
 	for name, itemdef in itemdefs.items():
 		itemdef = clone_itemdef(itemdef)
-		
-		default_path = req.get_path(*req.app.tree.prepath)
-		base_path = itemdef.get('base_path', default_path)
-		if(callable(base_path)):
-			base_path = base_path(req)
-		itemdef.config['base_path'] = base_path
 		
 		acl = itemdef.config.get('acl', 'view item')
 		if('acl' not in itemdef.config or user.is_allowed(acl)):
@@ -260,20 +252,12 @@ class itemdef(dict):
 		return forms
 	
 	
-	def get_item_url(self, storable):
-		"""
-		Given the provided storable, return a path that would take you to the item's detail page.
-		"""
-		#TODO: Make this customizable.
-		return '%s/detail/%s/%d' % (self.config['base_path'], storable.get_table(), storable.get_id())
-	
-	
 	def validate(self, req, form, storable):
 		"""
 		The validation function for forms generated from this itemdef.
 		"""
 		if('cancel' in form.data[form.name]):
-			app.redirect('%s/listing/%s' % (self.config['base_path'], storable.get_table()))
+			app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
 		
 		# call validate hook on each field, return false if they do
 		for field in form:
@@ -330,8 +314,8 @@ class itemdef(dict):
 		if('postwrite_callback' in self.config):
 			self.config['postwrite_callback'](req, form, storable)
 		
-		if(req.app.tree.postpath and req.app.tree.postpath[-1] == 'new'):
-			app.redirect(self.get_item_url(storable))
+		if(req.postpath and req.postpath[-1] == 'new'):
+			app.redirect(req.get_path(req.prepath, 'detail', storable.get_table(), storable.get_id()))
 
 
 class definition(dict):
@@ -385,7 +369,7 @@ class definition(dict):
 			frm.attributes[name] = value
 		
 		if(style == 'listing' and self.get('link', False)):
-			href = self.itemdef.get_item_url(storable)
+			href = req.get_path(req.prepath, 'detail', storable.get_table(), storable.get_id())
 			frm(prefix=tags.a(href=href, __no_close=True), suffix='</a>')
 		return frm
 	

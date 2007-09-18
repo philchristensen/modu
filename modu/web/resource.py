@@ -141,7 +141,7 @@ class TemplateContent(object):
 	
 	def get_content(self, req):
 		self.set_slot('base_path', req.get_path())
-		self.set_slot('request', req)
+		self.set_slot('req', req)
 		if('modu.content' in req):
 			self.set_slot('header_content', "\n".join([str(i) for i in req.content.get('header')]))
 		if('modu.user' in req):
