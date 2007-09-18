@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import os, re, threading, stat, mimetypes
+import os, os.path, re, threading, stat, mimetypes
 
 try:
 	import cPickle as pickle
@@ -157,6 +157,9 @@ class TemplateContent(object):
 	
 	def get_template(self, req):
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
+	
+	def get_template_root(self, req):
+		return os.path.join(req.approot, 'template')
 
 
 # According to the docs, Template can take awhile to load.
@@ -187,14 +190,14 @@ class CheetahTemplateContent(TemplateContent):
 		super(CheetahTemplateContent, self).get_content(req)
 		
 		template = self.get_template(req)
-		template_path = req.approot + '/template/' + template
+		template_path = os.path.join(self.get_template_root(req), template)
 		module_name = re.sub(r'\W+', '_', template)
-		module_path = req.approot + '/template/' + module_name + '.py'
+		module_path = os.path.join(self.get_template_root(req), module_name + '.py')
 		
 		# because we have to manage moduTemplateDirectory on the class instance
 		cheetah_lock.acquire()
 		try:
-			CheetahModuTemplate.moduTemplateDirectory = req.approot + '/template/'
+			CheetahModuTemplate.moduTemplateDirectory = self.get_template_root(req)
 		
 			try:
 				needs_recompile = (os.stat(template_path).st_mtime > os.stat(module_path).st_mtime)
@@ -241,7 +244,7 @@ class CheetahTemplateContent(TemplateContent):
 class ZPTemplateContent(TemplateContent):
 	"""http://zpt.sourceforge.net"""
 	def get_content(self, req):
-		super(CheetahTemplateContent, self).get_content(req)
+		super(ZPTemplateContent, self).get_content(req)
 		
 		from ZopePageTemplates import PageTemplate
 		class ZPTmoduTemplate(PageTemplate):
@@ -249,7 +252,7 @@ class ZPTemplateContent(TemplateContent):
 				if not context.has_key('args'):
 					context['args'] = args
 				return self.pt_render(extra_context=context)
-		template_file = open(req.approot + '/template/' + self.get_template(req))
+		template_file = open(os.path.join(self.get_template_root(req), self.get_template(req)))
 		self.template = ZPTmoduTemplate()
 		self.template.write(template_file.read())
 		return self.template(context={'here':self.data})
@@ -264,10 +267,10 @@ class ZPTemplateContent(TemplateContent):
 class CherryTemplateContent(TemplateContent):
 	"""http://cherrytemplate.python-hosting.com"""
 	def get_content(self, req):
-		super(CheetahTemplateContent, self).get_content(req)
+		super(CherryTemplateContent, self).get_content(req)
 		
 		from cherrytemplate import renderTemplate
-		self.data['_template_path'] = req.approot + '/template/' + self.get_template(req)
+		self.data['_template_path'] = os.path.join(self.get_template_root(req), self.get_template(req))
 		self.data['_renderTemplate'] = renderTemplate
 		return eval('_renderTemplate(file=_template_path)', self.data)
 	

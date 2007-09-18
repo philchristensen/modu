@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC 
+	"-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<title>editable test page</title>
+	<style type="text/css">@import '$base_path/admin-styles.css';</style>
+	$header_content
+</head>
+<body>
+
+<div id="navigation">
+#if $user
+<p class="current-user-info">
+	You are currently logged in as $user.username.<br/>
+	<a href="$req.get_path($req.prepath, 'logout')">Click here to logout.</a>
+</p>
+#end if
+
+#if $itemdef_layout and len($itemdef_layout)
+<ul id="nav-list">
+	#for $category, $itemdefs in $itemdef_layout.items()
+	<li>
+		$category
+		<ul class="subnav-list">
+		#for $itemdef in $itemdefs
+			<li class="#if $selected_itemdef == $itemdef then 'active' else ''#">
+			<a href="$req.get_path($req.prepath, 'listing', $itemdef.get_name())">$itemdef.config.get('label', $itemdef.get_name())</a>
+			</li>
+		#end for
+		</ul>
+	</li>
+	#end for
+</ul>
+#end if
+</div>
+
+<div id="content">
+
+#if $req.messages.count('error')
+<ul class="errors">
+#for $err in $req.messages.get('error')
+<li>$err</li>
+#end for
+</ul>
+#end if
+
+#if $req.messages.count('message')
+<ul class="messages">
+#for $msg in $req.messages.get('message')
+<li>$msg</li>
+#end for
+</ul>
+#end if
+

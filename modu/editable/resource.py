@@ -248,6 +248,16 @@ class AdminResource(resource.CheetahTemplateResource):
 	def get_template(self, req):
 		return self.template
 	
+	
+	def get_template_root(self, req):
+		import modu
+		template = self.get_template(req)
+		
+		template_root = os.path.join(req.approot, 'template')
+		if(os.access(os.path.join(template_root, template), os.F_OK)):
+			return template_root
+		
+		return os.path.join(os.path.dirname(modu.__file__), 'assets', 'default-template')
 
 class ListingTheme(theme.Theme):
 	def form(self, form_list):
