@@ -118,9 +118,7 @@ class ForeignAutocompleteField(define.definition):
 		
 		req.content.report('header', tags.style(type="text/css")[
 			"""@import '%s';""" % req.get_path('/assets/jquery/jquery.autocomplete.css')])
-		req.content.report('header', tags.style(type="text/css",
-			src=req.get_path("/assets/jquery/jquery.autocomplete.css"))[''])
-
+		
 		req.content.report('header', tags.script(type="text/javascript",
 			src=req.get_path("/assets/jquery/jquery-1.2.1.js"))[''])
 		req.content.report('header', tags.script(type="text/javascript",
@@ -269,8 +267,6 @@ class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 		
 		req.content.report('header', tags.style(type="text/css")[
 			"""@import '%s';""" % req.get_path('/assets/jquery/jquery.autocomplete.css')])
-		req.content.report('header', tags.style(type="text/css",
-			src=req.get_path("/assets/jquery/jquery.autocomplete.css"))[''])
 		
 		req.content.report('header', tags.script(type="text/javascript",
 			src=req.get_path("/assets/jquery/jquery-1.2.1.js"))[''])
