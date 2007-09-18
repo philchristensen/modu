@@ -210,7 +210,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			if(frm.execute(req)):
 				# we regenerate the form because some fields don't know their
 				# value until after the form is saved (e.g., postwrite fields)
-				new_frm = itemdef.get_form(selected_item)
+				new_frm = itemdef.get_form(req, selected_item, req.user)
 				new_frm.errors = frm.errors
 				frm = new_frm
 			else:
@@ -258,6 +258,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			return template_root
 		
 		return os.path.join(os.path.dirname(modu.__file__), 'assets', 'default-template')
+
 
 class ListingTheme(theme.Theme):
 	def form(self, form_list):
