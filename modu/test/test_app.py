@@ -54,15 +54,17 @@ class AppTestCase(unittest.TestCase):
 		self.failUnlessEqual(req['PATH_INFO'], req['modu.path'], 'PATH_INFO was different from modu.path')
 		self.failUnlessEqual(req['modu.path'], '/test-resource/this/is/a/long/path', 'modu.path was not as expected: %s' % req['modu.path'])
 		
-		rsrc = application.tree.parse(req.path)
+		rsrc = req.get_resource()
 		self.failIf(rsrc is None, 'Resource retrieval failed.')
 		
-		self.failUnlessEqual(rsrc.get_response(req), ['this/is/a/long/path'], "Did not find expected content")
+		response = rsrc.get_response(req)
+		expected = ['this/is/a/long/path']
+		self.failUnlessEqual(response, expected, "Found %s instead of %s" % (response, expected))
 		
 		environ['REQUEST_URI'] = '/app-test/test-delegate/this/is/a/long/path'
 		application = app.get_application(environ)
 		req = app.configure_request(environ, application)
-		rsrc = application.tree.parse(req.path)
+		rsrc = req.get_resource()
 		self.failUnless(resource.IResourceDelegate.providedBy(rsrc), 'Resource did not implement IResourceDelegate.')
 		
 		rsrc = rsrc.get_delegate(req)
@@ -73,7 +75,7 @@ class AppTestCase(unittest.TestCase):
 		environ['REQUEST_URI'] = '/app-test/test-access'
 		application = app.get_application(environ)
 		req = app.configure_request(environ, application)
-		rsrc = application.tree.parse(req.path)
+		rsrc = req.get_resource()
 		self.failUnless(resource.IResourceDelegate.providedBy(rsrc), 'Resource did not implement IResourceDelegate.')
 		
 		self.failUnlessRaises(web.HTTPStatus, rsrc.check_access, req)
