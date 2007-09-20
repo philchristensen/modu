@@ -9,7 +9,7 @@
 Contains the FCK Editor support for modu.editable.
 """
 
-import os, os.path, time, stat, shutil
+import os, os.path, time, stat, shutil, StringIO
 
 from zope.interface import implements
 
@@ -65,7 +65,7 @@ class FCKEditorField(define.definition):
 				"%s.Value = \"%s\";\n" % (fck_var, fck_value),
 				"%s.Width = \"%s\";\n" % (fck_var, self.get('width', 600)),
 				"%s.Height = \"%s\";\n" % (fck_var, self.get('height', 400)),
-				"%s.ToolbarSet = \"%s\";\n" % (fck_var, self.get('toolbar_set', 'Default')),
+				"%s.ToolbarSet = \"%s\";\n" % (fck_var, self.get('toolbar_set', 'Standard')),
 				"%s.Create();\n" % fck_var
 			]]
 		
@@ -146,10 +146,16 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 	def prepare_browser(self, req):
 		data = form.NestedFieldStorage(req)
 		
-		command_name = data.get('Command').value
-		resource_type = data.get('Type').value
-		new_folder_name = data.get('NewFolderName').value
-		folder_path = data.get('CurrentFolder').value
+		if(req['REQUEST_METHOD'] == 'POST'):
+			get_data = form.NestedFieldStorage({'QUERY_STRING':req['QUERY_STRING'],
+												'wsgi.input':req['wsgi.input']})
+		else:
+			get_data = data
+		
+		command_name = get_data.get('Command').value
+		resource_type = get_data.get('Type').value
+		new_folder_name = get_data.get('NewFolderName').value
+		folder_path = get_data.get('CurrentFolder').value
 		if(folder_path is None):
 			folder_path = ''
 		elif(folder_path.startswith('/')):
@@ -167,6 +173,7 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 			content += self.create_folder(folder_path, new_folder_name)
 		elif(command_name == 'FileUpload'):
 			self.file_upload(req, folder_path)
+			return
 		else:
 			return
 		
@@ -224,7 +231,8 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 	def file_upload(self, req, folder_path):
 		result, filename = self.handle_upload(req, folder_path)
 		file_url = os.path.join(self.upload_url, folder_path, filename)
-		print (result, filename, file_url)
+		
+		self.content_type = 'text/html'
 		self.content = [str(tags.script(type="text/javascript")[
 						"window.parent.frames['frmUpload'].OnUploadCompleted(%s, '%s');\n" % (result, filename)
 						])]
@@ -236,7 +244,7 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		fileitem = data['NewFile']
 		
 		filename = fileitem.filename
-		destination_path = os.path.join(folder_path, filename)
+		destination_path = os.path.join(self.upload_dir, folder_path, filename)
 		if(os.access(destination_path, os.F_OK)):
 			parts = filename.split('.')
 			if(len(parts) > 1):
@@ -255,6 +263,8 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 				uploaded_file.close()
 				result = SUCCESS
 			except:
+				import traceback
+				print traceback.print_exc()
 				result = UL_ACCESS_DENIED
 		
 		return result, filename
