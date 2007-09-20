@@ -27,6 +27,7 @@ def get_itemdefs():
 	Search the system path for any available itemdefs. 
 	""" 
 	import modu.itemdefs
+	#reload(modu.itemdefs)
 	itemdefs = {}
 	for itemdef in plugin.getPlugins(editable.IItemdef, modu.itemdefs):
 		if(itemdef.name):
@@ -52,7 +53,6 @@ def get_itemdef_layout(req, itemdefs=None):
 	definitions that the req.user has access to. The data iteself is a
 	clone, so modifications will have no effect.
 	"""
-	user = req.user
 	layout = util.OrderedDict()
 	if(itemdefs is None):
 		itemdefs = get_itemdefs()
@@ -60,7 +60,7 @@ def get_itemdef_layout(req, itemdefs=None):
 		itemdef = clone_itemdef(itemdef)
 		
 		acl = itemdef.config.get('acl', 'view item')
-		if('acl' not in itemdef.config or user.is_allowed(acl)):
+		if('acl' not in itemdef.config or req.user.is_allowed(acl)):
 			cat = itemdef.config.get('category', 'other')
 			layout.setdefault(cat, []).append(itemdef)
 			layout[cat].sort(itemdef_cmp)

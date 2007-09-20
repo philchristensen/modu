@@ -1,0 +1,29 @@
+FCKConfig.LinkBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Connector=$base_path/fck' ;
+FCKConfig.ImageBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Image&Connector=$base_path/fck' ;
+FCKConfig.FlashBrowserURL = FCKConfig.BasePath + 'filemanager/browser/default/browser.html?Type=Flash&Connector=$base_path/fck' ;
+
+FCKConfig.LinkUploadURL = '$base_path/fck/upload' ;
+FCKConfig.ImageUploadURL = '$base_path/fck/upload?Type=Image' ;
+FCKConfig.FlashUploadURL = '$base_path/fck/upload?Type=Flash' ;
+
+FCKConfig.ToolbarSets["Default"] = [
+	['Source','DocProps','-','Save','NewPage','Preview','-','Templates'],
+	['Cut','Copy','Paste','PasteText','PasteWord','-','Print','SpellCheck'],
+	['Undo','Redo','-','Find','Replace','-','SelectAll','RemoveFormat'],
+	['Form','Checkbox','Radio','TextField','Textarea','Select','Button','ImageButton','HiddenField'],
+	'/',
+	['Bold','Italic','Underline','StrikeThrough','-','Subscript','Superscript'],
+	['OrderedList','UnorderedList','-','Outdent','Indent'],
+	['JustifyLeft','JustifyCenter','JustifyRight','JustifyFull'],
+	['Link','Unlink','Anchor'],
+	['Image','Flash','Table','Rule','Smiley','SpecialChar','PageBreak'],
+	'/',
+	['Style','FontFormat','FontName','FontSize'],
+	['TextColor','BGColor'],
+	['FitWindow','-','About']
+] ;
+
+FCKConfig.ToolbarSets["Basic"] = [
+	['Bold','Italic','-','OrderedList','UnorderedList','-','Link','Unlink','-','Source']
+] ;
+

@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import copy, UserDict
+import copy
 
 from modu.util import tags, OrderedDict
 
@@ -156,7 +156,7 @@ class Theme(object):
 		value = map(str, value)
 		
 		option_data = copy.copy(element.attrib('options', []))
-		if(isinstance(option_data, (dict, UserDict.UserDict))):
+		if(isinstance(option_data, dict)):
 			option_keys = option_data.keys()
 		else:
 			option_keys = [i for i in range(len(option_data))]

@@ -300,7 +300,12 @@ class NestedFieldStorage(cgi.FieldStorage):
 			return True
 		else:
 			return False
-
+	
+	def get(self, key, default=None):
+		if(key in self):
+			return self[key]
+		return cgi.MiniFieldStorage(key, default)
+	
 	def parse_field(self, key, value):
 		#print 'parse field got %s: %s' % (key, value)
 		original_key = key
@@ -447,7 +452,7 @@ class MagicFile(file):
 		# is really only a bad thing because of the pickling overhead.
 		session = self.req.session
 		file_state = session['modu.file'][self.client_filename]
-		print "writing: %d bytes" % len(data)
+		#print "writing: %d bytes" % len(data)
 		file_state['bytes_written'] += len(data)
 		session.touch()
 		session.save()
