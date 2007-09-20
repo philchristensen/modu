@@ -51,6 +51,8 @@ class FCKEditorField(define.definition):
 		
 		# //$value = str_replace("'", '&apos;', $value);
 		fck_value = getattr(storable, self.name, '')
+		if(fck_value is None):
+			fck_value = ''
 		fck_value = fck_value.replace("\r\n", r'\r\n')
 		fck_value = fck_value.replace("\n", r'\n')
 		fck_value = fck_value.replace("\r", r'\r')
