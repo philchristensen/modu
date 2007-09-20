@@ -9,7 +9,7 @@
 Contains the FCK Editor support for modu.editable.
 """
 
-import os, os.path, time, stat, shutil
+import os, os.path, time, stat, shutil, array
 
 from zope.interface import implements
 
@@ -53,7 +53,10 @@ class FCKEditorField(define.definition):
 		fck_value = getattr(storable, self.name, '')
 		if(fck_value is None):
 			fck_value = ''
-		fck_value = str(fck_value)
+		if(isinstance(fck_value, array.array)):
+			fck_value = fck_value.tostring()
+		else:
+			fck_value = str(fck_value)
 		fck_value = fck_value.replace("\r\n", r'\r\n')
 		fck_value = fck_value.replace("\n", r'\n')
 		fck_value = fck_value.replace("\r", r'\r')
