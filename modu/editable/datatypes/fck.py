@@ -87,16 +87,14 @@ class FCKEditorField(define.definition):
 
 
 class FCKEditorResource(resource.CheetahTemplateResource):
-	def __init__(self, **options):
-		self.upload_dir = options.get('upload_dir', '/Users/phil/Workspace/dram2/webroot')
-		self.upload_url = options.get('upload_url', '/')
-	
-	
 	def get_paths(self):
 		return ['/fck']
 	
 	
 	def prepare_content(self, req):
+		self.upload_dir = os.path.join(req.approot, req.app.webroot)
+		self.upload_url = req.get_path()
+		
 		self.content_type = 'text/html'
 		self.content = None
 		self.template = None
