@@ -9,7 +9,7 @@
 Contains the FCK Editor support for modu.editable.
 """
 
-import os, os.path, time, stat, shutil, StringIO
+import os, os.path, time, stat, shutil
 
 from zope.interface import implements
 
