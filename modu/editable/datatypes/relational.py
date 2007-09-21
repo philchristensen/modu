@@ -107,14 +107,18 @@ class ForeignAutocompleteField(define.definition):
 		if(hasattr(storable, self.name)):
 			query = 'SELECT %s FROM %s WHERE %s = %%s' % (label, table, value)
 			
-			results = store.pool.runQuery(query, getattr(storable, self.name))
-			if(results):
-				ac_field(value=results[0][label])
+			field_value = getattr(storable, self.name)
+			if(field_value is not None):
+				results = store.pool.runQuery(query, field_value)
+				if(results):
+					ac_field(value=results[0][label])
+				else:
+					value_field(value=0)
 			else:
 				value_field(value=0)
 		
 		if(style == 'listing' or self.get('read_only', False)):
-			return form.FormNode(self.name)(type='label', value=ac_field.attribs('value', ''))
+			return form.FormNode(self.name)(type='label', value=ac_field.attrib('value', ''))
 		
 		req.content.report('header', tags.style(type="text/css")[
 			"""@import '%s';""" % req.get_path('/assets/jquery/jquery.autocomplete.css')])
@@ -131,6 +135,17 @@ class ForeignAutocompleteField(define.definition):
 		frm[value_field.name] = value_field
 		
 		return frm
+	
+	def update_storable(self, req, form, storable):
+		"""
+		Given the posted data in req, update provided storable with this field's content.
+		"""
+		form_name = '%s-form' % storable.get_table()
+		if(form_name in form.data):
+			form_data = form.data[form_name]
+			if(self.name in form_data and self.name in form_data[self.name]):
+				setattr(storable, self.name, form_data[self.name][self.name].value)
+		return True
 
 
 class ForeignMultipleSelectField(define.definition):
