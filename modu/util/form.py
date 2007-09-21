@@ -17,6 +17,15 @@ from modu.util import theme
 NESTED_NAME = re.compile(r'([^\[]+)(\[([^\]]+)\])*')
 KEYED_FRAGMENT = re.compile(r'\[([^\]]+)\]*')
 
+def nil():
+	"""
+	A convenience method for testing values in a NestedFieldStorage object.
+	
+	This allows a developer to use C{nfs['my-form'].get('title', form.nil()).value is None}
+	"""
+	return cgi.MiniFieldStorage('nil-field', None)
+
+
 class FormNode(object):
 	"""
 	In an attempt to mimic the Drupal form-building process in a slightly more
@@ -39,6 +48,8 @@ class FormNode(object):
 		self.validate = self._validate
 		self.theme = theme.Theme
 		self.data = {}
+		
+		self.submit_button = None
 	
 	def __getattr__(self, name):
 		if(name in self.attributes):
@@ -154,6 +165,7 @@ class FormNode(object):
 			# NOTE: This assumes the browser sends the submit button's name
 			# in the submit POST data. This may not always work.
 			if(self.name in self.data and submit.name in self.data[self.name]):
+				self.submit_button = submit
 				self.load_data(self.data)
 				result = self.validate(req, self)
 				if(result):
@@ -268,6 +280,7 @@ class FieldStorageDict(dict):
 	
 	def keys(self):
 		return self.field_storage.keys() + dict.keys(self)
+
 
 class NestedFieldStorage(cgi.FieldStorage):
 	"""

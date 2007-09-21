@@ -164,9 +164,9 @@ class itemdef(dict):
 				frm[name] = field.get_form_element(req, 'detail', storable)
 		
 		if(not frm.has_submit_buttons()):
+			frm['cancel'](type='submit', value='cancel', weight=1001)
 			frm['save'](type='submit', value='save', weight=1000)
-			frm['cancel'](type='submit', value='cancel', weight=1000)
-			frm['cancel'](type='submit', value='cancel', weight=1000)
+			frm['delete'](type='submit', value='delete', weight=1002)
 		
 		def _validate(req, form):
 			return self.validate(req, form, storable)
@@ -252,29 +252,33 @@ class itemdef(dict):
 		return forms
 	
 	
-	def validate(self, req, form, storable):
+	def validate(self, req, frm, storable):
 		"""
 		The validation function for forms generated from this itemdef.
 		"""
-		if('cancel' in form.data[form.name]):
+		form_data = frm.data[frm.name]
+		if(form_data.get('cancel', form.nil()).value == frm.submit_button.value):
+			app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
+		elif(form_data.get('delete', form.nil()).value == frm.submit_button.value):
+			self.delete(req, frm, storable)
 			app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
 		
 		# call validate hook on each field, return false if they do
-		for field in form:
+		for field in frm:
 			if(field in self and 'validator' in self[field]):
 				validator = self[field]['validator']
 				if(validator):
-					if not(validator(req, form, storable)):
+					if not(validator(req, frm, storable)):
 						return False
 			else:
-				if not(form[field].validate(req, form)):
+				if not(frm[field].validate(req, frm)):
 					return False
 		
 		# call prewrite_callback
 		# this seems like a strange place for this, since prewrites aren't
 		# explicitly validation, but i think it's okay for now.
 		if('prewrite_callback' in self.config):
-			result = self.config['prewrite_callback'](req, form, storable)
+			result = self.config['prewrite_callback'](req, frm, storable)
 			if(result is False):
 				return False
 		
@@ -316,6 +320,23 @@ class itemdef(dict):
 		
 		if(req.postpath and req.postpath[-1] == 'new'):
 			app.redirect(req.get_path(req.prepath, 'detail', storable.get_table(), storable.get_id()))
+	
+	def delete(self, req, form, storable):
+		if('predelete_callback' in self.config):
+			result = self.config['predelete_callback'](req, form, storable)
+			if(result is False):
+				return False
+		
+		deleted_id = storable.get_id()
+		deleted_table = storable.get_table()
+		storable.get_store().destroy(storable)
+		
+		if('postdelete_callback' in self.config):
+			self.config['postdelete_callback'](req, form, storable)
+		
+		req.messages.report('message', "Record #%d in %s was deleted." % (deleted_id, deleted_table))
+		
+		return True
 
 
 class definition(dict):
