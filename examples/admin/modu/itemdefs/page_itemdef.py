@@ -19,7 +19,7 @@ __itemdef__ = define.itemdef(
 	),
 	
 	id				= string.LabelField(
-		label		= 'id',
+		label		= 'id:',
 		size		= 10,
 		help		= 'the id of this page.',
 		listing		= True,
@@ -27,7 +27,7 @@ __itemdef__ = define.itemdef(
 	),
 	
 	title			= string.StringField(
-		label		= 'title',
+		label		= 'title:',
 		size		= 60,
 		maxlength 	= 64,
 		help		= 'the title of this page.',
@@ -38,13 +38,13 @@ __itemdef__ = define.itemdef(
 	
 	password		= string.PasswordField(
 		type		= 'PasswordField',
-		label		= 'password',
+		label		= 'password:',
 		help		= 'a password for this page.',
 		weight		= 1
 	),
 	 
 	category_id		= relational.ForeignAutocompleteField(
-		label		= 'category',
+		label		= 'category:',
 		help		= 'a category for this page.',
 		url			= '/editable/autocomplete/page/category_id',
 		fvalue		= 'id',
@@ -54,7 +54,7 @@ __itemdef__ = define.itemdef(
 	),
 	 
 	other_categories= relational.ForeignMultipleAutocompleteField(
-		label		= 'other categories',
+		label		= 'other categories:',
 		help		= 'additional categories for this page.',
 		url			= '/editable/autocomplete/page/other_categories',
 		fvalue		= 'id',
@@ -67,7 +67,7 @@ __itemdef__ = define.itemdef(
 	),
 	 
 	code			= string.StringField(
-		label		= 'code',
+		label		= 'code:',
 		size		= 40,
 		help		= 'the URL code of this page.',
 		listing		= True,
@@ -75,7 +75,7 @@ __itemdef__ = define.itemdef(
 	),
 	
 	content			= string.TextAreaField(
-		label		= 'content',
+		label		= 'content:',
 		help		= 'the content of the page.',
 		weight		= 4,
 		rows		= 10,
@@ -83,7 +83,7 @@ __itemdef__ = define.itemdef(
 	),
 	
 	created_date	= string.DateField(
-		label		= 'created date',
+		label		= 'created date:',
 		datatype	= 'timestamp',
 		help		= 'the date this page was created.',
 		listing		= True,
@@ -91,7 +91,7 @@ __itemdef__ = define.itemdef(
 	),
 	
 	modified_date	= string.DateField(
-		label		= 'modified date',
+		label		= 'modified date:',
 		datatype	= 'timestamp',
 		help		= 'the date this page was created.',
 		listing		= True,

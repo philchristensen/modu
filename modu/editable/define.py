@@ -98,6 +98,9 @@ class itemdef(dict):
 				del fields[name]
 				continue
 			
+			if(name.startswith('_') or name.endswith('_')):
+				name = name.strip('_')
+			
 			if not(isinstance(field, definition)):
 				raise ValueError("'%s' is not a valid definition." % name)
 			field.name = name
@@ -166,7 +169,8 @@ class itemdef(dict):
 		if(not frm.has_submit_buttons()):
 			frm['cancel'](type='submit', value='cancel', weight=1001)
 			frm['save'](type='submit', value='save', weight=1000)
-			frm['delete'](type='submit', value='delete', weight=1002)
+			frm['delete'](type='submit', value='delete', weight=1002,
+							attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
 		def _validate(req, form):
 			return self.validate(req, form, storable)
