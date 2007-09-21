@@ -73,6 +73,14 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 		if(self.startID):
 			reactor.removeSystemEventTrigger(self.startID)
 	
+	# def runOperation(self, *args, **kwargs):
+	# 	print args, kwargs
+	# 	adbapi.ConnectionPool.runOperation(self, *args, **kwargs)
+	# 
+	# def runQuery(self, *args, **kwargs):
+	# 	print args, kwargs
+	# 	return adbapi.ConnectionPool.runQuery(self, *args, **kwargs)
+	
 	def runInteraction(self, interaction, *args, **kw):
 		return self._runInteraction(interaction, *args, **kw)
 	

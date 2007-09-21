@@ -69,7 +69,8 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form = form.FormNode('test-form')
 		reference_form['selected'](type='checkbox', label='Selected', checked=True)
 		reference_form['save'](type='submit', value='save', weight=1000)
-		reference_form['cancel'](type='submit', value='cancel', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1001)
+		reference_form['delete'](type='submit', value='delete', weight=1002, attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
@@ -148,7 +149,8 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form = form.FormNode('test-form')
 		reference_form['name'](type='textfield', label='Name', value='Test Name')
 		reference_form['save'](type='submit', value='save', weight=1000)
-		reference_form['cancel'](type='submit', value='cancel', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1001)
+		reference_form['delete'](type='submit', value='delete', weight=1002, attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
@@ -203,7 +205,8 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form = form.FormNode('page-form')
 		reference_form['category_id'](type='label', label='Category', value='Biography')
 		reference_form['save'](type='submit', value='save', weight=1000)
-		reference_form['cancel'](type='submit', value='cancel', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1001)
+		reference_form['delete'](type='submit', value='delete', weight=1002, attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
@@ -231,7 +234,8 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form = form.FormNode('test-form')
 		reference_form['user_type'](type='select', label='Type', value='user', options=options)
 		reference_form['save'](type='submit', value='save', weight=1000)
-		reference_form['cancel'](type='submit', value='cancel', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1001)
+		reference_form['delete'](type='submit', value='delete', weight=1002, attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
@@ -265,7 +269,8 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form = form.FormNode('page-form')
 		reference_form['category_id'](type='select', label='Category', value=3, options=options)
 		reference_form['save'](type='submit', value='save', weight=1000)
-		reference_form['cancel'](type='submit', value='cancel', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1001)
+		reference_form['delete'](type='submit', value='delete', weight=1002, attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)
@@ -301,7 +306,8 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['name']['name'](type='hidden', weight=2, value=0,
 								attributes={'id':'test-form-name-ac-callback'})
 		reference_form['save'](type='submit', value='save', weight=1000)
-		reference_form['cancel'](type='submit', value='cancel', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1001)
+		reference_form['delete'](type='submit', value='delete', weight=1002, attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)

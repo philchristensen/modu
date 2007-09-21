@@ -15,19 +15,26 @@ from modu.editable import IDatatype, define
 from modu.util import form
 from modu import persist
 
-class LabelField(define.definition):
+class SearchFieldMixin(object):
+	def get_search_value(self, value):
+		if(self.get('fulltext_search')):
+			return persist.RAW(persist.interp("MATCH(%%s) AGAINST (%s)", [value]))
+		elif(self.get('exact_match')):
+			return value
+		else:
+			return persist.RAW(persist.interp("INSTR(%%s, %s)", [value]))
+
+
+class LabelField(SearchFieldMixin, define.definition):
 	implements(IDatatype)
 	
 	def get_element(self, req, style, storable):
 		frm = form.FormNode(self.name)
-		frm(type='label', value=getattr(storable, self.name, ''))
-		return frm
-	
-	def get_search_value(self, value):
-		if(self.get('fulltext_search')):
-			return persist.RAW(persist.interp("MATCH(%%s) AGAINST (%s)", [value]))
+		if(style == 'search'):
+			frm(type='textfield', size=10) 
 		else:
-			return persist.RAW(persist.interp("INSTR(%%s, %s)", [value]))
+			frm(type='label', value=getattr(storable, self.name, ''))
+		return frm
 
 
 class DateField(define.definition):
@@ -39,7 +46,7 @@ class DateField(define.definition):
 		return frm
 
 
-class StringField(define.definition):
+class StringField(SearchFieldMixin, define.definition):
 	implements(IDatatype)
 	
 	inherited_attributes = ['size', 'maxlength']
@@ -52,15 +59,9 @@ class StringField(define.definition):
 		else:
 			frm(type='textfield')
 		return frm
-	
-	def get_search_value(self, value):
-		if(self.get('fulltext_search')):
-			return persist.RAW(persist.interp("MATCH(%%s) AGAINST (%s)", [value]))
-		else:
-			return persist.RAW(persist.interp("INSTR(%%s, %s)", [value]))
 
 
-class TextAreaField(define.definition):
+class TextAreaField(SearchFieldMixin, define.definition):
 	implements(IDatatype)
 	
 	inherited_attributes = ['rows', 'cols']
@@ -73,12 +74,6 @@ class TextAreaField(define.definition):
 		else:
 			frm(type='textarea')
 		return frm
-	
-	def get_search_value(self, value):
-		if(self.get('fulltext_search')):
-			return persist.RAW(persist.interp("MATCH(%%s) AGAINST (%s)", [value]))
-		else:
-			return persist.RAW(persist.interp("INSTR(%%s, %s)", [value]))
 
 
 class PasswordField(define.definition):

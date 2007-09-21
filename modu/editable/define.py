@@ -203,7 +203,7 @@ class itemdef(dict):
 				if not(field.get('search', False)):
 					continue
 				
-				frm[name] = field.get_form_element(req, 'detail', storable)
+				frm[name] = field.get_form_element(req, 'search', storable)
 		
 		if(not frm.has_submit_buttons()):
 			frm['search'](type='submit', value='search', weight=1000)
