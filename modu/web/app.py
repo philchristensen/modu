@@ -5,6 +5,22 @@
 #
 # See LICENSE for details
 
+"""
+Primary components of the modu webapp foundation.
+
+@var host_tree: domain name to URLNode mappings
+@type host_tree: dict
+
+@var host_tree_lock: lock on host_tree during C{app.get_application()}
+@type host_tree_lock: threading.BoundedSemaphore
+
+@var pool: pool of synchronous database connections, shared between threads
+@type pool: adbapi.SynchronousConnectionPool
+
+@var pool_lock: lock on host_tree during site lookup
+@type pool_lock: threading.BoundedSemaphore
+"""
+
 import os, os.path, sys, stat, copy, mimetypes, traceback, threading
 
 from modu.util import url, tags, queue
@@ -24,6 +40,9 @@ pool_lock = threading.BoundedSemaphore()
 mimetypes_init = False
 
 def handler(env, start_response):
+	"""
+	The primary WSGI application object.
+	"""
 	req = {}
 	try:
 		try:
@@ -73,6 +92,12 @@ def handler(env, start_response):
 
 
 def configure_request(env, application):
+	"""
+	Create a Request instance for the current HTTP request.
+	
+	Given a WSGI environment dict and an Application instance,
+	return a Request object that encapsulates this thread's data.
+	"""
 	env['modu.app'] = application
 	
 	env['SCRIPT_NAME'] = application.base_path
@@ -135,6 +160,8 @@ def get_application(req):
 
 def redirect(url, permanent=False):
 	"""
+	Convenience method for raise301/raise302.
+	
 	Because I want to, that's why.
 	"""
 	if(permanent):
@@ -144,18 +171,30 @@ def redirect(url, permanent=False):
 
 
 def raise200(headers, content):
+	"""
+	Override the content currently being rendered in the current request.
+	"""
 	raise web.HTTPStatus('200 OK', headers, content)
 
 
 def raise301(url):
+	"""
+	Return a permanent redirect status and content to the user.
+	"""
 	raise web.HTTPStatus('301 Moved Permanently', [('Location', url)], [''])
 
 
 def raise302(url):
+	"""
+	Return a temporary redirect status and content to the user.
+	"""
 	raise web.HTTPStatus('302 Found', [('Location', url)], [''])
 
 
 def raise404(path=None):
+	"""
+	Return a Not Found page to the user, with optional path info.
+	"""
 	content = tags.h1()['Not Found']
 	content += tags.hr()
 	content += tags.p()['There is no object registered at that path.']
@@ -165,6 +204,9 @@ def raise404(path=None):
 
 
 def raise403(path=None):
+	"""
+	You are not allowed to access that path.
+	"""
 	content = tags.h1()['Forbidden']
 	content += tags.hr()
 	content += tags.p()['You are not allowed to access that path.']
@@ -174,6 +216,11 @@ def raise403(path=None):
 
 
 def raise401(path=None):
+	"""
+	You have not supplied the appropriate credentials.
+	
+	Will cause the client browser to display HTTP username/password dialog.
+	"""
 	content = tags.h1()['Unauthorized']
 	content += tags.hr()
 	content += tags.p()['You have not supplied the appropriate credentials.']
@@ -183,6 +230,9 @@ def raise401(path=None):
 
 
 def raise500(message=None):
+	"""
+	Sorry, an error has occurred.
+	"""
 	content = tags.h1()['Internal Server Error']
 	content += tags.hr()
 	content += tags.p()['Sorry, an error has occurred:']
@@ -192,10 +242,16 @@ def raise500(message=None):
 
 
 def activate_pool(req):
+	"""
+	JIT Request handler for enabling DB support.
+	"""
 	req['modu.pool'] = acquire_db(req.app.db_url)
 
 
 def acquire_db(db_url):
+	"""
+	Create the shared connection pool for this process.
+	"""
 	global pool, pool_lock
 	pool_lock.acquire()
 	try:
@@ -209,6 +265,11 @@ def acquire_db(db_url):
 
 
 def _scan_sites(env):
+	"""
+	Search for available site configuration objects.
+	
+	Register any found objects with the internal structures.
+	"""
 	global host_tree
 	
 	if(env.get('SCRIPT_FILENAME', sys.path[0]) not in sys.path):
@@ -254,46 +315,91 @@ class ISite(interface.Interface):
 
 class Request(dict):
 	"""
+	A representation of an HTTP request, with some modu-specific features.
+	
 	At this point we are supposedly server-neutral, although
 	the code does make a few assumptions about what various
 	environment variables actually mean. Shocking.
 	"""
 	def __init__(self, env={}):
+		"""
+		Create a blank Request instance.
+		
+		The result contains the items of the provided environment dictionary.
+		
+		User code should call C{app.configure_request()} in normal usage.
+		"""
 		dict.__init__(self)
 		self.update(env)
+		self.rsrc = None
 		self.jit_handlers = {}
 		self.prepath = []
 		self.postpath = []
 	
 	def __getattr__(self, key):
+		"""
+		Override attribute access for modu.* request variables.
+		
+		As a convenience, keys with a "modu." prefix can be referred to
+		with attribute acces, e.g. C{req.app == req['modu.app']}
+		"""
 		modu_key = 'modu.%s' % key
 		if(modu_key in self.jit_handlers or modu_key in self):
 			return self[modu_key]
 		raise AttributeError(key)
 	
 	def __getitem__(self, key):
-		self.handle_jit(key)
+		"""
+		Provide JIT "bootstrapping" of expensive request data.
+		
+		This allows things like sessions to only be created/loaded
+		when actually referred to by application code.
+		"""
+		self._handle_jit(key)
 		return dict.__getitem__(self, key)
 	
 	def __contains__(self, key):
+		"""
+		Provide containment info for JIT handled variables.
+		
+		If a Request instance supports a JIT variable,
+		C{'jit_var' in req} will return True. To see if a
+		JIT variable has been instantiated or not, use
+		C{req.get('jit_var', None) is None}
+		"""
 		if(key in self.jit_handlers):
 			return True
 		return dict.__contains__(self, key)
 	
-	def handle_jit(self, key):
+	def _handle_jit(self, key):
+		"""
+		Internal function.
+		
+		Activate a JIT key if it hasn't been created already.
+		"""
 		if(not dict.__contains__(self, key) and key in self.jit_handlers):
 			handler = self.jit_handlers[key]
 			#print 'activating %s with %r' % (key, handler)
 			handler(self)
 	
 	def set_jit(self, key, handler):
+		"""
+		Configure a handler for a JIT environment variable.
+		"""
 		self.jit_handlers[key] = handler
 	
 	def get_resource(self):
-		rsrc = self.app.tree.parse(self.path)
+		"""
+		Return the Resource object this Request refers to.
+		
+		The
+		"""
+		if(self.rsrc):
+			return self.rsrc
+		self.rsrc = self.app.tree.parse(self.path)
 		self.prepath = self.app.tree.prepath
 		self.postpath = self.app.tree.postpath
-		return rsrc
+		return self.rsrc
 	
 	def log_error(self, data):
 		self['wsgi.errors'].write(data)

@@ -310,13 +310,23 @@ class NOT:
 	"""
 	Allows NOTs to be embedded in constructed queries.
 	
+	When persist.NOT(value) is included in the constraint array passed
+	to a query building function, it will generate the SQL fragment
+	'column <> value'
+	
 	@ivar value: The value to NOT be
 	"""
 	def __init__(self, value):
+		"""
+		Create a NOT instance
+		"""
 		self.value = value
 	
 	def __repr__(self):
-		return "NOT(%s)" % self.value
+		"""
+		Printable version.
+		"""
+		return "NOT(%r)" % self.value
 
 
 class RAW:
@@ -326,9 +336,15 @@ class RAW:
 	@ivar value: "Raw" (i.e., properly escaped) SQL
 	"""
 	def __init__(self, value):
+		"""
+		Create a RAW SQL fragment
+		"""
 		self.value = value
 	
 	def __repr__(self):
+		"""
+		Printable version.
+		"""
 		return "RAW(%s)" % self.value
 
 

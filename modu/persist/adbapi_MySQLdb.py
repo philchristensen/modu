@@ -47,7 +47,9 @@ def fix_mysqldb(connection):
 class _DummyClass(object):
 	"""
 	Dummy class used to override an instance method on MySQLdb connection object.
-	@seealso C{fix_mysqldb()}
 	"""
 	def _dummy_method(self):
+		"""
+		Sample instance method for hackery.
+		"""
 		pass
