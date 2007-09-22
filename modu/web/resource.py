@@ -5,6 +5,23 @@
 #
 # See LICENSE for details
 
+"""
+Fundamental modu building-blocks.
+
+Resources are activated on the L{modu.web.app.Application} object and are
+placed inside the application URLNode tree.
+
+The modu concept of a Resource is in practice more of an organizational tool
+than a rigid separation of responsibility. A resource can serve any URL under
+it's root path, and use any number of methods for returning content.
+
+Use of templating engines is fairly fundamental to the modu framework, however,
+and the Cheetah template system is the preferred engine, although limited support
+is available for CherryTemplate and ZPT templates.
+
+@see: modu.util.url.URLNode
+"""
+
 import os, os.path, re, threading, stat, mimetypes
 
 try:
@@ -27,6 +44,9 @@ class IResource(interface.Interface):
 	def get_response(self, req):
 		"""
 		Do whatever this thing should do when a path is loaded.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
 		"""
 
 
@@ -41,6 +61,19 @@ class IResourceDelegate(interface.Interface):
 		"""
 
 class Resource(object):
+	"""
+	An abstract resource.
+	
+	Resources can act as Controllers in the MVC approach, and supply
+	an IContent implementor to generate content.
+	
+	Direct subclasses of this class can also inherit from an IContent
+	implementor, which is the approach taken by the various *TemplateResource
+	classes.
+	
+	@see: IResource
+	"""
+	
 	implements(IResource)
 	
 	def set_content_provider(self, content_provider):
@@ -162,7 +195,8 @@ class TemplateContent(object):
 		return os.path.join(req.approot, 'template')
 
 
-# According to the docs, Template can take awhile to load.
+# According to the docs, Template can take awhile to load,
+# so it's loaded on startup.
 try:
 	from Cheetah.Template import Template as CheetahTemplate
 except:

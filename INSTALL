@@ -5,3 +5,56 @@
 #
 # See LICENSE for details
 
+
+Requirements
+=============
+
+Core
+----
+Python 2.4 or greater
+	http://www.python.org
+
+Zope Interface
+	http://www.zope.org/Products/ZopeInterface
+
+Twisted 2.5
+	http://twistedmatrix.com/trac
+	svn co svn://svn.twistedmatrix.com/svn/Twisted/trunk Twisted
+
+
+Database Connectivity
+---------------------
+MySQL 5.0
+	http://dev.mysql.com/downloads/mysql/5.0.html
+	
+	MySQLdb
+		http://sourceforge.net/projects/mysql-python
+
+-OR-
+
+PostgreSQL 8.2
+	http://www.postgresql.org
+
+	pgdb
+		http://www.pygresql.org/pgdb.html
+
+	-OR-
+
+	psycopg2
+		http://www.initd.org/tracker/psycopg/wiki/PsycopgTwo
+
+
+Template Engines
+----------------
+Cheetah Template
+	http://www.cheetahtemplate.org
+
+-AND/OR-
+
+CherryTemplate
+	http://cherrytemplate.python-hosting.com
+
+-AND/OR-
+
+Zope Page Templates
+	http://zpt.sourceforge.net

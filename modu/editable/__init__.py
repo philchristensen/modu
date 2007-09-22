@@ -35,18 +35,40 @@ class IDatatype(Interface):
 		Take the given definition, and return a FormNode.
 		
 		The result is prepopulated with data from the provided storable.
+		
+		@param style: Generate for 'listing', 'search', or 'detail' views.
+		@type style: str
+		
+		@param definition: The definition of the field to generate
+		@type definition: L{modu.editable.define.definition}
+		
+		@param storable: The Storable instance to fill the form data with.
+		@type storable: L{modu.persist.storable.Storable} subclass
+		
+		@return: The generated form
+		@rtype: L{modu.util.form.FormNode}
 		"""
 	
 	def update_storable(self, req, definition, storable):
 		"""
 		Can be implemented by IDatatypes that require complex handling of POST data.
+		
+		@param req: The currrent request
+		@type req: L{modu.web.app.Request}
+		
+		@param definition: The definition of the field
+		@type definition: L{modu.editable.define.definition}
+		
+		@param storable: The Storable instance to update.
+		@type storable: L{modu.persist.storable.Storable} subclass
 		"""
 	
 	def is_postwrite_field(self):
 		"""
 		Does this IDatatype write its data as part of the normal save process?
 		
-		If this function returns True, the items will be ignored during the
-		regular process and given a chance to write after the main record has
-		been saved.
+		@return: if True, the items will be ignored during the
+			regular process and given a chance to write after the
+			main record has been saved.
+		@rtype: bool
 		"""

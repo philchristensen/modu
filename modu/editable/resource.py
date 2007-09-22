@@ -143,7 +143,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		# give it a factory so fields can use its store reference
 		search_storable.set_factory(req.store.get_factory(table_name))
 		# build the form tree
-		search_form = itemdef.get_search_form(req, search_storable, req.user)
+		search_form = itemdef.get_search_form(req, search_storable)
 		# get any saved search data
 		session_search_data = req.session.setdefault('search_form', {}).setdefault(itemdef.name, {})
 		
@@ -203,14 +203,14 @@ class AdminResource(resource.CheetahTemplateResource):
 				except TypeError:
 					app.raise404('There is no detail view at the path: %s' % req['REQUEST_URI'])
 			
-			frm = itemdef.get_form(req, selected_item, req.user)
+			frm = itemdef.get_form(req, selected_item)
 			if('theme' in itemdef.config):
 				frm.theme = itemdef.config['theme']
 			
 			if(frm.execute(req)):
 				# we regenerate the form because some fields don't know their
 				# value until after the form is saved (e.g., postwrite fields)
-				new_frm = itemdef.get_form(req, selected_item, req.user)
+				new_frm = itemdef.get_form(req, selected_item)
 				new_frm.errors = frm.errors
 				frm = new_frm
 			else:
