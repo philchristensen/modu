@@ -12,6 +12,7 @@ An example itemdef that contains all available options and field types.
 from modu.util import theme
 from modu.editable import define
 from modu.editable.datatypes import string, relational, boolean, select
+from modu.persist import storable
 
 def noop(req, form, storable):
 	"""
@@ -37,12 +38,14 @@ __itemdef__ = define.itemdef(
 		# TODO:
 		# acl			= {'view':'view pages',	# Alternate usage
 		#  				'edit':'edit pages'}
-		prewrite_callback	=	noop,			# [o] This is called during validation. If it returns false,
+		prewrite_callback	= noop,				# [o] This is called during validation. If it returns false,
 												# validation will fail.
-		postwrite_callback	=	noop,			# [o] Called during submit, after writing the storable.
-		theme				=	theme.Theme,	# [o] Overrides the default theme class for form generation.
-		list_template		=	"[default:'admin-listing.tmpl.html']",	# [o] Overrides the default list template.
-		detail_template		=	"[default:'admin-detail.tmpl.html']"	# [o] Overrides the default detail template.
+		postwrite_callback	= noop,				# [o] Called during submit, after writing the storable.
+		theme				= theme.Theme,		# [o] Overrides the default theme class for form generation.
+		factory				= storable.DefaultFactory,		# [o] Factory to use to build Storable objects
+		model_class			= storable.Storable,			# [o] Model class to use with DefaultFactory
+		list_template		= "[default:'admin-listing.tmpl.html']",	# [o] Overrides the default list template.
+		detail_template		= "[default:'admin-detail.tmpl.html']"		# [o] Overrides the default detail template.
 	),
 	
 	# The name of a field is automatically set by the parent itemdef, so it doesn't

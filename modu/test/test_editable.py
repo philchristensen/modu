@@ -46,6 +46,7 @@ class EditableTestCase(unittest.TestCase):
 		
 		req = app.configure_request(environ, application)
 		req['modu.pool'] = app.acquire_db(application.db_url)
+		req['modu.user'] = None
 		persist.activate_store(req)
 		
 		return req
