@@ -25,6 +25,9 @@ class CheckboxField(define.definition):
 	implements(IDatatype)
 	
 	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		frm = form.FormNode(self.name)
 		frm(type='checkbox', value=self.get('checked_value', 1))
 		if(str(getattr(storable, self.name, None)) == str(self.get('checked_value', 1))):
@@ -36,6 +39,9 @@ class CheckboxField(define.definition):
 		return frm
 	
 	def update_storable(self, req, form, storable):
+		"""
+		@see: L{modu.editable.define.definition.update_storable()}
+		"""
 		form_name = '%s-form' % storable.get_table()
 		if(form_name in form.data):
 			form_data = form.data[form_name]

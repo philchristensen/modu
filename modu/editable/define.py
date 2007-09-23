@@ -59,7 +59,7 @@ def get_itemdef_layout(req, itemdefs=None):
 	definitions that the req.user has access to. The data iteself is a
 	clone, so modifications will have no effect.
 	
-	@param req: the currrent request
+	@param req: the current request
 	@type req: L{modu.web.app.Request}
 	
 	@param itemdefs: the itemdefs to layout, or None to layout all available itemdefs
@@ -236,7 +236,7 @@ class itemdef(dict):
 		If a user object is passed along, the resulting form will only
 		contain fields the provided user is allowed to see.
 		
-		@param req: The currrent request
+		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
 		@param storable: The Storable instance to display.
@@ -282,7 +282,7 @@ class itemdef(dict):
 		If a user object is passed along, the resulting form will only
 		contain search fields the provided user is allowed to see.
 		
-		@param req: The currrent request
+		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
 		@param storable: The Storable instance to display.
@@ -325,7 +325,7 @@ class itemdef(dict):
 		This function returns a list of form objects that can be
 		assembled into a list view (one "form" per row).
 		
-		@param req: The currrent request
+		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
 		@param storable: The Storable instances to display.
@@ -369,10 +369,10 @@ class itemdef(dict):
 		"""
 		The validation function for forms generated from this itemdef.
 		
-		@param req: The currrent request
+		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
-		@param frm: The currrent form
+		@param frm: The current form
 		@type frm: L{modu.util.form.FormNode}
 		
 		@param storable: The Storable instance associated with this form.
@@ -414,10 +414,10 @@ class itemdef(dict):
 		"""
 		The submit function for forms generated from this itemdef.
 		
-		@param req: The currrent request
+		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
-		@param frm: The currrent form
+		@param frm: The current form
 		@type frm: L{modu.util.form.FormNode}
 		
 		@param storable: The Storable instance to submit.
@@ -459,10 +459,10 @@ class itemdef(dict):
 		"""
 		The delete function for forms generated from this itemdef.
 		
-		@param req: The currrent request
+		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
-		@param frm: The currrent form
+		@param frm: The current form
 		@type frm: L{modu.util.form.FormNode}
 		
 		@param storable: The Storable instance to delete.
@@ -565,7 +565,7 @@ class definition(dict):
 		The parent itemdef class will call this function, which will
 		call the get_element() method, and set a few default values.
 		
-		@param req: The currrent request
+		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
 		@param style: Generate for 'listing', 'search', or 'detail' views.
@@ -602,7 +602,7 @@ class definition(dict):
 		"""
 		Render a FormNode element for this field definition.
 		
-		@param req: The currrent request
+		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
 		@param style: Generate for 'listing', 'search', or 'detail' views.
@@ -621,10 +621,10 @@ class definition(dict):
 		"""
 		Given the posted data in req, update provided storable with this field's content.
 		
-		@param req: The currrent request
+		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
-		@param frm: The currrent form
+		@param frm: The current form
 		@type frm: L{modu.util.form.FormNode}
 		
 		@param storable: The Storable instance to fill form data with.

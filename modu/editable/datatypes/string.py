@@ -16,7 +16,13 @@ from modu.util import form
 from modu import persist
 
 class SearchFieldMixin(object):
+	"""
+	A convenient Mixin for text-based searching.
+	"""
 	def get_search_value(self, value):
+		"""
+		@see: L{modu.editable.define.definition.get_search_value()}
+		"""
 		if(self.get('fulltext_search')):
 			return persist.RAW(persist.interp("MATCH(%%s) AGAINST (%s)", [value]))
 		elif(self.get('exact_match')):
@@ -26,9 +32,15 @@ class SearchFieldMixin(object):
 
 
 class LabelField(SearchFieldMixin, define.definition):
+	"""
+	Display this field's contents as a read-only value.
+	"""
 	implements(IDatatype)
 	
 	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		frm = form.FormNode(self.name)
 		if(style == 'search'):
 			frm(type='textfield', size=10) 
@@ -38,20 +50,34 @@ class LabelField(SearchFieldMixin, define.definition):
 
 
 class DateField(define.definition):
+	"""
+	Allow editing of date data via a multiple select interface or javascript popup calendar.
+	
+	TODO: Implement this.
+	"""
 	implements(IDatatype)
 	
 	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		frm = form.FormNode(self.name)
 		frm(type='label', value=getattr(storable, self.name, ''))
 		return frm
 
 
 class StringField(SearchFieldMixin, define.definition):
+	"""
+	Allow editing of a string field value.
+	"""
 	implements(IDatatype)
 	
 	inherited_attributes = ['size', 'maxlength']
 	
 	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		frm = form.FormNode(self.name)
 		frm(value=getattr(storable, self.name, ''))
 		if(style == 'listing' or self.get('read_only', False)):
@@ -62,11 +88,17 @@ class StringField(SearchFieldMixin, define.definition):
 
 
 class TextAreaField(SearchFieldMixin, define.definition):
+	"""
+	Allow editing of a string field value using a TextArea field.
+	"""
 	implements(IDatatype)
 	
 	inherited_attributes = ['rows', 'cols']
 	
 	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		frm = form.FormNode(self.name)
 		frm(value=getattr(storable, self.name, ''))
 		if(style == 'listing' or self.get('read_only', False)):
@@ -77,9 +109,15 @@ class TextAreaField(SearchFieldMixin, define.definition):
 
 
 class PasswordField(define.definition):
+	"""
+	Allow editing of an optionally encrypted password field.
+	"""
 	implements(IDatatype)
 	
 	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		entry_frm = form.FormNode(self.name)
 		entry_frm(value=getattr(storable, self.name, ''))
 		
@@ -112,6 +150,9 @@ class PasswordField(define.definition):
 		return frm
 	
 	def update_storable(self, req, form, storable):
+		"""
+		@see: L{modu.editable.define.definition.update_storable()}
+		"""
 		form_name = '%s-form' % storable.get_table()
 		
 		# There should be either a fieldset or a field at the regular name

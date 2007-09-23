@@ -53,7 +53,7 @@ class IDatatype(Interface):
 		"""
 		Can be implemented by IDatatypes that require complex handling of POST data.
 		
-		@param req: The currrent request
+		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
 		@param definition: The definition of the field

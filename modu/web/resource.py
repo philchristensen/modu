@@ -60,51 +60,6 @@ class IResourceDelegate(interface.Interface):
 		Return a this object's Resource delegate.
 		"""
 
-class Resource(object):
-	"""
-	An abstract resource.
-	
-	Resources can act as Controllers in the MVC approach, and supply
-	an IContent implementor to generate content.
-	
-	Direct subclasses of this class can also inherit from an IContent
-	implementor, which is the approach taken by the various *TemplateResource
-	classes.
-	
-	@see: IResource
-	"""
-	
-	implements(IResource)
-	
-	def set_content_provider(self, content_provider):
-		self.content_provider = content_provider
-	
-	def get_content_provider(self):
-		if(not hasattr(self, 'content_provider') and IContent.providedBy(self)):
-			return self
-		return self.content_provider
-	
-	def get_response(self, req):
-		cnt = self.get_content_provider()
-		if(IAccessControl.providedBy(cnt)):
-			cnt.check_access(req)
-		
-		cnt.prepare_content(req)
-		
-		req.app.add_header('Content-Type', cnt.get_content_type(req))
-		
-		content = cnt.get_content(req)
-		
-		if(isinstance(content, str)):
-			req.app.add_header('Content-Length', len(content))
-			return [content]
-		else:
-			return content
-	
-	def get_paths(self):
-		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
-
-
 class IContent(interface.Interface):
 	"""
 	This class represents a piece of content that has a MIME-type of some kind.
@@ -149,6 +104,69 @@ class ITemplate(interface.Interface):
 		this is probably a filename, but for the default TemplateContent class, it's
 		a StringTemplate-style string.
 		"""
+	
+	def get_template_root(self, req):
+		"""
+		This function gives an opportunity for template resources to support an
+		arbitrary number of template distributions, to allow implementation of themes
+		and default templates.
+		"""
+
+
+class IAccessControl(interface.Interface):
+	"""
+	An access controlled object can look at a request and determine if
+	the user is allowed access or not.
+	"""
+	def check_access(self, req):
+		"""
+		Is this request allowed access?
+		"""
+
+
+class Resource(object):
+	"""
+	An abstract resource.
+	
+	Resources can act as Controllers in the MVC approach, and supply
+	an IContent implementor to generate content.
+	
+	Direct subclasses of this class can also inherit from an IContent
+	implementor, which is the approach taken by the various *TemplateResource
+	classes.
+	
+	@see: IResource
+	"""
+	
+	implements(IResource)
+	
+	def set_content_provider(self, content_provider):
+		self.content_provider = content_provider
+	
+	def get_content_provider(self):
+		if(not hasattr(self, 'content_provider') and IContent.providedBy(self)):
+			return self
+		return self.content_provider
+	
+	def get_response(self, req):
+		cnt = self.get_content_provider()
+		if(IAccessControl.providedBy(cnt)):
+			cnt.check_access(req)
+		
+		cnt.prepare_content(req)
+		
+		req.app.add_header('Content-Type', cnt.get_content_type(req))
+		
+		content = cnt.get_content(req)
+		
+		if(isinstance(content, str)):
+			req.app.add_header('Content-Length', len(content))
+			return [content]
+		else:
+			return content
+	
+	def get_paths(self):
+		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
 
 
 class TemplateContent(object):
@@ -313,27 +331,6 @@ class CherryTemplateContent(TemplateContent):
 	
 	def get_template(self, req):
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
-
-
-class IAccessControl(interface.Interface):
-	"""
-	An access controlled object can look at a request and determine if
-	the user is allowed access or not.
-	"""
-	def check_access(self, req):
-		"""
-		Is this request allowed access?
-		"""
-
-
-class RoleBasedAccessControl(object):
-	implements(IAccessControl)
-	
-	def check_access(self, req):
-		return False
-	
-	def get_perms(self, req):
-		raise NotImplementedError('%s::get_perms()' % self.__class__.__name__)
 
 
 class TemplateResource(Resource, TemplateContent):

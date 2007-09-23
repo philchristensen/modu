@@ -16,9 +16,15 @@ from modu.util import form, tags
 from modu import persist
 
 class ForeignLabelField(define.definition):
+	"""
+	Display a value from a foreign table based on this field's value.
+	"""
 	implements(IDatatype)
 	
 	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		store = storable.get_store()
 		
 		value = self['fvalue']
@@ -39,11 +45,17 @@ class ForeignLabelField(define.definition):
 
 
 class ForeignSelectField(define.definition):
+	"""
+	Allow selection of a foreign value.
+	"""
 	implements(IDatatype)
 	
 	inherited_attributes = ['size']
 	
 	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		store = storable.get_store()
 		
 		value = self['fvalue']
@@ -78,9 +90,15 @@ class ForeignSelectField(define.definition):
 
 
 class ForeignAutocompleteField(define.definition):
+	"""
+	Allow selection of a foreign value by autocomplete field.
+	"""
 	implements(IDatatype)
 	
 	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		form_name = '%s-form' % storable.get_table()
 		ac_id = '%s-%s-autocomplete' % (form_name, self.name)
 		ac_cb_id = '%s-%s-ac-callback' % (form_name, self.name)
@@ -138,7 +156,7 @@ class ForeignAutocompleteField(define.definition):
 	
 	def update_storable(self, req, form, storable):
 		"""
-		Given the posted data in req, update provided storable with this field's content.
+		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		form_name = '%s-form' % storable.get_table()
 		if(form_name in form.data):
@@ -149,9 +167,15 @@ class ForeignAutocompleteField(define.definition):
 
 
 class ForeignMultipleSelectField(define.definition):
+	"""
+	Allow management of an n2m relationship with a foreign table.
+	"""
 	implements(IDatatype)
 	
 	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		mlabel = self.get('flabel', '')
 		if(mlabel.find('.') == -1):
 			mlabel = 'm.%s' % mlabel
@@ -189,6 +213,9 @@ class ForeignMultipleSelectField(define.definition):
 		return frm
 	
 	def update_storable(self, req, form, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		form_data = form.data[form.name]
 		store = storable.get_store()
 		item_id = storable.get_id()
@@ -222,10 +249,19 @@ class ForeignMultipleSelectField(define.definition):
 		return True
 	
 	def is_postwrite_field(self):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		return True
 
 class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
+	"""
+	Allow management of an n2m relationship with a foreign table by using an autocomplete field.
+	"""
 	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
 		mlabel = self.get('flabel', '')
 		if(mlabel.find('.') == -1):
 			mlabel = 'm.%s' % mlabel
