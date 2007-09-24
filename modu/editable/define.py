@@ -74,7 +74,7 @@ def get_itemdef_layout(req, itemdefs=None):
 	for name, itemdef in itemdefs.items():
 		itemdef = clone_itemdef(itemdef)
 		
-		acl = itemdef.config.get('acl', 'view item')
+		acl = itemdef.config.get('acl', '')
 		if('acl' not in itemdef.config or req.user.is_allowed(acl)):
 			cat = itemdef.config.get('category', 'other')
 			layout.setdefault(cat, []).append(itemdef)
@@ -595,6 +595,10 @@ class definition(dict):
 		if(style == 'listing' and self.get('link', False)):
 			href = req.get_path(req.prepath, 'detail', storable.get_table(), storable.get_id())
 			frm(prefix=tags.a(href=href, __no_close=True), suffix='</a>')
+		
+		if('form_alter' in self):
+			self['form_alter'](req, style, frm, storable, self)
+		
 		return frm
 	
 	

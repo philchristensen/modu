@@ -174,7 +174,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		else:
 			items = pager.get_results(req.store, table_name, {})
 		
-		forms = itemdef.get_listing(req, items, req.user)
+		forms = itemdef.get_listing(req, items)
 		thm = ListingTheme(req)
 		
 		self.set_slot('items', items)

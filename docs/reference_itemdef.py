@@ -23,6 +23,15 @@ def noop(req, form, storable):
 def fwhere_callback(storable):
 	pass
 
+def autocomplete_callback(req, partial, definition):
+	output = ''
+	for result in []: # do some query here
+		output += "%s|%d\n" % (result['name'], result['id'])
+	return output
+
+def form_alter_callback(req, style, form, storable, definition):
+	pass
+
 # Itemdefs can be bound to any variable name, but they must be assigned to **something**
 __itemdef__ = define.itemdef(
 	# The configuration dict
@@ -61,8 +70,11 @@ __itemdef__ = define.itemdef(
 		read_only	= False,					# [o] If supported, this field should be uneditable/disabled
 		search		= False,					# [o] Should this field appear in the listing search form?
 		weight		= 0,						# [o] The weight (relative position) of this field
-		attributes	= {}						# [o] Attributes set here will define or override 
+		attributes	= {},						# [o] Attributes set here will define or override 
 												# values on the resulting FormNode instance.
+		form_alter	= form_alter_callback		# [o] After a form is generated, it will be passed to
+												# this function, if defined, which may modify the resulting
+												# form element.
 	),
 	
 	id					= string.LabelField(
@@ -114,15 +126,15 @@ __itemdef__ = define.itemdef(
 	),
 	 
 	topic_id			= relational.ForeignAutocompleteField(
-		ftable			= 'topic',				# [r] The name of the foreign table
-		fvalue			= 'id',					# [r] The name of the value field in the foreign table
-		flabel			= 'name',				# [r] The name of the foreign field to display as a label
-		fwhere			= "[default:'']",		# [o] A string specifying the WHERE clause, OR
-		# fwhere			= {'active':1},		# [o] An array to use to build the WHERE clause, OR
-		# fwhere			= fwhere_callback	# [o] A callable that returns either a string or a dict
-		min_chars		= 3,					# [o] The number of chars that must be typed to start a lokup
-		max_choices		= 10,					# [o] The number of matches to display
-		url				= '/some/url'			# [r] The url to query
+		ftable			= 'topic',						# [r] The name of the foreign table
+		fvalue			= 'id',							# [r] The name of the value field in the foreign table
+		flabel			= 'name',						# [r] The name of the foreign field to display as a label
+		fwhere			= "[default:'']",				# [o] A string specifying the WHERE clause, OR
+		# fwhere			= {'active':1},				# [o] An array to use to build the WHERE clause, OR
+		# fwhere			= fwhere_callback			# [o] A callable that returns either a string or a dict
+		min_chars		= 3,							# [o] The number of chars that must be typed to start a lokup
+		max_choices		= 10,							# [o] The number of matches to display
+		autocomplete_callback = autocomplete_callback	# [r] Use this function to generate autocomplete results
 	),
 	
 	# In foreign multiple field (e.g., n2m relationships), the m table is considered the
@@ -142,19 +154,19 @@ __itemdef__ = define.itemdef(
 	),
 
 	other_topics		= relational.ForeignMultipleAutocompleteField(
-		ftable			= 'category',			# [r] The name of the foreign table
-		fvalue			= 'id',					# [o] The name of the value field in the foreign table
-		flabel			= 'title',				# [r] The name of the foreign field to display as a label
-		fwhere			= "[default:'']",		# [o] A string specifying the WHERE clause, OR
-		# fwhere			= {'active':1},		# [o] An array to use to build the WHERE clause, OR
-		# fwhere			= fwhere_callback	# [o] A callable that returns either a string or a dict
-		ntof			= 'page_category',		# [r] The name of the n2m table
-		ntof_f_id		= 'category_id',		# [r] The name of the foreign table's id column in the
-												# n2m table (where fvalue is saved)
-		ntof_n_id		= 'page_id',			# [r] The name of this itemdef's table's id column in
-												# the n2m table
-		min_chars		= 3,					# [o] The number of chars that must be typed to start a lokup
-		max_choices		= 10,					# [o] The number of matches to display
-		url				= '/some/url'			# [r] The url to query
+		ftable			= 'category',					# [r] The name of the foreign table
+		fvalue			= 'id',							# [o] The name of the value field in the foreign table
+		flabel			= 'title',						# [r] The name of the foreign field to display as a label
+		fwhere			= "[default:'']",				# [o] A string specifying the WHERE clause, OR
+		# fwhere			= {'active':1},				# [o] An array to use to build the WHERE clause, OR
+		# fwhere			= fwhere_callback			# [o] A callable that returns either a string or a dict
+		ntof			= 'page_category',				# [r] The name of the n2m table
+		ntof_f_id		= 'category_id',				# [r] The name of the foreign table's id column in the
+														# n2m table (where fvalue is saved)
+		ntof_n_id		= 'page_id',					# [r] The name of this itemdef's table's id column in
+														# the n2m table
+		min_chars		= 3,							# [o] The number of chars that must be typed to start a lokup
+		max_choices		= 10,							# [o] The number of matches to display
+		autocomplete_callback = autocomplete_callback	# [r] Use this function to generate autocomplete results
 	)
 )
