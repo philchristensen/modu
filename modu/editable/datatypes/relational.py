@@ -31,8 +31,18 @@ class ForeignLabelField(define.definition):
 		label = self['flabel']
 		table = self['ftable']
 		
-		foreign_label_query = "SELECT %s, %s FROM %s WHERE %s = %%s" % (value, label, table, value)
-		foreign_label_query = persist.interp(foreign_label_query, [getattr(storable, self.name, None)])
+		where = self.get('fwhere', 'WHERE %s = %%s' % value)
+		args = [getattr(storable, self.name, None)]
+		
+		if(callable(where)):
+			where = where(storable)
+			args = []
+		if(isinstance(where, dict)):
+			where = persist.build_where(where)
+			args = []
+		
+		foreign_label_query = "SELECT %s, %s FROM %s %s" % (value, label, table, where)
+		foreign_label_query = persist.interp(foreign_label_query, args)
 		
 		results = store.pool.runQuery(foreign_label_query)
 		frm = form.FormNode(self.name)

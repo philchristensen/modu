@@ -159,7 +159,12 @@ class AdminResource(resource.CheetahTemplateResource):
 			data = {}
 			for key, value in search_data.items():
 				session_search_data[key] = value.value
-				data[key] = itemdef[key].get_search_value(value.value)
+				result = itemdef[key].get_search_value(value.value)
+				if(isinstance(result, dict)):
+					for key, value in result.items():
+						data[key] = value
+				else:
+					data[key] = result
 			
 			items = pager.get_results(req.store, table_name, data)
 		elif(session_search_data):
@@ -168,7 +173,12 @@ class AdminResource(resource.CheetahTemplateResource):
 			
 			data = {}
 			for key, value in session_search_data.items():
-				data[key] = itemdef[key].get_search_value(value)
+				result = itemdef[key].get_search_value(value)
+				if(isinstance(result, dict)):
+					for key, value in result.items():
+						data[key] = value
+				else:
+					data[key] = result
 			
 			items = pager.get_results(req.store, table_name, data)
 		else:
@@ -242,7 +252,7 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def get_content_type(self, req):
-		return 'text/html'
+		return 'text/html; charset=UTF-8'
 	
 	
 	def get_template(self, req):
