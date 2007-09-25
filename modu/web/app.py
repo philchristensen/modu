@@ -28,7 +28,8 @@ from modu.web import session, user, resource, static
 from modu import persist, web
 
 from twisted import plugin
-from twisted.python import log
+from twisted.python import log, failure
+from twisted.web.util import formatFailure
 from zope import interface
 
 host_tree = {}
@@ -86,6 +87,14 @@ def handler(env, start_response):
 	except web.HTTPStatus, http:
 		start_response(http.status, http.headers)
 		return http.content
+	except:
+		reason = failure.Failure()
+		log.err(reason)
+		content = ["<html><head><title>web.Server Traceback (most recent call last)</title></head>"
+			"<body><b>web.Server Traceback (most recent call last):</b>\n\n"
+			"%s\n\n</body></html>\n" % formatFailure(reason)]
+		start_response('500 Internal Server Error', [('Content-Type', 'text/html')])
+		return content
 	
 	start_response('200 OK', application.get_headers())
 	return content
