@@ -160,11 +160,12 @@ class AdminResource(resource.CheetahTemplateResource):
 			for key, value in search_data.items():
 				session_search_data[key] = value.value
 				result = itemdef[key].get_search_value(value.value)
-				if(isinstance(result, dict)):
-					for key, value in result.items():
-						data[key] = value
-				else:
-					data[key] = result
+				if(result is not None):
+					if(isinstance(result, dict)):
+						for key, value in result.items():
+							data[key] = value
+					else:
+						data[key] = result
 			
 			items = pager.get_results(req.store, table_name, data)
 		elif(session_search_data):
