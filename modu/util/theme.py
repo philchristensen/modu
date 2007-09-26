@@ -131,7 +131,10 @@ class Theme(object):
 			attribs['checked'] = None
 		if(element.attrib('disabled', False)):
 			attribs['disabled'] = None
-		return tags.input(type='checkbox', **attribs)
+		return tags.label()[[
+			tags.input(type='checkbox', **attribs),
+			element.attrib('text', '')
+		]]
 	
 	def form_radio(self, form_id, element):
 		attribs = element.attrib('attributes', {})
@@ -160,6 +163,7 @@ class Theme(object):
 			option_keys = option_data.keys()
 		else:
 			option_keys = [i for i in range(len(option_data))]
+			option_data = dict(zip(option_keys, option_data))
 		
 		if not(isinstance(option_data, OrderedDict)):
 			option_keys.sort(element.attrib('sort', cmp))

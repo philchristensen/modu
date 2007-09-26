@@ -49,23 +49,6 @@ class LabelField(SearchFieldMixin, define.definition):
 		return frm
 
 
-class DateField(define.definition):
-	"""
-	Allow editing of date data via a multiple select interface or javascript popup calendar.
-	
-	TODO: Implement this.
-	"""
-	implements(IDatatype)
-	
-	def get_element(self, req, style, storable):
-		"""
-		@see: L{modu.editable.define.definition.get_element()}
-		"""
-		frm = form.FormNode(self.name)
-		frm(type='label', value=getattr(storable, self.name, ''))
-		return frm
-
-
 class StringField(SearchFieldMixin, define.definition):
 	"""
 	Allow editing of a string field value.

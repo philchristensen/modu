@@ -244,6 +244,63 @@ class DatatypesTestCase(unittest.TestCase):
 		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )
 	
 	
+	def test_date_field(self):
+		from modu.editable.datatypes import date
+		test_itemdef = define.itemdef(
+			start_date			= date.DateField(
+				label			= 'start date:',
+			)
+		)
+		
+		req = self.get_request([('test-form[start_date][month]',8),
+								('test-form[start_date][day]',25),
+								('test-form[start_date][year]',2),
+								('test-form[start_date][hour]',23),
+								('test-form[start_date][minute]',40)
+								])
+		
+		test_storable = storable.Storable('test')
+		# +---------------------------+
+		# | from_unixtime(1190864400) |
+		# +---------------------------+
+		# | 2007-09-26 23:40:00       | 
+		# +---------------------------+
+		test_storable.start_date = 1190864400
+		
+		field = date.DateField(start_year=2005, end_year=2012)
+		months, days, years = field.get_date_arrays()
+		hours, minutes = field.get_time_arrays()
+		
+		itemdef_form = test_itemdef.get_form(req, test_storable)
+		
+		reference_form = form.FormNode('test-form')
+		reference_form['start_date'](type='fieldset', style='brief', label='start date:')
+		reference_form['start_date']['null'](type='checkbox', text="no value", weight=-1, suffix=tags.br(), 
+			attributes=dict(onChange='enableDateField(this);'))
+		reference_form['start_date']['month'](type='select', weight=0, options=months, value=8)
+		reference_form['start_date']['day'](type='select', weight=1, options=days, value=25)
+		reference_form['start_date']['year'](type='select', weight=2, options=years, value=2)
+		reference_form['start_date']['hour'](type='select', weight=3, options=hours, value=23)
+		reference_form['start_date']['minute'](type='select', weight=4, options=minutes, value=40)
+		
+		reference_form['save'](type='submit', value='save', weight=1000)
+		reference_form['cancel'](type='submit', value='cancel', weight=1001)
+		reference_form['delete'](type='submit', value='delete', weight=1002,
+			attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
+		
+		itemdef_form_html = itemdef_form.render(req)
+		reference_form_html = reference_form.render(req)
+		
+		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )
+		
+		test_storable.start_date = 0
+		# this just loads the data, since there was
+		# no submit button in the test post data
+		itemdef_form.execute(req)
+		test_itemdef['start_date'].update_storable(req, itemdef_form, test_storable)
+		self.failUnlessEqual(test_storable.start_date, 1190864400, 'Date was calculated incorrectly as %d' % test_storable.start_date)
+	
+	
 	def test_foreign_select_field(self):
 		options = {1:'Drama', 2:'Science Fiction', 3:'Biography', 4:'Horror', 5:'Science', 6:'Historical Fiction', 7:'Self-Help', 8:'Romance', 9:'Business', 10:'Technical', 11:'Engineering', 12:'Lanugage', 13:'Finance', 14:'Young Readers', 15:'Music', 16:'Dance', 17:'Psychology', 18:'Astronomy', 19:'Physics', 20:'Politics'}
 		test_itemdef = define.itemdef(

@@ -13,8 +13,8 @@ import sys
 EXPECTED_TITLE = '<input name="node-form[title]" size="30" type="text" value="" />'
 EXPECTED_BODY = '<textarea cols="30" name="node-form[body]" rows="10"></textarea>'
 EXPECTED_SUBMIT = '<input name="node-form[submit]" type="submit" value="submit" />'
-EXPECTED_CHECKBOX = '<input name="node-form[checkbox]" type="checkbox" value="1" />'
-EXPECTED_SELECTED_CHECKBOX = '<input name="node-form[checkbox]" type="checkbox" value="1" checked />'
+EXPECTED_CHECKBOX = '<label><input name="node-form[checkbox]" type="checkbox" value="1" />Checkbox</label>'
+EXPECTED_SELECTED_CHECKBOX = '<label><input name="node-form[checkbox]" type="checkbox" value="1" checked />Selected Checkbox</label>'
 
 EXPECTED_CATEGORY = '<select name="node-form[category]" size="1">'
 EXPECTED_CATEGORY += '<option value="">Select...</option>'
@@ -143,13 +143,13 @@ class FormThemeTestCase(unittest.TestCase):
 		self.failUnlessEqual(some_label_result, expected_result, 'Basic "some_label" field misrendered as \n`%s`, not \n`%s`' % (some_label_result, expected_result));
 		
 	def test_checkbox(self):
-		checkbox = self.form['checkbox']
+		checkbox = self.form['checkbox'](text='Checkbox')
 		
 		checkbox_result = self.theme.form_checkbox('node-form', checkbox)
 		self.failUnlessEqual(checkbox_result, EXPECTED_CHECKBOX, 'Basic "checkbox" field misrendered as \n`%s`, not \n`%s`' % (checkbox_result, EXPECTED_CHECKBOX));
 		
 	def test_selected_checkbox(self):
-		checkbox = self.form['checkbox']
+		checkbox = self.form['checkbox'](text='Selected Checkbox')
 		checkbox(checked=True)
 		
 		checkbox_result = self.theme.form_checkbox('node-form', checkbox)
