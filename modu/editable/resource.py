@@ -14,8 +14,7 @@ import os.path, copy
 from modu.web import resource, app, user
 from modu.editable import define
 from modu.util import form, theme, tags
-from modu import persist
-from modu.persist import page, storable
+from modu.persist import page, storable, sql
 
 def validate_login(req, form):
 	if not(form.data[form.name]['username']):
@@ -29,8 +28,8 @@ def validate_login(req, form):
 def submit_login(req, form):
 	req.store.ensure_factory('user', user.User)
 	form_data = form.data[form.name]
-	encrypt_sql = persist.interp('%%s = ENCRYPT(%s, SUBSTRING(crypt, 1, 2))', [form_data['password'].value])
-	u = req.store.load_one('user', username=form_data['username'].value, crypt=persist.RAW(encrypt_sql))
+	encrypt_sql = sql.interp('%%s = ENCRYPT(%s, SUBSTRING(crypt, 1, 2))', [form_data['password'].value])
+	u = req.store.load_one('user', username=form_data['username'].value, crypt=sql.RAW(encrypt_sql))
 	if(u):
 		req.session.set_user(u)
 	else:

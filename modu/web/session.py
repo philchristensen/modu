@@ -6,12 +6,11 @@
 # See LICENSE for details
 
 import Cookie, time, re, random
-from MySQLdb import cursors
 
 import cPickle
 
 from modu.web import user
-from modu import persist
+from modu.persist import sql
 
 """
 The change to WSGI support meant I needed to find a substitute for
@@ -287,7 +286,7 @@ class DbUserSession(BaseSession):
 		BaseSession.__init__(self, req, sid=sid, cookie_params=cookie_params)
 	
 	def do_load(self):
-		load_query = persist.build_select('session', {'id':self.id()})
+		load_query = sql.build_select('session', {'id':self.id()})
 		record = self._pool.runQuery(load_query)
 		
 		if(record):
@@ -308,17 +307,17 @@ class DbUserSession(BaseSession):
 		attribs['data'] = cPickle.dumps(attribs['data'], 1)
 		if(self.is_clean()):
 			del attribs['data']
-			update_query = persist.build_update('session', attribs, {'id':self.id()})
+			update_query = sql.build_update('session', attribs, {'id':self.id()})
 			self.debug(update_query)
 			self._pool.runOperation(update_query)
 		elif(self.is_new()):
 			attribs['id'] = self.id()
-			insert_query = persist.build_insert('session', attribs)
+			insert_query = sql.build_insert('session', attribs)
 			self.debug(insert_query)
 			self._pool.runOperation(insert_query)
 		else:
 			attribs['id'] = self.id()
-			replace_query = persist.build_replace('session', attribs)
+			replace_query = sql.build_replace('session', attribs)
 			self.debug(replace_query)
 			self._pool.runOperation(replace_query)
 	

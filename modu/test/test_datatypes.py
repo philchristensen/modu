@@ -286,7 +286,7 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['save'](type='submit', value='save', weight=1000)
 		reference_form['cancel'](type='submit', value='cancel', weight=1001)
 		reference_form['delete'](type='submit', value='delete', weight=1002,
-			attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
+			attributes=dict(onClick="return confirm('Are you sure you want to delete this record?');"))
 		
 		itemdef_form_html = itemdef_form.render(req)
 		reference_form_html = reference_form.render(req)

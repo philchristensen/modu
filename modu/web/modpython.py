@@ -68,7 +68,7 @@ def get_wsgi_environment(mp_req):
 		else:
 			raise ValueError(bad_value % "multiprocess")
 	
-	env = dict(apache.build_cgi_env(mp_req))
+	env = dict(apache.sql.build_cgi_env(mp_req))
 	
 	# We'll set SCRIPT_FILENAME, but SCRIPT_NAME will
 	# be misleading until the modu app code actually

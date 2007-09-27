@@ -13,7 +13,7 @@ from zope.interface import implements
 
 from modu.editable import IDatatype, define
 from modu.util import form, tags
-from modu import persist
+from modu.persist import sql
 
 class ForeignLabelField(define.definition):
 	"""
@@ -38,11 +38,11 @@ class ForeignLabelField(define.definition):
 			where = where(storable)
 			args = []
 		if(isinstance(where, dict)):
-			where = persist.build_where(where)
+			where = sql.build_where(where)
 			args = []
 		
 		foreign_label_query = "SELECT %s, %s FROM %s %s" % (value, label, table, where)
-		foreign_label_query = persist.interp(foreign_label_query, args)
+		foreign_label_query = sql.interp(foreign_label_query, args)
 		
 		results = store.pool.runQuery(foreign_label_query)
 		frm = form.FormNode(self.name)
@@ -76,7 +76,7 @@ class ForeignSelectField(define.definition):
 		if(callable(where)):
 			where = where(storable)
 		if(isinstance(where, dict)):
-			where = persist.build_where(where)
+			where = sql.build_where(where)
 		
 		foreign_query = 'SELECT %s, %s FROM %s ' % (value, label, table)
 		if(where):
@@ -196,7 +196,7 @@ class ForeignMultipleSelectField(define.definition):
 		if(callable(where)):
 			where = where(storable)
 		if(isinstance(where, dict)):
-			where = persist.build_where(where)
+			where = sql.build_where(where)
 		
 		ntom_query = """SELECT m.%s AS value, %s AS label, IF(n2m.%s, 1, 0) AS selected
 						FROM %s m
@@ -230,7 +230,7 @@ class ForeignMultipleSelectField(define.definition):
 		store = storable.get_store()
 		item_id = storable.get_id()
 		
-		delete_query = persist.build_delete(self['ntof'], {self['ntof_n_id']:item_id})
+		delete_query = sql.build_delete(self['ntof'], {self['ntof_n_id']:item_id})
 		store.pool.runOperation(delete_query)
 		
 		if(self.name in form_data):
@@ -238,7 +238,7 @@ class ForeignMultipleSelectField(define.definition):
 			if not(isinstance(values, list)):
 				values = [values]
 			data = [{self['ntof_n_id']:item_id, self['ntof_f_id']:val} for val in values]
-			insert_query = persist.build_insert(self['ntof'], data)
+			insert_query = sql.build_insert(self['ntof'], data)
 			store.pool.runOperation(insert_query)
 		elif(self.get('required', False)):
 			# A conundrum...
@@ -282,7 +282,7 @@ class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 		if(callable(where)):
 			where = where(storable)
 		elif(isinstance(where, dict)):
-			where = persist.build_where(where)
+			where = sql.build_where(where)
 		
 		limit = 'LIMIT %d' % self.get('limit_choices', 20)
 		

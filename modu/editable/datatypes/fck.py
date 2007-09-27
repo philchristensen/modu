@@ -13,7 +13,8 @@ import os, os.path, time, stat, shutil, array
 
 from zope.interface import implements
 
-from modu import editable, persist
+from modu import editable
+from modu.persist import sql
 from modu.editable import define
 from modu.util import form, tags
 from modu.web import resource, app
@@ -90,9 +91,9 @@ class FCKEditorField(define.definition):
 		@see: L{modu.editable.define.definition.get_search_value()}
 		"""
 		if(self.get('fulltext_search')):
-			return persist.RAW(persist.interp("MATCH(%%s) AGAINST (%s)", [value]))
+			return sql.RAW(sql.interp("MATCH(%%s) AGAINST (%s)", [value]))
 		else:
-			return persist.RAW(persist.interp("INSTR(%%s, %s)", [value]))
+			return sql.RAW(sql.interp("INSTR(%%s, %s)", [value]))
 
 
 class FCKEditorResource(resource.CheetahTemplateResource):

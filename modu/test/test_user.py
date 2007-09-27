@@ -7,7 +7,7 @@
 
 from twisted.trial import unittest
 
-from modu.persist import storable, adbapi
+from modu.persist import storable, adbapi, sql
 from modu.util import test
 from modu.web import user, app
 from modu import persist
@@ -85,7 +85,7 @@ class UserTestCase(unittest.TestCase):
 		u.username = 'phil@bubblehouse.org'
 		u.first = 'Phil'
 		u.last = 'Christensen'
-		u.crypt = persist.RAW("ENCRYPT('phil')")
+		u.crypt = sql.RAW("ENCRYPT('phil')")
 		self.store.save(u)
 		
 		r = user.Role()
@@ -106,7 +106,7 @@ class UserTestCase(unittest.TestCase):
 		u.username = 'phil@bubblehouse.org'
 		u.first = 'Phil'
 		u.last = 'Christensen'
-		u.crypt = persist.RAW("ENCRYPT('phil')")
+		u.crypt = sql.RAW("ENCRYPT('phil')")
 		self.store.save(u)
 		
 		r = user.Role()
@@ -137,7 +137,7 @@ class UserTestCase(unittest.TestCase):
 		u.username = 'phil@bubblehouse.org'
 		u.first = 'Phil'
 		u.last = 'Christensen'
-		u.crypt = persist.RAW("ENCRYPT('phil')")
+		u.crypt = sql.RAW("ENCRYPT('phil')")
 		self.store.save(u)
 		
 		auth_role = user.Role()

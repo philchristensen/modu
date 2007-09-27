@@ -18,7 +18,7 @@ from twisted.python import util
 
 from modu import editable
 from modu.util import form, tags, theme
-from modu.persist import storable, interp
+from modu.persist import storable
 from modu.web.user import AnonymousUser
 from modu.web import app
 
@@ -651,7 +651,7 @@ class definition(dict):
 		reason to override this field is to return a RAW SQL value,
 		or other non-string constraint.
 		
-		@return: a value suitable for inclusion in L{modu.persist.build_where()}
+		@return: a value suitable for inclusion in L{modu.persist.sql.build_where()}
 			constraint argument dictionary
 		"""
 		return value

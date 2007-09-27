@@ -13,7 +13,7 @@ from zope.interface import implements
 
 from modu.editable import IDatatype, define
 from modu.util import form
-from modu import persist
+from modu.persist import sql
 
 class SearchFieldMixin(object):
 	"""
@@ -24,11 +24,11 @@ class SearchFieldMixin(object):
 		@see: L{modu.editable.define.definition.get_search_value()}
 		"""
 		if(self.get('fulltext_search')):
-			return persist.RAW(persist.interp("MATCH(%%s) AGAINST (%s)", [value]))
+			return sql.RAW(sql.interp("MATCH(%%s) AGAINST (%s)", [value]))
 		elif(self.get('exact_match')):
 			return value
 		else:
-			return persist.RAW(persist.interp("INSTR(%%s, %s)", [value]))
+			return sql.RAW(sql.interp("INSTR(%%s, %s)", [value]))
 
 
 class LabelField(SearchFieldMixin, define.definition):
@@ -167,7 +167,7 @@ class PasswordField(define.definition):
 				value = form_data[self.name].value
 		
 		if(self.get('encrypt', True)):
-			setattr(storable, self.name, persist.RAW("ENCRYPT('%s')" % value))
+			setattr(storable, self.name, sql.RAW("ENCRYPT('%s')" % value))
 		else:
 			setattr(storable, self.name, value)
 		

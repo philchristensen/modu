@@ -7,7 +7,7 @@
 
 from twisted.trial import unittest
 
-from modu.persist import storable, RAW, Store, adbapi
+from modu.persist import storable, Store, adbapi, sql
 from modu.util import test, queue
 from modu.web import session, user, app
 from modu import persist
@@ -157,7 +157,7 @@ class DbSessionTestCase(unittest.TestCase):
 		usr.username = 'sampleuser'
 		usr.first = 'Sample'
 		usr.last = 'User'
-		usr.crypt = RAW("ENCRYPT('%s')" % 'password')
+		usr.crypt = sql.RAW("ENCRYPT('%s')" % 'password')
 		
 		self.store.ensure_factory('user')
 		self.store.save(usr)

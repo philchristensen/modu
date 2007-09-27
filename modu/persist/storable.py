@@ -13,6 +13,7 @@ import time, copy, sys
 
 from zope import interface
 from zope.interface import implements, Interface, Attribute
+from modu.persist import sql
 
 def cached(timeout):
 	"""
@@ -466,7 +467,7 @@ class DefaultFactory(object):
 		if not(self.table):
 			raise NotImplementedError('%s::create_item_query()' % self.__class__.__name__)
 		from modu import persist
-		return persist.build_select(self.table, data)
+		return sql.build_select(self.table, data)
 	
 	def get_item(self, id):
 		"""
