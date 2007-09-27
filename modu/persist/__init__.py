@@ -11,9 +11,11 @@ Home to modu's database abstraction layer and object/relational mapping API.
 @var DEFAULT_STORE_NAME: the default Store name
 @type DEFAULT_STORE_NAME: str
 """
+import thread, types
+
+from zope.interface import Interface, implements
 
 from modu.persist import storable, sql
-import thread, types
 
 DEFAULT_STORE_NAME = '__default__'
 
@@ -33,6 +35,142 @@ def activate_store(req):
 	req['modu.store'] = store
 
 
+class IStore(Interface):
+	def register_factory(self, factory_id, factory):
+		"""
+		Register an object to be the factory for this factory_id.
+		
+		@param table: the table to register the given factory for
+		@type table: str
+		
+		@param factory: the factory object to register
+		@type factory: L{storable.IFactory} implementor
+		
+		@raises ValueError: if the provided factory is not a L{storable.IFactory} implementor
+		"""
+	
+	
+	def has_factory(self, factory_id):
+		"""
+		Does this store already know how to handle the provided factory_id?
+		
+		@param factory_id: the table whose factory is sought
+		
+		@returns: True if the specified factory has been registered
+		@rtype: bool
+		"""
+	
+	
+	def get_factory(self, factory_id):
+		"""
+		Return the factory registered for the given factory_id.
+		
+		@param factory_id: the factory_id whose factory is sought
+		
+		@returns: the requested factory
+		@rtype: L{storable.IFactory}
+		@raises LookupError: if no factory has been registered for the given factory_id
+		"""
+	
+	
+	def ensure_factory(self, factory_id, *args, **kwargs):
+		"""
+		Register a DefaultFactory for the provided factory_id.
+		
+		A convenience method, if there is already a factory registered,
+		and the function was not passed a keyword argument 'force',
+		any other args or kwargs are passed to the storable.DefaultFactory
+		constructor.
+		
+		@param factory_id: the factory_id to register the given factory for
+		@type factory_id: str
+		
+		@param force: should this override existing factory registrations?
+		@type force: bool
+		"""
+	
+	
+	def fetch_id(self, storable):
+		"""
+		Fetch an ID for this object, if possible.
+		
+		@param storable: the object whose ID you wish to fetch
+		@type storable: L{storable.Storable}
+		
+		@returns: the item's id, or 0
+		@rtype: int
+		@raises LookupError: if no factory has been registered for this Storable's table
+		"""
+	
+	
+	def load(self, factory_id, data=None, **kwargs):
+		"""
+		Load an object using the specified data.
+		
+		This function uses whatever factory is registered for the requested
+		factory_id. 
+		
+		Returns an iterable object.
+		
+		@param factory_id: the factory_id to use to load data
+		@type factory_id: str
+		
+		@param data: Implementor and Factory-specific data
+		@type data: dict
+		
+		@returns: a set of resulting objects
+		@rtype: iterable
+		@raises LookupError: if no factory has been registered for this Storable's table
+		"""
+	
+	
+	def load_one(self, factory_id, data=None, **kwargs):
+		"""
+		Load one item from the store.
+		
+		If the resulting query returns multiple objects, the first is
+		returned, and the rest are discarded.
+		
+		@param factory_id: the factory_id to use to load data
+		@type factory_id: str
+		
+		@param data: Implementor and Factory-specific data
+		@type data: dict
+		
+		@returns: a single resulting object
+		@rtype: iterable
+		@raises LookupError: if no factory has been registered for this Storable's factory_id
+		"""
+	
+	
+	def save(self, storable, save_related_storables=True):
+		"""
+		Save the provided Storable.
+		
+		@param storable: the object you wish to save
+		@type storable: L{storable.Storable}
+		
+		@param save_related_storables: should the items returned by
+			L{Storable.get_related_storables()} be automatically saved?
+		@type save_related_storables: bool
+		
+		@raises LookupError: if no factory has been registered for this Storable's factory_id
+		"""
+	
+	
+	def destroy(self, storable, destroy_related_storables=False):
+		"""
+		Destroy the provided Storable.
+		
+		@param storable: the object you wish to destroy
+		@type storable: L{storable.Storable}
+		
+		@param destroy_related_storables: should the items returned by
+			L{Storable.get_related_storables()} be automatically destroyed?
+		@type destroy_related_storables: bool
+		"""
+
+
 class Store(object):
 	"""
 	persist.Store is the routing point for most interactions with the Storable
@@ -43,8 +181,8 @@ class Store(object):
 	@cvar _stores: pool of Store objects
 	@type _stores: dict
 	
-	@ivar connection: the connection object
-	@type connection: a DB-API 2.0 compliant connection
+	@ivar pool: the connection object
+	@type pool: a SynchronousConnectionPool instance
 	
 	@ivar debug_file: print debug info to this object, if not None
 	@type debug_file: a file-like object
@@ -52,7 +190,7 @@ class Store(object):
 	@ivar _factories: table names mapped to registered factories
 	@type _factories: dict
 	"""
-	
+	implements
 	_stores = {}
 	
 	@classmethod
@@ -104,7 +242,9 @@ class Store(object):
 	
 	def register_factory(self, table, factory):
 		"""
-		Register an object to be the factory for this class.
+		Register an object to be the factory for this table.
+		
+		@see: L{IFactory.register_factory()}
 		
 		@param table: the table to register the given factory for
 		@type table: str
@@ -123,6 +263,8 @@ class Store(object):
 		"""
 		Does this store already know how to handle the provided table?
 		
+		@see: L{IFactory.has_factory()}
+		
 		@param table: the table whose factory is sought
 		
 		@returns: boolean
@@ -132,6 +274,8 @@ class Store(object):
 	def get_factory(self, table):
 		"""
 		Return the factory registered for the given table.
+		
+		@see: L{IFactory.get_factory()}
 		
 		@param table: the table whose factory is sought
 		
@@ -151,6 +295,8 @@ class Store(object):
 		and the function was not passed a keyword argument 'force',
 		any other args or kwargs are passed to the storable.DefaultFactory
 		constructor.
+		
+		@see: L{IFactory.ensure_factory()}
 		
 		@param table: the table to register the given factory for
 		@type table: str
@@ -174,6 +320,8 @@ class Store(object):
 		If GUIDs are not being used, this method will return 0 if
 		this is an unsaved object. It's not possible to use "predictive"
 		IDs in that case.
+		
+		@see: L{IFactory.fetch_id()}
 		
 		@param storable: the object whose ID you wish to fetch
 		@type storable: L{storable.Storable}
@@ -205,6 +353,8 @@ class Store(object):
 		and are ignored if `data` is a query string.
 		
 		Returns an iterable object.
+		
+		@see: L{IFactory.load()}
 		
 		@param table: the table to register the given factory for
 		@type table: str
@@ -249,7 +399,7 @@ class Store(object):
 		If the resulting query returns multiple rows/objects, the first is
 		returned, and the rest are discarded.
 		
-		@seealso: L{load()}
+		@see: L{IFactory.load_one()}
 		"""
 		results = self.load(table, data, **kwargs)
 		for result in list(results):
@@ -259,6 +409,8 @@ class Store(object):
 	def save(self, storable, save_related_storables=True):
 		"""
 		Save the provided Storable.
+		
+		@see: L{IFactory.save()}
 		
 		@param storable: the object you wish to save
 		@type storable: L{storable.Storable}
@@ -323,6 +475,8 @@ class Store(object):
 	def destroy(self, storable, destroy_related_storables=False):
 		"""
 		Destroy the provided Storable.
+		
+		@see: L{IFactory.destroy()}
 		
 		@param storable: the object you wish to destroy
 		@type storable: L{storable.Storable}
