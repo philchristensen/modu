@@ -73,6 +73,12 @@ class AdminResource(resource.CheetahTemplateResource):
 			
 			# FIXME: This is inelegant -- we need to get at the cloned itemdef
 			# as it already has some config data in it (because of get_itemdef_layout)
+			
+			# Is this an issue anymore? since the useful itemdef functions now get a
+			# reference to the request, we don't put any dynamic config data in the
+			# itemdef anymore.
+			
+			# Maybe we still need it for user permission support?
 			itemdefs = dict([(itemdef.name, itemdef) for itemdef in
 								reduce(lambda x, y: x+y, self.itemdef_layout.values())])
 			

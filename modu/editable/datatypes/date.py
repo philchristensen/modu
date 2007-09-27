@@ -9,7 +9,7 @@
 Datatypes for managing stringlike data.
 """
 
-import time
+import time, datetime
 
 from zope.interface import implements
 
@@ -25,8 +25,6 @@ YEAR = DAY * 365
 class DateField(define.definition):
 	"""
 	Allow editing of date data via a multiple select interface or javascript popup calendar.
-	
-	TODO: Implement this.
 	"""
 	implements(IDatatype)
 	
@@ -45,6 +43,12 @@ class DateField(define.definition):
 		hours = [str(i).zfill(2) for i in range(25)]
 		minutes = [str(i).zfill(2) for i in range(60)]
 		return hours, minutes
+	
+	def convert_to_timestamp(self, value):
+		if(isinstance(value, (datetime.datetime, datetime.date))):
+			return time.mktime(value.timetuple())
+		else:
+			return value
 	
 	def get_element(self, req, style, storable):
 		"""
@@ -70,7 +74,8 @@ class DateField(define.definition):
 			}
 		"""])
 		
-		value = getattr(storable, self.name, None)
+		value = self.convert_to_timestamp(getattr(storable, self.name, None))
+		
 		attribs = {}
 		if(value is None):
 			frm['null'](checked=True)
@@ -121,7 +126,15 @@ class DateField(define.definition):
 			value += time.mktime(time.strptime('%s:1:1970:%s:%s' % (months[0], hour, minute), '%B:%d:%Y:%H:%M'))
 			value -= time.timezone
 		
-		setattr(storable, self.name, value)
+		save_format = self.get('save_format', 'timestamp')
+		if(save_format == 'date'):
+			setattr(storable, self.name, datetime.date.fromtimestamp(value))
+		elif(save_format == 'datetime'):
+			setattr(storable, self.name, datetime.datetime.fromtimestamp(value))
+		elif(save_format == 'time'):
+			setattr(storable, self.name, datetime.timedelta(seconds=value))
+		else:
+			setattr(storable, self.name, value)
 		
 		return True
 
