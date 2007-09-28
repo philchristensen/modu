@@ -28,7 +28,7 @@ class SelectField(define.definition):
 			return form.FormNode(self.name)(type='label', value=getattr(storable, self.get_column_name(), None))
 		
 		frm = form.FormNode(self.name)
-		frm(type='select', value=getattr(storable, self.get_column_name(), None), options=self.get('options', {}))
+		frm(type=self.get('style', 'select'), value=getattr(storable, self.get_column_name(), None), options=self.get('options', {}))
 		return frm
 
 

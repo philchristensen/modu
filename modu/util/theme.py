@@ -13,6 +13,7 @@ class Theme(object):
 	def __init__(self, req):
 		self.req = req
 	
+	
 	def form(self, form):
 		content = ''
 		for child in form:
@@ -31,6 +32,7 @@ class Theme(object):
 			attribs['action'] = action
 		return tags.form(**attribs)["\n" + content]
 	
+	
 	def form_element(self, form_id, element):
 		content = ''
 		
@@ -48,6 +50,7 @@ class Theme(object):
 			element_class = 'form-item'
 		
 		return tags.div(_class=element_class, _id='form-item-%s' % element.name)[content]
+	
 	
 	def basic_form_element(self, form_id, element):
 		content = ''
@@ -72,8 +75,10 @@ class Theme(object):
 		
 		return content
 	
+	
 	def form_markup(self, form_id, element):
 		return element.attr('value', '')
+	
 	
 	def form_fieldset(self, form_id, element):
 		element_style = element.attr('style', 'brief')
@@ -85,10 +90,12 @@ class Theme(object):
 				content += self.basic_form_element(form_id, element[child_name])
 			return content
 	
+	
 	def form_label(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		value = element.attr('value', element.attr('default_value', ''))
 		return tags.label(**attribs)[value]
+	
 	
 	def form_hidden(self, form_id, element):
 		attribs = element.attr('attributes', {})
@@ -96,12 +103,14 @@ class Theme(object):
 		attribs['value'] = element.attr('value', element.attr('default_value', ''))
 		return tags.input(type='hidden', **attribs)
 	
+	
 	def form_textfield(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
 		attribs['size'] = element.attr('size', 30)
 		attribs['value'] = element.attr('value', element.attr('default_value', ''))
-		return tags.input(type='textfield', **attribs)
+		return tags.input(type='text', **attribs)
+	
 	
 	def form_password(self, form_id, element):
 		attribs = element.attr('attributes', {})
@@ -110,6 +119,7 @@ class Theme(object):
 		attribs['value'] = element.attr('value', element.attr('default_value', ''))
 		return tags.input(type='password', **attribs)
 	
+	
 	def form_textarea(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
@@ -117,11 +127,13 @@ class Theme(object):
 		attribs['rows'] = element.attr('rows', 5)
 		return tags.textarea(**attribs)[element.attr('value', element.attr('default_value', ''))]
 	
+	
 	def form_submit(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
 		attribs['value'] = element.attr('value', 'Submit')
 		return tags.input(type='submit', **attribs)
+	
 	
 	def form_checkbox(self, form_id, element):
 		attribs = element.attr('attributes', {})
@@ -136,6 +148,7 @@ class Theme(object):
 			element.attr('text', '')
 		]]
 	
+	
 	def form_radio(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
@@ -143,6 +156,7 @@ class Theme(object):
 		if(element.attr('selected', False)):
 			attribs['checked'] = None
 		return tags.input(type='radio', **attribs)
+	
 	
 	def form_select(self, form_id, element):
 		attribs = element.attr('attributes', {})
@@ -158,15 +172,10 @@ class Theme(object):
 			value = [value]
 		value = map(str, value)
 		
-		option_data = copy.copy(element.attr('options', []))
-		if(isinstance(option_data, dict)):
-			option_keys = option_data.keys()
-		else:
-			option_keys = [i for i in range(len(option_data))]
-			option_data = dict(zip(option_keys, option_data))
+		comparator = element.attr('sort', cmp)
 		
-		if not(isinstance(option_data, OrderedDict)):
-			option_keys.sort(element.attr('sort', cmp))
+		options_clone = copy.copy(element.attr('options', []))
+		option_keys, option_data = self._mangle_option_data(options_clone, comparator)
 		
 		if(attribs['size'] == 1):
 			option_keys.insert(0, '')
@@ -185,6 +194,37 @@ class Theme(object):
 		
 		return tags.select(**attribs)[options]
 	
+	
+	def form_radiogroup(self, form_id, element):
+		attribs = element.attr('attributes', {})
+		attribs['name'] = element.get_element_name()
+		
+		comparator = element.attr('sort', cmp)
+		
+		options_clone = copy.copy(element.attr('options', []))
+		option_keys, option_data = self._mangle_option_data(options_clone, comparator)
+		
+		element = [str(tags.label()[[
+			tags.input(type='radio', value=key),
+			option_data[key]
+		]]) for key in option_keys]
+		
+		return ''.join(element)
+	
+	
+	def _mangle_option_data(self, option_data, comparator):
+		if(isinstance(option_data, dict)):
+			option_keys = option_data.keys()
+		else:
+			option_keys = [i for i in range(len(option_data))]
+			option_data = dict(zip(option_keys, option_data))
+		
+		if not(isinstance(option_data, OrderedDict)):
+			option_keys.sort(comparator)
+		
+		return (option_keys, option_data)
+	
+	
 	def form_timestamp(self, form_id, element):
 		style = element.attr('style', 'date')
 		if(style == 'date' or style == 'datetime'):
@@ -193,11 +233,17 @@ class Theme(object):
 			pass
 		
 	
+	def form_date(self, form_id, element):
+		pass
+	
+	
 	def form_file(self, form_id, element):
 		pass
 	
+	
 	def form_image(self, form_id, element):
 		pass
+	
 	
 	def page_guide(self, pages, url):
 		if(url.find('?') == -1):

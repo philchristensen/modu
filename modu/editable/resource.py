@@ -136,7 +136,6 @@ class AdminResource(resource.CheetahTemplateResource):
 		@see: L{modu.web.resource.IContent.prepare_content()}
 		"""
 		user = req['modu.user']
-		self.set_slot('user', user)
 		if(user and user.get_id()):
 			if(req.prepath[-1] == 'logout'):
 				req.session.set_user(None)

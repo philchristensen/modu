@@ -31,6 +31,8 @@ EXPECTED_MULTIPLE_CATEGORY += '<option value="horror">Horror</option>'
 EXPECTED_MULTIPLE_CATEGORY += '<option value="sci-fi" selected>Science Fiction</option>'
 EXPECTED_MULTIPLE_CATEGORY += '</select>'
 
+EXPECTED_RADIO = '<label><input type="radio" value="%s" />%s</label>'
+
 EXPECTED_LABEL = '<label class="field-label">%s</label>'
 EXPECTED_HELP = '<div class="form-help">%s</div>'
 EXPECTED_ELEMENT = '<div class="form-item" id="form-item-%s">%s</div>';
@@ -109,6 +111,24 @@ class FormThemeTestCase(unittest.TestCase):
 	
 	def tearDown(self):
 		pass
+	
+	def test_radiogroup(self):
+		radio_options = {'some-value':'some-label', 'some-other-value':'some-other-label'}
+		
+		radiogroup = form.FormNode('radio')(
+			options = radio_options
+		)
+		
+		expected = ''
+		keys = radio_options.keys()
+		keys.sort()
+		
+		for key in keys:
+			expected += EXPECTED_RADIO % (key, radio_options[key])
+		
+		result = self.theme.form_radiogroup('test-form', radiogroup)
+		
+		self.failUnlessEqual(result, expected, "Radiogroup rendered as \n%s\n instead of \n%s" % (result, expected))
 	
 	def test_fieldset(self):
 		fieldset = self.form['advanced']
