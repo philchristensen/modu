@@ -54,7 +54,9 @@ __itemdef__ = define.itemdef(
 		factory				= storable.DefaultFactory,		# [o] Factory to use to build Storable objects
 		model_class			= storable.Storable,			# [o] Model class to use with DefaultFactory
 		list_template		= "[default:'admin-listing.tmpl.html']",	# [o] Overrides the default list template.
-		detail_template		= "[default:'admin-detail.tmpl.html']"		# [o] Overrides the default detail template.
+		detail_template		= "[default:'admin-detail.tmpl.html']",		# [o] Overrides the default detail template.
+		template_variable_callback = noop		# [o] A dict of name-value pairs returned from this function
+												# will be added to the template
 	),
 	
 	# The name of a field is automatically set by the parent itemdef, so it doesn't

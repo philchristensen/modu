@@ -16,6 +16,16 @@ from modu.editable import define
 from modu.util import form, theme, tags
 from modu.persist import page, storable, sql
 
+def select_template_root(req, template):
+	import modu
+	
+	template_root = os.path.join(req.approot, 'template')
+	if(os.access(os.path.join(template_root, template), os.F_OK)):
+		return template_root
+	
+	return os.path.join(os.path.dirname(modu.__file__), 'assets', 'default-template')
+
+
 def validate_login(req, form):
 	"""
 	Validation callback for login form.
@@ -275,6 +285,11 @@ class AdminResource(resource.CheetahTemplateResource):
 		forms = itemdef.get_listing(req, items)
 		thm = theme.Theme(req)
 		
+		template_variable_callback = itemdef.config.get('template_variable_callback')
+		if(callable(template_variable_callback)):
+			for key, value in template_variable_callback(req, forms, search_storable).items():
+				self.set_slot(key, value)
+		
 		self.set_slot('items', items)
 		self.set_slot('pager', pager)
 		self.set_slot('search_form', search_form.render(req))
@@ -325,6 +340,13 @@ class AdminResource(resource.CheetahTemplateResource):
 				# If we haven't submitted the form, errors should definitely be empty
 				for field, err in frm.errors.items():
 					req.messages.report('error', err)
+			
+			template_variable_callback = itemdef.config.get('template_variable_callback')
+			if(callable(template_variable_callback)):
+				result = template_variable_callback(req, frm, selected_item)
+				if(isinstance(result, dict)):
+					for key, value in result.items():
+						self.set_slot(key, value)
 			
 			self.set_slot('form', frm)
 			self.set_slot('theme', frm.theme(req))
@@ -377,13 +399,6 @@ class AdminResource(resource.CheetahTemplateResource):
 		"""
 		@see: L{modu.web.resource.ITemplate.get_template_root()}
 		"""
-		import modu
-		template = self.get_template(req)
-		
-		template_root = os.path.join(req.approot, 'template')
-		if(os.access(os.path.join(template_root, template), os.F_OK)):
-			return template_root
-		
-		return os.path.join(os.path.dirname(modu.__file__), 'assets', 'default-template')
+		return select_template_root(self.get_template(req))
 
 
