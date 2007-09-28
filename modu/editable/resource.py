@@ -273,13 +273,14 @@ class AdminResource(resource.CheetahTemplateResource):
 			items = pager.get_results(req.store, table_name, {})
 		
 		forms = itemdef.get_listing(req, items)
+		thm = theme.Theme(req)
 		
 		self.set_slot('items', items)
 		self.set_slot('pager', pager)
 		self.set_slot('search_form', search_form.render(req))
 		self.set_slot('page_guide', thm.page_guide(pager, req.get_path(req.path)))
 		self.set_slot('forms', forms)
-		self.set_slot('theme', theme.Theme(req))
+		self.set_slot('theme', thm)
 	
 	
 	def prepare_detail(self, req, itemdef):
