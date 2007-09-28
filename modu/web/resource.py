@@ -58,6 +58,9 @@ class IResourceDelegate(interface.Interface):
 	def get_delegate(self, req):
 		"""
 		Return a this object's Resource delegate.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
 		"""
 
 class IContent(interface.Interface):
@@ -68,17 +71,26 @@ class IContent(interface.Interface):
 		"""
 		Run any neccessary code that prepares this content object for display.
 		This method is only called once.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
 		"""
 	
 	def get_content(self, req):
 		"""
 		Return the content for this item. This method can be called multiple times,
 		but is always called **after** prepare_content()
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
 		"""
 	
 	def get_content_type(self, req):
 		"""
 		Return the mime type of this content.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
 		"""
 
 
@@ -90,12 +102,24 @@ class ITemplate(interface.Interface):
 	def set_slot(self, key, value):
 		"""
 		Set a slot in the template to the provided key and value.
+		
+		@param name: the name of the slot
+		@type name: str
+		
+		@param value: the value to set
 		"""
 	
 	def get_slot(self, key, default=None):
 		"""
 		Return the value of the slot with the provided key.
 		If the item doesn't exist, and default isn't provided, throw an exception.
+		
+		@param name: the slot to fetch
+		@type name: str
+		
+		@param default: return value if there is no slot by that name
+		
+		@returns: some value
 		"""
 	
 	def get_template(self, req):
@@ -103,6 +127,11 @@ class ITemplate(interface.Interface):
 		Get an opaque value representing the template. For most template engines
 		this is probably a filename, but for the default TemplateContent class, it's
 		a StringTemplate-style string.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
+		
+		@returns: some value that makes sense to the template engine
 		"""
 	
 	def get_template_root(self, req):
@@ -110,6 +139,12 @@ class ITemplate(interface.Interface):
 		This function gives an opportunity for template resources to support an
 		arbitrary number of template distributions, to allow implementation of themes
 		and default templates.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
+		
+		@returns: the dirname of the template directory.
+		@rtype: str
 		"""
 
 
@@ -121,12 +156,15 @@ class IAccessControl(interface.Interface):
 	def check_access(self, req):
 		"""
 		Is this request allowed access?
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
 		"""
 
 
 class Resource(object):
 	"""
-	An abstract resource.
+	An abstract HTTP resource.
 	
 	Resources can act as Controllers in the MVC approach, and supply
 	an IContent implementor to generate content.
@@ -135,20 +173,43 @@ class Resource(object):
 	implementor, which is the approach taken by the various *TemplateResource
 	classes.
 	
-	@see: IResource
+	@see: L{IResource}
+	
+	@ivar content_provider: if not None, this object will generate content for this Resource
+	@type content_provider: L{IContent} implementor
 	"""
 	
 	implements(IResource)
 	
 	def set_content_provider(self, content_provider):
+		"""
+		Set the content provider for this resource.
+		
+		@param content_provider: if not None, this object will generate content for this Resource
+		@type content_provider: L{IContent} implementor
+		"""
+		if not(IContent.providedBy(content_provider)):
+			raise ValueError('%r is not an implementation of IContent.' % content_provider)
 		self.content_provider = content_provider
 	
 	def get_content_provider(self):
+		"""
+		Set the IContent implementor that will generate content for this resource.
+		
+		If there is no content provider set, but the current instance is a IContent
+		implementor (because of subclassing/inheritence), this method may return self.
+		
+		@returns: the object to generate content for this Resource
+		@rtype: L{IContent} implementor
+		"""
 		if(not hasattr(self, 'content_provider') and IContent.providedBy(self)):
 			return self
 		return self.content_provider
 	
 	def get_response(self, req):
+		"""
+		@see: L{IResource.get_response()}
+		"""
 		cnt = self.get_content_provider()
 		if(IAccessControl.providedBy(cnt)):
 			cnt.check_access(req)
@@ -166,31 +227,79 @@ class Resource(object):
 			return content
 	
 	def get_paths(self):
+		"""
+		@see: L{IResource.get_paths()}
+		"""
 		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
 
 
 class TemplateContent(object):
+	"""
+	Abstract class that handles basic templating functionality.
+	
+	@ivar data: a template slot to value mapping
+	@type data: dict
+	"""
 	implements(IContent, ITemplate)
 	
 	def __getattr__(self, key):
+		"""
+		Convenience hook to create data member variable on demand.
+		
+		This lets subclasses define their own constructor without having to
+		worry about calling the superclass constructor.
+		
+		@param key: the name of the attribute to fetch
+		@type key: str
+		
+		@returns: some value
+		"""
 		if(key == 'data'):
 			self.data = {}
 			return self.data
 		raise AttributeError(key)
 	
 	def set_slot(self, name, value):
-		if not(hasattr(self, 'data')):
-			self.data = {}
+		"""
+		Set a template varable slot to the provided value.
+		
+		@param name: the name of the slot
+		@type name: str
+		
+		@param value: the value to set
+		"""
 		self.data[name] = value
 	
 	def get_slot(self, name, default=None):
-		if(not hasattr(self, 'data') or name not in self.data):
+		"""
+		Get a value out of the template data.
+		
+		@param name: the slot to fetch
+		@type name: str
+		
+		@param default: return value if there is no slot by that name
+		
+		@returns: some value
+		"""
+		if(name not in self.data):
 			if(default is not None):
 				return default
 			raise KeyError(name)
 		return self.data[name]
 	
 	def get_content(self, req):
+		"""
+		Return the template-generated content.
+		
+		Subclasses intending to implement new template engine support should
+		make sure to call this function if they wish to use the default template
+		variable set.
+		
+		@see: L{IContent.get_content()}
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
+		"""
 		self.set_slot('base_path', req.get_path())
 		self.set_slot('req', req)
 		if('modu.content' in req):
@@ -201,15 +310,27 @@ class TemplateContent(object):
 			self.set_slot('user', None)
 	
 	def get_content_type(self, req):
+		"""
+		@see: L{IContent.get_content()}
+		"""
 		return 'text/html'
 	
 	def prepare_content(self, req):
+		"""
+		@see: L{IContent.prepare_content()}
+		"""
 		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
 	
 	def get_template(self, req):
+		"""
+		@see: L{IContent.get_template()}
+		"""
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 	
 	def get_template_root(self, req):
+		"""
+		@see: L{IContent.get_template_root()}
+		"""
 		return os.path.join(req.approot, 'template')
 
 
@@ -219,15 +340,37 @@ try:
 	from Cheetah.Template import Template as CheetahTemplate
 except:
 	class CheetahTemplate(object):
+		"""
+		CheetahTemplate substitution class for when Cheetah isn't installed.
+		
+		This class allows the loading of the Cheetah Template system on
+		modu startup.
+		"""
 		@staticmethod
 		def compile(*args, **kwargs):
+			"""
+			Raise a intelligent error message.
+			"""
 			raise RuntimeError("Cannot find the Cheetah Template modules.")
 		
 		def __init__(*args, **kwargs):
+			"""
+			Raise a intelligent error message.
+			"""
 			raise RuntimeError("Cannot find the Cheetah Template modules.")
 
 class CheetahModuTemplate(CheetahTemplate):
+	"""
+	An adapter class to provide Cheetah Template #include support in modu.
+	
+	@ivar moduTemplateDirectory: the path to the current template engine's
+		template directory.
+	@type moduTemplateDirectory: str
+	"""
 	def serverSidePath(self, path=None, normpath=os.path.normpath, abspath=os.path.abspath):
+		"""
+		Return the proper template directory, if set by the user.
+		"""
 		if(hasattr(self, 'moduTemplateDirectory')):
 			templatePath = os.path.join(self.moduTemplateDirectory, path)
 			return normpath(abspath(templatePath))
@@ -237,8 +380,20 @@ class CheetahModuTemplate(CheetahTemplate):
 cheetah_lock = threading.BoundedSemaphore()
 
 class CheetahTemplateContent(TemplateContent):
-	"""http://www.cheetahtemplate.org"""
+	"""
+	Implement support for the Cheetah Template library.
+	
+	Although modu allows use of other templating systems on a per-resource basis,
+	Cheetah is the primary area of support. Add-on modules distributed with modu
+	also require Cheetah for use.
+	
+	Usage of Cheetah in modu is meant to be somewhat similar to Smarty used in
+	modu's PHP predecessor.
+	"""
 	def get_content(self, req):
+		"""
+		@see: L{IContent.get_content()}
+		"""
 		super(CheetahTemplateContent, self).get_content(req)
 		
 		template = self.get_template(req)
@@ -287,15 +442,26 @@ class CheetahTemplateContent(TemplateContent):
 		return str(self.template_class(searchList=[self.data]))
 	
 	def prepare_content(self, req):
+		"""
+		@see: L{IContent.prepare_content()}
+		"""
 		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
 	
 	def get_template(self, req):
+		"""
+		@see: L{ITemplate.get_template()}
+		"""
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 
 
 class ZPTemplateContent(TemplateContent):
-	"""http://zpt.sourceforge.net"""
+	"""
+	Basic support for the Zope Page Templates library.
+	"""
 	def get_content(self, req):
+		"""
+		@see: L{IContent.get_content()}
+		"""
 		super(ZPTemplateContent, self).get_content(req)
 		
 		from ZopePageTemplates import PageTemplate
@@ -310,15 +476,26 @@ class ZPTemplateContent(TemplateContent):
 		return self.template(context={'here':self.data})
 	
 	def prepare_content(self, req):
+		"""
+		@see: L{IContent.prepare_content()}
+		"""
 		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
 	
 	def get_template(self, req):
+		"""
+		@see: L{ITemplate.get_template()}
+		"""
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 
 
 class CherryTemplateContent(TemplateContent):
-	"""http://cherrytemplate.python-hosting.com"""
+	"""
+	Basic support for the CherryTemplate library.
+	"""
 	def get_content(self, req):
+		"""
+		@see: L{IContent.get_content()}
+		"""
 		super(CherryTemplateContent, self).get_content(req)
 		
 		from cherrytemplate import renderTemplate
@@ -327,23 +504,34 @@ class CherryTemplateContent(TemplateContent):
 		return eval('_renderTemplate(file=_template_path)', self.data)
 	
 	def prepare_content(self, req):
+		"""
+		@see: L{IContent.prepare_content()}
+		"""
 		raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
 	
 	def get_template(self, req):
+		"""
+		@see: L{ITemplate.get_template()}
+		"""
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 
 
-class TemplateResource(Resource, TemplateContent):
-	pass
-
-
 class CheetahTemplateResource(Resource, CheetahTemplateContent):
+	"""
+	A convenience class so further subclasses don't need to think about multiple inheritance ;-).
+	"""
 	pass
 
 
 class ZPTemplateResource(Resource, ZPTemplateContent):
+	"""
+	A convenience class so further subclasses don't need to think about multiple inheritance ;-).
+	"""
 	pass
 
 
 class CherryTemplateResource(Resource, CherryTemplateContent):
+	"""
+	A convenience class so further subclasses don't need to think about multiple inheritance ;-).
+	"""
 	pass

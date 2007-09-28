@@ -21,6 +21,8 @@ DEFAULT_STORE_NAME = '__default__'
 
 def activate_store(req):
 	"""
+	Turn on database Store services for this request.
+	
 	Examine the req object and its internal modu.app object,
 	and create or fetch a store instance to be used by this request.
 	"""
@@ -36,6 +38,10 @@ def activate_store(req):
 
 
 class IStore(Interface):
+	"""
+	A thing that can store things.
+	"""
+	
 	def register_factory(self, factory_id, factory):
 		"""
 		Register an object to be the factory for this factory_id.

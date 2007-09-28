@@ -17,6 +17,20 @@ from modu.util import form, theme, tags
 from modu.persist import page, storable, sql
 
 def validate_login(req, form):
+	"""
+	Validation callback for login form.
+	
+	Ensures values in username and password fields.
+	
+	@param req: the current request
+	@type req: L{modu.web.app.Request}
+	
+	@param form: the form being validated
+	@type form: L{modu.util.form.FormNode}
+	
+	@return: True if all data is entered
+	@rtype: bool
+	"""
 	if not(form.data[form.name]['username']):
 		form.set_form_error('username', "Please enter your username.")
 	if not(form.data[form.name]['password']):
@@ -26,6 +40,17 @@ def validate_login(req, form):
 
 
 def submit_login(req, form):
+	"""
+	Submission callback for login form.
+	
+	Logs in the user using crypt()-based passwords.
+	
+	@param req: the current request
+	@type req: L{modu.web.app.Request}
+	
+	@param form: the form being validated
+	@type form: L{modu.util.form.FormNode}
+	"""
 	req.store.ensure_factory('user', user.User)
 	form_data = form.data[form.name]
 	encrypt_sql = sql.interp('%%s = ENCRYPT(%s, SUBSTRING(crypt, 1, 2))', [form_data['password'].value])
@@ -37,6 +62,18 @@ def submit_login(req, form):
 
 
 def configure_store(req, itemdef):
+	"""
+	Set up the current request environment for this itemdef.
+	
+	For now, this simply registers the appropriate factories for the
+	given itemdef instance.
+	
+	@param req: the current request
+	@type req: L{modu.web.app.Request}
+	
+	@param itemdef: the itemdef to load factories for
+	@type itemdef: L{modu.editable.define.itemdef}
+	"""
 	table_name = itemdef.config.get('table', itemdef.name)
 	if('factory' in itemdef.config):
 		req.store.register_factory(table_name, itemdef.config['factory'])
@@ -47,7 +84,26 @@ def configure_store(req, itemdef):
 
 
 class AdminResource(resource.CheetahTemplateResource):
+	"""
+	Provides a configurable administrative/content management interface.
+	
+	Adding an instance of this resource to a modu site allows you to use
+	itemdefs to define the content management interfaces for your database
+	content.
+	
+	@ivar path: The path this instance is installed at.
+	@type path: str
+	
+	@ivar template: The template the current request has selected.
+	@type template: str
+	"""
 	def __init__(self, path=None, **options):
+		"""
+		Create an instance of the admin tool.
+		
+		@param path: The path this instance should respond to.
+		@type path: str
+		"""
 		if(path is None):
 			path = '/admin'
 		self.path = path
@@ -55,10 +111,20 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def get_paths(self):
+		"""
+		This resource will respond to /admin by default.
+		
+		"%s/logout" % self.path will also be registered.
+		
+		@see: L{modu.web.resource.IResource.get_paths()}
+		"""
 		return [self.path, '%s/logout' % self.path]
 	
 	
 	def prepare_content(self, req):
+		"""
+		@see: L{modu.web.resource.IContent.prepare_content()}
+		"""
 		user = req['modu.user']
 		self.set_slot('user', user)
 		if(user and user.get_id()):
@@ -116,6 +182,12 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def prepare_login(self, req):
+		"""
+		Handle creation and display of a login page.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
+		"""
 		self.template = 'admin-login.html.tmpl'
 		
 		login_form = form.FormNode('login')
@@ -132,6 +204,15 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def prepare_listing(self, req, itemdef):
+		"""
+		Handle creation and display of the listing page.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
+		
+		@param itemdef: the itemdef to use to generate the listing
+		@type itemdef: L{modu.editable.define.itemdef}
+		"""
 		self.template = itemdef.config.get('list_template', 'admin-listing.html.tmpl')
 		table_name = itemdef.config.get('table', itemdef.name)
 		
@@ -202,6 +283,15 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def prepare_detail(self, req, itemdef):
+		"""
+		Handle creation and display of the detail page.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
+		
+		@param itemdef: the itemdef to use to generate the form
+		@type itemdef: L{modu.editable.define.itemdef}
+		"""
 		self.template = itemdef.config.get('detail_template', 'admin-detail.html.tmpl')
 		self.set_slot('form', None)
 		if(len(req.postpath) > 2):
@@ -242,6 +332,15 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def prepare_autocomplete(self, req, itemdef):
+		"""
+		Provide AJAX support for autocomplete fields.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
+		
+		@param itemdef: the itemdef to provide autocompletion for
+		@type itemdef: L{modu.editable.define.itemdef}
+		"""
 		definition = itemdef[req.postpath[2]]
 		post_data = form.NestedFieldStorage(req)
 		results = []
@@ -259,14 +358,23 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def get_content_type(self, req):
+		"""
+		@see: L{modu.web.resource.IContent.get_content_type()}
+		"""
 		return 'text/html; charset=UTF-8'
 	
 	
 	def get_template(self, req):
+		"""
+		@see: L{modu.web.resource.ITemplate.get_template()}
+		"""
 		return self.template
 	
 	
 	def get_template_root(self, req):
+		"""
+		@see: L{modu.web.resource.ITemplate.get_template_root()}
+		"""
 		import modu
 		template = self.get_template(req)
 		
@@ -278,7 +386,13 @@ class AdminResource(resource.CheetahTemplateResource):
 
 
 class ListingTheme(theme.Theme):
+	"""
+	A slightly hackish theme class for generating field listings.
+	"""
 	def form(self, form_list):
+		"""
+		Generate HTML for a list of "forms", e.g. itemdef listing L{modu.util.form.FormNode}s
+		"""
 		content = ''
 		for form in form_list:
 			row = ''
@@ -306,5 +420,8 @@ class ListingTheme(theme.Theme):
 	
 	
 	def form_element(self, form_id, element):
+		"""
+		Generate a table cell in the itemdef listing.
+		"""
 		return tags.td()[self._form_element(form_id, element)]
 	

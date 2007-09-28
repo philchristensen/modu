@@ -76,7 +76,7 @@ class AppTestCase(unittest.TestCase):
 		application = app.get_application(environ)
 		req = app.configure_request(environ, application)
 		rsrc = req.get_resource()
-		self.failUnless(resource.IResourceDelegate.providedBy(rsrc), 'Resource did not implement IResourceDelegate.')
+		self.failUnless(resource.IAccessControl.providedBy(rsrc), 'Resource did not implement IAccessControl.')
 		
 		self.failUnlessRaises(web.HTTPStatus, rsrc.check_access, req)
 		try:
