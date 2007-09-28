@@ -19,14 +19,14 @@ class Theme(object):
 			content += self.form_element(form.name, form[child])
 			content += "\n"
 		
-		attribs = form.attrib('attributes', {})
+		attribs = form.attr('attributes', {})
 		attribs['name'] = form.name.replace('-', '_')
 		attribs['id'] = form.name
-		attribs['enctype'] = form.attrib('enctype', 'application/x-www-form-urlencoded')
-		attribs['method'] = form.attrib('method', 'post')
-		attribs['action'] = form.attrib('action', '')
+		attribs['enctype'] = form.attr('enctype', 'application/x-www-form-urlencoded')
+		attribs['method'] = form.attr('method', 'post')
+		attribs['action'] = form.attr('action', '')
 		
-		action = form.attrib('action', None)
+		action = form.attr('action', None)
 		if(action):
 			attribs['action'] = action
 		return tags.form(**attribs)["\n" + content]
@@ -37,7 +37,7 @@ class Theme(object):
 		if(hasattr(element, 'label')):
 			content += tags.label(_class="field-label")[element.label]
 		
-		content += self._form_element(form_id, element)
+		content += self.basic_form_element(form_id, element)
 		
 		if(hasattr(element, 'help')):
 			content += tags.div(_class='form-help')[element.help]
@@ -49,22 +49,22 @@ class Theme(object):
 		
 		return tags.div(_class=element_class, _id='form-item-%s' % element.name)[content]
 	
-	def _form_element(self, form_id, element):
+	def basic_form_element(self, form_id, element):
 		content = ''
-		prefix = element.attrib('prefix', False)
+		prefix = element.attr('prefix', False)
 		if(callable(prefix)):
 			content += prefix(element)
 		elif(prefix):
 			content += str(prefix)
 		
-		if(element.attrib('type', False)):
+		if(element.attr('type', False)):
 			theme_func = getattr(self, 'form_' + element.type)
 		else:
 			theme_func = self.form_markup
 		
 		content += theme_func(form_id, element)
 		
-		suffix = element.attrib('suffix', False)
+		suffix = element.attr('suffix', False)
 		if(callable(suffix)):
 			content += suffix(element)
 		elif(suffix):
@@ -73,92 +73,92 @@ class Theme(object):
 		return content
 	
 	def form_markup(self, form_id, element):
-		return element.attrib('value', '')
+		return element.attr('value', '')
 	
 	def form_fieldset(self, form_id, element):
-		element_style = element.attrib('style', 'brief')
+		element_style = element.attr('style', 'brief')
 		if(element_style == 'full'):
 			return ''.join([str(self.form_element(form_id, element[child])) for child in element])
 		else:
 			content = ''
 			for child_name in element:
-				content += self._form_element(form_id, element[child_name])
+				content += self.basic_form_element(form_id, element[child_name])
 			return content
 	
 	def form_label(self, form_id, element):
-		attribs = element.attrib('attributes', {})
-		value = element.attrib('value', element.attrib('default_value', ''))
+		attribs = element.attr('attributes', {})
+		value = element.attr('value', element.attr('default_value', ''))
 		return tags.label(**attribs)[value]
 	
 	def form_hidden(self, form_id, element):
-		attribs = element.attrib('attributes', {})
+		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
-		attribs['value'] = element.attrib('value', element.attrib('default_value', ''))
+		attribs['value'] = element.attr('value', element.attr('default_value', ''))
 		return tags.input(type='hidden', **attribs)
 	
 	def form_textfield(self, form_id, element):
-		attribs = element.attrib('attributes', {})
+		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
-		attribs['size'] = element.attrib('size', 30)
-		attribs['value'] = element.attrib('value', element.attrib('default_value', ''))
-		return tags.input(type='text', **attribs)
+		attribs['size'] = element.attr('size', 30)
+		attribs['value'] = element.attr('value', element.attr('default_value', ''))
+		return tags.input(type='textfield', **attribs)
 	
 	def form_password(self, form_id, element):
-		attribs = element.attrib('attributes', {})
+		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
-		attribs['size'] = element.attrib('size', 30)
-		attribs['value'] = element.attrib('value', element.attrib('default_value', ''))
+		attribs['size'] = element.attr('size', 30)
+		attribs['value'] = element.attr('value', element.attr('default_value', ''))
 		return tags.input(type='password', **attribs)
 	
 	def form_textarea(self, form_id, element):
-		attribs = element.attrib('attributes', {})
+		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
-		attribs['cols'] = element.attrib('cols', 40)
-		attribs['rows'] = element.attrib('rows', 5)
-		return tags.textarea(**attribs)[element.attrib('value', element.attrib('default_value', ''))]
+		attribs['cols'] = element.attr('cols', 40)
+		attribs['rows'] = element.attr('rows', 5)
+		return tags.textarea(**attribs)[element.attr('value', element.attr('default_value', ''))]
 	
 	def form_submit(self, form_id, element):
-		attribs = element.attrib('attributes', {})
+		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
-		attribs['value'] = element.attrib('value', 'Submit')
+		attribs['value'] = element.attr('value', 'Submit')
 		return tags.input(type='submit', **attribs)
 	
 	def form_checkbox(self, form_id, element):
-		attribs = element.attrib('attributes', {})
+		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
-		attribs['value'] = element.attrib('value', 1)
-		if(element.attrib('checked', False)):
+		attribs['value'] = element.attr('value', 1)
+		if(element.attr('checked', False)):
 			attribs['checked'] = None
-		if(element.attrib('disabled', False)):
+		if(element.attr('disabled', False)):
 			attribs['disabled'] = None
 		return tags.label()[[
 			tags.input(type='checkbox', **attribs),
-			element.attrib('text', '')
+			element.attr('text', '')
 		]]
 	
 	def form_radio(self, form_id, element):
-		attribs = element.attrib('attributes', {})
+		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
-		attribs['value'] = element.attrib('value', 1)
-		if(element.attrib('selected', False)):
+		attribs['value'] = element.attr('value', 1)
+		if(element.attr('selected', False)):
 			attribs['checked'] = None
 		return tags.input(type='radio', **attribs)
 	
 	def form_select(self, form_id, element):
-		attribs = element.attrib('attributes', {})
+		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
-		if(element.attrib('multiple', False)):
-			attribs['size'] = element.attrib('size', 5)
+		if(element.attr('multiple', False)):
+			attribs['size'] = element.attr('size', 5)
 			attribs['multiple'] = None
 		else:
-			attribs['size'] = element.attrib('size', 1)
+			attribs['size'] = element.attr('size', 1)
 		
-		value = element.attrib('value', 1)
+		value = element.attr('value', 1)
 		if not(isinstance(value, (list, tuple))):
 			value = [value]
 		value = map(str, value)
 		
-		option_data = copy.copy(element.attrib('options', []))
+		option_data = copy.copy(element.attr('options', []))
 		if(isinstance(option_data, dict)):
 			option_keys = option_data.keys()
 		else:
@@ -166,7 +166,7 @@ class Theme(object):
 			option_data = dict(zip(option_keys, option_data))
 		
 		if not(isinstance(option_data, OrderedDict)):
-			option_keys.sort(element.attrib('sort', cmp))
+			option_keys.sort(element.attr('sort', cmp))
 		
 		if(attribs['size'] == 1):
 			option_keys.insert(0, '')
@@ -186,7 +186,7 @@ class Theme(object):
 		return tags.select(**attribs)[options]
 	
 	def form_timestamp(self, form_id, element):
-		style = element.attrib('style', 'date')
+		style = element.attr('style', 'date')
 		if(style == 'date' or style == 'datetime'):
 			pass
 		if(style == 'datetime' or style == 'time'):

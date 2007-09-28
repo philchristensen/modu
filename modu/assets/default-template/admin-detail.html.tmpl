@@ -2,6 +2,29 @@
 
 <h2>Editing $selected_itemdef.config.get('label', $selected_itemdef.get_name()) Record</h2>
 
-$form
+#if $form
+## This is very strange. For some reason if I use just $form in the form tag's
+## echo statements, only repr(form) is output. If I omit the dollar sign
+## (as I had to do in the listing template), I get "no such global" errors.
+#set $dummy_form = $form
+<form id="#echo dummy_form.attr('name') #" name="#echo dummy_form.attr('name').replace('-', '_') #"
+	method="#echo dummy_form.attr('method', 'post') #"
+	enctype="#echo dummy_form.attr('enctype', 'application/x-www-form-urlencoded') #">
+	
+	#for $field_name in $form
+	#set $element = $form[$field_name]
+	<div class="form-item#if element.get_errors() then ' form-error' else '' #"
+		id="form-item-#echo element.name #">
+		#if element.attr('label', '')
+		<label class="field-label">#echo element.attr('label') #</label>
+		#end if
+		#echo $theme.basic_form_element($form.attr('name'), element) #
+		#if element.attr('help', '')
+		<div class="form-help">#echo element.attr('help') #</div>
+		#end if
+	</div>
+	#end for
+</form>
+#end if
 
 #include 'admin-footer.html.tmpl'

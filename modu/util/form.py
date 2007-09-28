@@ -104,15 +104,17 @@ class FormNode(object):
 		def __weighted_cmp(a, b):
 			a = self.children[a]
 			b = self.children[b]
-			return cmp(a.attrib('weight', 0), b.attrib('weight', 0))
+			return cmp(a.attr('weight', 0), b.attr('weight', 0))
 		
 		keys = self.children.keys()
 		keys.sort(__weighted_cmp)
 		return iter(keys)
 	
-	def attrib(self, name, default=None):
+	def attr(self, name, default=None):
 		if(name in self.attributes):
 			return self.attributes[name]
+		if(name == 'name'):
+			return self.name
 		return default
 	
 	def get_element_path(self):

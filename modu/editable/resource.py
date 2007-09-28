@@ -273,13 +273,13 @@ class AdminResource(resource.CheetahTemplateResource):
 			items = pager.get_results(req.store, table_name, {})
 		
 		forms = itemdef.get_listing(req, items)
-		thm = ListingTheme(req)
 		
 		self.set_slot('items', items)
 		self.set_slot('pager', pager)
 		self.set_slot('search_form', search_form.render(req))
 		self.set_slot('page_guide', thm.page_guide(pager, req.get_path(req.path)))
-		self.set_slot('form', thm.form(forms))
+		self.set_slot('forms', forms)
+		self.set_slot('theme', theme.Theme(req))
 	
 	
 	def prepare_detail(self, req, itemdef):
@@ -325,7 +325,8 @@ class AdminResource(resource.CheetahTemplateResource):
 				for field, err in frm.errors.items():
 					req.messages.report('error', err)
 			
-			self.set_slot('form', frm.render(req))
+			self.set_slot('form', frm)
+			self.set_slot('theme', frm.theme(req))
 			self.set_slot('selected_item', selected_item)
 		else:
 			app.raise404('There is no detail view at the path: %s' % req['REQUEST_URI'])
@@ -385,43 +386,3 @@ class AdminResource(resource.CheetahTemplateResource):
 		return os.path.join(os.path.dirname(modu.__file__), 'assets', 'default-template')
 
 
-class ListingTheme(theme.Theme):
-	"""
-	A slightly hackish theme class for generating field listings.
-	"""
-	def form(self, form_list):
-		"""
-		Generate HTML for a list of "forms", e.g. itemdef listing L{modu.util.form.FormNode}s
-		"""
-		content = ''
-		for form in form_list:
-			row = ''
-			if not(content):
-				content = ''.join([str(tags.th()[form[child].attrib('label', form[child].name)]) for child in form])
-			for child in form:
-				row += self.form_element(form.name, form[child])
-			content += tags.tr()[row]
-		content = tags.table(_id='listing-table')[content]
-		
-		if(len(form_list)):
-			form = form_list[0]
-			attribs = form.attrib('attributes', {})
-			attribs['name'] = form.name.replace('-', '_')
-			attribs['id'] = form.name
-			attribs['enctype'] = form.attrib('enctype', 'application/x-www-form-urlencoded')
-			attribs['method'] = form.attrib('method', 'post')
-		
-			action = form.attrib('action', None)
-			if(action):
-				attribs['action'] = action
-			return tags.form(**attribs)["\n" + content]
-		
-		return tags.form()["\n" + content]
-	
-	
-	def form_element(self, form_id, element):
-		"""
-		Generate a table cell in the itemdef listing.
-		"""
-		return tags.td()[self._form_element(form_id, element)]
-	

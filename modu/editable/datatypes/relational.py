@@ -146,7 +146,7 @@ class ForeignAutocompleteField(define.definition):
 				value_field(value=0)
 		
 		if(style == 'listing' or self.get('read_only', False)):
-			return form.FormNode(self.name)(type='label', value=ac_field.attrib('value', ''))
+			return form.FormNode(self.name)(type='label', value=ac_field.attr('value', ''))
 		
 		req.content.report('header', tags.style(type="text/css")[
 			"""@import '%s';""" % req.get_path('/assets/jquery/jquery.autocomplete.css')])
