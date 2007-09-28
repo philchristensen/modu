@@ -74,7 +74,7 @@ class DateField(define.definition):
 			}
 		"""])
 		
-		value = self.convert_to_timestamp(getattr(storable, self.name, None))
+		value = self.convert_to_timestamp(getattr(storable, self.get_column_name(), None))
 		
 		attribs = {}
 		if(value is None):
@@ -102,7 +102,7 @@ class DateField(define.definition):
 		data = form.data['%s-form' % storable.get_table()][self.name]
 		
 		if(data.get('null', 0)):
-			setattr(storable, self.name, None)
+			setattr(storable, self.get_column_name(), None)
 			return True
 		
 		value = 0
@@ -128,13 +128,13 @@ class DateField(define.definition):
 		
 		save_format = self.get('save_format', 'timestamp')
 		if(save_format == 'date'):
-			setattr(storable, self.name, datetime.date.fromtimestamp(value))
+			setattr(storable, self.get_column_name(), datetime.date.fromtimestamp(value))
 		elif(save_format == 'datetime'):
-			setattr(storable, self.name, datetime.datetime.fromtimestamp(value))
+			setattr(storable, self.get_column_name(), datetime.datetime.fromtimestamp(value))
 		elif(save_format == 'time'):
-			setattr(storable, self.name, datetime.timedelta(seconds=value))
+			setattr(storable, self.get_column_name(), datetime.timedelta(seconds=value))
 		else:
-			setattr(storable, self.name, value)
+			setattr(storable, self.get_column_name(), value)
 		
 		return True
 

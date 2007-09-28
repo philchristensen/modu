@@ -45,7 +45,7 @@ class LabelField(SearchFieldMixin, define.definition):
 		if(style == 'search'):
 			frm(type='textfield', size=10) 
 		else:
-			frm(type='label', value=getattr(storable, self.name, ''))
+			frm(type='label', value=getattr(storable, self.get_column_name(), ''))
 		return frm
 
 
@@ -62,7 +62,7 @@ class StringField(SearchFieldMixin, define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		frm = form.FormNode(self.name)
-		frm(value=getattr(storable, self.name, ''))
+		frm(value=getattr(storable, self.get_column_name(), ''))
 		if(style == 'listing' or self.get('read_only', False)):
 			frm(type='label')
 		else:
@@ -83,7 +83,7 @@ class TextAreaField(SearchFieldMixin, define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		frm = form.FormNode(self.name)
-		frm(value=getattr(storable, self.name, ''))
+		frm(value=getattr(storable, self.get_column_name(), ''))
 		if(style == 'listing' or self.get('read_only', False)):
 			frm(type='label')
 		else:
@@ -102,7 +102,7 @@ class PasswordField(define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		entry_frm = form.FormNode(self.name)
-		entry_frm(value=getattr(storable, self.name, ''))
+		entry_frm(value=getattr(storable, self.get_column_name(), ''))
 		
 		if(style == 'listing' or self.get('read_only', False)):
 			entry_frm(type='label')
@@ -167,8 +167,8 @@ class PasswordField(define.definition):
 				value = form_data[self.name].value
 		
 		if(self.get('encrypt', True)):
-			setattr(storable, self.name, sql.RAW("ENCRYPT('%s')" % value))
+			setattr(storable, self.get_column_name(), sql.RAW("ENCRYPT('%s')" % value))
 		else:
-			setattr(storable, self.name, value)
+			setattr(storable, self.get_column_name(), value)
 		
 		return True

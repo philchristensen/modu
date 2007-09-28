@@ -558,6 +558,10 @@ class definition(dict):
 		return user.is_allowed(self.get('acl', []))
 	
 	
+	def get_column_name(self):
+		return self.get('column', self.name)
+	
+	
 	def get_form_element(self, req, style, storable):
 		"""
 		Get a FormNode element that represents this field.
@@ -638,7 +642,7 @@ class definition(dict):
 		if(form_name in form.data):
 			form_data = form.data[form_name]
 			if(self.name in form_data):
-				setattr(storable, self.name, form_data[self.name].value)
+				setattr(storable, self.get_column_name(), form_data[self.name].value)
 		return True
 	
 	

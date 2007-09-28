@@ -30,7 +30,7 @@ class CheckboxField(define.definition):
 		"""
 		frm = form.FormNode(self.name)
 		frm(type='checkbox', value=self.get('checked_value', 1))
-		if(str(getattr(storable, self.name, None)) == str(self.get('checked_value', 1))):
+		if(str(getattr(storable, self.get_column_name(), None)) == str(self.get('checked_value', 1))):
 			frm(checked=True)
 		
 		if(style == 'listing' or self.get('read_only', False)):
@@ -46,8 +46,8 @@ class CheckboxField(define.definition):
 		if(form_name in form.data):
 			form_data = form.data[form_name]
 			if(self.name in form_data):
-				setattr(storable, self.name, form_data[self.name].value)
+				setattr(storable, self.get_column_name(), form_data[self.name].value)
 			else:
-				setattr(storable, self.name, self.get('unchecked_value', 0))
+				setattr(storable, self.get_column_name(), self.get('unchecked_value', 0))
 		return True
 

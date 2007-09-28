@@ -25,10 +25,10 @@ class SelectField(define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		if(style == 'listing' or self.get('read_only', False)):
-			return form.FormNode(self.name)(type='label', value=getattr(storable, self.name, None))
+			return form.FormNode(self.name)(type='label', value=getattr(storable, self.get_column_name(), None))
 		
 		frm = form.FormNode(self.name)
-		frm(type='select', value=getattr(storable, self.name, None), options=self.get('options', {}))
+		frm(type='select', value=getattr(storable, self.get_column_name(), None), options=self.get('options', {}))
 		return frm
 
 

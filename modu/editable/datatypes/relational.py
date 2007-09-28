@@ -32,7 +32,7 @@ class ForeignLabelField(define.definition):
 		table = self['ftable']
 		
 		where = self.get('fwhere', 'WHERE %s = %%s' % value)
-		args = [getattr(storable, self.name, None)]
+		args = [getattr(storable, self.get_column_name(), None)]
 		
 		if(callable(where)):
 			where = where(storable)
@@ -88,13 +88,13 @@ class ForeignSelectField(define.definition):
 		
 		frm = form.FormNode(self.name)
 		if(style == 'listing' or self.get('read_only', False)):
-			foreign_value = getattr(storable, self.name, None)
+			foreign_value = getattr(storable, self.get_column_name(), None)
 			if(foreign_value in options):
 				frm(type='label', value=options[foreign_value])
 			else:
 				frm(type='label', value='')
 		else:
-			frm(type='select', value=getattr(storable, self.name, None), options=options)
+			frm(type='select', value=getattr(storable, self.get_column_name(), None), options=options)
 
 		return frm
 
@@ -124,7 +124,7 @@ class ForeignAutocompleteField(define.definition):
 		ac_field(type='textfield', weight=0, attributes={'id':ac_id}, suffix=ac_javascript)
 		
 		value_field = form.FormNode(self.name)
-		value_field(type='hidden', weight=2, value=getattr(storable, self.name, None), attributes={'id':ac_cb_id})
+		value_field(type='hidden', weight=2, value=getattr(storable, self.get_column_name(), None), attributes={'id':ac_cb_id})
 		
 		store = storable.get_store()
 		
@@ -135,7 +135,7 @@ class ForeignAutocompleteField(define.definition):
 		if(hasattr(storable, self.name)):
 			query = 'SELECT %s FROM %s WHERE %s = %%s' % (label, table, value)
 			
-			field_value = getattr(storable, self.name)
+			field_value = getattr(storable, self.get_column_name())
 			if(field_value is not None):
 				results = store.pool.runQuery(query, field_value)
 				if(results):
@@ -172,7 +172,7 @@ class ForeignAutocompleteField(define.definition):
 		if(form_name in form.data):
 			form_data = form.data[form_name]
 			if(self.name in form_data and self.name in form_data[self.name]):
-				setattr(storable, self.name, form_data[self.name][self.name].value)
+				setattr(storable, self.get_column_name(), form_data[self.name][self.name].value)
 		return True
 
 

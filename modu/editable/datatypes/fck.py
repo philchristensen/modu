@@ -46,7 +46,7 @@ class FCKEditorField(define.definition):
 			frm(type='label', value='(html content)')
 			return frm
 		if(self.get('read_only', False)):
-			frm(type='label', value=getattr(storable, self.name, ''))
+			frm(type='label', value=getattr(storable, self.get_column_name(), ''))
 			return frm
 		
 		fck_base_path = req.get_path('assets', 'fckeditor')
@@ -57,7 +57,7 @@ class FCKEditorField(define.definition):
 		fck_element_name = '%s-form[%s]' % (storable.get_table(), self.name)
 		
 		# //$value = str_replace("'", '&apos;', $value);
-		fck_value = getattr(storable, self.name, '')
+		fck_value = getattr(storable, self.get_column_name(), '')
 		if(fck_value is None):
 			fck_value = ''
 		if(isinstance(fck_value, array.array)):

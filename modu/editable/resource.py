@@ -9,7 +9,7 @@
 Contains resources for configuring a default admin interface.
 """
 
-import os.path, copy
+import os.path, copy, re
 
 from modu.web import resource, app, user
 from modu.editable import define
@@ -243,6 +243,13 @@ class AdminResource(resource.CheetahTemplateResource):
 		# get any saved search data
 		session_search_data = req.session.setdefault('search_form', {}).setdefault(itemdef.name, {})
 		
+		order_by = itemdef.config.get('order_by', 'id DESC')
+		if('order' in query_data and re.match(r'^\w+$', query_data['order'].value)):
+			order_by = query_data['order'].value
+			if('desc' in query_data and query_data['desc'].value):
+				order_by += ' DESC'
+		ordering_dict = {'__order_by':order_by}
+		
 		if(search_form.execute(req)):
 			search_data = search_form.data[search_form.name]
 			if('clear_search' in search_data):
@@ -253,6 +260,7 @@ class AdminResource(resource.CheetahTemplateResource):
 				search_data.pop(submit.name, None)
 			
 			data = {}
+			data.update(ordering_dict)
 			for key, value in search_data.items():
 				session_search_data[key] = value.value
 				result = itemdef[key].get_search_value(value.value)
@@ -269,6 +277,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			search_form.load_data(search_data)
 			
 			data = {}
+			data.update(ordering_dict)
 			for key, value in session_search_data.items():
 				result = itemdef[key].get_search_value(value)
 				if(result is not None):
@@ -280,7 +289,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			
 			items = pager.get_results(req.store, table_name, data)
 		else:
-			items = pager.get_results(req.store, table_name, {})
+			items = pager.get_results(req.store, table_name, ordering_dict)
 		
 		forms = itemdef.get_listing(req, items)
 		thm = theme.Theme(req)
@@ -399,6 +408,6 @@ class AdminResource(resource.CheetahTemplateResource):
 		"""
 		@see: L{modu.web.resource.ITemplate.get_template_root()}
 		"""
-		return select_template_root(self.get_template(req))
+		return select_template_root(req, self.get_template(req))
 
 
