@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+Tests the L{modu.util.form.FormNode} framework.
+"""
+
 import copy
 
 from modu.util import form, test
@@ -13,13 +17,15 @@ from modu.web import app
 from twisted.trial import unittest
 
 class FormTestCase(unittest.TestCase):
-	def setUp(self):
-		pass
-	
-	def tearDown(self):
-		pass
-	
+	"""
+	Test the non-theme-related aspects of form use.
+	"""
 	def get_request(self, post_data={}, multipart=True):
+		"""
+		The request generator for this TestCase.
+		
+		This generator can also create multipart post data.
+		"""
 		environ = test.generate_test_wsgi_environment(post_data, multipart)
 		environ['REQUEST_URI'] = '/app-test/test-resource'
 		environ['SCRIPT_FILENAME'] = ''
@@ -36,6 +42,9 @@ class FormTestCase(unittest.TestCase):
 	
 	
 	def test_basic_form(self):
+		"""
+		Test the basic syntax and field features of forms.
+		"""
 		frm = form.FormNode('test-form')
 		frm(enctype="multipart/form-data")
 		frm['title'](type='textfield', title='Title', required=True, description='This is the title field')
@@ -43,14 +52,22 @@ class FormTestCase(unittest.TestCase):
 		self.failUnlessEqual(frm['title'].attributes['title'], 'Title', "Didn't find correct title.")
 		self.failUnlessEqual(frm.attributes['enctype'], 'multipart/form-data', "Didn't find correct enctype.")
 	
+	
 	def test_element_path(self):
+		"""
+		Test the path function for fieldsets.
+		"""
 		frm = form.FormNode('test-form')
 		frm['one']['two']['three']['four'](type='text')
 		result = '/'.join(frm['one']['two']['three']['four'].get_element_path())
 		expecting = 'test-form/one/two/three/four'
 		self.failUnlessEqual(result, expecting, "Element path was incorrect, got '%s' when expecting '%s'" % (result, expecting))
 	
+	
 	def test_fieldset(self):
+		"""
+		Test fieldsets.
+		"""
 		frm = form.FormNode('test-form')
 		frm['title-area'](type='fieldset', collapsed=False, collapsible=True, title='Title Area')
 		frm['title-area']['title'](type='textfield', title='Title', required=True, description='This is the title field')
@@ -58,7 +75,11 @@ class FormTestCase(unittest.TestCase):
 		self.failUnlessEqual(frm['title-area'].attributes['type'], 'fieldset', "Didn't find correct type.")
 		self.failUnlessEqual(frm['title-area'].children['title'], frm['title-area']['title'], "Didn't find nested child.")
 	
+	
 	def test_validation(self):
+		"""
+		Test the validation flow.
+		"""
 		form_data = [('test-form[title]','Sample Title'), ('test-form[submit]','submit')]
 		req = self.get_request(form_data)
 		

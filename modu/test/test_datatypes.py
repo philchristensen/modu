@@ -5,6 +5,12 @@
 #
 # See LICENSE for details
 
+"""
+Tests for the various built-in editable datatypes.
+
+This module is getting big, and may need to be split into smaller pieces.
+"""
+
 import time
 
 from twisted.trial import unittest
@@ -17,7 +23,14 @@ from modu.persist import storable, adbapi
 from modu.util import form, test, tags, queue
 
 class DatatypesTestCase(unittest.TestCase):
+	"""
+	Tests for the various built-in editable datatypes.
+	"""
+	
 	def setUp(self):
+		"""
+		Initializes the testing tables in the modu test database.
+		"""
 		self.store = persist.Store.get_store()
 		if not(self.store):
 			pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
@@ -29,11 +42,13 @@ class DatatypesTestCase(unittest.TestCase):
 				self.store.pool.runOperation(sql)
 	
 	
-	def tearDown(self):
-		pass
-	
-	
 	def get_request(self, form_data={}):
+		"""
+		The request generator for this TestCase.
+		
+		This particular implementation will return a Request object
+		that has had a store instance defined for it.
+		"""
 		environ = test.generate_test_wsgi_environment(form_data)
 		environ['REQUEST_URI'] = '/app-test/test-resource'
 		environ['SCRIPT_FILENAME'] = ''
@@ -54,6 +69,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_checkbox_field(self):
+		"""
+		Test for L{modu.editable.datatypes.boolean.CheckboxField}
+		"""
 		test_itemdef = define.itemdef(
 			selected		= boolean.CheckboxField(
 								label		= 'Selected'
@@ -80,6 +98,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_checkbox_field_listing(self):
+		"""
+		Test for L{modu.editable.datatypes.boolean.CheckboxField} as displayed in a generated form.
+		"""
 		test_itemdef = define.itemdef(
 			selected		= boolean.CheckboxField(
 								label		= 'Selected',
@@ -104,6 +125,11 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_linked_labelfield(self):
+		"""
+		Test for L{modu.editable.datatypes.string.LabelField}.
+		
+		...and any other datatype that could support a link prefix/suffix
+		"""
 		test_itemdef = define.itemdef(
 			# Normally base_path is set by the admin resource
 			__config		= dict(
@@ -134,6 +160,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_stringfield(self):
+		"""
+		Test for L{modu.editable.datatypes.string.StringField}
+		"""
 		test_itemdef = define.itemdef(
 			name			= string.StringField(
 								label		= 'Name'
@@ -160,6 +189,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_stringfield_listing(self):
+		"""
+		Test for L{modu.editable.datatypes.string.StringField} as displayed in a generated form.
+		"""
 		test_itemdef = define.itemdef(
 			name			= string.StringField(
 								label		= 'Name',
@@ -184,6 +216,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_foreign_labelfield(self):
+		"""
+		Test for L{modu.editable.datatypes.relational.ForeignLabelField}
+		"""
 		test_itemdef = define.itemdef(
 			category_id		= relational.ForeignLabelField(
 								label		= 'Category',
@@ -216,6 +251,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_select_field(self):
+		"""
+		Test for L{modu.editable.datatypes.select.SelectField}
+		"""
 		options = {'admin':'Administrator', 'user':'User'}
 		test_itemdef = define.itemdef(
 			user_type		= select.SelectField(
@@ -245,6 +283,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_date_field(self):
+		"""
+		Test for L{modu.editable.datatypes.date.DateField}
+		"""
 		from modu.editable.datatypes import date
 		test_itemdef = define.itemdef(
 			start_date			= date.DateField(
@@ -302,6 +343,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_foreign_select_field(self):
+		"""
+		Test for L{modu.editable.datatypes.relational.ForeignSelectField}
+		"""
 		options = {1:'Drama', 2:'Science Fiction', 3:'Biography', 4:'Horror', 5:'Science', 6:'Historical Fiction', 7:'Self-Help', 8:'Romance', 9:'Business', 10:'Technical', 11:'Engineering', 12:'Lanugage', 13:'Finance', 14:'Young Readers', 15:'Music', 16:'Dance', 17:'Psychology', 18:'Astronomy', 19:'Physics', 20:'Politics'}
 		test_itemdef = define.itemdef(
 			category_id		= relational.ForeignSelectField(
@@ -337,6 +381,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_foreign_autocomplete_field(self):
+		"""
+		Test for L{modu.editable.datatypes.relational.ForeignAutocompleteField}
+		"""
 		test_itemdef = define.itemdef(
 			name			= relational.ForeignAutocompleteField(
 								label		= 'Name',
@@ -374,6 +421,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_password_field(self):
+		"""
+		Test for L{modu.editable.datatypes.string.PasswordField}
+		"""
 		post_data = [('page-form[title][entry]', 'Text Before Encryption'),
 					 ('page-form[title][verify]','Text Before Encryption'),
 					 ('page-form[save]','save')]
@@ -454,6 +504,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_password_field_noverify(self):
+		"""
+		Test for L{modu.editable.datatypes.string.PasswordField} without verification.
+		"""
 		post_data = [('page-form[title]', 'Text Before Encryption'),
 					 ('page-form[save]','save')]
 		test_itemdef = define.itemdef(
@@ -482,6 +535,9 @@ class DatatypesTestCase(unittest.TestCase):
 	
 	
 	def test_password_field_noencrypt(self):
+		"""
+		Test for L{modu.editable.datatypes.string.PasswordField} without encryption.
+		"""
 		post_data = [('page-form[title][entry]', 'Text Before Encryption'),
 					 ('page-form[title][verify]','Text Before Encryption'),
 					 ('page-form[save]','save')]

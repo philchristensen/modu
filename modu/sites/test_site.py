@@ -93,7 +93,7 @@ class TestAccessControlResource(resource.Resource):
 
 class BasicTestSite(object):
 	"""
-	This site activates only the most basic features of modu.
+	This site activates only the most basic features of modu, running at /app-test.
 	"""
 	classProvides(plugin.IPlugin, app.ISite)
 	
@@ -113,7 +113,7 @@ class BasicTestSite(object):
 
 class BasicRootTestSite(object):
 	"""
-	This site activates only the most basic features of modu.
+	This site activates only the most basic features of modu, running at the site root.
 	"""
 	classProvides(plugin.IPlugin, app.ISite)
 	
