@@ -31,7 +31,7 @@ EXPECTED_MULTIPLE_CATEGORY += '<option value="horror">Horror</option>'
 EXPECTED_MULTIPLE_CATEGORY += '<option value="sci-fi" selected>Science Fiction</option>'
 EXPECTED_MULTIPLE_CATEGORY += '</select>'
 
-EXPECTED_RADIO = '<label><input type="radio" value="%s" />%s</label>'
+EXPECTED_RADIO = '<label><input name="test-form[radio]" type="radio" value="%s" %s/>%s</label>'
 
 EXPECTED_LABEL = '<label class="field-label">%s</label>'
 EXPECTED_HELP = '<div class="form-help">%s</div>'
@@ -115,8 +115,10 @@ class FormThemeTestCase(unittest.TestCase):
 	def test_radiogroup(self):
 		radio_options = {'some-value':'some-label', 'some-other-value':'some-other-label'}
 		
-		radiogroup = form.FormNode('radio')(
-			options = radio_options
+		frm = form.FormNode('test-form')
+		frm['radio'](
+			options = radio_options,
+			value = 'some-value'
 		)
 		
 		expected = ''
@@ -124,9 +126,12 @@ class FormThemeTestCase(unittest.TestCase):
 		keys.sort()
 		
 		for key in keys:
-			expected += EXPECTED_RADIO % (key, radio_options[key])
+			if(key == 'some-value'):
+				expected += EXPECTED_RADIO % (key, 'checked ', radio_options[key])
+			else:
+				expected += EXPECTED_RADIO % (key, '', radio_options[key])
 		
-		result = self.theme.form_radiogroup('test-form', radiogroup)
+		result = self.theme.form_radiogroup('test-form', frm['radio'])
 		
 		self.failUnlessEqual(result, expected, "Radiogroup rendered as \n%s\n instead of \n%s" % (result, expected))
 	
