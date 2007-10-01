@@ -17,10 +17,32 @@ from modu.editable import IDatatype, define
 from modu.util import form, tags
 from modu import persist
 
-
 DAY = 86400
 MONTH = DAY * 31
 YEAR = DAY * 365
+
+def get_date_arrays(start_year, end_year):
+	def _get_month_struct(t):
+		st = list(time.localtime())
+		st[1] = t
+		return st
+	months = [time.strftime('%B', _get_month_struct(t)) for t in range(1, 13)]
+	years = range(start_year, end_year + 1)
+	days = range(1, 32)
+	return months, days, years
+
+
+def get_time_arrays():
+	hours = [str(i).zfill(2) for i in range(25)]
+	minutes = [str(i).zfill(2) for i in range(60)]
+	return hours, minutes
+
+
+def convert_to_timestamp(value):
+	if(isinstance(value, (datetime.datetime, datetime.date))):
+		return time.mktime(value.timetuple())
+	else:
+		return value
 
 class DateField(define.definition):
 	"""
@@ -28,33 +50,15 @@ class DateField(define.definition):
 	"""
 	implements(IDatatype)
 	
-	def get_date_arrays(self):
-		def _get_month_struct(t):
-			st = list(time.localtime())
-			st[1] = t
-			return st
-		months = [time.strftime('%B', _get_month_struct(t)) for t in range(1, 13)]
-		current_year = int(time.strftime('%Y', time.localtime()))
-		years = range(self.get('start_year', current_year - 2), self.get('end_year', current_year + 5))
-		days = range(1, 32)
-		return months, days, years
-	
-	def get_time_arrays(self):
-		hours = [str(i).zfill(2) for i in range(25)]
-		minutes = [str(i).zfill(2) for i in range(60)]
-		return hours, minutes
-	
-	def convert_to_timestamp(self, value):
-		if(isinstance(value, (datetime.datetime, datetime.date))):
-			return time.mktime(value.timetuple())
-		else:
-			return value
-	
 	def get_element(self, req, style, storable):
 		"""
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
-		months, days, years = self.get_date_arrays()
+		current_year = int(time.strftime('%Y', time.localtime()))
+		start_year = self.get('start_year', current_year - 2)
+		end_year = self.get('end_year', current_year + 5)
+		
+		months, days, years = get_date_arrays(start_year, end_year)
 		
 		frm = form.FormNode(self.name)
 		frm(type='fieldset', style='brief')
@@ -74,7 +78,7 @@ class DateField(define.definition):
 			}
 		"""])
 		
-		value = self.convert_to_timestamp(getattr(storable, self.get_column_name(), None))
+		value = convert_to_timestamp(getattr(storable, self.get_column_name(), None))
 		
 		attribs = {}
 		if(value is None):
@@ -89,7 +93,7 @@ class DateField(define.definition):
 			frm['day'](type='select', weight=1, options=days, value=days.index(int(day)), attributes=attribs)
 			frm['year'](type='select', weight=2, options=years, value=years.index(int(year)), attributes=attribs)
 		if(self.get('style', 'datetime') in ('datetime', 'time')):
-			hours, minutes = self.get_time_arrays()
+			hours, minutes = get_time_arrays()
 			frm['hour'](type='select', weight=3, options=hours, value=hours.index(hour), attributes=attribs)
 			frm['minute'](type='select', weight=4, options=minutes, value=minutes.index(minute), attributes=attribs)
 		
@@ -107,7 +111,11 @@ class DateField(define.definition):
 		
 		value = 0
 		
-		months, days, years = self.get_date_arrays()
+		current_year = int(time.strftime('%Y', time.localtime()))
+		start_year = self.get('start_year', current_year - 2)
+		end_year = self.get('end_year', current_year + 5)
+		
+		months, days, years = get_date_arrays(start_year, end_year)
 		
 		def _safe_int(i):
 			if(i == ''):
@@ -120,7 +128,7 @@ class DateField(define.definition):
 			year = years[_safe_int(data['year'].value)]
 			value += time.mktime(time.strptime('%s:%d:%d' % (month, day, year), '%B:%d:%Y'))
 		if(self.get('style', 'datetime') in ('datetime', 'time')):
-			hours, minutes = self.get_time_arrays()
+			hours, minutes = get_time_arrays()
 			hour = hours[_safe_int(data['hour'].value)]
 			minute = minutes[_safe_int(data['minute'].value)]
 			value += time.mktime(time.strptime('%s:1:1970:%s:%s' % (months[0], hour, minute), '%B:%d:%Y:%H:%M'))

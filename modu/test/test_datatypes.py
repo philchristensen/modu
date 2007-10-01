@@ -16,7 +16,7 @@ import time
 from twisted.trial import unittest
 
 from modu import persist
-from modu.editable.datatypes import string, relational, boolean, select
+from modu.editable.datatypes import string, relational, boolean, select, date
 from modu.web import app
 from modu.editable import define
 from modu.persist import storable, adbapi
@@ -282,6 +282,26 @@ class DatatypesTestCase(unittest.TestCase):
 		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )
 	
 	
+	def test_date_field_arrays(self):
+		"""
+		Test the date field arrays used to build date selects.
+		"""
+		months, days, years = date.get_date_arrays(2000, 2005)
+		hours, minutes = date.get_time_arrays()
+		
+		self.failUnlessEqual(years[0], 2000, 'Found broken first year: %s' % years[0])
+		self.failUnlessEqual(years[-1], 2005, 'Found broken last year: %s' % years[-1])
+		
+		self.failUnlessEqual(days[0], 1, 'Found broken first day: %s' % days[0])
+		self.failUnlessEqual(days[-1], 31, 'Found broken last day: %s' % days[-1])
+		
+		self.failUnlessEqual(hours[0], '00', 'Found broken first hour: %s' % hours[0])
+		self.failUnlessEqual(hours[-1], '24', 'Found broken last hour: %s' % hours[-1])
+		
+		self.failUnlessEqual(minutes[0], '00', 'Found broken first minute: %s' % minutes[0])
+		self.failUnlessEqual(minutes[-1], '59', 'Found broken last minute: %s' % minutes[-1])
+	
+	
 	def test_date_field(self):
 		"""
 		Test for L{modu.editable.datatypes.date.DateField}
@@ -308,9 +328,8 @@ class DatatypesTestCase(unittest.TestCase):
 		# +---------------------------+
 		test_storable.start_date = 1190864400
 		
-		field = date.DateField(start_year=2005, end_year=2012)
-		months, days, years = field.get_date_arrays()
-		hours, minutes = field.get_time_arrays()
+		months, days, years = date.get_date_arrays(2005, 2012)
+		hours, minutes = date.get_time_arrays()
 		
 		itemdef_form = test_itemdef.get_form(req, test_storable)
 		
