@@ -225,7 +225,8 @@ class AdminResource(resource.CheetahTemplateResource):
 		self.template = itemdef.config.get('list_template', 'admin-listing.html.tmpl')
 		table_name = itemdef.config.get('table', itemdef.name)
 		
-		query_data = form.NestedFieldStorage(req)
+		query_data = form.NestedFieldStorage({'QUERY_STRING':req.get('QUERY_STRING', ''),
+												'wsgi.input':req['wsgi.input']})
 		pager = page.Paginator()
 		if('page' in query_data):
 			pager.page = int(query_data['page'].value)
