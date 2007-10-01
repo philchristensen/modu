@@ -7,7 +7,7 @@
 
 import copy
 
-from modu.util import tags, OrderedDict
+from modu.util import tags, OrderedDict, date
 
 class Theme(object):
 	def __init__(self, req):
@@ -180,6 +180,7 @@ class Theme(object):
 		if(attribs['size'] == 1):
 			option_keys.insert(0, '')
 			option_data[''] = 'Select...'
+			del attribs['size']
 		
 		def _create_option(k):
 			tag = tags.option(value=k)[option_data[k]]
@@ -233,8 +234,93 @@ class Theme(object):
 			pass
 		
 	
+	def form_datetime(self, form_id, element):
+		import time
+		attribs = element.attr('attributes', {})
+		
+		current_year = int(time.strftime('%Y', time.localtime()))
+		start_year = element.attr('start_year', current_year - 2)
+		end_year = element.attr('end_year', current_year + 5)
+		
+		months, days, years = date.get_date_arrays(start_year, end_year)
+		hours, minutes = date.get_time_arrays()
+		
+		value = date.convert_to_timestamp(element.attr('value', None))
+		
+		if(value is None):
+			month, day, year, hour, minute = (months[0], 1, years[0], '00', '00')
+		else:
+			month, day, year, hour, minute = time.strftime('%B:%d:%Y:%H:%M', time.localtime(value)).split(':')
+		
+		arrays = (months, days, years, hours, minutes)
+		values = (month, int(day), int(year), hour, minute)
+		names = ('month', 'day', 'year', 'hour', 'minute')
+		
+		return self._generate_datetime_select(element, attribs, arrays, values, names)
+	
+	
 	def form_date(self, form_id, element):
-		pass
+		import time
+		attribs = element.attr('attributes', {})
+		
+		current_year = int(time.strftime('%Y', time.localtime()))
+		start_year = element.attr('start_year', current_year - 2)
+		end_year = element.attr('end_year', current_year + 5)
+		
+		months, days, years = date.get_date_arrays(start_year, end_year)
+		
+		value = date.convert_to_timestamp(element.attr('value', None))
+		
+		if(value is None):
+			month, day, year = (months[0], 1, years[0])
+		else:
+			month, day, year = time.strftime('%B:%d:%Y', time.localtime(value)).split(':')
+		
+		arrays = (months, days, years)
+		values = (month, int(day), int(year))
+		names = ('month', 'day', 'year')
+		
+		return self._generate_datetime_select(element, attribs, arrays, values, names)
+	
+	
+	def form_time(self, form_id, element):
+		import time
+		attribs = element.attr('attributes', {})
+		
+		hours, minutes = date.get_time_arrays()
+		
+		value = date.convert_to_timestamp(element.attr('value', None))
+		
+		if(value is None):
+			hour, minute = ('00', '00')
+		else:
+			hour, minute = time.strftime('%H:%M', time.localtime(value)).split(':')
+		
+		arrays = (hours, minutes)
+		values = (hour, minute)
+		names = ('hour', 'minute')
+		
+		return self._generate_datetime_select(element, attribs, arrays, values, names)
+	
+	
+	def _generate_datetime_select(self, element, attribs, arrays, values, names):
+		def _create_option(index, v, option_data):
+			tag = tags.option(value=index)[option_data[index]]
+			if(index == v):
+				tag(selected=None)
+			return tag
+		
+		output = ''
+		for index in range(len(arrays)):
+			selected_item = arrays[index].index(values[index])
+			attribs['name'] = '%s[%s]' % (element.get_element_name(), names[index])
+			output += tags.select(**attribs)[[
+				tags.option(value='')['Select...']
+			]+[
+				_create_option(i, selected_item, arrays[index]) for i in range(len(arrays[index]))
+			]]
+		
+		return output
 	
 	
 	def form_file(self, form_id, element):

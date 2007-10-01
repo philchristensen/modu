@@ -16,7 +16,7 @@ EXPECTED_SUBMIT = '<input name="node-form[submit]" type="submit" value="submit" 
 EXPECTED_CHECKBOX = '<label><input name="node-form[checkbox]" type="checkbox" value="1" />Checkbox</label>'
 EXPECTED_SELECTED_CHECKBOX = '<label><input name="node-form[checkbox]" type="checkbox" value="1" checked />Selected Checkbox</label>'
 
-EXPECTED_CATEGORY = '<select name="node-form[category]" size="1">'
+EXPECTED_CATEGORY = '<select name="node-form[category]">'
 EXPECTED_CATEGORY += '<option value="">Select...</option>'
 EXPECTED_CATEGORY += '<option value="bio" selected>Biography</option>'
 EXPECTED_CATEGORY += '<option value="drama">Drama</option>'

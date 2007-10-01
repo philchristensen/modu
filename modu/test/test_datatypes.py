@@ -16,11 +16,11 @@ import time
 from twisted.trial import unittest
 
 from modu import persist
-from modu.editable.datatypes import string, relational, boolean, select, date
+from modu.editable.datatypes import string, relational, boolean, select
 from modu.web import app
 from modu.editable import define
 from modu.persist import storable, adbapi
-from modu.util import form, test, tags, queue
+from modu.util import form, test, tags, queue, date
 
 class DatatypesTestCase(unittest.TestCase):
 	"""
@@ -306,18 +306,18 @@ class DatatypesTestCase(unittest.TestCase):
 		"""
 		Test for L{modu.editable.datatypes.date.DateField}
 		"""
-		from modu.editable.datatypes import date
+		from modu.editable.datatypes import date as date_datatype
 		test_itemdef = define.itemdef(
-			start_date			= date.DateField(
+			start_date			= date_datatype.DateField(
 				label			= 'start date:',
 			)
 		)
 		
-		req = self.get_request([('test-form[start_date][month]',8),
-								('test-form[start_date][day]',25),
-								('test-form[start_date][year]',2),
-								('test-form[start_date][hour]',23),
-								('test-form[start_date][minute]',40)
+		req = self.get_request([('test-form[start_date][date][month]',8),
+								('test-form[start_date][date][day]',25),
+								('test-form[start_date][date][year]',2),
+								('test-form[start_date][date][hour]',23),
+								('test-form[start_date][date][minute]',40)
 								])
 		
 		test_storable = storable.Storable('test')
@@ -337,11 +337,12 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['start_date'](type='fieldset', style='brief', label='start date:')
 		reference_form['start_date']['null'](type='checkbox', text="no value", weight=-1, suffix=tags.br(), 
 			attributes=dict(onChange='enableDateField(this);'))
-		reference_form['start_date']['month'](type='select', weight=0, options=months, value=8)
-		reference_form['start_date']['day'](type='select', weight=1, options=days, value=25)
-		reference_form['start_date']['year'](type='select', weight=2, options=years, value=2)
-		reference_form['start_date']['hour'](type='select', weight=3, options=hours, value=23)
-		reference_form['start_date']['minute'](type='select', weight=4, options=minutes, value=40)
+		reference_form['start_date']['date'](type='fieldset')
+		reference_form['start_date']['date']['month'](type='select', weight=0, options=months, value=8)
+		reference_form['start_date']['date']['day'](type='select', weight=1, options=days, value=25)
+		reference_form['start_date']['date']['year'](type='select', weight=2, options=years, value=2)
+		reference_form['start_date']['date']['hour'](type='select', weight=3, options=hours, value=23)
+		reference_form['start_date']['date']['minute'](type='select', weight=4, options=minutes, value=40)
 		
 		reference_form['save'](type='submit', value='save', weight=1000)
 		reference_form['cancel'](type='submit', value='cancel', weight=1001)
@@ -360,6 +361,28 @@ class DatatypesTestCase(unittest.TestCase):
 		test_itemdef['start_date'].update_storable(req, itemdef_form, test_storable)
 		self.failUnlessEqual(test_storable.start_date, 1190864400, 'Date was calculated incorrectly as %d' % test_storable.start_date)
 	
+	
+	def test_date_field2(self):
+		req = self.get_request()
+		
+		months, days, years = date.get_date_arrays(2005, 2012)
+		hours, minutes = date.get_time_arrays()
+		
+		simple_element = form.FormNode('test-form')
+		simple_element['start_date'](type='fieldset', style='brief', label='start date:')
+		simple_element['start_date']['month'](type='select', weight=0, options=months, value=8)
+		simple_element['start_date']['day'](type='select', weight=1, options=days, value=25)
+		simple_element['start_date']['year'](type='select', weight=2, options=years, value=2)
+		simple_element['start_date']['hour'](type='select', weight=3, options=hours, value=23)
+		simple_element['start_date']['minute'](type='select', weight=4, options=minutes, value=40)
+		
+		date_element = form.FormNode('test-form')
+		date_element['start_date'](type='datetime', label='start date:', value=1190864400)
+		
+		simple_element_html = simple_element.render(req)
+		date_element_html = date_element.render(req)
+		
+		self.failUnlessEqual(date_element_html, simple_element_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (date_element_html, simple_element_html) )
 	
 	def test_foreign_select_field(self):
 		"""
