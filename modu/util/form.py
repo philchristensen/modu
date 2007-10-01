@@ -171,8 +171,7 @@ class FormNode(object):
 				self.load_data(self.data)
 				result = self.validate(req, self)
 				if(result):
-					self.submit(req, self)
-					return True
+					return self.submit(req, self)
 		return False
 	
 	def set_error(self, name, error):
@@ -222,8 +221,12 @@ class FormNode(object):
 					for name, child in self.children.items():
 						child.load_data(form_data)
 				else:
-					# this is bad
-					pass
+					# this would happen if a theme function
+					# generated nested form data for a single
+					# form object
+					loader = self.attr('loader', None)
+					if(callable(loader)):
+						loader(self, form_data)
 			else:
 				if(hasattr(form_data, 'value')):
 					self.attributes['value'] = form_data.value

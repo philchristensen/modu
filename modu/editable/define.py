@@ -399,14 +399,6 @@ class itemdef(dict):
 				if not(frm[field].validate(req, frm)):
 					return False
 		
-		# call prewrite_callback
-		# this seems like a strange place for this, since prewrites aren't
-		# explicitly validation, but i think it's okay for now.
-		if('prewrite_callback' in self.config):
-			result = self.config['prewrite_callback'](req, frm, storable)
-			if(result is False):
-				return False
-		
 		return True
 	
 	
@@ -432,9 +424,18 @@ class itemdef(dict):
 			else:
 				# update storable data with form
 				result = definition.update_storable(req, form, storable)
-				if(result == False):
+				if(result is False):
 					#print '%s datatype returned false.' % name
-					return
+					return False
+		
+		# call prewrite_callback
+		if('prewrite_callback' in self.config):
+			prewrite_callback = self.config['prewrite_callback']
+			if not(isinstance(prewrite_callback, (list, tuple))):
+				prewrite_callback = [prewrite_callback]
+			for callback in prewrite_callback:
+				if(callback(req, form, storable) is False):
+					return False
 		
 		# save storable data
 		req.store.save(storable)
@@ -450,10 +451,16 @@ class itemdef(dict):
 		
 		# call postwrite_callback
 		if('postwrite_callback' in self.config):
-			self.config['postwrite_callback'](req, form, storable)
+			postwrite_callback = self.config['postwrite_callback']
+			if not(isinstance(postwrite_callback, (list, tuple))):
+				postwrite_callback = [postwrite_callback]
+			for callback in postwrite_callback:
+				callback(req, form, storable)
 		
 		if(req.postpath and req.postpath[-1] == 'new'):
 			app.redirect(req.get_path(req.prepath, 'detail', storable.get_table(), storable.get_id()))
+		
+		return True
 	
 	def delete(self, req, form, storable):
 		"""

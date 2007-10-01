@@ -31,7 +31,17 @@ class DateField(define.definition):
 		"""
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
-		current_year = int(time.strftime('%Y', time.localtime()))
+		value = date.convert_to_timestamp(getattr(storable, self.get_column_name(), None))
+		if(self.get('read_only', False)):
+			if(value):
+				output = time.strftime(self.get('format_string', '%B %d, %Y at %I:%M%p'), time.localtime(value))
+			else:
+				output = 'no date set'
+			frm = form.FormNode(self.name)
+			frm(type='label', value=output)
+			return frm
+		
+		current_year = int(time.strftime('%Y', time.localtime(value)))
 		start_year = self.get('start_year', current_year - 2)
 		end_year = self.get('end_year', current_year + 5)
 		
@@ -55,12 +65,11 @@ class DateField(define.definition):
 			}
 		"""])
 		
-		value = date.convert_to_timestamp(getattr(storable, self.get_column_name(), None))
 		attribs = {}
 		if(value is None):
 			frm['null'](checked=True)
 			attribs['disabled'] = None
-		frm['date'](type=self.get('style', 'datetime'), value=value, attributes=attribs)
+		frm['date'](type=self.get('style', 'datetime'), value=value, attributes=attribs, start_year=start_year, end_year=end_year)
 		
 		return frm
 	
@@ -68,6 +77,9 @@ class DateField(define.definition):
 		"""
 		@see: L{modu.editable.define.definition.update_storable()}
 		"""
+		if(self.get('read_only')):
+			return True
+		
 		data = form.data['%s-form' % storable.get_table()][self.name]
 		
 		if(data.get('null', 0)):

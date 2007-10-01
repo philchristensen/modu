@@ -86,7 +86,7 @@ def configure_store(req, itemdef):
 	"""
 	table_name = itemdef.config.get('table', itemdef.name)
 	if('factory' in itemdef.config):
-		req.store.register_factory(table_name, itemdef.config['factory'])
+		req.store.register_factory(table_name, itemdef.config['factory'], force=True)
 	elif('model_class' in itemdef.config):
 		req.store.ensure_factory(table_name, itemdef.config['model_class'])
 	else:
