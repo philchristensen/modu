@@ -267,7 +267,7 @@ class itemdef(dict):
 			return self.validate(req, form, storable)
 		
 		def _submit(req, form):
-			self.submit(req, form, storable)
+			return self.submit(req, form, storable)
 		
 		frm.validate = _validate
 		frm.submit = _submit
@@ -435,6 +435,7 @@ class itemdef(dict):
 				prewrite_callback = [prewrite_callback]
 			for callback in prewrite_callback:
 				if(callback(req, form, storable) is False):
+					#print 'prewrite returned false'
 					return False
 		
 		# save storable data
