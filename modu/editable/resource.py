@@ -135,6 +135,10 @@ class AdminResource(resource.CheetahTemplateResource):
 		"""
 		@see: L{modu.web.resource.IContent.prepare_content()}
 		"""
+		req.content.report('header', tags.style(type="text/css")[
+			"@import '%s';" % req.get_path('assets', 'admin-styles.css')
+		])
+		
 		user = req['modu.user']
 		if(user and user.get_id()):
 			if(req.prepath[-1] == 'logout'):
