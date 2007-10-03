@@ -16,6 +16,7 @@ from zope.interface import implements
 from modu import editable
 from modu.persist import sql
 from modu.editable import define
+from modu.editable import resource as admin_resource
 from modu.util import form, tags
 from modu.web import resource, app
 
@@ -173,18 +174,14 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		return self.template
 	
 	
-	def get_template_root(self, req):
+	def get_template_root(self, req, template=None):
 		"""
 		@see: L{modu.web.resource.ITemplate.get_template()}
 		"""
-		import modu
-		template = self.get_template(req)
+		if(template is None):
+			template = self.get_template(req)
 		
-		template_root = os.path.join(req.approot, 'template')
-		if(os.access(os.path.join(template_root, template), os.F_OK)):
-			return template_root
-		
-		return os.path.join(os.path.dirname(modu.__file__), 'assets', 'default-template')
+		return admin_resource.select_template_root(req, template)
 	
 	
 	def prepare_quick_upload(self, req):

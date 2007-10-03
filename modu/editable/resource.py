@@ -18,13 +18,12 @@ from modu.persist import page, storable, sql
 
 def select_template_root(req, template):
 	import modu
-	
+
 	template_root = os.path.join(req.approot, 'template')
 	if(os.access(os.path.join(template_root, template), os.F_OK)):
 		return template_root
-	
-	return os.path.join(os.path.dirname(modu.__file__), 'assets', 'default-template')
 
+	return os.path.join(os.path.dirname(modu.__file__), 'assets', 'default-template')
 
 def validate_login(req, form):
 	"""
@@ -118,6 +117,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			path = '/admin'
 		self.path = path
 		self.options = options
+		self.content_type = 'text/html; charset=UTF-8'
 	
 	
 	def get_paths(self):
@@ -150,14 +150,12 @@ class AdminResource(resource.CheetahTemplateResource):
 			# get_itemdef_layout adds some data and clones the itemdef
 			self.itemdef_layout = define.get_itemdef_layout(req, itemdefs)
 			
-			# FIXME: This is inelegant -- we need to get at the cloned itemdef
-			# as it already has some config data in it (because of get_itemdef_layout)
-			
-			# Is this an issue anymore? since the useful itemdef functions now get a
-			# reference to the request, we don't put any dynamic config data in the
-			# itemdef anymore.
-			
-			# Maybe we still need it for user permission support?
+			# FIXME: This is inelegant -- we find the current itemdef
+			# by using itemdefs.get(req.postpath[1]), so we recreate
+			# the itemdef list from the itemdef layout to stop
+			# malicious URL access.
+			# TODO: Limit the itemdefs by user *first*, then modify
+			# get_itemdef_layout() to organize, but not limit.
 			itemdefs = dict([(itemdef.name, itemdef) for itemdef in
 								reduce(lambda x, y: x+y, self.itemdef_layout.values())])
 			
@@ -170,13 +168,15 @@ class AdminResource(resource.CheetahTemplateResource):
 				
 				self.set_slot('selected_itemdef', selected_itemdef)
 				
-				if(selected_itemdef):
+				if(selected_itemdef is not None):
 					configure_store(req, selected_itemdef)
 					
 					if(req.postpath[0] == 'detail'):
 						self.prepare_detail(req, selected_itemdef)
 					elif(req.postpath[0] == 'autocomplete'):
 						self.prepare_autocomplete(req, selected_itemdef)
+					elif(req.postpath[0] == 'custom'):
+						self.prepare_custom(req, selected_itemdef)
 					else:
 						self.prepare_listing(req, selected_itemdef)
 				else:
@@ -394,11 +394,26 @@ class AdminResource(resource.CheetahTemplateResource):
 		app.raise200([('Content-Type', 'text/plain')], [content])
 	
 	
+	def prepare_custom(self, req, itemdef):
+		rsrc = itemdef.config.get('resource')
+		if not(rsrc):
+			app.raise404('There is no resource at the path: %s' % req['REQUEST_URI'])
+		if not(isinstance(rsrc, resource.CheetahTemplateContent)):
+			app.raise500('The resource at %s is invalid.' % req['REQUEST_URI'])
+		
+		self.template = rsrc.get_template(req)
+		self.content_type = rsrc.get_content_type(req)
+		
+		rsrc.prepare_content(req)
+		for slot in rsrc.get_slots():
+			self.set_slot(slot, rsrc.get_slot(slot))
+	
+	
 	def get_content_type(self, req):
 		"""
 		@see: L{modu.web.resource.IContent.get_content_type()}
 		"""
-		return 'text/html; charset=UTF-8'
+		return self.content_type
 	
 	
 	def get_template(self, req):
@@ -408,10 +423,12 @@ class AdminResource(resource.CheetahTemplateResource):
 		return self.template
 	
 	
-	def get_template_root(self, req):
+	def get_template_root(self, req, template=None):
 		"""
 		@see: L{modu.web.resource.ITemplate.get_template_root()}
 		"""
-		return select_template_root(req, self.get_template(req))
-
+		if(template is None):
+			template = self.get_template(req)
+		
+		return select_template_root(req, template)
 

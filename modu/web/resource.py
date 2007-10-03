@@ -122,6 +122,14 @@ class ITemplate(interface.Interface):
 		@returns: some value
 		"""
 	
+	def get_slots(self):
+		"""
+		Return a list of slots added to template.
+		
+		@returns: a list of slot names
+		@rtype: list(str)
+		"""
+	
 	def get_template(self, req):
 		"""
 		Get an opaque value representing the template. For most template engines
@@ -134,7 +142,7 @@ class ITemplate(interface.Interface):
 		@returns: some value that makes sense to the template engine
 		"""
 	
-	def get_template_root(self, req):
+	def get_template_root(self, req, template=None):
 		"""
 		This function gives an opportunity for template resources to support an
 		arbitrary number of template distributions, to allow implementation of themes
@@ -263,6 +271,8 @@ class TemplateContent(object):
 		"""
 		Set a template varable slot to the provided value.
 		
+		@see: L{ITemplate.set_slot()}
+		
 		@param name: the name of the slot
 		@type name: str
 		
@@ -273,6 +283,8 @@ class TemplateContent(object):
 	def get_slot(self, name, default=None):
 		"""
 		Get a value out of the template data.
+		
+		@see: L{ITemplate.get_slot()}
 		
 		@param name: the slot to fetch
 		@type name: str
@@ -286,6 +298,17 @@ class TemplateContent(object):
 				return default
 			raise KeyError(name)
 		return self.data[name]
+	
+	def get_slots(self):
+		"""
+		Return a list of slots added to template.
+		
+		@see: L{ITemplate.get_slots()}
+		
+		@returns: a list of slot names
+		@rtype: list(str)
+		"""
+		return self.data.keys()
 	
 	def get_content(self, req):
 		"""
@@ -327,7 +350,7 @@ class TemplateContent(object):
 		"""
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 	
-	def get_template_root(self, req):
+	def get_template_root(self, req, template=None):
 		"""
 		@see: L{IContent.get_template_root()}
 		"""
@@ -371,8 +394,8 @@ class CheetahModuTemplate(CheetahTemplate):
 		"""
 		Return the proper template directory, if set by the user.
 		"""
-		if(hasattr(self, 'moduTemplateDirectory')):
-			templatePath = os.path.join(self.moduTemplateDirectory, path)
+		if(hasattr(self, 'moduTemplateDirectoryCallback')):
+			templatePath = os.path.join(self.moduTemplateDirectoryCallback(path), path)
 			return normpath(abspath(templatePath))
 		return super(CheetahModuTemplate, self).serverSidePath(path, normpath, abspath)
 
@@ -401,10 +424,13 @@ class CheetahTemplateContent(TemplateContent):
 		module_name = re.sub(r'\W+', '_', template)
 		module_path = os.path.join(self.get_template_root(req), module_name + '.py')
 		
-		# because we have to manage moduTemplateDirectory on the class instance
+		# because we have to manage moduTemplateDirectoryCallback on the class instance
 		cheetah_lock.acquire()
 		try:
-			CheetahModuTemplate.moduTemplateDirectory = self.get_template_root(req)
+			def _template_cb(parent_template, template):
+				return self.get_template_root(req, template)
+			
+			CheetahModuTemplate.moduTemplateDirectoryCallback = _template_cb
 		
 			try:
 				needs_recompile = (os.stat(template_path).st_mtime > os.stat(module_path).st_mtime)
@@ -430,7 +456,7 @@ class CheetahTemplateContent(TemplateContent):
 				module_file.write(pysrc)
 				module_file.close()
 		
-				exec(pysrc, moduleGlobals)
+				exec pysrc in moduleGlobals
 				self.template_class = moduleGlobals[module_name]
 			else:
 				self.template_class = CheetahModuTemplate.compile(file=open(template_path),

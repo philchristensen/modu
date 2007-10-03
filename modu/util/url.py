@@ -21,7 +21,6 @@ def urlparse(url):
 class URLNode(object):
 	def __init__(self, leaf_data=None):
 		self.children = {}
-		self.leaf_data = None
 		self.parsed_data = []
 		self.prepath = []
 		self.postpath = []

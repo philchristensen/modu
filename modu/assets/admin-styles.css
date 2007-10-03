@@ -86,3 +86,7 @@ label.field-label {
 	padding: 4px 8px 8px 8px;
 	vertical-align: top;
 }
+
+ul.subnav-list li.active {
+	font-weight: bold;
+}
