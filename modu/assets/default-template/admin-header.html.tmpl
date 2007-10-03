@@ -41,17 +41,17 @@
 <div id="content">
 
 #if $req.messages.count('error')
-<ul class="errors">
+<ul>
 #for $err in $req.messages.get('error')
-<li>$err</li>
+<li class="error">$err</li>
 #end for
 </ul>
 #end if
 
 #if $req.messages.count('message')
-<ul class="messages">
+<ul>
 #for $msg in $req.messages.get('message')
-<li>$msg</li>
+<li class="message">$msg</li>
 #end for
 </ul>
 #end if

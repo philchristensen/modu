@@ -90,3 +90,11 @@ label.field-label {
 ul.subnav-list li.active {
 	font-weight: bold;
 }
+
+.error {
+	color: #800;
+}
+
+.message {
+	color: #080;
+}
