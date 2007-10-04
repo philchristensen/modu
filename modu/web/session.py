@@ -97,9 +97,12 @@ class BaseSession(dict):
 		self._loaded = False
 		self._user = None
 		self._user_id = None
+		self._client_ip = None
 		
 		self._created = int(time.time())
 		self._timeout = 1800
+		
+		dispatch_cookie = False
 		
 		if(sid and validate_sid(sid)):
 			self._sid = sid
@@ -108,16 +111,21 @@ class BaseSession(dict):
 			if('sid' in self._cookie and validate_sid(self._cookie['sid'].value)):
 				self._sid = self._cookie['sid'].value
 			else:
-				self._cookie = Cookie.SimpleCookie()
-				self._sid = generate_token()
-				self._cookie['sid'] = self._sid
-				for k, v in self._cookie_params.items():
-					self._cookie['sid'][k] = v
-				self._send_cookie()
+				dispatch_cookie = True
 		
 		if(self._sid):
 			if(self.load()):
 				self._new = False
+			else:
+				dispatch_cookie = True
+		
+		if(dispatch_cookie):
+			self._cookie = Cookie.SimpleCookie()
+			self._sid = generate_token()
+			self._cookie['sid'] = self._sid
+			for k, v in self._cookie_params.items():
+				self._cookie['sid'][k] = v
+			self._send_cookie()
 		
 		self._accessed = int(time.time())
 		
@@ -169,6 +177,9 @@ class BaseSession(dict):
 			self.delete()
 			return False
 		
+		if(self._req['REMOTE_ADDR'] != result['client_ip']):
+			return False
+		
 		self._created  = result["created"]
 		self._accessed = result["accessed"]
 		self._timeout  = result["timeout"]
@@ -186,7 +197,8 @@ class BaseSession(dict):
 					"created" : self._created, 
 					"accessed": self._accessed, 
 					"timeout" : self._timeout,
-					"user_id" : self._user_id}
+					"user_id" : self._user_id,
+					"client_ip" : self._req['REMOTE_ADDR']}
 			self.debug('session cleanliness is: ' + str(self.is_clean()))
 			self.do_save(result)
 			self._new = False

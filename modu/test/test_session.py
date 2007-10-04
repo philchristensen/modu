@@ -20,6 +20,7 @@ CREATE TABLE `session` (
   `created` int(11),
   `accessed` int(11),
   `timeout` int(11),
+  `client_ip` varchar(255),
   `data` BLOB,
   PRIMARY KEY (id),
   KEY `user_idx` (`user_id`),
@@ -68,6 +69,7 @@ class DbSessionTestCase(unittest.TestCase):
 		environ['HTTP_HOST'] = '____basic-test-domain____:1234567'
 		environ['SERVER_NAME'] = '____basic-test-domain____'
 		environ['HTTP_PORT'] = '1234567'
+		environ['REMOTE_ADDR'] = '127.0.0.1'
 		
 		application = app.get_application(environ)
 		self.failIf(application is  None, "Didn't get an application object.")
@@ -86,6 +88,20 @@ class DbSessionTestCase(unittest.TestCase):
 		saved_sess = session.DbUserSession(req, self.store.pool, sid=sess.id())
 		self.failUnlessEqual(saved_sess.id(), sess.id(), "Found sid %s when expecting %s." % (saved_sess.id(), sess.id()))
 		self.failUnlessEqual(saved_sess['test_data'], 'test', "Session data was not saved properly.")
+	
+	
+	def test_ip_security(self):
+		req = self.get_request()
+		
+		sess = session.DbUserSession(req, self.store.pool)
+		sess['test_data'] = 'test'
+		sess.save()
+		
+		req['REMOTE_ADDR'] = '127.0.0.2'
+		saved_sess = session.DbUserSession(req, self.store.pool, sid=sess.id())
+		self.failIfEqual(saved_sess.id(), sess.id(), "Found saved sid %s and new sid %s." % (saved_sess.id(), sess.id()))
+		self.failIfEqual(saved_sess.get('test_data'), 'test', "Session data was not saved properly.")
+	
 	
 	def test_modify(self):
 		req = self.get_request()
