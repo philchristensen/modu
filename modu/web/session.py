@@ -5,9 +5,8 @@
 #
 # See LICENSE for details
 
-import Cookie, time, re, random
-
-import cPickle
+import Cookie, time, re, random, os
+import cPickle, thread, threading
 
 from modu.web import user
 from modu.persist import sql
@@ -49,19 +48,68 @@ def activate_session(req):
 		if(req.user is None and app.enable_anonymous_users):
 			req['modu.user'] = user.AnonymousUser()
 
-def generate_token(entropy=None):
-	"""
-	This function is used to generate "unique" session IDs. It's
-	not nearly as fancy as it probably should be.
-	"""
+def _init_rnd():
+	""" initialize random number generators
+	this is key in multithreaded env, see
+	python docs for random """
+	
+	# query max number of threads
+	
+	gennum = threading.activeCount()
+	
+	# make generators
+	# this bit is from Python lib reference
+	g = random.Random(time.time())
+	result = [g]
+	for i in range(gennum - 1):
+		laststate = g.getstate()
+		g = random.Random()
+		g.setstate(laststate)
+		g.jumpahead(1000000)
+		result.append(g)
+	
+	return result
+
+rnd_gens = _init_rnd()
+rnd_iter = iter(rnd_gens)
+
+def _get_generator():
+	# get rnd_iter.next(), or start over
+	# if we reached the end of it
+	global rnd_iter
+	try:
+		return rnd_iter.next()
+	except StopIteration:
+		# the small potential for two threads doing this
+		# seems does not warrant use of a lock
+		rnd_iter = iter(rnd_gens)
+		return rnd_iter.next()
+
+def _new_sid(req):
+	# Make a number based on current time, pid, remote ip
+	# and two random ints, then hash with md5. This should
+	# be fairly unique and very difficult to guess.
+	#
+	# WARNING
+	# The current implementation of _new_sid returns an
+	# md5 hexdigest string. To avoid a possible directory traversal
+	# attack in FileSession the sid is validated using
+	# the validate_sid() method and the compiled regex
+	# VALIDATE_SID_RE. The sid will be accepted only if len(sid) == 32
+	# and it only contains the characters 0-9 and a-f. 
+	t = long(time.time()*10000)
+	pid = os.getpid()
+	tid = thread.get_ident()
+	g = _get_generator()
+	rnd1 = g.randint(0, 999999999)
+	rnd2 = g.randint(0, 999999999)
+	ip = req['REMOTE_ADDR']
+	
 	try:
 		import hashlib
 	except:
 		import md5 as hashlib
-	if not(entropy):
-		entropy = random.randint(0, 1)
-	
-	return hashlib.md5(str(int(time.time() * entropy))).hexdigest()
+	return hashlib.md5("%d%d%d%d%d%s" % (t, pid, tid, rnd1, rnd2, ip)).hexdigest()
 
 def validate_sid(sid):
 	"""
@@ -121,7 +169,7 @@ class BaseSession(dict):
 		
 		if(dispatch_cookie):
 			self._cookie = Cookie.SimpleCookie()
-			self._sid = generate_token()
+			self._sid = _new_sid(req)
 			self._cookie['sid'] = self._sid
 			for k, v in self._cookie_params.items():
 				self._cookie['sid'][k] = v

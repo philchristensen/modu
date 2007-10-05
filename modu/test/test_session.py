@@ -153,7 +153,7 @@ class DbSessionTestCase(unittest.TestCase):
 	def test_noclobber(self):
 		req = self.get_request()
 		
-		sessid = session.generate_token()
+		sessid = session._new_sid(req)
 		sess = session.DbUserSession(req, self.store.pool, sessid)
 		sess2 = session.DbUserSession(req, self.store.pool, sessid)
 		sess['test_data'] = 'something'
