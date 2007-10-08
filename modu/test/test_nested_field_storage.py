@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+Test NestedField Storage.
+"""
+
 from modu.web import app
 from modu.util import form, test
 
@@ -13,12 +17,6 @@ from twisted.trial import unittest
 encodings = (('multipart', True), ('standard', False))
 
 class NestedFieldStorageTestCase(unittest.TestCase):
-	def setUp(self):
-		pass
-
-	def tearDown(self):
-		pass
-	
 	def get_request(self, post_data, multipart):
 		environ = test.generate_test_wsgi_environment(post_data, multipart)
 		environ['REQUEST_URI'] = '/app-test/test-resource'

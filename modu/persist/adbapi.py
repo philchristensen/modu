@@ -15,22 +15,32 @@ from modu.util import url
 
 def connect(db_url=None, async=False, *args, **kwargs):
 	"""
+	Get a new connection pool for a particular db_url.
+	
 	Accepts a DSN specified as a URL, and returns a new
 	connection pool object. If `async` is False (the default),
 	all database requests are made synchronously.
+	
+	@param db_url: A URL of the form C{drivername://user:password@host/dbname}
+	@type db_url: str
+	
+	@param async: if True, create an asynchronous connection pool object.
+	@type async: bool
+	
+	@param *args: other positional arguments to pass to the DB-API driver.
+	@param **kwargs: other keyword arguments to pass to the DB-API driver.
 	"""
-	if(db_url is not None):
-		dsn = get_dsn(db_url)
-		
-		dbapiName = dsn['dbapiName']
-		del dsn['dbapiName']
-		
-		globs = {}
-		exec('from modu.persist import adbapi_%s as db_driver' % dbapiName, globs)
-		dargs, dkwargs = globs['db_driver'].process_dsn(dsn)
-		kwargs.update(dkwargs)
-		args = list(args)
-		args.extend(dargs)
+	dsn = get_dsn(db_url)
+	
+	dbapiName = dsn['dbapiName']
+	del dsn['dbapiName']
+	
+	globs = {}
+	exec('from modu.persist import adbapi_%s as db_driver' % dbapiName, globs)
+	dargs, dkwargs = globs['db_driver'].process_dsn(dsn)
+	kwargs.update(dkwargs)
+	args = list(args)
+	args.extend(dargs)
 	
 	if(async):
 		return adbapi.ConnectionPool(dbapiName, *dargs, **dkwargs)
@@ -68,6 +78,12 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 	object so that it may be used from within a syncronous application
 	"""
 	def __init__(self, dbapiName, *connargs, **connkw):
+		"""
+		Create a new instance of the connection pool.
+		
+		This overridden constructor makes sure the Twisted reactor
+		doesn't get started in non-twisted.web-hosted environments.
+		"""
 		adbapi.ConnectionPool.__init__(self, dbapiName, *connargs, **connkw)
 		from twisted.internet import reactor
 		if(self.startID):
@@ -82,12 +98,31 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 	# 	return adbapi.ConnectionPool.runQuery(self, *args, **kwargs)
 	
 	def runInteraction(self, interaction, *args, **kw):
+		"""
+		Run a SQL statement through one of the connections in this pool.
+		
+		This version of the method does not spawn a thread, and so returns
+		the result directly, instead of a Deferred.
+		"""
 		return self._runInteraction(interaction, *args, **kw)
 	
 	def runWithConnection(self, func, *args, **kw):
+		"""
+		Run a function, passing it one of the connections in this pool.
+		
+		This version of the method does not spawn a thread, and so returns
+		the result directly, instead of a Deferred.
+		"""
 		return self._runWithConnection(func, *args, **kw)
 	
 	def _runInteraction(self, interaction, *args, **kw):
+		"""
+		An internal function to run a SQL statement through one of the connections in this pool.
+		
+		This version of the method ensures that all drivers return a column->value dict. This
+		can also be handled by the driver layer itself (e.g., by selecting a particular
+		cursor type).
+		"""
 		conn = adbapi.Connection(self)
 		trans = adbapi.Transaction(self, conn)
 		try:
