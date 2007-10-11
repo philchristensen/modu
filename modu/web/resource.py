@@ -420,9 +420,12 @@ class CheetahTemplateContent(TemplateContent):
 		super(CheetahTemplateContent, self).get_content(req)
 		
 		template = self.get_template(req)
-		template_path = os.path.join(self.get_template_root(req), template)
+		template_root = self.get_template_root(req)
+		template_path = os.path.join(template_root, template)
+		
 		module_name = re.sub(r'\W+', '_', template)
-		module_path = os.path.join(self.get_template_root(req), module_name + '.py')
+		module_root = req.app.config.get('compiled_template_root', template_root)
+		module_path = os.path.join(module_root, module_name + '.py')
 		
 		# because we have to manage moduTemplateDirectoryCallback on the class instance
 		cheetah_lock.acquire()
