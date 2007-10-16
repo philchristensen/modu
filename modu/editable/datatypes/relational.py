@@ -15,6 +15,8 @@ from modu.editable import IDatatype, define
 from modu.util import form, tags
 from modu.persist import sql
 
+from modu.persist.sql import escape_dot_syntax as q
+
 class ForeignLabelField(define.definition):
 	"""
 	Display a value from a foreign table based on this field's value.
@@ -31,7 +33,7 @@ class ForeignLabelField(define.definition):
 		label = self['flabel']
 		table = self['ftable']
 		
-		where = self.get('fwhere', 'WHERE `%s` = %%s' % value)
+		where = self.get('fwhere', 'WHERE %s = %%s' % q(value))
 		args = [getattr(storable, self.get_column_name(), None)]
 		
 		if(callable(where)):
@@ -41,7 +43,7 @@ class ForeignLabelField(define.definition):
 			where = sql.build_where(where)
 			args = []
 		
-		foreign_label_query = "SELECT `%s`, `%s` FROM `%s` %s" % (value, label, table, where)
+		foreign_label_query = "SELECT %s, %s FROM %s %s" % (q(value), q(label), q(table), where)
 		foreign_label_query = sql.interp(foreign_label_query, args)
 		
 		results = store.pool.runQuery(foreign_label_query)
@@ -78,7 +80,7 @@ class ForeignSelectField(define.definition):
 		if(isinstance(where, dict)):
 			where = sql.build_where(where)
 		
-		foreign_query = 'SELECT `%s`, `%s` FROM `%s` ' % (value, label, table)
+		foreign_query = 'SELECT %s, %s FROM %s ' % (q(value), q(label), q(table))
 		if(where):
 			foreign_query += where
 		
@@ -133,7 +135,7 @@ class ForeignAutocompleteField(define.definition):
 		table = self['ftable']
 		
 		if(hasattr(storable, self.name)):
-			query = 'SELECT `%s` FROM `%s` WHERE `%s` = %%s' % (label, table, value)
+			query = 'SELECT %s FROM %s WHERE %s = %%s' % (q(label), q(table), q(value))
 			
 			field_value = getattr(storable, self.get_column_name())
 			if(field_value is not None):
@@ -198,13 +200,13 @@ class ForeignMultipleSelectField(define.definition):
 		if(isinstance(where, dict)):
 			where = sql.build_where(where)
 		
-		ntom_query = """SELECT m.%s AS value, `%s` AS label, IF(n2m.%s, 1, 0) AS selected
-						FROM `%s` m
-						LEFT JOIN `%s` n2m ON m.%s = n2m.%s AND n2m.%s = %%s
+		ntom_query = """SELECT m.%s AS value, %s AS label, IF(n2m.%s, 1, 0) AS selected
+						FROM %s m
+						LEFT JOIN %s n2m ON m.%s = n2m.%s AND n2m.%s = %%s
 						%s
-						ORDER BY label""" % (self['fvalue'], mlabel, self['ntof_f_id'],
-										  self['ftable'],
-										  self['ntof'], self.get('fvalue', 'id'),
+						ORDER BY label""" % (self['fvalue'], q(mlabel), self['ntof_f_id'],
+										  q(self['ftable']),
+										  q(self['ntof']), self.get('fvalue', 'id'),
 										  self['ntof_f_id'], self['ntof_n_id'],
 										  where)
 		
@@ -286,16 +288,16 @@ class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 		
 		limit = 'LIMIT %d' % self.get('limit_choices', 20)
 		
-		ntom_query = """SELECT m.%s AS value, `%s` AS label
-						FROM `%s` m
-						INNER JOIN `%s` n2m ON m.%s = n2m.%s AND n2m.%s = %%s
+		ntom_query = """SELECT m.%s AS value, %s AS label
+						FROM %s m
+						INNER JOIN %s n2m ON m.%s = n2m.%s AND n2m.%s = %%s
 						%s
 						ORDER BY label
-						%s""" % (self['fvalue'], mlabel,
-										  self['ftable'],
-										  self['ntof'], self.get('fvalue', 'id'),
-										  self['ntof_f_id'], self['ntof_n_id'],
-										  where, limit)
+						%s""" % (self['fvalue'], q(mlabel),
+								q(self['ftable']),
+								q(self['ntof']), self.get('fvalue', 'id'),
+								self['ntof_f_id'], self['ntof_n_id'],
+								where, limit)
 		
 		store = storable.get_store()
 		results = store.pool.runQuery(ntom_query, storable.get_id())
