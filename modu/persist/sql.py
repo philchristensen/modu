@@ -248,7 +248,7 @@ def escape_dot_syntax(key):
 	return key
 
 
-def interp(query, args):
+def interp(query, args=[], *vargs):
 	"""
 	Interpolate the provided arguments into the provided query, using
 	the DB-API's default conversions, with the additional 'RAW' support
@@ -266,6 +266,10 @@ def interp(query, args):
 	#FIXME: an unfortunate MySQLdb dependency, for now
 	import MySQLdb
 	from MySQLdb import converters
+	
+	if not(isinstance(args, (tuple, list))):
+		args = [args]
+	args.extend(vargs)
 	
 	def UnicodeConverter(s, d):
 		return converters.string_literal(s.encode('utf8', 'replace'))
