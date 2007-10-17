@@ -155,7 +155,7 @@ class FormNode(object):
 				submits.extend(element.find_submit_buttons())
 		return submits
 	
-	def execute(self, req):
+	def execute(self, req, force=False):
 		"""
 		This function first identifies 	whether or not a submit button
 		was pressed. If so, it begins the validation process, then, if
@@ -168,10 +168,14 @@ class FormNode(object):
 			# in the submit POST data. This may not always work.
 			if(self.name in self.data and submit.name in self.data[self.name]):
 				self.submit_button = submit
-				self.load_data(self.data)
-				result = self.validate(req, self)
-				if(result):
-					return self.submit(req, self)
+				break
+		
+		if(self.submit_button or force):
+			self.load_data(self.data)
+			result = self.validate(req, self)
+			if(result):
+				return self.submit(req, self)
+		
 		return False
 	
 	def set_error(self, name, error):

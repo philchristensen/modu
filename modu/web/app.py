@@ -78,6 +78,7 @@ def handler(env, start_response):
 			if(resource.IAccessControl.providedBy(rsrc)):
 				rsrc.check_access(req)
 			
+			req['modu.resource'] = rsrc
 			content = rsrc.get_response(req)
 		finally:
 			# remember, req.get will return None if the session wasn't used
