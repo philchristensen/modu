@@ -94,6 +94,9 @@ class FormNode(object):
 		child.name = key
 		child.parent = self
 	
+	def __delitem__(self, key):
+		del self.children[key]
+	
 	def __len__(self):
 		return len(self.children)
 	
