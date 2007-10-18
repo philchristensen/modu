@@ -86,6 +86,9 @@ class FormNode(object):
 			self[key] = FormNode(key)(weight=len(self.children))
 		return self.children[key]
 	
+	def __nonzero__(self):
+		return True
+	
 	def __setitem__(self, key, child):
 		self.children[key] = child
 		child.name = key
