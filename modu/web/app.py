@@ -86,15 +86,32 @@ def handler(env, start_response):
 			if(req.get('modu.session', None) is not None):
 				req.session.save()
 	except web.HTTPStatus, http:
+		if('modu.app' in req and req.app.config.get('status_content')):
+			content_provider = req.app.status_content()
+			if(hasattr(content_provider, 'handles_status') and content_provider.handles_status(http)):
+				content_provider.prepare_content(req)
+				content = [content_provider.get_content(req)]
+				headers = [('Content-Type', content_provider.get_content_type(req))]
+				start_response(http.status, headers)
+				return content
+		
 		start_response(http.status, http.headers)
 		return http.content
-	except:
-		reason = failure.Failure()
-		log.err(reason)
-		content = ["<html><head><title>web.Server Traceback (most recent call last)</title></head>"
-			"<body><b>web.Server Traceback (most recent call last):</b>\n\n"
-			"%s\n\n</body></html>\n" % formatFailure(reason)]
-		start_response('500 Internal Server Error', [('Content-Type', 'text/html')])
+	except Exception, e:
+		if('modu.app' in req and req.app.config.get('error_content')):
+			content_provider = req.app.error_content()
+			content_provider.prepare_content(req)
+			content = [content_provider.get_content(req)]
+			headers = [('Content-Type', content_provider.get_content_type(req))]
+		else:
+			reason = failure.Failure()
+			log.err(reason)
+			content = ["<html><head><title>web.Server Traceback (most recent call last)</title></head>"
+				"<body><b>web.Server Traceback (most recent call last):</b>\n\n"
+				"%s\n\n</body></html>\n" % formatFailure(reason)]
+			headers = [('Content-Type', 'text/html')]
+		
+		start_response('500 Internal Server Error', headers)
 		return content
 	
 	start_response('200 OK', application.get_headers())
