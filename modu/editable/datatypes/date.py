@@ -53,6 +53,8 @@ class DateField(define.definition):
 		frm['null'](type='checkbox', text="no value", weight=-1, suffix=tags.br(), 
 			attributes=dict(onChange='enableDateField(this);'))
 		
+		req.content.report('header', tags.script(type="text/javascript",
+			src=req.get_path("/assets/jquery/jquery-1.2.1.js"))[''])
 		req.content.report('header', tags.script(type='text/javascript')["""
 			function enableDateField(checkboxField){
 				var formItem = $(checkboxField).parent().parent()
@@ -67,8 +69,11 @@ class DateField(define.definition):
 		
 		attribs = {}
 		if(value is None):
-			frm['null'](checked=True)
-			attribs['disabled'] = None
+			if(self.get('default_now', False)):
+				value = int(time.time())
+			else:
+				frm['null'](checked=True)
+				attribs['disabled'] = None
 		frm['date'](type=self.get('style', 'datetime'), value=value, attributes=attribs, start_year=start_year, end_year=end_year)
 		
 		return frm
