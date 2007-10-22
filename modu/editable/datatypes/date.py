@@ -32,7 +32,7 @@ class DateField(define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		value = date.convert_to_timestamp(getattr(storable, self.get_column_name(), None))
-		if(self.get('read_only', False)):
+		if(self.get('read_only', False) or style == 'listing'):
 			if(value):
 				output = time.strftime(self.get('format_string', '%B %d, %Y at %I:%M%p'), time.localtime(value))
 			else:
