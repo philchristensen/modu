@@ -97,7 +97,7 @@ def handler(env, start_response):
 		
 		start_response(http.status, http.headers)
 		return http.content
-	except Exception, e:
+	except:
 		if('modu.app' in req and req.app.config.get('error_content')):
 			content_provider = req.app.error_content()
 			content_provider.prepare_content(req)
