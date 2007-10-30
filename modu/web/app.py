@@ -461,8 +461,8 @@ class Request(dict):
 		
 		result = prefix + result
 		
-		if(hasattr(self.app, 'url_rewriter')):
-			result = self.app.url_rewriter(self, result)
+		if('url_rewriter' in self):
+			result = self['url_rewriter'](self, result)
 		
 		return result
 
