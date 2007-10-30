@@ -455,6 +455,15 @@ class Request(dict):
 		if(self.app.base_path == '/' and not args):
 			result = ''
 		
+		prefix = '%s://%s' % (self['REQUEST_SCHEME'], self.app.base_domain)
+		if('SERVER_PORT' in self and self['SERVER_PORT'] != '80'):
+			prefix += ':' + self['SERVER_PORT']
+		
+		result = prefix + result
+		
+		if(hasattr(self.app, 'url_rewriter')):
+			result = self.app.url_rewriter(self, result)
+		
 		return result
 
 
