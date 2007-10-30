@@ -451,8 +451,12 @@ class Request(dict):
 		
 		args = [_deslash(a) for a in args]
 		result = os.path.join(self.app.base_path, *args)
+		
 		if(self.app.base_path == '/' and not args):
-			return ''
+			result = ''
+		
+		if('modu.url_rewriter' in self and callable(self.url_rewriter)):
+			result = self.url_rewriter(req, result)
 		
 		return result
 
