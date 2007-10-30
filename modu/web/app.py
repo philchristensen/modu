@@ -455,9 +455,6 @@ class Request(dict):
 		if(self.app.base_path == '/' and not args):
 			result = ''
 		
-		if('modu.url_rewriter' in self and callable(self.url_rewriter)):
-			result = self.url_rewriter(self, result)
-		
 		return result
 
 
