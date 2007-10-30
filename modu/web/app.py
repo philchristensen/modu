@@ -456,7 +456,7 @@ class Request(dict):
 			result = ''
 		
 		if('modu.url_rewriter' in self and callable(self.url_rewriter)):
-			result = self.url_rewriter(req, result)
+			result = self.url_rewriter(self, result)
 		
 		return result
 
