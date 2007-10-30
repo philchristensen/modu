@@ -18,7 +18,10 @@
 
 #if $itemdef_layout and len($itemdef_layout)
 <ul id="nav-list">
-	#for $category, $itemdefs in $itemdef_layout.items()
+	#set categories = $itemdef_layout.keys()
+	#silent categories.sort()
+	#for $category in $categories
+	#set itemdefs = $itemdef_layout[category]
 	<li>
 		$category
 		<ul class="subnav-list">
