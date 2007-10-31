@@ -306,6 +306,7 @@ def _scan_sites(env):
 	reload(modu.sites)
 	
 	for site_plugin in plugin.getPlugins(ISite, modu.sites):
+		print 'found site config %r' % site_plugin
 		site = site_plugin()
 		app = Application(site)
 		
