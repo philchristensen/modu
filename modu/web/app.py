@@ -120,7 +120,9 @@ def handler(env, start_response):
 		start_response('500 Internal Server Error', headers)
 		return content
 	
-	start_response('200 OK', application.get_headers())
+	headers = application.get_headers()
+	print 'returned 200 OK with headers: %s' % headers
+	start_response('200 OK', headers)
 	return content
 
 
