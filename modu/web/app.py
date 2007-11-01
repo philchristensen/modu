@@ -93,9 +93,14 @@ def handler(env, start_response):
 			if(hasattr(content_provider, 'handles_status') and content_provider.handles_status(http)):
 				content_provider.prepare_content(req)
 				content = [content_provider.get_content(req)]
-				headers = [('Content-Type', content_provider.get_content_type(req))]
-				start_response(http.status, headers)
-				return content
+				set_content_type = False
+				for item in http.headers:
+					if(item[0].lower() == 'content-type'):
+						item[1] = content_provider.get_content_type(req)
+						set_content_type = True
+				if not(set_content_type):
+					http.headers.append(('Content-Type', content_provider.get_content_type(req)))
+				http.content = content
 		
 		start_response(http.status, http.headers)
 		return http.content
