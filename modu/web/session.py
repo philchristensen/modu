@@ -273,6 +273,12 @@ class BaseSession(dict):
 	def timeout(self):
 		return self._timeout
 	
+	def set_auth_token(self, auth_token):
+		self._auth_token = auth_token
+	
+	def get_auth_token(self):
+		return self._auth_token
+	
 	def set_timeout(self, secs):
 		self._timeout = secs
 	
