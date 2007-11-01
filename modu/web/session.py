@@ -202,6 +202,7 @@ class BaseSession(dict):
 		cookie_data = self._cookie.output()
 		for header in cookie_data.split("\n"):
 			header, data = header.split(":")
+			print 'adding header: %s: %s' % (header, data)
 			self._req.app.add_header(header, data)
 	
 	def invalidate(self):
