@@ -45,6 +45,7 @@ def handler(env, start_response):
 	The primary WSGI application object.
 	"""
 	req = {}
+	application = None
 	try:
 		try:
 			application = get_application(env)
@@ -86,7 +87,9 @@ def handler(env, start_response):
 			if(req.get('modu.session', None) is not None):
 				req.session.save()
 	except web.HTTPStatus, http:
-		headers = http.headers + application.get_headers()
+		headers = http.headers
+		if(application):
+			headers += application.get_headers()
 		content = http.content
 		
 		if('modu.app' in req and req.app.config.get('status_content')):
