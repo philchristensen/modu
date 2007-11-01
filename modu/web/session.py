@@ -146,6 +146,7 @@ class BaseSession(dict):
 		self._user = None
 		self._user_id = None
 		self._client_ip = None
+		self._auth_token = None
 		
 		self._created = int(time.time())
 		self._timeout = 1800
@@ -229,6 +230,7 @@ class BaseSession(dict):
 			return False
 		
 		self._created  = result["created"]
+		self._auth_token = result["auth_token"]
 		self._accessed = result["accessed"]
 		self._timeout  = result["timeout"]
 		self._user_id = result.get("user_id", None)
@@ -246,6 +248,7 @@ class BaseSession(dict):
 					"accessed": self._accessed, 
 					"timeout" : self._timeout,
 					"user_id" : self._user_id,
+					"auth_token" : self._auth_token,
 					"client_ip" : self._req['REMOTE_ADDR']}
 			self.debug('session cleanliness is: ' + str(self.is_clean()))
 			self.do_save(result)
