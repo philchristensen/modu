@@ -87,7 +87,6 @@ def handler(env, start_response):
 				print 'saving session'
 				req.session.save()
 	except web.HTTPStatus, http:
-		print 'got status'
 		if('modu.app' in req and req.app.config.get('status_content')):
 			content_provider = req.app.status_content()
 			if(hasattr(content_provider, 'handles_status') and content_provider.handles_status(http)):
@@ -101,7 +100,7 @@ def handler(env, start_response):
 				if not(set_content_type):
 					http.headers.append(('Content-Type', content_provider.get_content_type(req)))
 				http.content = content
-		
+		print 'got status %s, headers %s' % (http.status, http.headers)
 		start_response(http.status, http.headers)
 		return http.content
 	except:
