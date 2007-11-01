@@ -84,25 +84,19 @@ def handler(env, start_response):
 			# remember, req.get will return None if the session wasn't used
 			# in this page load
 			if(req.get('modu.session', None) is not None):
-				print 'saving session'
 				req.session.save()
 	except web.HTTPStatus, http:
+		headers = http.headers + application.get_headers()
+		content = http.content
+		
 		if('modu.app' in req and req.app.config.get('status_content')):
 			content_provider = req.app.status_content()
 			if(hasattr(content_provider, 'handles_status') and content_provider.handles_status(http)):
 				content_provider.prepare_content(req)
 				content = [content_provider.get_content(req)]
-				set_content_type = False
-				for item in http.headers:
-					if(item[0].lower() == 'content-type'):
-						item[1] = content_provider.get_content_type(req)
-						set_content_type = True
-				if not(set_content_type):
-					http.headers.append(('Content-Type', content_provider.get_content_type(req)))
-				http.content = content
-		print 'got status %s, headers %s' % (http.status, http.headers)
-		start_response(http.status, http.headers)
-		return http.content
+		
+		start_response(http.status, headers)
+		return content
 	except:
 		if('modu.app' in req and req.app.config.get('error_content')):
 			content_provider = req.app.error_content()
@@ -120,9 +114,7 @@ def handler(env, start_response):
 		start_response('500 Internal Server Error', headers)
 		return content
 	
-	headers = application.get_headers()
-	print 'returned 200 OK with headers: %s' % headers
-	start_response('200 OK', headers)
+	start_response('200 OK', application.get_headers())
 	return content
 
 
