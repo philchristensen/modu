@@ -84,8 +84,10 @@ def handler(env, start_response):
 			# remember, req.get will return None if the session wasn't used
 			# in this page load
 			if(req.get('modu.session', None) is not None):
+				print 'saving session'
 				req.session.save()
 	except web.HTTPStatus, http:
+		print 'got status'
 		if('modu.app' in req and req.app.config.get('status_content')):
 			content_provider = req.app.status_content()
 			if(hasattr(content_provider, 'handles_status') and content_provider.handles_status(http)):
