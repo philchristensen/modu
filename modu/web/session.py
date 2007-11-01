@@ -85,13 +85,13 @@ def _get_generator():
 		rnd_iter = iter(rnd_gens)
 		return rnd_iter.next()
 
-def _new_sid(req):
+def new_sid(req):
 	# Make a number based on current time, pid, remote ip
 	# and two random ints, then hash with md5. This should
 	# be fairly unique and very difficult to guess.
 	#
 	# WARNING
-	# The current implementation of _new_sid returns an
+	# The current implementation of new_sid returns an
 	# md5 hexdigest string. To avoid a possible directory traversal
 	# attack in FileSession the sid is validated using
 	# the validate_sid() method and the compiled regex
@@ -169,7 +169,7 @@ class BaseSession(dict):
 		
 		if(dispatch_cookie):
 			self._cookie = Cookie.SimpleCookie()
-			self._sid = _new_sid(req)
+			self._sid = new_sid(req)
 			self._cookie['sid'] = self._sid
 			for k, v in self._cookie_params.items():
 				self._cookie['sid'][k] = v

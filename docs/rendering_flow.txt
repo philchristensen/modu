@@ -1,0 +1,11 @@
+Method Call Order for Rendering Flow
+------------------------------------
+
+1. IResource::get_response()
+2.     IResource::get_content_provider()
+3.     IAccessControl::check_access()
+4.     IContent::prepare_content()
+5.     IContent::get_content_type()
+6.     IContent::get_content()
+7.         ITemplate::get_template()
+8.         ITemplate::get_template_root()
