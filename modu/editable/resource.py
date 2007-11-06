@@ -66,6 +66,7 @@ def submit_login(req, form):
 	u = req.store.load_one('user', username=form_data['username'].value, crypt=sql.RAW(encrypt_sql))
 	if(u):
 		req.session.set_user(u)
+		app.redirect(req.get_path(req.path))
 	else:
 		req.messages.report('error', "Sorry, that login was incorrect.")
 
@@ -210,10 +211,9 @@ class AdminResource(resource.CheetahTemplateResource):
 		login_form.validate = validate_login
 		login_form.submit = submit_login
 		
-		if(login_form.execute(req) and req.session.get_user()):
-			app.redirect(req.get_path(self.path))
-		else:
-			self.set_slot('login_form', login_form.render(req))
+		login_form.execute(req)
+		
+		self.set_slot('login_form', login_form.render(req))
 	
 	
 	def prepare_listing(self, req, itemdef):
