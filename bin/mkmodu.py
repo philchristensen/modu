@@ -15,6 +15,10 @@ class Options(usage.Options):
 	
 	def parseArgs(self, shortname):
 		self['shortname'] = shortname
+		if not self['longname']:
+			self['longname'] = self['shortname']
+		if not self['author']:
+			self['author'] = self['shortname']
 
 if(__name__ == '__main__'):
 	config = Options()
@@ -31,8 +35,11 @@ if(__name__ == '__main__'):
 	destroot = os.path.normpath(config['shortname'])
 	
 	for dirpath, dirnames, filenames in os.walk(skelroot):
-		print (dirpath, dirnames, filenames)
-		created_dir = os.path.join(destroot, dirpath[5:])
+		#print (dirpath, dirnames, filenames)
+		stub = dirpath[5:]
+		if(stub.startswith('.')):
+			continue
+		created_dir = os.path.join(destroot, stub)
 		os.mkdir(created_dir)
 		
 		for filename in filenames:
@@ -48,7 +55,7 @@ if(__name__ == '__main__'):
 					copyright_holder = config.get('author', config['shortname']),
 					year = time.strftime('%Y')
 				)
-				
+				print variables
 				output = str(template_class(searchList=[variables]))
 				newfile = os.path.join(created_dir, filename[:-5])
 				
