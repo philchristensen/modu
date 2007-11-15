@@ -38,8 +38,8 @@ class FileResource(object):
 		self.root = root
 	
 	def get_response(self, req):
-		req.app.add_header('Content-Type', self.content_type)
-		req.app.add_header('Content-Length', self.size)
+		req.add_header('Content-Type', self.content_type)
+		req.add_header('Content-Length', self.size)
 		file_wrapper = req['wsgi.file_wrapper']
 		return file_wrapper(open(self.true_path))
 	
@@ -53,7 +53,8 @@ class FileResource(object):
 		except IOError:
 			app.raise403('Cannot discern type: %s' % req['REQUEST_URI'])
 		except (TypeError, OSError):
-			return self._return_alternate(req)
+			rsrc = self._return_alternate(req)
+			return rsrc[0](*rsrc[1], **rsrc[2])
 		
 		return self
 	

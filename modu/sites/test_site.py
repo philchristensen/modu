@@ -106,9 +106,9 @@ class BasicTestSite(object):
 		application.db_url = None
 		application.session_class = None
 		application.initialize_store = False
-		application.activate(TestResource())
-		application.activate(TestDelegateResource())
-		application.activate(TestAccessControlResource())
+		application.activate(TestResource)
+		application.activate(TestDelegateResource)
+		application.activate(TestAccessControlResource)
 
 
 class BasicRootTestSite(object):
@@ -125,9 +125,9 @@ class BasicRootTestSite(object):
 		application.db_url = None
 		application.session_class = None
 		application.initialize_store = False
-		application.activate(TestResource())
-		application.activate(TestDelegateResource())
-		application.activate(TestAccessControlResource())
+		application.activate(TestResource)
+		application.activate(TestDelegateResource)
+		application.activate(TestAccessControlResource)
 
 
 class StoreTestSite(object):
@@ -143,8 +143,8 @@ class StoreTestSite(object):
 		application.base_domain = '____store-test-domain____:1234567'
 		application.base_path = '/app-test'
 		application.session_class = None
-		application.activate(TestResource())
-		application.activate(TestDelegateResource())
-		application.activate(TestAccessControlResource())
+		application.activate(TestResource)
+		application.activate(TestDelegateResource)
+		application.activate(TestAccessControlResource)
 
 

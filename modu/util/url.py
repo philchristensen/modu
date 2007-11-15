@@ -57,21 +57,20 @@ class URLNode(object):
 					node.leaf_data = data
 	
 	def parse(self, fragment):
-		self.postpath = filter(None, fragment.split('/'))
+		prepath = []
+		postpath = filter(None, fragment.split('/'))
 		
 		node = self
-		while(self.postpath):
-			segment = self.postpath.pop(0)
+		while(postpath):
+			segment = postpath.pop(0)
 			if(segment not in node.children):
-				self.postpath.insert(0, segment)
-				self.parsed_data = node.leaf_data
-				return self.parsed_data
+				postpath.insert(0, segment)
+				return node.leaf_data, prepath, postpath
 				
-			self.prepath.append(segment)
+			prepath.append(segment)
 			node = node.children[segment]
 		
-		self.parsed_data = node.leaf_data
-		return self.parsed_data
+		return node.leaf_data, prepath, postpath
 	
 	def get_data_at(self, fragment):
 		postpath = filter(None, fragment.split('/'))

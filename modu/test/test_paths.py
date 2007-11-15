@@ -27,32 +27,36 @@ class PathTestCase(unittest.TestCase):
 	
 	def test_with_path(self):
 		req = self.get_request('/app-test/test-resource')
-		self.failUnlessEqual(req.app.base_path, '/app-test', "Found %s when expecting %s." % (req.app.base_path, '/app-test'))
+		expecting = '/app-test'
+		got = req.app.base_path
+		self.failUnlessEqual(expecting, got, "Found %s when expecting %s." % (got, expecting))
 		
-		expecting = '/app-test/one'
+		expecting = 'http://____basic-test-domain____:1234567/app-test/one'
 		got = req.get_path('one')
 		self.failUnlessEqual(expecting, got, "Found %s when expecting %s." % (got, expecting))
 		
-		expecting = '/app-test/'
+		expecting = 'http://____basic-test-domain____:1234567/app-test/'
 		got = req.get_path('/')
 		self.failUnlessEqual(expecting, got, "Found %s when expecting %s." % (got, expecting))
 		
-		expecting = '/app-test'
+		expecting = 'http://____basic-test-domain____:1234567/app-test'
 		got = req.get_path()
 		self.failUnlessEqual(expecting, got, "Found %s when expecting %s." % (got, expecting))
 	
 	def test_without_path(self):
 		req = self.get_request('/test-resource')
-		self.failUnlessEqual(req.app.base_path, '/', "Found %s when expecting %s." % (req.app.base_path, '/'))
+		expecting = '/'
+		got = req.app.base_path
+		self.failUnlessEqual(expecting, got, "Found %s when expecting %s." % (got, expecting))
 		
-		expecting = '/one'
+		expecting = 'http://____basic-test-domain____:1234567/one'
 		got = req.get_path('one')
 		self.failUnlessEqual(expecting, got, "Found %s when expecting %s." % (got, expecting))
 		
-		expecting = '/'
+		expecting = 'http://____basic-test-domain____:1234567/'
 		got = req.get_path('/')
 		self.failUnlessEqual(expecting, got, "Found %s when expecting %s." % (got, expecting))
 		
-		expecting = ''
+		expecting = 'http://____basic-test-domain____:1234567'
 		got = req.get_path()
 		self.failUnlessEqual(expecting, got, "Found %s when expecting %s." % (got, expecting))

@@ -224,12 +224,12 @@ class Resource(object):
 		
 		cnt.prepare_content(req)
 		
-		req.app.add_header('Content-Type', cnt.get_content_type(req))
+		req.add_header('Content-Type', cnt.get_content_type(req))
 		
 		content = cnt.get_content(req)
 		
 		if(isinstance(content, str)):
-			req.app.add_header('Content-Length', len(content))
+			req.add_header('Content-Length', len(content))
 			return [content]
 		else:
 			return content

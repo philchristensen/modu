@@ -21,6 +21,7 @@ CREATE TABLE `session` (
   `accessed` int(11),
   `timeout` int(11),
   `client_ip` varchar(255),
+  `auth_token` varchar(255),
   `data` BLOB,
   PRIMARY KEY (id),
   KEY `user_idx` (`user_id`),
@@ -153,7 +154,7 @@ class DbSessionTestCase(unittest.TestCase):
 	def test_noclobber(self):
 		req = self.get_request()
 		
-		sessid = session._new_sid(req)
+		sessid = session.new_sid(req)
 		sess = session.DbUserSession(req, self.store.pool, sessid)
 		sess2 = session.DbUserSession(req, self.store.pool, sessid)
 		sess['test_data'] = 'something'
@@ -182,7 +183,7 @@ class DbSessionTestCase(unittest.TestCase):
 		sess.set_user(usr)
 		sess.save()
 		
-		for header, data in req.app.get_headers():
+		for header, data in req.get_headers():
 			if(header == 'Set-Cookie'):
 				req['HTTP_COOKIE'] = data.strip()
 		

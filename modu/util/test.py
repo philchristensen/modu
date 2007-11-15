@@ -29,6 +29,20 @@ CREATE TABLE IF NOT EXISTS `page` (
   UNIQUE KEY `code_uni` (`code`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+DROP TABLE IF EXISTS `subpage`;
+CREATE TABLE IF NOT EXISTS `subpage` (
+  `id` bigint(20) unsigned NOT NULL default 0,
+  `code` varchar(128) NOT NULL default '',
+  `password` varchar(255) NOT NULL default '',
+  `category_id` int(11) NOT NULL default 0,
+  `content` text NOT NULL,
+  `title` varchar(64) NOT NULL default '',
+  `created_date` int(11) NOT NULL default '0',
+  `modified_date` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `code_uni` (`code`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 DROP TABLE IF EXISTS `category`;
 CREATE TABLE IF NOT EXISTS `category` (
   `id` bigint(20) unsigned NOT NULL default 0,

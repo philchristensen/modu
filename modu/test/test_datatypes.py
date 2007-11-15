@@ -151,7 +151,7 @@ class DatatypesTestCase(unittest.TestCase):
 		
 		reference_form = form.FormNode('test-row')
 		reference_form['linked_name'](type='label', label='Name', value='Linked Name',
-										prefix=tags.a(href='/app-test/detail/test/0', __no_close=True), suffix='</a>')
+										prefix=tags.a(href='http://____store-test-domain____:1234567/app-test/detail/test/0', __no_close=True), suffix='</a>')
 		
 		itemdef_form_html = itemdef_form[0].render(req)
 		reference_form_html = reference_form.render(req)
@@ -449,7 +449,7 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['name']['name-autocomplete'](type='textfield', weight=0,
 								attributes={'id':'test-form-name-autocomplete'})
 		reference_form['name']['ac-support'](weight=1, value=tags.script(type='text/javascript')
-									['$("#test-form-name-autocomplete").autocomplete("/app-test/autocomplete/test/name", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, selectOnly:1, minChars:3, maxItemsToShow:10});'])
+									['$("#test-form-name-autocomplete").autocomplete("http://____store-test-domain____:1234567/app-test/autocomplete/test/name", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, selectOnly:1, minChars:3, maxItemsToShow:10});'])
 		reference_form['name']['name'](type='hidden', weight=2, value=0,
 								attributes={'id':'test-form-name-ac-callback'})
 		reference_form['save'](type='submit', value='save', weight=1000)

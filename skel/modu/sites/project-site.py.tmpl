@@ -12,17 +12,5 @@ class Site(object):
 	def initialize(self, application):
 		application.base_domain = 'localhost'
 		
-		application.activate(resource.AdminResource(default_listing='page'))
-		application.activate(index.Resource())
-	
-	def configure_request(self, req):
-		"""
-		Called for every request, before resource selection.
-		"""
-		\# The default behavior is to save compiled templates in the same
-		\# directory as the template itself, but this is better.
-		\# It could be hard-coded into the initialize() function if
-		\# performance is a primary concern.
-		compiled_template_root = os.path.join(req.approot, 'var')
-		if(os.path.exists(compiled_template_root)):
-			req.app.config['compiled_template_root'] = compiled_template_root
+		application.activate(resource.AdminResource, default_listing='page')
+		application.activate(index.Resource)

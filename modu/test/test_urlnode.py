@@ -24,27 +24,27 @@ class URLNodeTestCase(unittest.TestCase):
 		pass
 	
 	def test_root(self):
-		result = self.tree.parse('/')
+		result, prepath, postpath = self.tree.parse('/')
 		self.failUnlessEqual(result, 'SLASH', "Didn't find 'SLASH' where I expected")
 	
 	def test_one(self):
-		result = self.tree.parse('/one/and/some/extra/crud')
+		result, prepath, postpath = self.tree.parse('/one/and/some/extra/crud')
 		self.failUnlessEqual(result, 'ONE', "Didn't find 'ONE' where I expected")
 		
 	def test_two(self):
-		result = self.tree.parse('/one/two/some/extra/crud')
+		result, prepath, postpath = self.tree.parse('/one/two/some/extra/crud')
 		self.failUnlessEqual(result, 'TWO', "Didn't find 'TWO' where I expected")
 		
 	def test_three(self):
-		result = self.tree.parse('/three')
+		result, prepath, postpath = self.tree.parse('/three')
 		self.failUnlessEqual(result, 'THREE', "Didn't find 'THREE' where I expected")
 		
 	def test_slash(self):
-		result = self.tree.parse('/something/else')
+		result, prepath, postpath = self.tree.parse('/something/else')
 		self.failUnlessEqual(result, 'SLASH', "Didn't find 'SLASH' where I expected")
 		
 	def test_long(self):
-		result = self.tree.parse('/this/is/a/long/url')
+		result, prepath, postpath = self.tree.parse('/this/is/a/long/url')
 		self.failUnlessEqual(result, 'LONG', "Didn't find 'LONG' where I expected")
 	
 	def test_collision(self):
@@ -55,7 +55,7 @@ class URLNodeTestCase(unittest.TestCase):
 	def test_bug1(self):
 		tree = url.URLNode()
 		tree.register('/', 'SLASH')
-		result = tree.parse('/status')
+		result, prepath, postpath = tree.parse('/status')
 		self.failUnlessEqual(result, 'SLASH', "Root resource was not returned properly")
 	
 	def test_bug2(self):

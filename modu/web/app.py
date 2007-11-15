@@ -44,7 +44,9 @@ def handler(env, start_response):
 	"""
 	The primary WSGI application object.
 	"""
-	req = {}
+	# just in case an error occurs before the request is created for real
+	# this lets the error pages add headers to the request response
+	req = Request()
 	application = None
 	try:
 		try:
@@ -89,7 +91,7 @@ def handler(env, start_response):
 	except web.HTTPStatus, http:
 		headers = http.headers
 		if(application):
-			headers += application.get_headers()
+			headers += req.get_headers()
 		content = http.content
 		
 		if('modu.app' in req and req.app.config.get('status_content')):
@@ -117,7 +119,7 @@ def handler(env, start_response):
 		start_response('500 Internal Server Error', headers)
 		return content
 	
-	start_response('200 OK', application.get_headers())
+	start_response('200 OK', req.get_headers())
 	return content
 
 
@@ -185,7 +187,9 @@ def get_application(req):
 	finally:
 		host_tree_lock.release()
 	
-	return copy.deepcopy(app)
+	# we should no longer be mutating the app at any point
+	#return copy.deepcopy(app)
+	return app
 
 
 def redirect(url, permanent=False):
@@ -309,7 +313,7 @@ def _scan_sites(env):
 	reload(modu.sites)
 	
 	for site_plugin in plugin.getPlugins(ISite, modu.sites):
-		print 'found site config %r' % site_plugin
+		#print 'found site config %r' % site_plugin
 		site = site_plugin()
 		app = Application(site)
 		
@@ -318,8 +322,7 @@ def _scan_sites(env):
 		if('SCRIPT_FILENAME' in env):
 			root = app.tree.get_data_at('/')
 			webroot = os.path.join(env['SCRIPT_FILENAME'], app.webroot)
-			file_root = static.FileResource(['/'], webroot, root)
-			app.tree.register('/', file_root, clobber=True)
+			app.tree.register('/', (static.FileResource, (['/'], webroot, root), {}), clobber=True)
 		
 		domain = app.base_domain
 		if(domain.find(':') == -1):
@@ -366,6 +369,8 @@ class Request(dict):
 		self.jit_handlers = {}
 		self.prepath = []
 		self.postpath = []
+		
+		self.response_headers = []
 	
 	def __getattr__(self, key):
 		"""
@@ -427,9 +432,14 @@ class Request(dict):
 		"""
 		if(self.rsrc):
 			return self.rsrc
-		self.rsrc = self.app.tree.parse(self.path)
-		self.prepath = self.app.tree.prepath
-		self.postpath = self.app.tree.postpath
+		
+		rsrc, self.prepath, self.postpath = self.app.tree.parse(self.path)
+		
+		if not(rsrc):
+			raise404("No such resource: %s" % self['REQUEST_URI'])
+		
+		self.rsrc = rsrc[0](*rsrc[1], **rsrc[2])
+		
 		return self.rsrc
 	
 	def log_error(self, data):
@@ -460,7 +470,7 @@ class Request(dict):
 			result = ''
 		
 		prefix = '%s://%s' % (self['REQUEST_SCHEME'], self.app.base_domain)
-		if('SERVER_PORT' in self and self['SERVER_PORT'] != '80'):
+		if('SERVER_PORT' in self and self['SERVER_PORT'] != '80' and self.app.base_domain.find(':') == -1):
 			prefix += ':' + self['SERVER_PORT']
 		
 		result = prefix + result
@@ -469,7 +479,28 @@ class Request(dict):
 			result = self['url_rewriter'](self, result)
 		
 		return result
-
+	
+	def add_header(self, header, data):
+		"""
+		Store headers for later retrieval.
+		"""
+		self.response_headers.append((header, data))
+	
+	def has_header(self, header):
+		"""
+		Check if a header has ever been set.
+		"""
+		for h, d in self.response_headers:
+			if(h == header):
+				return True
+		return False
+	
+	def get_headers(self):
+		"""
+		Get accumulated headers
+		"""
+		return self.response_headers
+	
 
 class Application(object):
 	"""
@@ -483,7 +514,6 @@ class Application(object):
 	"""
 	def __init__(self, site):
 		_dict = self.__dict__
-		_dict['_response_headers'] = []
 		_dict['config'] = {}
 		
 		self.base_domain = 'localhost'
@@ -511,39 +541,18 @@ class Application(object):
 			return super(Application, self).__getattr__(key)
 		return self.__dict__['config'][key]
 	
-	def activate(self, rsrc):
+	def activate(self, rsrc, *args, **kwargs):
 		"""
 		Add a resource to this site's URLNode tree
 		"""
-		if not resource.IResource.providedBy(rsrc):
+		if not resource.IResource.implementedBy(rsrc):
 			raise TypeError('%r does not implement IResource' % rsrc)
 		
-		for path in rsrc.get_paths():
-			self.tree.register(path, rsrc)
+		for path in rsrc(*args, **kwargs).get_paths():
+			self.tree.register(path, (rsrc, args, kwargs))
 	
 	def get_tree(self):
 		"""
 		Return this site's URLNode tree
 		"""
 		return self.tree
-	
-	def add_header(self, header, data):
-		"""
-		Store headers for later retrieval.
-		"""
-		self._response_headers.append((header, data))
-	
-	def has_header(self, header):
-		"""
-		Check if a header has ever been set.
-		"""
-		for h, d in self._response_headers:
-			if(h == header):
-				return True
-		return False
-	
-	def get_headers(self):
-		"""
-		Get accumulated headers
-		"""
-		return self._response_headers
