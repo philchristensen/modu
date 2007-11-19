@@ -1,8 +1,6 @@
 \# $project_description
 \# Copyright (C) $year $copyright_holder
-\#
-#echo '# $' + 'Id$'
-\#
+#echo '#\n# $' + 'Id$\n#\n'
 
 from modu import util
 from modu.editable import define
@@ -12,7 +10,7 @@ __itemdef__ = define.itemdef(
 	__config			= dict(
 		name			= 'page',
 		label			= 'pages',
-		acl				= 'access pages',
+		acl				= 'access admin',
 		category		= 'site content',
 		weight			= 1
 	),

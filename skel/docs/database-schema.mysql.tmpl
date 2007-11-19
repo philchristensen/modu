@@ -72,3 +72,9 @@ CREATE TABLE `page` (
   KEY active_idx(`active`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
 
+INSERT INTO `guid` (`guid`) VALUES (4);
+INSERT INTO `user` (`id`, `username`, `first`, `last`, `crypt`) VALUES (1, 'admin', 'Admin', 'User', ENCRYPT('admin'));
+INSERT INTO `role` (`id`, `name`) VALUES (2, 'admin user');
+INSERT INTO `user_role` (`user_id`, `role_id`) VALUES (1, 2);
+INSERT INTO `permission` (`id`, `name`) VALUES (3, 'access admin');
+INSERT INTO `role_permission` (`role_id`, `permission_id`) VALUES (2, 3);

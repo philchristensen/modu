@@ -39,6 +39,8 @@ if(__name__ == '__main__'):
 		stub = dirpath[5:]
 		if(stub.startswith('.')):
 			continue
+		if(stub.startswith('project')):
+			stub = stub.replace('project', config['shortname'])
 		created_dir = os.path.join(destroot, stub)
 		os.mkdir(created_dir)
 		
@@ -57,7 +59,10 @@ if(__name__ == '__main__'):
 				)
 				print variables
 				output = str(template_class(searchList=[variables]))
-				newfile = os.path.join(created_dir, filename[:-5])
+				new_filename = filename[:-5]
+				if(new_filename.startswith('project')):
+					new_filename = new_filename.replace('project', config['shortname'])
+				newfile = os.path.join(created_dir, new_filename)
 				
 				nf = open(newfile, 'w')
 				nf.write(output)
