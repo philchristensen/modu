@@ -86,6 +86,8 @@ class TextAreaField(SearchFieldMixin, define.definition):
 		frm(value=getattr(storable, self.get_column_name(), ''))
 		if(style == 'listing' or self.get('read_only', False)):
 			frm(type='label')
+		elif(style == 'search'):
+			frm(type='textfield', size=20)
 		else:
 			frm(type='textarea')
 		return frm
@@ -108,7 +110,10 @@ class PasswordField(define.definition):
 			entry_frm(type='label')
 			if(self.get('obfuscate', True)):
 				entry_frm(value='********')
-			return frm
+			return entry_frm
+		elif(style == 'search'):
+			entry_frm(type='textfield', size=20)
+			return entry_frm
 		
 		if(self.get('obfuscate', True)):
 			entry_frm(type='password')

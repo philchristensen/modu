@@ -267,15 +267,16 @@ class AdminResource(resource.CheetahTemplateResource):
 			data = {}
 			data.update(ordering_dict)
 			for key, value in search_data.items():
-				session_search_data[key] = value.value
 				result = itemdef[key].get_search_value(value.value)
+				session_search_data[key] = value.value
+				key = itemdef[key].get('column', key)
 				if(result is not None):
 					if(isinstance(result, dict)):
-						for key, value in result.items():
-							data[key] = value
+						for k, v in result.items():
+							data[k] = v
 					else:
 						data[key] = result
-			
+			print 'post: %s' % data
 			items = pager.get_results(req.store, table_name, data)
 		elif(session_search_data):
 			search_data = {search_form.name:session_search_data}
@@ -285,15 +286,17 @@ class AdminResource(resource.CheetahTemplateResource):
 			data.update(ordering_dict)
 			for key, value in session_search_data.items():
 				result = itemdef[key].get_search_value(value)
+				key = itemdef[key].get('column', key)
 				if(result is not None):
 					if(isinstance(result, dict)):
-						for key, value in result.items():
-							data[key] = value
+						for k, v in result.items():
+							data[k] = v
 					else:
 						data[key] = result
-			
+			print 'session: %s' % data
 			items = pager.get_results(req.store, table_name, data)
 		else:
+			print 'default: %s' % ordering_dict
 			items = pager.get_results(req.store, table_name, ordering_dict)
 		
 		forms = itemdef.get_listing(req, items)

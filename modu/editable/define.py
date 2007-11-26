@@ -296,8 +296,6 @@ class itemdef(dict):
 			for name, field in self.items():
 				if(name.startswith('_')):
 					continue
-				if(not field.get('detail', True)):
-					continue
 				if not(field.allows(req.user)):
 					continue
 				if not(field.get('search', False)):
