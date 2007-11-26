@@ -15,10 +15,6 @@ class Options(usage.Options):
 	
 	def parseArgs(self, shortname):
 		self['shortname'] = shortname
-		if not self['longname']:
-			self['longname'] = self['shortname']
-		if not self['author']:
-			self['author'] = self['shortname']
 
 if(__name__ == '__main__'):
 	config = Options()
@@ -30,9 +26,16 @@ if(__name__ == '__main__'):
 		print e.args[0]
 		sys.exit(1)
 	
-	skelroot = os.path.normpath(os.path.dirname(__file__) + '/../skel')
 	
-	destroot = os.path.normpath(config['shortname'])
+	skelroot = os.path.normpath(os.path.dirname(__file__) + '/../skel')
+	destroot = os.path.abspath(os.path.normpath(config['shortname']))
+	
+	config['shortname'] = os.path.basename(destroot)
+	
+	if not config['longname']:
+		config['longname'] = config['shortname']
+	if not config['author']:
+		config['author'] = config['shortname']
 	
 	for dirpath, dirnames, filenames in os.walk(skelroot):
 		#print (dirpath, dirnames, filenames)

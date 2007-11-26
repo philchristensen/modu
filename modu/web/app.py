@@ -28,6 +28,7 @@ from modu.web import session, user, resource, static
 from modu import persist, web
 
 from twisted import plugin
+from twisted.web import server
 from twisted.python import log, failure
 from twisted.web.util import formatFailure
 from zope import interface
@@ -501,6 +502,39 @@ class Request(dict):
 		"""
 		return self.response_headers
 	
+
+class UnparsedRequest(server.Request):
+	"""
+	This Request subclass omits the request body parsing that
+	happens before our code takes over. This lets us use the
+	NestedFieldStorage (or alternative) to parse the body.
+	"""
+	def requestReceived(self, command, path, version):
+		"""Called by channel when all data has been received.
+		
+		This method is not intended for users.
+		"""
+		self.content.seek(0,0)
+		self.args = {}
+		self.stack = []
+		
+		self.method, self.uri = command, path
+		self.clientproto = version
+		x = self.uri.split('?', 1)
+		
+		if len(x) == 1:
+			self.path = self.uri
+		else:
+			self.path, argstring = x
+			#self.args = parse_qs(argstring, 1)
+		
+		# cache the client and server information, we'll need this later to be
+		# serialized and sent with the request so CGIs will work remotely
+		self.client = self.channel.transport.getPeer()
+		self.host = self.channel.transport.getHost()
+		
+		self.process()
+
 
 class Application(object):
 	"""
