@@ -370,7 +370,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			self.set_slot('theme', frm.theme(req))
 			self.set_slot('selected_item', selected_item)
 			
-			if('title_column' in itemdef.config):
+			if('title_column' in itemdef.config and item_id != 'new'):
 				item_name = "'%s'" % getattr(selected_item, itemdef.config['title_column'])
 			else:
 				item_name = '#' + str(selected_item.get_id())
