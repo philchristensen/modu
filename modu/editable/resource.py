@@ -214,6 +214,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		login_form.execute(req)
 		
 		self.set_slot('login_form', login_form.render(req))
+		self.set_slot('title', self.options.get('login_title', 'admin login'))
 	
 	
 	def prepare_listing(self, req, itemdef):
@@ -309,6 +310,10 @@ class AdminResource(resource.CheetahTemplateResource):
 		self.set_slot('page_guide', thm.page_guide(pager, req.get_path(req.path)))
 		self.set_slot('forms', forms)
 		self.set_slot('theme', thm)
+		
+		default_title = 'Listing %s Records' % itemdef.name.title()
+		custom_title = itemdef.config.get('listing_title', default_title)
+		self.set_slot('title', custom_title)
 	
 	
 	def prepare_detail(self, req, itemdef):
@@ -364,6 +369,14 @@ class AdminResource(resource.CheetahTemplateResource):
 			self.set_slot('form', frm)
 			self.set_slot('theme', frm.theme(req))
 			self.set_slot('selected_item', selected_item)
+			
+			if('title_column' in itemdef.config):
+				item_name = "'%s'" % getattr(selected_item, itemdef.config['title_column'])
+			else:
+				item_name = '#' + str(selected_item.get_id())
+			default_title = 'Details for %s %s' % (itemdef.name.title(), item_name)
+			custom_title = itemdef.config.get('detail_title', default_title)
+			self.set_slot('title', custom_title)
 		else:
 			app.raise404('There is no detail view at the path: %s' % req['REQUEST_URI'])
 	

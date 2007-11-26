@@ -1,6 +1,6 @@
 #include 'admin-header.html.tmpl'
 
-<h2>Editing $selected_itemdef.config.get('label', $selected_itemdef.get_name()) Record</h2>
+<h2>$getVar('title', 'record detail')</h2>
 
 #if $form
 ## This is very strange. For some reason if I use just $form in the form tag's
