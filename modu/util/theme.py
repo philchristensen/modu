@@ -207,7 +207,7 @@ class Theme(object):
 		option_keys, option_data = self._mangle_option_data(options_clone, comparator)
 		
 		def _create_radio(value, default_value, **attribs):
-			if(value == default_value):
+			if(str(value) == str(default_value)):
 				attribs['checked'] = None
 			attribs['value'] = value
 			return tags.input(**attribs)

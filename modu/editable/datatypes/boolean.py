@@ -24,20 +24,35 @@ class CheckboxField(define.definition):
 	only submit form data when checked.
 	"""
 	implements(IDatatype)
+	search_list = ['checked', 'unchecked', 'no search']
 	
 	def get_element(self, req, style, storable):
 		"""
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		frm = form.FormNode(self.name)
-		frm(type='checkbox', value=self.get('checked_value', 1))
-		if(str(getattr(storable, self.get_column_name(), None)) == str(self.get('checked_value', 1))):
-			frm(checked=True)
+		if(style == 'search'):
+			search_value = getattr(storable, self.get_column_name(), 2)
+			
+			frm(type='radiogroup', options=self.search_list, value=2)
+		else:
+			frm(type='checkbox', value=self.get('checked_value', 1))
+			if(str(getattr(storable, self.get_column_name(), None)) == str(self.get('checked_value', 1))):
+				frm(checked=True)
 		
-		if(style == 'listing' or self.get('read_only', False)):
-			frm(disabled=True)
+			if(style == 'listing' or self.get('read_only', False)):
+				frm(disabled=True)
 		
 		return frm
+	
+	def get_search_value(self, value):
+		if(value == '0'):
+			return self.get('checked_value', 1)
+		elif(value == '1'):
+			return self.get('checked_value', 0)
+		else:
+			# a trick
+			return sql.RAW('IF(%s, 1, 1)')
 	
 	def update_storable(self, req, form, storable):
 		"""

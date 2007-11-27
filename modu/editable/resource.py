@@ -276,7 +276,7 @@ class AdminResource(resource.CheetahTemplateResource):
 							data[k] = v
 					else:
 						data[key] = result
-			print 'post: %s' % data
+			#print 'post: %s' % data
 			items = pager.get_results(req.store, table_name, data)
 		elif(session_search_data):
 			search_data = {search_form.name:session_search_data}
@@ -293,10 +293,10 @@ class AdminResource(resource.CheetahTemplateResource):
 							data[k] = v
 					else:
 						data[key] = result
-			print 'session: %s' % data
+			#print 'session: %s' % data
 			items = pager.get_results(req.store, table_name, data)
 		else:
-			print 'default: %s' % ordering_dict
+			#print 'default: %s' % ordering_dict
 			items = pager.get_results(req.store, table_name, ordering_dict)
 		
 		forms = itemdef.get_listing(req, items)
