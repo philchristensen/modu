@@ -5,6 +5,38 @@
 #
 # See LICENSE for details
 
+from htmlentitydefs import name2codepoint, codepoint2name
+import re
+
+entity_re = re.compile("&(#?)(\d{1,5}|\w{1,8});")
+
+def decode_htmlentities(string):
+	def __entity(match):
+		ent = match.group(2)
+		if match.group(1) == "#":
+			return unichr(int(ent))
+		else:
+			cp = name2codepoint.get(ent)
+		
+			if cp:
+				return unichr(cp)
+			else:
+				return match.group()
+	
+	return entity_re.subn(__entity, string)[0]
+
+def encode_htmlentities(string):
+	if not(isinstance(string, basestring)):
+		return string
+	result = ''
+	for c in string:
+		cp = ord(c)
+		if(cp in codepoint2name):
+			result += '&%s;' % codepoint2name[cp]
+		else:
+			result += c
+	return result
+
 class Tag(object):
 	def __init__(self, tag):
 		self.tag = tag
@@ -41,7 +73,7 @@ class Tag(object):
 				if(value is None):
 					fragments += ' %s' % key
 				else:
-					output += ' %s="%s"' % (key, value)
+					output += ' %s="%s"' % (key, encode_htmlentities(value))
 		output += fragments
 		if(self.children):
 			output += '>'
