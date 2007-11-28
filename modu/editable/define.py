@@ -162,16 +162,19 @@ class itemdef(dict):
 			# I was pretty sure I knew how kwargs worked, but...
 			if(name == '__config'):
 				__config = field
-				del fields[name]
+				#del fields[name]
 				continue
+			
+			if not(isinstance(field, definition)):
+				raise ValueError("'%s' is not a valid definition." % name)
 			
 			if(name.startswith('_') or name.endswith('_')):
 				name = name.strip('_')
 			
-			if not(isinstance(field, definition)):
-				raise ValueError("'%s' is not a valid definition." % name)
 			field.name = name
 			field.itemdef = self
+			
+			self[name] = field
 		
 		if(__config):
 			self.config = __config
@@ -179,8 +182,6 @@ class itemdef(dict):
 		else:
 			self.config = definition()
 			self.name = None
-		
-		self.update(fields)
 	
 	
 	def get_name(self):
