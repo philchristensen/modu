@@ -2,7 +2,9 @@
 
 <h2>$getVar('title', 'record list')</h2>
 
+#if not $selected_itemdef.get('no_create', False)
 <a href="$req.get_path($req.prepath, 'detail', $selected_itemdef.get_table(), 'new')">Create New Record</a>
+#end if
 
 $search_form
 
