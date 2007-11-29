@@ -177,7 +177,7 @@ class FormNode(object):
 				break
 		
 		if(self.submit_button or force):
-			self.load_data(self.data)
+			self.load_data(req, self.data)
 			result = self.validate(req, self)
 			if(result):
 				return self.submit(req, self)
@@ -214,7 +214,7 @@ class FormNode(object):
 		thm = self.theme(req)
 		return thm.form(self)
 	
-	def load_data(self, data):
+	def load_data(self, req, data):
 		"""
 		This function takes a FieldStorage object (more often
 		NestedFieldStorage) and populates this form.
@@ -229,12 +229,15 @@ class FormNode(object):
 			if(isinstance(form_data, dict)):
 				if(self.children):
 					for name, child in self.children.items():
-						child.load_data(form_data)
+						child.load_data(req, form_data)
 				else:
 					# this would happen if a theme function
 					# generated nested form data for a single
 					# form object
 					loader = self.attr('loader', None)
+					loader_func = 'form_%s_loader' % self.attr('type', 'markup')
+					if(not loader and hasattr(self.theme, loader_func)):
+						loader = getattr(self.theme(req), loader_func, None)
 					if(callable(loader)):
 						loader(self, form_data)
 			else:

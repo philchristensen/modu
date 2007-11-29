@@ -266,6 +266,20 @@ class Theme(object):
 		return self._generate_datetime_select(element, attribs, arrays, values, names)
 	
 	
+	def form_datetime_loader(self, form, form_data):
+		import time, datetime
+		
+		current_year = int(time.strftime('%Y', time.localtime()))
+		start_year = form.attr('start_year', current_year - 2)
+		end_year = form.attr('end_year', current_year + 5)
+		
+		months, days, years = date.get_date_arrays(start_year, end_year)
+		
+		value = datetime.datetime(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, int(form_data['day'].value) + 1,
+									int(form_data['hour'].value), int(form_data['minute'].value))
+		form(value=value)
+	
+	
 	def form_date(self, form_id, element):
 		import time
 		attribs = element.attr('attributes', {})
@@ -290,6 +304,19 @@ class Theme(object):
 		return self._generate_datetime_select(element, attribs, arrays, values, names)
 	
 	
+	def form_date_loader(self, form, form_data):
+		import time, datetime
+		
+		current_year = int(time.strftime('%Y', time.localtime()))
+		start_year = form.attr('start_year', current_year - 2)
+		end_year = form.attr('end_year', current_year + 5)
+		
+		months, days, years = date.get_date_arrays(start_year, end_year)
+		
+		value = datetime.date(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, int(form_data['day'].value) + 1)
+		form(value=value)
+	
+	
 	def form_time(self, form_id, element):
 		import time
 		attribs = element.attr('attributes', {})
@@ -308,6 +335,14 @@ class Theme(object):
 		names = ('hour', 'minute')
 		
 		return self._generate_datetime_select(element, attribs, arrays, values, names)
+	
+	
+	def form_time_loader(self, form, form_data):
+		import time, datetime
+		
+		value = ((int(form_data['hour'].value) * 60) + int(form_data['minute'].value)) * 60
+		value += time.timezone
+		form(value=value)
 	
 	
 	def _generate_datetime_select(self, element, attribs, arrays, values, names):

@@ -280,7 +280,7 @@ class AdminResource(resource.CheetahTemplateResource):
 			items = pager.get_results(req.store, table_name, data)
 		elif(session_search_data):
 			search_data = {search_form.name:session_search_data}
-			search_form.load_data(search_data)
+			search_form.load_data(req, search_data)
 			
 			data = {}
 			data.update(ordering_dict)
