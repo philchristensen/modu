@@ -43,28 +43,31 @@ label.field-label {
 
 ul#nav-list {
 	list-style: none;
-	background-color: #2d5fb8;
 	margin-left: 0px;
 	padding-left: 0px;
 }
 
 ul#nav-list li {
+	margin-bottom: 5px;
 	padding: 2px 2px 2px 2px;
 	text-transform: capitalize;
+	background-color: #2d5fb8;
 	color: #fff;
 }
 
 ul#nav-list .subnav-list {
 	list-style: none;
-	background-color: #b7b7e5;
 	margin-left: 0px;
 	padding-left: 0px;
+	background-color: #b7b7e5;
 }
 
 ul#nav-list .subnav-list li {
+	margin-bottom: 0;
 	padding: 2px 0 2px 12px;
 	text-transform: none;
 	font-weight: normal;
+	background-color: #b7b7e5;
 }
 
 ul#nav-list .subnav-list li.active {
