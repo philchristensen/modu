@@ -11,6 +11,23 @@ Various date-related utilities useful in building modu applications.
 
 import time, datetime
 
+def format_seconds(seconds):
+	hours, remainder = divmod(int(seconds), 3600)
+	minutes, remainder = divmod(remainder, 60)
+	seconds = remainder
+	
+	__found = False
+	def __zeroes(num):
+		if(num or __found):
+			__found = True
+			return num
+	
+	result = ':'.join(map(lambda(i): str(i).zfill(2), [hours, minutes, seconds])).lstrip('0:')
+	if(result and result.find(':') == -1):
+		result = ':' + result
+	return result
+
+
 def get_date_arrays(start_year, end_year):
 	def _get_month_struct(t):
 		st = list(time.localtime())
