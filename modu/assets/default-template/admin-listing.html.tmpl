@@ -15,7 +15,7 @@ $page_guide
 <form id="#echo first_row.attr('name') #" name="#echo first_row.attr('name').replace('-', '_') #"
 	method="#echo first_row.attr('method', 'post') #"
 	enctype="#echo first_row.attr('enctype', 'application/x-www-form-urlencoded') #">
-	<table id="listing-table">
+	<table class="listing-table">
 		<tr>
 		#for $column in $first_row
 			<th>#echo $first_row[$column].attr('label', $first_row[$column].attr('name')) #</th>
