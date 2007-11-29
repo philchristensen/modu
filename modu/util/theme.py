@@ -274,9 +274,15 @@ class Theme(object):
 		end_year = form.attr('end_year', current_year + 5)
 		
 		months, days, years = date.get_date_arrays(start_year, end_year)
-		
-		value = datetime.datetime(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, int(form_data['day'].value) + 1,
-									int(form_data['hour'].value), int(form_data['minute'].value))
+		try:
+			value = datetime.datetime(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, int(form_data['day'].value) + 1,
+										int(form_data['hour'].value), int(form_data['minute'].value))
+		except ValueError:
+			max_day = 30
+			if(int(form_data['month'].value) == 2):
+				max_day = 28
+			value = datetime.datetime(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, max_day,
+										int(form_data['hour'].value), int(form_data['minute'].value))
 		form(value=value)
 	
 	
@@ -313,7 +319,13 @@ class Theme(object):
 		
 		months, days, years = date.get_date_arrays(start_year, end_year)
 		
-		value = datetime.date(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, int(form_data['day'].value) + 1)
+		try:
+			value = datetime.date(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, int(form_data['day'].value) + 1)
+		except ValueError:
+			max_day = 30
+			if(int(form_data['month'].value) == 2):
+				max_day = 28
+			value = datetime.datetime(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, max_day)
 		form(value=value)
 	
 	
