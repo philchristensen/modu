@@ -1,3 +1,6 @@
+@import 'reset-min.css';
+@import 'global.css';
+
 body {
 	font-family: Helvetica, Arial, "MS Trebuchet", sans-serif;
 }
@@ -5,6 +8,11 @@ body {
 label.field-label {
 	display: block;
 	font-weight: bold;
+}
+
+.current-user-info {
+	margin-top: 15px;
+	margin-bottom: 15px;
 }
 
 .form-item {
@@ -111,6 +119,7 @@ ul#nav-list .subnav-list li.active {
 	border-bottom: 1px solid #bbb;
 	text-align: left;
 	padding: 4px 8px 0px 8px;
+	font-weight: bold;
 }
 
 .listing-table td {

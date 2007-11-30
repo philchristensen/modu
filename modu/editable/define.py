@@ -304,7 +304,7 @@ class itemdef(dict):
 				
 				frm[name] = field.get_form_element(req, 'search', storable)
 		
-		if(not frm.has_submit_buttons()):
+		if(len(frm) and not frm.has_submit_buttons()):
 			frm['search'](type='submit', value='search', weight=1000)
 			frm['clear_search'](type='submit', value='clear search', weight=1000)
 		

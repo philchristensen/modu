@@ -214,7 +214,7 @@ class Theme(object):
 		
 		element = [str(tags.label()[[
 			_create_radio(key, element.attr('value', None), **attribs),
-			option_data[key]
+			' ', option_data[key]
 		]]) for key in option_keys]
 		
 		return ''.join(element)
