@@ -24,3 +24,11 @@ label input {
 	margin-left: 2px;
 	margin-left: 5px;
 }
+
+ul, ol {
+	padding-left: 20px;
+}
+
+ol li {
+	list-style: decimal inside;
+}
