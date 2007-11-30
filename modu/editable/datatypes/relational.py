@@ -166,14 +166,16 @@ class ForeignAutocompleteField(define.definition):
 		
 		return frm
 	
-	def update_storable(self, req, form, storable):
+	def update_storable(self, req, frm, storable):
 		"""
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		form_name = '%s-form' % storable.get_table()
-		if(form_name in form.data):
-			form_data = form.data[form_name]
-			if(self.name in form_data and self.name in form_data[self.name]):
+		if(form_name in frm.data):
+			form_data = frm.data[form_name]
+			if not(form_data.get(self.name, {}).get('%s-autocomplete' % self.name, form.nil()).value):
+				setattr(storable, self.get_column_name(), None)
+			elif(self.name in form_data and self.name in form_data[self.name]):
 				setattr(storable, self.get_column_name(), form_data[self.name][self.name].value)
 		return True
 

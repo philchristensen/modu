@@ -37,6 +37,11 @@ def encode_htmlentities(string):
 			result += c
 	return result
 
+def quote(string):
+	if not(isinstance(string, basestring)):
+		return string
+	return string.replace('"', '&quot;')
+
 class Tag(object):
 	def __init__(self, tag):
 		self.tag = tag
@@ -73,7 +78,7 @@ class Tag(object):
 				if(value is None):
 					fragments += ' %s' % key
 				else:
-					output += ' %s="%s"' % (key, encode_htmlentities(value))
+					output += ' %s="%s"' % (key, quote(value))
 		output += fragments
 		if(self.children):
 			output += '>'
