@@ -316,7 +316,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		
 		default_title = 'Listing %s Records' % itemdef.name.title()
 		custom_title = itemdef.config.get('listing_title', default_title)
-		self.set_slot('title', custom_title)
+		self.set_slot('title', tags.encode_htmlentities(custom_title))
 	
 	
 	def prepare_detail(self, req, itemdef):
@@ -381,7 +381,7 @@ class AdminResource(resource.CheetahTemplateResource):
 				item_name = '#' + str(selected_item.get_id())
 			default_title = 'Details for %s %s' % (itemdef.name.title(), item_name)
 			custom_title = itemdef.config.get('detail_title', default_title)
-			self.set_slot('title', custom_title)
+			self.set_slot('title', tags.encode_htmlentities(custom_title))
 		else:
 			app.raise404('There is no detail view at the path: %s' % req['REQUEST_URI'])
 	
