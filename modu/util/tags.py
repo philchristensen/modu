@@ -9,6 +9,14 @@ from htmlentitydefs import name2codepoint, codepoint2name
 import re
 
 entity_re = re.compile("&(#?)(\d{1,5}|\w{1,8});")
+reserved2name = {
+	ord('"')  : 'quot',
+	ord(u'"') : 'quot',
+	ord('>')  : 'gt',
+	ord(u'>') : 'gt',
+	ord('<')  : 'lt',
+	ord(u'<') : 'lt'
+}
 
 def decode_htmlentities(string):
 	def __entity(match):
@@ -25,14 +33,20 @@ def decode_htmlentities(string):
 	
 	return entity_re.subn(__entity, string)[0]
 
-def encode_htmlentities(string):
-	if not(isinstance(string, basestring)):
+def encode_htmlentities(string, strict=False):
+	if(isinstance(string, str)):
+		result = ''
+	elif(isinstance(string, unicode)):
+		result = u''
+	else:
 		return string
-	result = ''
+	
 	for c in string:
 		cp = ord(c)
-		if(cp in codepoint2name):
+		if(strict and cp in codepoint2name):
 			result += '&%s;' % codepoint2name[cp]
+		elif(cp in reserved2name):
+			result += '&%s;' % reserved2name[cp]
 		else:
 			result += c
 	return result
