@@ -22,6 +22,7 @@ def process_dsn(dsn):
 	dsn['cp_openfun'] = fix_mysqldb
 	from MySQLdb import cursors
 	dsn['cursorclass'] = cursors.SSDictCursor
+	
 	# I'm just not sure whether these make things worse or better
 	# dsn['use_unicode'] = True
 	# dsn['charset'] = 'utf8'

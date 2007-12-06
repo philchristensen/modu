@@ -9,7 +9,9 @@
 SQL building facilities.
 """
 
-import types
+import types, datetime
+
+from modu.util import date
 
 def build_insert(table, data):
 	"""
@@ -271,13 +273,19 @@ def interp(query, args=[], *vargs):
 		args = [args]
 	args.extend(vargs)
 	
-	def UnicodeConverter(s, d):
-		return converters.string_literal(s.encode('utf8', 'replace'))
-	
+	#def UnicodeConverter(s, d):
+	#	return converters.string_literal(s.encode('utf8', 'replace'))
+
+	def DateTime2literal(d, c):
+		from _mysql import string_literal
+		return string_literal(date.strftime(d, "%Y-%m-%d %H:%M:%S"),c)
+
 	conv_dict = converters.conversions.copy()
 	# This is only used in build_replace/insert()
 	conv_dict[RAW] = Raw2Literal
-	conv_dict[types.UnicodeType] = UnicodeConverter
+	conv_dict[datetime.datetime] = DateTime2literal
+	
+	#conv_dict[types.UnicodeType] = UnicodeConverter
 	return query % MySQLdb.escape_sequence(args, conv_dict)
 
 

@@ -31,17 +31,23 @@ class DateField(define.definition):
 		"""
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
-		value = date.convert_to_timestamp(getattr(storable, self.get_column_name(), None))
+		value = getattr(storable, self.get_column_name(), None)
+		if(isinstance(value, (int, long))):
+			value = datetime.datetime.utcfromtimestamp(value)
+		
 		if(self.get('read_only', False) or style == 'listing'):
 			if(value):
-				output = time.strftime(self.get('format_string', '%B %d, %Y at %I:%M%p'), time.localtime(value))
+				output = date.strftime(value, self.get('format_string', '%B %d, %Y at %I:%M%p'))
 			else:
 				output = 'no date set'
 			frm = form.FormNode(self.name)
 			frm(type='label', value=output)
 			return frm
 		
-		current_year = int(time.strftime('%Y', time.localtime(value)))
+		if(value is None):
+			current_year = datetime.datetime.now().year
+		else:
+			current_year = value.year
 		start_year = self.get('start_year', current_year - 2)
 		end_year = self.get('end_year', current_year + 5)
 		
@@ -70,10 +76,11 @@ class DateField(define.definition):
 		attribs = {}
 		if(value is None):
 			if(self.get('default_now', False)):
-				value = int(time.time())
+				value = datetime.datetime.now()
 			else:
 				frm['null'](checked=True)
 				attribs['disabled'] = None
+		
 		frm['date'](type=self.get('style', 'datetime'), value=value, attributes=attribs, start_year=start_year, end_year=end_year)
 		
 		return frm
@@ -91,19 +98,20 @@ class DateField(define.definition):
 			setattr(storable, self.get_column_name(), None)
 			return True
 		
-		current_year = int(time.strftime('%Y', time.localtime()))
+		value = getattr(storable, self.get_column_name())
+		if(value is None):
+			current_year = datetime.datetime.now().year
+		else:
+			current_year = value.year
+		
 		start_year = self.get('start_year', current_year - 2)
 		end_year = self.get('end_year', current_year + 5)
 		
 		value = date.get_dateselect_value(data['date'], self.get('style', 'datetime'), start_year, end_year)
 		
 		save_format = self.get('save_format', 'timestamp')
-		if(save_format == 'date'):
-			setattr(storable, self.get_column_name(), datetime.date.fromtimestamp(value))
-		elif(save_format == 'datetime'):
-			setattr(storable, self.get_column_name(), datetime.datetime.fromtimestamp(value))
-		elif(save_format == 'time'):
-			setattr(storable, self.get_column_name(), datetime.timedelta(seconds=value))
+		if(save_format == 'timestamp'):
+			setattr(storable, self.get_column_name(), date.convert_to_timestamp(value))
 		else:
 			setattr(storable, self.get_column_name(), value)
 		

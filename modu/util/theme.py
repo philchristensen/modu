@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import copy
+import copy, datetime
 
 from modu.util import tags, OrderedDict, date
 
@@ -245,19 +245,20 @@ class Theme(object):
 		import time
 		attribs = element.attr('attributes', {})
 		
-		current_year = int(time.strftime('%Y', time.localtime()))
+		current_year = datetime.datetime.now().year
 		start_year = element.attr('start_year', current_year - 2)
 		end_year = element.attr('end_year', current_year + 5)
 		
 		months, days, years = date.get_date_arrays(start_year, end_year)
 		hours, minutes = date.get_time_arrays()
 		
-		value = date.convert_to_timestamp(element.attr('value', None))
+		#value = date.convert_to_timestamp(element.attr('value', None))
+		value = element.attr('value', None)
 		
 		if(value is None):
 			month, day, year, hour, minute = (months[0], 1, years[0], '00', '00')
 		else:
-			month, day, year, hour, minute = time.strftime('%B:%d:%Y:%H:%M', time.localtime(value)).split(':')
+			month, day, year, hour, minute = date.strftime(value, '%B:%d:%Y:%H:%M').split(':')
 		
 		arrays = (months, days, years, hours, minutes)
 		values = (month, int(day), int(year), hour, minute)
@@ -290,18 +291,20 @@ class Theme(object):
 		import time
 		attribs = element.attr('attributes', {})
 		
-		current_year = int(time.strftime('%Y', time.localtime()))
+		current_year = datetime.datetime.now().year
 		start_year = element.attr('start_year', current_year - 2)
 		end_year = element.attr('end_year', current_year + 5)
 		
 		months, days, years = date.get_date_arrays(start_year, end_year)
 		
-		value = date.convert_to_timestamp(element.attr('value', None))
+		#value = date.convert_to_timestamp(element.attr('value', None))
+		value = element.attr('value', None)
 		
 		if(value is None):
 			month, day, year = (months[0], 1, years[0])
 		else:
-			month, day, year = time.strftime('%B:%d:%Y', time.localtime(value)).split(':')
+			month, day, year = date.strftime(value, '%B:%d:%Y').split(':')
+			#month, day, year = time.strftime('%B:%d:%Y', time.localtime(value)).split(':')
 		
 		arrays = (months, days, years)
 		values = (month, int(day), int(year))
