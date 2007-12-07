@@ -16,6 +16,16 @@ class SQLTestCase(unittest.TestCase):
 	def tearDown(self):
 		pass
 	
+	def test_interp_args_1(self):
+		query = sql.interp("SELECT * FROM some_table WHERE a = %s AND b = %s", 1, 'something')
+		expecting = "SELECT * FROM some_table WHERE a = %s AND b = %s" % (1, repr('something'))
+		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+	
+	def test_interp_args_2(self):
+		query = sql.interp("SELECT * FROM some_table WHERE a = %s AND b = %s", [1, 'something'])
+		expecting = "SELECT * FROM some_table WHERE a = %s AND b = %s" % (1, repr('something'))
+		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+	
 	def test_build_delete(self):
 		query = sql.build_delete('table', {'col1':'col1_data', 'col2':'col2_data'});
 		expecting = "DELETE FROM `table` WHERE `col1` = 'col1_data' AND `col2` = 'col2_data'"
