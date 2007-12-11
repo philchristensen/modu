@@ -1,0 +1,31 @@
+#include 'admin-header.html.tmpl'
+
+<h2>Access Control</h2>
+
+<table id="acl-table">
+	<tr>
+		<th></th>
+		#for rid, rname in $roles.items()
+		<td class="role-cell">$rname</td>
+		#end for
+	</tr>
+	#set last_name = None
+	#for pid, pname in $permissions.items():
+		#if $pname != $last_name
+			#if $last_name
+		</tr>
+			#end if
+		#set last_name = $pname
+		<tr>
+			<td class="permission-cell">$pname</td>
+		#end if
+		#for rid, rname in $roles.items()
+			<td class="check-cell"><input type="checkbox" name="acl[$pid][$rid]" value="1"#if $rid in $acl_map[$pid] then ' checked' else ''#/></td>
+		#end for
+	#end for
+	#if $pname != $last_name
+	</tr>
+	#end if
+</table>
+
+#include 'admin-footer.html.tmpl'

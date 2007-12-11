@@ -11,6 +11,7 @@ Contains resources for configuring a default admin interface.
 
 import os.path, copy, re
 
+from modu import util
 from modu.web import resource, app, user
 from modu.editable import define
 from modu.util import form, theme, tags
@@ -18,12 +19,13 @@ from modu.persist import page, storable, sql
 
 def select_template_root(req, template):
 	import modu
-
+	
 	template_root = os.path.join(req.approot, 'template')
 	if(os.access(os.path.join(template_root, template), os.F_OK)):
 		return template_root
-
+	
 	return os.path.join(os.path.dirname(modu.__file__), 'assets', 'default-template')
+
 
 def validate_login(req, form):
 	"""
@@ -46,6 +48,7 @@ def validate_login(req, form):
 		form.set_form_error('password', "Please enter your password.")
 	return not form.has_errors()
 	
+
 
 
 def submit_login(req, form):
@@ -449,4 +452,49 @@ class AdminResource(resource.CheetahTemplateResource):
 			template = self.get_template(req)
 		
 		return select_template_root(req, template)
+	
 
+class ACLResource(resource.CheetahTemplateResource):
+	"""
+	A convenience resource for managing ACLs.
+	
+	Sample Itemdef::
+		from modu.editable import define, resource
+		
+		__itemdef__ = define.itemdef(
+		    __config            = dict(
+		        name            = 'acl',
+		        label           = 'access control',
+		        category        = 'accounts',
+		        acl             = 'access admin',
+		        weight          = -10,
+		        resource        = resource.ACLResource()
+		    )
+		)
+	
+	
+	"""
+	def get_paths(self):
+		return ['/acl']
+	
+	def prepare_content(self, req):
+		permission_query = "SELECT id, name FROM permission ORDER BY name"
+		result = req.store.pool.runQuery(permission_query)
+		permissions = util.OrderedDict([(item['id'], item['name']) for item in result])
+		
+		role_query = "SELECT id, name FROM role ORDER BY name"
+		result = req.store.pool.runQuery(role_query)
+		roles = util.OrderedDict([(item['id'], item['name']) for item in result])
+		
+		acl_query = """SELECT * FROM role_permission"""
+		acl_results = req.store.pool.runQuery(acl_query)
+		acl_map = {}
+		for item in acl_results:
+			acl_map.setdefault(item['permission_id'], []).append(item['role_id'])
+		
+		self.set_slot('permissions', permissions)
+		self.set_slot('roles', roles)
+		self.set_slot('acl_map', acl_map)
+	
+	def get_template(self, req):
+		return 'admin-acl.html.tmpl'
