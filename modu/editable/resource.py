@@ -47,8 +47,6 @@ def validate_login(req, form):
 	if not(form.data[form.name]['password']):
 		form.set_form_error('password', "Please enter your password.")
 	return not form.has_errors()
-	
-
 
 
 def submit_login(req, form):
@@ -454,6 +452,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		return select_template_root(req, template)
 	
 
+
 class ACLResource(resource.CheetahTemplateResource):
 	"""
 	A convenience resource for managing ACLs.
@@ -478,6 +477,20 @@ class ACLResource(resource.CheetahTemplateResource):
 		return ['/acl']
 	
 	def prepare_content(self, req):
+		form_data = form.NestedFieldStorage(req)
+		if('new' in form_data):
+			new_data = form_data['new']
+			if('permission' in new_data):
+				req.store.ensure_factory('permission')
+				p = storable.Storable('permission')
+				p.name = new_data['permission'].value
+				req.store.save(p)
+			elif('role' in new_data):
+				req.store.ensure_factory('role')
+				r = storable.Storable('role')
+				r.name = new_data['role'].value
+				req.store.save(r)
+		
 		permission_query = "SELECT id, name FROM permission ORDER BY name"
 		result = req.store.pool.runQuery(permission_query)
 		permissions = util.OrderedDict([(item['id'], item['name']) for item in result])
@@ -485,6 +498,27 @@ class ACLResource(resource.CheetahTemplateResource):
 		role_query = "SELECT id, name FROM role ORDER BY name"
 		result = req.store.pool.runQuery(role_query)
 		roles = util.OrderedDict([(item['id'], item['name']) for item in result])
+		
+		if('acl' in form_data):
+			acl_data = form_data['acl']
+			checked = []
+			unchecked = []
+			for pid in permissions.keys():
+				pid = str(pid)
+				for rid in roles.keys():
+					rid = str(rid)
+					if(pid in acl_data and rid in acl_data[pid]):
+						checked.append({'role_id':rid, 'permission_id':pid})
+					else:
+						unchecked.append({'role_id':rid, 'permission_id':pid})
+			
+			for perm in checked:
+				replace_query = sql.build_replace('role_permission', perm)
+				req.store.pool.runOperation(replace_query)
+			
+			for perm in unchecked:
+				delete_query = sql.build_delete('role_permission', perm)
+				req.store.pool.runOperation(delete_query)
 		
 		acl_query = """SELECT * FROM role_permission"""
 		acl_results = req.store.pool.runQuery(acl_query)

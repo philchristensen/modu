@@ -98,7 +98,7 @@ class DateField(define.definition):
 			setattr(storable, self.get_column_name(), None)
 			return True
 		
-		value = getattr(storable, self.get_column_name())
+		value = getattr(storable, self.get_column_name(), None)
 		if(value is None):
 			current_year = datetime.datetime.now().year
 		else:

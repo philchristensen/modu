@@ -60,7 +60,7 @@ if(__name__ == '__main__'):
 					copyright_holder = config.get('author', config['shortname']),
 					year = time.strftime('%Y')
 				)
-				print variables
+				
 				output = str(template_class(searchList=[variables]))
 				new_filename = filename[:-5]
 				if(new_filename.startswith('project')):
