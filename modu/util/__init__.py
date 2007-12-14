@@ -25,7 +25,12 @@ class OrderedDict(dict):
 		return {'_order':self._order, '_data':self.dict()}
 	
 	def __setstate__(self, data):
+		self._order = []
 		for key in data.get('_order', []):
+			# I don't think __setitem__ is called during
+			# the run of this function, so we manage order
+			# ourselves
+			self._order.append(key)
 			self[key] = data['_data'][key]
 	
 	def __setitem__(self, key, value):

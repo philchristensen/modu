@@ -17,7 +17,7 @@ from twisted import plugin
 from twisted.python import util
 
 from modu import editable
-from modu.util import form, tags, theme
+from modu.util import form, tags, theme, OrderedDict
 from modu.persist import storable
 from modu.web.user import AnonymousUser
 from modu.web import app
@@ -99,7 +99,7 @@ def clone_itemdef(itemdef):
 		field.itemdef = clone
 	return clone
 
-class itemdef(dict):
+class itemdef(OrderedDict):
 	"""
 	An itemdef describes the data of a Storable.
 	It can generate an editor form for its Storable, as well
@@ -158,6 +158,8 @@ class itemdef(dict):
 		@param **fields: the fields to display in the generated forms
 		@type **fields: dict(str=L{modu.editable.define.definition})
 		"""
+		super(itemdef, self).__init__(self)
+		
 		for name, field in fields.items():
 			# I was pretty sure I knew how kwargs worked, but...
 			if(name == '__config'):
@@ -182,6 +184,19 @@ class itemdef(dict):
 		else:
 			self.config = definition()
 			self.name = None
+	
+	
+	def __getstate__(self):
+		data = super(itemdef, self).__getstate__()
+		data['config'] = self.config
+		data['name'] = self.name
+		return data
+	
+	
+	def __setstate__(self, data):
+		super(itemdef, self).__setstate__(data)
+		self.config = data['config']
+		self.name = data['name']
 	
 	
 	def get_name(self):

@@ -9,7 +9,7 @@
 Contains resources for configuring a default admin interface.
 """
 
-import os.path, copy, re
+import os.path, copy, re, datetime
 
 from modu import util
 from modu.web import resource, app, user
@@ -179,8 +179,10 @@ class AdminResource(resource.CheetahTemplateResource):
 						self.prepare_autocomplete(req, selected_itemdef)
 					elif(req.postpath[0] == 'custom'):
 						self.prepare_custom(req, selected_itemdef)
-					else:
+					elif(req.postpath[0] in ('listing', 'export')):
 						self.prepare_listing(req, selected_itemdef)
+					else:
+						app.raise404()
 				else:
 					app.raise403()
 			else:
@@ -228,17 +230,10 @@ class AdminResource(resource.CheetahTemplateResource):
 		@param itemdef: the itemdef to use to generate the listing
 		@type itemdef: L{modu.editable.define.itemdef}
 		"""
-		self.template = itemdef.config.get('list_template', 'admin-listing.html.tmpl')
 		table_name = itemdef.config.get('table', itemdef.name)
 		
 		query_data = form.NestedFieldStorage({'QUERY_STRING':req.get('QUERY_STRING', ''),
 												'wsgi.input':req['wsgi.input']})
-		pager = page.Paginator()
-		if('page' in query_data):
-			pager.page = int(query_data['page'].value)
-		else:
-			pager.page = 1
-		pager.per_page = itemdef.config.get('per_page', 25)
 		
 		# create a fake storable to make itemdef/form happy
 		search_storable = storable.Storable(table_name)
@@ -255,6 +250,8 @@ class AdminResource(resource.CheetahTemplateResource):
 			if('desc' in query_data and query_data['desc'].value):
 				order_by += ' DESC'
 		ordering_dict = {'__order_by':order_by}
+		
+		limits = None
 		
 		if(search_form.execute(req)):
 			search_data = search_form.data[search_form.name]
@@ -278,7 +275,6 @@ class AdminResource(resource.CheetahTemplateResource):
 					else:
 						data[key] = result
 			#print 'post: %s' % data
-			items = pager.get_results(req.store, table_name, data)
 		elif(session_search_data):
 			search_data = {search_form.name:session_search_data}
 			search_form.load_data(req, search_data)
@@ -295,30 +291,82 @@ class AdminResource(resource.CheetahTemplateResource):
 					else:
 						data[key] = result
 			#print 'session: %s' % data
-			items = pager.get_results(req.store, table_name, data)
 		else:
 			#print 'default: %s' % ordering_dict
-			items = pager.get_results(req.store, table_name, ordering_dict)
-		
-		forms = itemdef.get_listing(req, items)
-		thm = theme.Theme(req)
+			data = ordering_dict
 		
 		template_variable_callback = itemdef.config.get('template_variable_callback')
 		if(callable(template_variable_callback)):
 			for key, value in template_variable_callback(req, forms, search_storable).items():
 				self.set_slot(key, value)
 		
-		self.set_slot('items', items)
-		self.set_slot('pager', pager)
-		self.set_slot('search_form', search_form.render(req))
-		self.set_slot('page_guide', thm.page_guide(pager, req.get_path(req.path)))
-		self.set_slot('forms', forms)
-		self.set_slot('theme', thm)
-		
-		default_title = 'Listing %s Records' % itemdef.name.title()
-		custom_title = itemdef.config.get('listing_title', default_title)
-		self.set_slot('title', tags.encode_htmlentities(custom_title))
+		if(req.postpath[0] == 'listing'):
+			self.template = itemdef.config.get('list_template', 'admin-listing.html.tmpl')
+			
+			pager = page.Paginator()
+			if('page' in query_data):
+				pager.page = int(query_data['page'].value)
+			else:
+				pager.page = 1
+			pager.per_page = itemdef.config.get('per_page', 25)
+			
+			items = pager.get_results(req.store, table_name, data)
+			forms = itemdef.get_listing(req, items)
+			thm = theme.Theme(req)
+			
+			self.set_slot('pager', pager)
+			self.set_slot('search_form', search_form.render(req))
+			self.set_slot('page_guide', thm.page_guide(pager, req.get_path(req.path)))
+			self.set_slot('forms', forms)
+			self.set_slot('theme', thm)
+			self.set_slot('selected_items', items)
+			
+			default_title = 'Listing %s Records' % itemdef.name.title()
+			custom_title = itemdef.config.get('listing_title', default_title)
+			self.set_slot('title', tags.encode_htmlentities(custom_title))
+		elif(req.postpath[0] == 'export'):
+			items = req.store.load(table_name, data)
+			self.prepare_export(req, itemdef, items)
 	
+	
+	def prepare_export(self, req, itemdef, items):
+		header_string = None
+		content_string = ''
+		for item in items:
+			headers = []
+			fields = []
+			for name, field in itemdef.items():
+				if(field.get('csv_listing', False)):
+					if(header_string is None):
+						header = field.get('label', field.name)
+						header = header.replace("\n", '')
+						header = header.replace("\r", '')
+						header = header.replace("\"","\"\"")
+						headers.append('"%s"' % header);
+					
+					frm = field.get_element(req, 'listing', item)
+					value = getattr(item, field.get_column_name(), None) #frm.attributes.get('value', None))
+					
+					formatter = field.get('csv_formatter', None)
+					if(callable(formatter)):
+						value = formatter(value)
+					
+					# make sure to escape quotes in the output
+					# in MS Excel double-quotes are escaped with double-quotes so that's what we do here
+					fields.append('"%s"' % str(value).replace("\"","\"\""))
+			
+			if(header_string is None):
+				header_string = ','.join(headers) + "\r\n";
+			content_string += ','.join(fields) + "\r\n";
+		
+		if(header_string is None):
+			header_string = 'No results\r\n';
+		
+		self.content_type = 'text/csv; charset=UTF-8'
+		self.content = header_string + content_string
+		export_filename = '%s_%s.csv' % (itemdef.name, datetime.datetime.now().strftime('%Y-%m-%d_%H%M'))
+		export_size = len(self.content)
+		req.add_header('Content-Disposition', 'attachment; filename=%s; size=%d' % (export_filename, export_size))
 	
 	def prepare_detail(self, req, itemdef):
 		"""
@@ -433,6 +481,13 @@ class AdminResource(resource.CheetahTemplateResource):
 		@see: L{modu.web.resource.IContent.get_content_type()}
 		"""
 		return self.content_type
+	
+	
+	def get_content(self, req):
+		if(hasattr(self, 'content')):
+			return self.content
+		else:
+			return super(AdminResource, self).get_content(req)
 	
 	
 	def get_template(self, req):

@@ -13,6 +13,8 @@ from twisted.enterprise import adbapi
 
 from modu.util import url
 
+debug = False
+
 def connect(db_url=None, async=False, *args, **kwargs):
 	"""
 	Get a new connection pool for a particular db_url.
@@ -89,13 +91,15 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 		if(self.startID):
 			reactor.removeSystemEventTrigger(self.startID)
 	
-	# def runOperation(self, *args, **kwargs):
-	# 	print args, kwargs
-	# 	adbapi.ConnectionPool.runOperation(self, *args, **kwargs)
-	# 
-	# def runQuery(self, *args, **kwargs):
-	# 	print args, kwargs
-	# 	return adbapi.ConnectionPool.runQuery(self, *args, **kwargs)
+	def runOperation(self, *args, **kwargs):
+		if(debug):
+			print args, kwargs
+		adbapi.ConnectionPool.runOperation(self, *args, **kwargs)
+	
+	def runQuery(self, *args, **kwargs):
+		if(debug):
+			print args, kwargs
+		return adbapi.ConnectionPool.runQuery(self, *args, **kwargs)
 	
 	def runInteraction(self, interaction, *args, **kw):
 		"""
