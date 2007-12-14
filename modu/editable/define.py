@@ -160,7 +160,13 @@ class itemdef(OrderedDict):
 		"""
 		super(itemdef, self).__init__(self)
 		
-		for name, field in fields.items():
+		def _sorter(akey, bkey):
+			return cmp(fields[akey].get('weight', 0), fields[bkey].get('weight', 0))
+		keys = fields.keys()
+		keys.sort(_sorter)
+		
+		for name in keys:
+			field = fields[name]
 			# I was pretty sure I knew how kwargs worked, but...
 			if(name == '__config'):
 				__config = field
@@ -170,10 +176,7 @@ class itemdef(OrderedDict):
 			if not(isinstance(field, definition)):
 				raise ValueError("'%s' is not a valid definition." % name)
 			
-			if(name.startswith('_') or name.endswith('_')):
-				name = name.strip('_')
-			
-			field.name = name
+			field.name = name.strip('_')
 			field.itemdef = self
 			
 			self[name] = field
