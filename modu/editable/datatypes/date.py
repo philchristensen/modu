@@ -39,7 +39,7 @@ class DateField(define.definition):
 			if(value):
 				output = date.strftime(value, self.get('format_string', '%B %d, %Y at %I:%M%p'))
 			else:
-				output = 'no date set'
+				output = ''
 			frm = form.FormNode(self.name)
 			frm(type='label', value=output)
 			return frm

@@ -160,10 +160,8 @@ class itemdef(OrderedDict):
 		"""
 		super(itemdef, self).__init__(self)
 		
-		def _sorter(akey, bkey):
-			return cmp(fields[akey].get('weight', 0), fields[bkey].get('weight', 0))
 		keys = fields.keys()
-		keys.sort(_sorter)
+		keys.sort(lambda a,b: cmp(fields[a].get('weight', 0), fields[b].get('weight', 0)))
 		
 		for name in keys:
 			field = fields[name]

@@ -345,7 +345,8 @@ class AdminResource(resource.CheetahTemplateResource):
 						headers.append('"%s"' % header);
 					
 					frm = field.get_element(req, 'listing', item)
-					value = getattr(item, field.get_column_name(), None) #frm.attributes.get('value', None))
+					
+					value = frm.attributes.get('value', getattr(item, field.get_column_name(), None))
 					
 					formatter = field.get('csv_formatter', None)
 					if(callable(formatter)):
