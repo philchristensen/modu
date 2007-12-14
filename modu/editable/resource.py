@@ -325,6 +325,8 @@ class AdminResource(resource.CheetahTemplateResource):
 			custom_title = itemdef.config.get('listing_title', default_title)
 			self.set_slot('title', tags.encode_htmlentities(custom_title))
 		elif(req.postpath[0] == 'export'):
+			if(callable(itemdef.config.get('csv_query_builder'))):
+				data = itemdef.config['csv_query_builder'](req, itemdef, data)
 			items = req.store.load(table_name, data)
 			self.prepare_export(req, itemdef, items)
 	
@@ -335,26 +337,22 @@ class AdminResource(resource.CheetahTemplateResource):
 		for item in items:
 			headers = []
 			fields = []
-			for name, field in itemdef.items():
-				if(field.get('csv_listing', False)):
-					if(header_string is None):
-						header = field.get('label', field.name)
-						header = header.replace("\n", '')
-						header = header.replace("\r", '')
-						header = header.replace("\"","\"\"")
-						headers.append('"%s"' % header);
-					
-					frm = field.get_element(req, 'listing', item)
-					
-					value = frm.attributes.get('value', getattr(item, field.get_column_name(), None))
-					
-					formatter = field.get('csv_formatter', None)
-					if(callable(formatter)):
-						value = formatter(value)
-					
-					# make sure to escape quotes in the output
-					# in MS Excel double-quotes are escaped with double-quotes so that's what we do here
-					fields.append('"%s"' % str(value).replace("\"","\"\""))
+			
+			csv_formatter = self.prepare_standard_export
+			if(callable(itemdef.config.get('csv_formatter'))):
+				csv_formatter = itemdef.config['csv_formatter']
+			data = csv_formatter(req, itemdef, item)
+			
+			for header, value in data.items():
+				if(header_string is None):
+					header = header.replace("\n", '')
+					header = header.replace("\r", '')
+					header = header.replace("\"","\"\"")
+					headers.append('"%s"' % header)
+				
+				# make sure to escape quotes in the output
+				# in MS Excel double-quotes are escaped with double-quotes so that's what we do here
+				fields.append('"%s"' % str(value).replace("\"","\"\""))
 			
 			if(header_string is None):
 				header_string = ','.join(headers) + "\r\n";
@@ -368,6 +366,22 @@ class AdminResource(resource.CheetahTemplateResource):
 		export_filename = '%s_%s.csv' % (itemdef.name, datetime.datetime.now().strftime('%Y-%m-%d_%H%M'))
 		export_size = len(self.content)
 		req.add_header('Content-Disposition', 'attachment; filename=%s; size=%d' % (export_filename, export_size))
+	
+	def prepare_standard_export(self, req, itemdef, item):
+		result = util.OrderedDict()
+		for name, field in itemdef.items():
+			if(field.get('csv_listing', False)):
+				frm = field.get_element(req, 'listing', item)
+				
+				header = field.get('label', name)
+				value = frm.attributes.get('value', getattr(item, field.get_column_name(), None))
+				
+				formatter = field.get('csv_formatter', None)
+				if(callable(formatter)):
+					value = formatter(value)
+				
+				result[header] = value
+		return result
 	
 	def prepare_detail(self, req, itemdef):
 		"""
