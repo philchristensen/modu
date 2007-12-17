@@ -9,6 +9,65 @@
 Various utilities useful in building modu applications.
 """
 
+def generate_csv(rows, le='\n'):
+	header_string = None
+	content_string = ''
+	
+	for row in rows:
+		headers = []
+		fields = []
+		
+		for header, value in row.items():
+			if(header_string is None):
+				if(header.find('"') != -1 or header.find(',') != -1):
+					headers.append('"%s"' % header.replace("\"","\"\""))
+				else:
+					headers.append(header)
+			
+			# make sure to escape quotes in the output
+			# in MS Excel double-quotes are escaped with double-quotes so that's what we do here
+			if(not isinstance(value, basestring)):
+				value = str(value)
+			if(value.find('"') != -1 or value.find(',') != -1):
+				fields.append('"%s"' % value.replace("\"","\"\""))
+			else:
+				fields.append(value)
+		
+		if(header_string is None):
+			header_string = ','.join(headers) + le;
+		
+		content_string += ','.join(fields) + le;
+	
+	if(header_string is None):
+		header_string = ''
+	
+	return header_string + content_string
+
+def generate_tsv(rows, le='\n'):
+	header_string = None
+	content_string = ''
+	
+	for row in rows:
+		headers = []
+		fields = []
+		
+		for header, value in row.items():
+			if(header_string is None):
+				headers.append(header)
+			
+			if(not isinstance(value, basestring)):
+				value = str(value)
+			fields.append(value)
+		
+		if(header_string is None):
+			header_string = '\t'.join(headers) + le;
+		content_string += '\t'.join(fields) + le;
+	
+	if(header_string is None):
+		header_string = ''
+	
+	return header_string + content_string
+
 class OrderedDict(dict):
 	def __init__(self, data=None, **kwargs):
 		self._order = []

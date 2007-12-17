@@ -325,58 +325,50 @@ class AdminResource(resource.CheetahTemplateResource):
 			custom_title = itemdef.config.get('listing_title', default_title)
 			self.set_slot('title', tags.encode_htmlentities(custom_title))
 		elif(req.postpath[0] == 'export'):
-			if(callable(itemdef.config.get('csv_query_builder'))):
-				data = itemdef.config['csv_query_builder'](req, itemdef, data)
+			if(callable(itemdef.config.get('export_query_builder'))):
+				data = itemdef.config['export_query_builder'](req, itemdef, data)
 			items = req.store.load(table_name, data)
 			self.prepare_export(req, itemdef, items)
 	
 	
 	def prepare_export(self, req, itemdef, items):
 		header_string = None
-		content_string = ''
-		for item in items:
-			headers = []
-			fields = []
-			
-			csv_formatter = self.prepare_standard_export
-			if(callable(itemdef.config.get('csv_formatter'))):
-				csv_formatter = itemdef.config['csv_formatter']
-			data = csv_formatter(req, itemdef, item)
-			
-			for header, value in data.items():
-				if(header_string is None):
-					header = header.replace("\n", '')
-					header = header.replace("\r", '')
-					header = header.replace("\"","\"\"")
-					headers.append('"%s"' % header)
-				
-				# make sure to escape quotes in the output
-				# in MS Excel double-quotes are escaped with double-quotes so that's what we do here
-				fields.append('"%s"' % str(value).replace("\"","\"\""))
-			
-			if(header_string is None):
-				header_string = ','.join(headers) + "\r\n";
-			content_string += ','.join(fields) + "\r\n";
 		
-		if(header_string is None):
-			header_string = 'No results\r\n';
+		le = itemdef.config.get('export_le', '\n')
+		export_type = itemdef.config.get('export_type', 'csv')
 		
-		self.content_type = 'text/csv; charset=UTF-8'
-		self.content = header_string + content_string
-		export_filename = '%s_%s.csv' % (itemdef.name, datetime.datetime.now().strftime('%Y-%m-%d_%H%M'))
+		export_formatter = self.prepare_standard_export
+		if(callable(itemdef.config.get('export_formatter'))):
+			export_formatter = itemdef.config['export_formatter']
+		
+		rows = [export_formatter(req, itemdef, item) for item in items]
+		
+		if(export_type == 'csv'):
+			self.content_type = 'text/csv; charset=UTF-8'
+			self.content = util.generate_csv(rows, le)
+			ext = 'csv'
+		elif(export_type == 'tsv'):
+			self.content_type = 'text/tsv; charset=UTF-8'
+			self.content = util.generate_tsv(rows, le)
+			ext = 'tsv'
+		else:
+			raise RuntimeError("Invalid export type '%s'" % export_type)
+		
+		export_filename = '%s_%s.%s' % (itemdef.name, datetime.datetime.now().strftime('%Y-%m-%d_%H%M'), ext)
 		export_size = len(self.content)
 		req.add_header('Content-Disposition', 'attachment; filename=%s; size=%d' % (export_filename, export_size))
+	
 	
 	def prepare_standard_export(self, req, itemdef, item):
 		result = util.OrderedDict()
 		for name, field in itemdef.items():
-			if(field.get('csv_listing', False)):
+			if(field.get('export_listing', False)):
 				frm = field.get_element(req, 'listing', item)
 				
 				header = field.get('label', name)
 				value = frm.attributes.get('value', getattr(item, field.get_column_name(), None))
 				
-				formatter = field.get('csv_formatter', None)
+				formatter = field.get('export_formatter', None)
 				if(callable(formatter)):
 					value = formatter(value)
 				
