@@ -170,7 +170,7 @@ def build_delete(table, constraints):
 	return query_stub + build_where(constraints)
 
 
-def build_where(data):
+def build_where(data, use_where=True):
 	"""
 	Given a dictionary, construct a WHERE clause. Keys are sorted alphabetically
 	before output, so the result of passing a semantically identical dictionary
@@ -225,7 +225,8 @@ def build_where(data):
 			values.append(value)
 	
 	if(criteria):
-		query += 'WHERE '
+		if(use_where):
+			query += 'WHERE '
 		query += ' AND '.join(criteria)
 	if('__order_by' in data):
 		query += ' ORDER BY %s' % data['__order_by']

@@ -350,7 +350,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		elif(export_type == 'tsv'):
 			self.content_type = 'text/tsv; charset=UTF-8'
 			self.content = util.generate_tsv(rows, le)
-			ext = 'tsv'
+			ext = 'txt'
 		else:
 			raise RuntimeError("Invalid export type '%s'" % export_type)
 		
