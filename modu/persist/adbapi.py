@@ -92,11 +92,17 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 			reactor.removeSystemEventTrigger(self.startID)
 	
 	def runOperation(self, *args, **kwargs):
+		"""
+		Trivial override to provide debugging support.
+		"""
 		if(debug):
 			print args, kwargs
 		adbapi.ConnectionPool.runOperation(self, *args, **kwargs)
 	
 	def runQuery(self, *args, **kwargs):
+		"""
+		Trivial override to provide debugging support.
+		"""
 		if(debug):
 			print args, kwargs
 		return adbapi.ConnectionPool.runQuery(self, *args, **kwargs)

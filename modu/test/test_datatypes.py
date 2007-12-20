@@ -11,7 +11,7 @@ Tests for the various built-in editable datatypes.
 This module is getting big, and may need to be split into smaller pieces.
 """
 
-import time
+import time, datetime
 
 from twisted.trial import unittest
 
@@ -310,6 +310,7 @@ class DatatypesTestCase(unittest.TestCase):
 		test_itemdef = define.itemdef(
 			start_date			= date_datatype.DateField(
 				label			= 'start date:',
+				save_format		= 'datetime'
 			)
 		)
 		
@@ -326,7 +327,7 @@ class DatatypesTestCase(unittest.TestCase):
 		# +---------------------------+
 		# | 2007-09-26 23:40:00       | 
 		# +---------------------------+
-		test_storable.start_date = 1190864400
+		test_storable.start_date = datetime.datetime.fromtimestamp(1190864400)
 		
 		months, days, years = date.get_date_arrays(2005, 2012)
 		hours, minutes = date.get_time_arrays()
@@ -349,17 +350,23 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['delete'](type='submit', value='delete', weight=1002,
 			attributes=dict(onClick="return confirm('Are you sure you want to delete this record?');"))
 		
-		itemdef_form_html = itemdef_form.render(req)
-		reference_form_html = reference_form.render(req)
+		itemdef_form_html = str(itemdef_form.render(req))
+		reference_form_html = str(reference_form.render(req))
+		
+		for i in range(len(itemdef_form_html)):
+			if(reference_form_html[i] != itemdef_form_html[i]):
+				self.fail('Found %s (%s) when expecting %s (%s) at position %d' % (
+					reference_form_html[i], reference_form_html[i-20:i+20], itemdef_form_html[i], itemdef_form_html[i-20:i+20], i
+				))
 		
 		self.failUnlessEqual(itemdef_form_html, reference_form_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (itemdef_form_html, reference_form_html) )
 		
-		test_storable.start_date = 0
+		test_storable.start_date = datetime.datetime.now()
 		# this just loads the data, since there was
 		# no submit button in the test post data
 		itemdef_form.execute(req)
 		test_itemdef['start_date'].update_storable(req, itemdef_form, test_storable)
-		self.failUnlessEqual(test_storable.start_date, 1190864400, 'Date was calculated incorrectly as %d' % test_storable.start_date)
+		self.failUnlessEqual(test_storable.start_date, datetime.datetime.fromtimestamp(1190864400), 'Date was calculated incorrectly as %s' % test_storable.start_date)
 	
 	
 	def test_date_field2(self):
@@ -377,7 +384,7 @@ class DatatypesTestCase(unittest.TestCase):
 		simple_element['start_date']['minute'](type='select', weight=4, options=minutes, value=40)
 		
 		date_element = form.FormNode('test-form')
-		date_element['start_date'](type='datetime', label='start date:', value=1190864400)
+		date_element['start_date'](type='datetime', label='start date:', value=datetime.datetime.fromtimestamp(1190864400))
 		
 		simple_element_html = simple_element.render(req)
 		date_element_html = date_element.render(req)
@@ -449,7 +456,7 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['name']['name-autocomplete'](type='textfield', weight=0,
 								attributes={'id':'test-form-name-autocomplete'})
 		reference_form['name']['ac-support'](weight=1, value=tags.script(type='text/javascript')
-									['$("#test-form-name-autocomplete").autocomplete("http://____store-test-domain____:1234567/app-test/autocomplete/test/name", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, selectOnly:1, minChars:3, maxItemsToShow:10});'])
+									['$("#test-form-name-autocomplete").autocomplete("http://____store-test-domain____:1234567/app-test/autocomplete/test/name", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, matchSubset:0, selectOnly:1, extraParams:{t:%d}, minChars:3});' % int(time.time())])
 		reference_form['name']['name'](type='hidden', weight=2, value=0,
 								attributes={'id':'test-form-name-ac-callback'})
 		reference_form['save'](type='submit', value='save', weight=1000)

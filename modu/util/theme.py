@@ -275,6 +275,7 @@ class Theme(object):
 		end_year = form.attr('end_year', current_year + 5)
 		
 		months, days, years = date.get_date_arrays(start_year, end_year)
+		
 		try:
 			value = datetime.datetime(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, int(form_data['day'].value) + 1,
 										int(form_data['hour'].value), int(form_data['minute'].value))

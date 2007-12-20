@@ -7,6 +7,10 @@
 
 """
 Contains resources for configuring a default admin interface.
+
+All the content in this module and the contained classes should deal
+only with itemdef organization and management. Any form- or validation-
+specific code should go in L{modu.editable.define}.
 """
 
 import os.path, copy, re, datetime
@@ -18,6 +22,21 @@ from modu.util import form, theme, tags
 from modu.persist import page, storable, sql
 
 def select_template_root(req, template):
+	"""
+	Determine the appropriate directory to find the provided template.
+	
+	This is used by the Cheetah template code to allow for default templates
+	to be included with the modu distribution.
+	
+	@param req: the current request
+	@type req: L{modu.web.app.Request}
+	
+	@param template: the template about to be opened
+	@type template: str
+	
+	@return: path to template directory
+	@rtype: str
+	"""
 	import modu
 	
 	template_root = os.path.join(req.approot, 'template')
@@ -332,6 +351,21 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def prepare_export(self, req, itemdef, items):
+		"""
+		Manage creation of an export file.
+		
+		The selected items will be escaped and formatted as
+		either tab- or comma-separated values.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
+		
+		@param itemdef: the itemdef to use to generate the export
+		@type itemdef: L{modu.editable.define.itemdef}
+		
+		@param items: the items returned by the search result.
+		@type items: list(L{modu.persist.storable.Storable})
+		"""
 		header_string = None
 		
 		le = itemdef.config.get('export_le', '\n')
@@ -360,6 +394,27 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def prepare_standard_export(self, req, itemdef, item):
+		"""
+		Create a row for an export file.
+		
+		The default behavior is to attempt to generate an export
+		row using the labels and list output of the current itemdef.
+		
+		This can be problematic, since some list-view items are quite
+		expensive when used across the entire result set.
+		
+		Itemdefs can override 'export_formatter' to change the functionality
+		of this method.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
+		
+		@param itemdef: the itemdef to use to generate the export
+		@type itemdef: L{modu.editable.define.itemdef}
+		
+		@param item: the item to export.
+		@type item: L{modu.persist.storable.Storable}
+		"""
 		result = util.OrderedDict()
 		for name, field in itemdef.items():
 			if(field.get('export_listing', False)):
@@ -469,6 +524,15 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def prepare_custom(self, req, itemdef):
+		"""
+		Manage use of custom resources in the admin interface.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
+		
+		@param itemdef: an itemdef with custom resource info
+		@type itemdef: L{modu.editable.define.itemdef}
+		"""
 		rsrc = itemdef.config.get('resource')
 		if not(rsrc):
 			app.raise404('There is no resource at the path: %s' % req['REQUEST_URI'])
@@ -491,6 +555,14 @@ class AdminResource(resource.CheetahTemplateResource):
 	
 	
 	def get_content(self, req):
+		"""
+		Allow for content override (used by export).
+		
+		Normally, this function just calls the superclass, but if
+		C{self.content} exists, that value is returned instead.
+		
+		@see: L{modu.web.resource.IContent.get_content()}
+		"""
 		if(hasattr(self, 'content')):
 			return self.content
 		else:
@@ -536,9 +608,15 @@ class ACLResource(resource.CheetahTemplateResource):
 	
 	"""
 	def get_paths(self):
+		"""
+		@see: L{modu.web.resource.IResource.get_paths()}
+		"""
 		return ['/acl']
 	
 	def prepare_content(self, req):
+		"""
+		@see: L{modu.web.resource.IContent.prepare_content()}
+		"""
 		form_data = form.NestedFieldStorage(req)
 		if('new' in form_data):
 			new_data = form_data['new']
@@ -593,4 +671,7 @@ class ACLResource(resource.CheetahTemplateResource):
 		self.set_slot('acl_map', acl_map)
 	
 	def get_template(self, req):
+		"""
+		@see: L{modu.web.resource.ITemplate.get_template()}
+		"""
 		return 'admin-acl.html.tmpl'

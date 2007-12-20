@@ -35,7 +35,7 @@ EXPECTED_MULTIPLE_CATEGORY += '<option value="horror">Horror</option>'
 EXPECTED_MULTIPLE_CATEGORY += '<option value="sci-fi" selected>Science Fiction</option>'
 EXPECTED_MULTIPLE_CATEGORY += '</select>'
 
-EXPECTED_RADIO = '<label><input name="test-form[radio]" type="radio" value="%s" %s/>%s</label>'
+EXPECTED_RADIO = '<label><input name="test-form[radio]" type="radio" value="%s" %s/> %s</label>'
 
 EXPECTED_LABEL = '<label class="field-label">%s</label>'
 EXPECTED_HELP = '<div class="form-help">%s</div>'

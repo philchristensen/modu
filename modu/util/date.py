@@ -11,12 +11,19 @@ Various date-related utilities useful in building modu applications.
 
 import time, datetime
 
-# I hope I did this math right. Every 28 years the
-# calendar repeats, except through century leap years
-# excepting the 400 year leap years.  But only if
-# you're using the Gregorian calendar.
-
 def strftime(dt, fmt):
+	"""
+	Format the provided datetime object using the given format string.
+	
+	This function will properly format dates before 1900.
+	"""
+	# I hope I did this math right. Every 28 years the
+	# calendar repeats, except through century leap years
+	# excepting the 400 year leap years.  But only if
+	# you're using the Gregorian calendar.
+	
+	# Created by Andrew Dalke
+	# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/306860
 	# WARNING: known bug with "%s", which is the number
 	# of seconds since the epoch.	This is too harsh
 	# of a check.	It should allow "%%s".
@@ -32,6 +39,9 @@ def strftime(dt, fmt):
 	year = year + off
 	
 	def _findall(text, substr):
+		"""
+		matching support function.
+		"""
 		# Also finds overlaps
 		sites = []
 		i = 0
@@ -64,6 +74,9 @@ def strftime(dt, fmt):
 	return s
 
 def format_seconds(seconds):
+	"""
+	Format seconds as HH:MM:SS.
+	"""
 	hours, remainder = divmod(int(seconds), 3600)
 	minutes, remainder = divmod(remainder, 60)
 	seconds = remainder
@@ -81,6 +94,9 @@ def format_seconds(seconds):
 
 
 def get_date_arrays(start_year, end_year):
+	"""
+	Get a set of array for creating date select fields.
+	"""
 	def _get_month_struct(t):
 		st = list(time.localtime())
 		st[1] = t
@@ -92,18 +108,27 @@ def get_date_arrays(start_year, end_year):
 
 
 def get_time_arrays():
+	"""
+	Get a set of array for creating time select fields.
+	"""
 	hours = [str(i).zfill(2) for i in range(25)]
 	minutes = [str(i).zfill(2) for i in range(60)]
 	return hours, minutes
 
 
 def convert_to_timestamp(value):
+	"""
+	Convert dates and datetimes to seconds since the epoch.
+	"""
 	if(isinstance(value, (datetime.datetime, datetime.date))):
 		return time.mktime(value.timetuple())
 	else:
 		return value
 
 def get_dateselect_value(date_post_data, style, start_year, end_year):
+	"""
+	Take a standard date select posting and create a date, datetime, or time object.
+	"""
 	value = 0
 	
 	months, days, years = get_date_arrays(start_year, end_year)

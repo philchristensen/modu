@@ -1,5 +1,22 @@
 #!/usr/bin/env python
 
+# modu
+# Copyright (C) 2007 Phil Christensen
+#
+# $Id: define.py 631 2007-12-14 18:35:07Z phil $
+#
+# See LICENSE for details
+
+"""
+Generate a modu project directory.
+
+This script creates a directory structure for a new modu project. It
+is assumed that the resulting directory will act as the approot in
+the new application, and that the directory will be added to the
+Python search path, either globally, or by a web container-specific
+directive.
+"""
+
 import os, os.path, sys, time
 
 from twisted.python import usage
@@ -7,6 +24,9 @@ from twisted.python import usage
 from Cheetah.Template import Template
 
 class Options(usage.Options):
+	"""
+	Implement usage parsing for the mkmodu script.
+	"""
 	optParameters = [["longname", "l", None, "The descriptive name for the new project."],
 					 ["author", "a", None, "Name of copyright holder."]
 					]
@@ -14,6 +34,9 @@ class Options(usage.Options):
 	synopsis = 'Usage: mkmodu.py project [options]'
 	
 	def parseArgs(self, shortname):
+		"""
+		Implement the required `shortname` argument.
+		"""
 		self['shortname'] = shortname
 
 if(__name__ == '__main__'):

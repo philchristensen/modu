@@ -52,6 +52,9 @@ class FormNode(object):
 		self.submit_button = None
 	
 	def __getattr__(self, name):
+		"""
+		A convenience method for accessing form attributes.
+		"""
 		if(name in self.attributes):
 			return self.attributes[name]
 		raise AttributeError(name)
@@ -77,6 +80,9 @@ class FormNode(object):
 		return self
 	
 	def __getitem__(self, key):
+		"""
+		Allows child selection via hash syntax.
+		"""
 		if(key not in self.children):
 			if('type' in self.attributes):
 				if(self.parent is not None and self.attributes['type'] != 'fieldset'):
@@ -87,26 +93,47 @@ class FormNode(object):
 		return self.children[key]
 	
 	def __nonzero__(self):
+		"""
+		All forms are nonzero.
+		"""
 		return True
 	
 	def __setitem__(self, key, child):
+		"""
+		Allows insertion of child forms.
+		"""
 		self.children[key] = child
 		child.name = key
 		child.parent = self
 	
 	def __delitem__(self, key):
+		"""
+		Child form deletion.
+		"""
 		del self.children[key]
 	
 	def __len__(self):
+		"""
+		Return number of child form elements.
+		"""
 		return len(self.children)
 	
 	def __iter__(self):
+		"""
+		Iterate through child form names.
+		"""
 		return self.iterkeys()
 	
 	def __contains__(self, key):
+		"""
+		Implement containment for child names.
+		"""
 		return key in self.children
 	
 	def iterkeys(self):
+		"""
+		Order key results by weight.
+		"""
 		def __weighted_cmp(a, b):
 			a = self.children[a]
 			b = self.children[b]
@@ -117,6 +144,9 @@ class FormNode(object):
 		return iter(keys)
 	
 	def attr(self, name, default=None):
+		"""
+		Similar to dict.get(), for form attributes.
+		"""
 		if(name in self.attributes):
 			return self.attributes[name]
 		if(name == 'name'):
@@ -124,6 +154,9 @@ class FormNode(object):
 		return default
 	
 	def get_element_path(self):
+		"""
+		Return list of names from parent to this item.
+		"""
 		path = []
 		node = self
 		while(node is not None):
@@ -133,10 +166,16 @@ class FormNode(object):
 		return path
 	
 	def get_element_name(self):
+		"""
+		Get this element's HTML form name.
+		"""
 		path = self.get_element_path()
 		return '%s[%s]' % (path[0], ']['.join(path[1:]))
 	
 	def has_submit_buttons(self):
+		"""
+		See if a submit button has been defined in this form.
+		"""
 		for name in self.children:
 			element = self.children[name]
 			if(element.type == 'submit'):
@@ -148,6 +187,8 @@ class FormNode(object):
 	
 	def find_submit_buttons(self):
 		"""
+		Return any submit buttons in this form.
+		
 		This method descends down the form tree looking for
 		form elements of the type 'submit', and returns an
 		array of results.
@@ -163,6 +204,8 @@ class FormNode(object):
 	
 	def execute(self, req, force=False):
 		"""
+		Process this form.
+		
 		This function first identifies 	whether or not a submit button
 		was pressed. If so, it begins the validation process, then, if
 		successful, initiates the submission process.
@@ -185,14 +228,28 @@ class FormNode(object):
 		return False
 	
 	def set_error(self, name, error):
+		"""
+		Note an error with this form's child.
+		
+		This function may only be called on top-level forms.
+		"""
 		if(self.parent):
 			raise RuntimeError('Errors cannot be set directly on child form elements.')
 		self.errors.setdefault(name, []).append(error)
 	
 	def has_errors(self):
+		"""
+		Return true if this form or any of its children have errors.
+		"""
 		return bool(len(self.get_errors()))
 	
 	def get_errors(self):
+		"""
+		Return errors on this element.
+		
+		If this is a top-level form, return all errors. Otherwise, only
+		return errors from this form.
+		"""
 		item = self
 		errors = {}
 		while(True):
@@ -333,11 +390,17 @@ class NestedFieldStorage(cgi.FieldStorage):
 			return False
 	
 	def get(self, key, default=None):
+		"""
+		Implements dict-style .get() function.
+		"""
 		if(key in self):
 			return self[key]
 		return cgi.MiniFieldStorage(key, default)
 	
 	def parse_field(self, key, value):
+		"""
+		This method manages the storage of nested data.
+		"""
 		#print 'parse field got %s: %s' % (key, value)
 		original_key = key
 		tree = []
@@ -438,6 +501,9 @@ class NestedFieldStorage(cgi.FieldStorage):
 	
 	
 	def make_file(self, binary=None):
+		"""
+		Enables use of MagicFile for progressive file transfers.
+		"""
 		if(self.filename):
 			return MagicFile(self.req, self.filename, 'w+b')
 		else:
@@ -462,6 +528,9 @@ class MagicFile(file):
 	polled for by the client.
 	"""
 	def __init__(self, req, filename, mode='r', bufsize=-1):
+		"""
+		Create a new MagicFile.
+		"""
 		import tempfile, md5, os.path
 		hashed_filename = os.path.join(tempfile.gettempdir(), md5.new(filename + time.ctime()).hexdigest())
 		file.__init__(self, hashed_filename, mode, bufsize)
@@ -477,6 +546,9 @@ class MagicFile(file):
 		session.save()
 	
 	def write(self, data):
+		"""
+		Write to the file and update the session bytecount.
+		"""
 		# So, we automatically save the session every time a page is
 		# loaded, since we need to update the access time. So writing
 		# the pickled data repeatedly (as we update the bytes written)
@@ -491,6 +563,9 @@ class MagicFile(file):
 		super(MagicFile, self).write(data)
 	
 	def seek(self, offset, whence=0):
+		"""
+		When seek goes to 0, we must be done loading the file.
+		"""
 		#self.req.log_error('file was sought')
 		session = self.req.session
 		session['modu.file'][self.client_filename]['complete'] = 1

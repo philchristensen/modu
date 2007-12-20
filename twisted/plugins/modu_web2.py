@@ -5,6 +5,12 @@
 #
 # See LICENSE for details
 
+"""
+Unsupported Twisted plugin to launch a modu web application container.
+
+Due to the nature of web2, this plugin is only provided as a reference.
+"""
+
 import os
 
 from zope.interface import implements
@@ -17,7 +23,18 @@ from twisted.web2 import server, channel, wsgi
 
 from modu.web import app
 
+class Options(usage.Options):
+	"""
+	Implement usage parsing for the modu-web plugin.
+	"""
+	optParameters = [["port", "p", 8888, "Port to use for web server."]
+					]
+
+
 class ModuwWeb2WSGIResource(wsgi.WSGIResource):
+	"""
+	This simple subclass sets env['SCRIPT_FILENAME'] to the current directory.
+	"""
 	def renderHTTP(self, req):
 		# Do stuff with WSGIHandler.
 		handler = wsgi.WSGIHandler(self.application, req)
@@ -29,18 +46,19 @@ class ModuwWeb2WSGIResource(wsgi.WSGIResource):
 		return d
 
 
-class Options(usage.Options):
-	optParameters = [["port", "p", 8888, "Port to use for web server."]
-					]
-
-
 class ModuWeb2ServiceMaker(object):
+	"""
+	Create a modu web service with twisted.web.
+	"""
 	implements(service.IServiceMaker, IPlugin)
 	tapname = "modu-web2"
 	description = "Run a modu application server."
 	options = Options
 	
 	def makeService(self, config):
+		"""
+		Instantiate the service.
+		"""
 		root = ModuwWeb2WSGIResource(app.handler)
 		site = server.Site(root)
 		

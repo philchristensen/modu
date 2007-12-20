@@ -194,6 +194,9 @@ def build_where(data, use_where=True):
 	@param data: a column name to value map
 	@type data: dict
 	
+	@param use_where: should the result start with "WHERE"? (Default: True)
+	@type use_where: bool
+	
 	@returns: an SQL fragment
 	@rtype: str
 	"""

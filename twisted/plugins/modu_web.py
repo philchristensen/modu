@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+Twisted plugin to launch a modu web application container.
+"""
+
 from zope.interface import implements
 
 from twisted.python import usage
@@ -18,17 +22,26 @@ from modu.web import twist, app
 import os
 
 class Options(usage.Options):
+	"""
+	Implement usage parsing for the modu-web plugin.
+	"""
 	optParameters = [["port", "p", 8888, "Port to use for web server."],
 					 ['logfile', 'l', 'twistd-access.log', 'Path to access log.']
 					]
 
 class ModuServiceMaker(object):
+	"""
+	Create a modu web service with twisted.web.
+	"""
 	implements(service.IServiceMaker, IPlugin)
 	tapname = "modu-web"
 	description = "Run a modu application server."
 	options = Options
 	
 	def makeService(self, config):
+		"""
+		Instantiate the service.
+		"""
 		if(config['logfile'] != '-'):
 			site = server.Site(twist.WSGIResource(app.handler), logPath=config['logfile'])
 		else:

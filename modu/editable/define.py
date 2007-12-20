@@ -7,6 +7,26 @@
 
 """
 Contains classes needed to define a basic itemdef.
+
+Although itemdefs are most readily used as part of the resources
+defined in L{modu.editable.resource}, they can also be used
+individually to present forms to modify Storables with.
+
+Example::
+	frm = itemdef.get_form(req, selected_item)
+	if('theme' in itemdef.config):
+	    frm.theme = itemdef.config['theme']
+	
+	if(frm.execute(req)):
+	    # we regenerate the form because some fields don't know their
+	    # value until after the form is saved (e.g., postwrite fields)
+	    new_frm = itemdef.get_form(req, selected_item)
+	    new_frm.errors = frm.errors
+	    frm = new_frm
+	else:
+	    # If we haven't submitted the form, errors should definitely be empty
+	    for field, err in frm.errors.items():
+	        req.messages.report('error', err)
 """
 
 import copy
@@ -120,7 +140,7 @@ class itemdef(OrderedDict):
 		
 		Example::
 		
-			__itemdef__ = define.itemdef(
+			itemdef = define.itemdef(
 			    __config        = dict(
 			                        name        = 'customer',
 			                        label       = 'Customers'
@@ -188,6 +208,9 @@ class itemdef(OrderedDict):
 	
 	
 	def __getstate__(self):
+		"""
+		Integrate with OrderedDict serialization.
+		"""
 		data = super(itemdef, self).__getstate__()
 		data['config'] = self.config
 		data['name'] = self.name
@@ -195,6 +218,9 @@ class itemdef(OrderedDict):
 	
 	
 	def __setstate__(self, data):
+		"""
+		Integrate with OrderedDict unserialization.
+		"""
 		super(itemdef, self).__setstate__(data)
 		self.config = data['config']
 		self.name = data['name']
@@ -582,6 +608,9 @@ class definition(dict):
 	
 	
 	def get_column_name(self):
+		"""
+		Return the proper SQL column name for this field.
+		"""
 		return self.get('column', self.name)
 	
 	

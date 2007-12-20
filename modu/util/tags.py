@@ -19,6 +19,9 @@ reserved2name = {
 }
 
 def decode_htmlentities(string):
+	"""
+	Decode HTML entities into their Unicode equivalent.
+	"""
 	def __entity(match):
 		ent = match.group(2)
 		if match.group(1) == "#":
@@ -34,6 +37,11 @@ def decode_htmlentities(string):
 	return entity_re.subn(__entity, string)[0]
 
 def encode_htmlentities(string, strict=False):
+	"""
+	Encode special characters in `string` into HTML entities.
+	
+	If strict is True, encode **all** possible entities.
+	"""
 	if(isinstance(string, str)):
 		result = ''
 	elif(isinstance(string, unicode)):
@@ -52,23 +60,38 @@ def encode_htmlentities(string, strict=False):
 	return result
 
 def quote(string):
+	"""
+	Replace double-quotes in `string` with '&quot;'
+	"""
 	if not(isinstance(string, basestring)):
 		return string
 	return string.replace('"', '&quot;')
 
 class Tag(object):
+	"""
+	An X/HTML tag.
+	"""
 	def __init__(self, tag):
+		"""
+		Create a new tag with the given name.
+		"""
 		self.tag = tag
 		self.attributes = {}
 		self.children = []
 	
 	def __getitem__(self, children):
+		"""
+		Item access indicates containment.
+		"""
 		if not(isinstance(children, (list, tuple))):
 			children = [children]
 		self.children.extend(children)
 		return self
 	
 	def __call__(self, *args, **kwargs):
+		"""
+		Call syntax indicates attributes.
+		"""
 		if not(kwargs):
 			return self
 		
@@ -82,6 +105,9 @@ class Tag(object):
 		return self
 	
 	def __str__(self):
+		"""
+		Render as ASCII.
+		"""
 		output = '<' + self.tag
 		fragments = ''
 		keys = self.attributes.keys()
@@ -109,12 +135,21 @@ class Tag(object):
 		return output
 	
 	def __add__(self, other):
+		"""
+		Concatenation support.
+		"""
 		return str(self) + str(other)
 	
 	def __radd__(self, other):
+		"""
+		Concatenation support.
+		"""
 		return str(other) + str(self)
 	
 	def __eq__(self, other):
+		"""
+		Equality support.
+		"""
 		return str(self) == str(other)
 
 
@@ -124,9 +159,15 @@ class _tag(str):
 	and __getitem__, delegating responsibility to the tag.
 	"""
 	def __call__(self, **kw):
+		"""
+		Convienience syntax.
+		"""
 		return Tag(self)(**kw)
 	
 	def __getitem__(self, children):
+		"""
+		Convienience syntax.
+		"""
 		return Tag(self)[children]
 
 
