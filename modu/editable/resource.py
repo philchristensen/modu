@@ -18,7 +18,7 @@ import os.path, copy, re, datetime
 from modu import util
 from modu.web import resource, app, user
 from modu.editable import define
-from modu.util import form, theme, tags
+from modu.util import form, theme, tags, csv
 from modu.persist import page, storable, sql
 
 def select_template_root(req, template):
@@ -379,11 +379,11 @@ class AdminResource(resource.CheetahTemplateResource):
 		
 		if(export_type == 'csv'):
 			self.content_type = 'text/csv; charset=UTF-8'
-			self.content = util.generate_csv(rows, le)
+			self.content = csv.generate_csv(rows, le)
 			ext = 'csv'
 		elif(export_type == 'tsv'):
 			self.content_type = 'text/tsv; charset=UTF-8'
-			self.content = util.generate_tsv(rows, le)
+			self.content = csv.generate_tsv(rows, le)
 			ext = 'txt'
 		else:
 			raise RuntimeError("Invalid export type '%s'" % export_type)
