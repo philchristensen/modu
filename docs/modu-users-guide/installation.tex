@@ -1,0 +1,59 @@
+\chapter{Installation}
+
+\section{Requirements}
+
+\begin{flushleft}
+\begin{description}
+    \item[Python 2.5] -- Although modu should run properly under Python 2.4,
+        there are some memory release issues that can be a problem for long-
+        running applications, such as web servers.
+    \item[Zope Interface 3.3.0] -- Zope.Interface is required by both Twisted
+        and modu, but should be considered an essential part of any Python
+        installation.
+    \item[Twisted 2.5.0] -- As a matter of personal preference, I run Twisted
+        from the most recent SVN checkout, but the most recent stable release
+        should be fine.
+    \item[MySQL 5.0] -- Modu is generally DB-agnostic, but at this time only
+        MySQL 5 is supported.
+    \item[MySQLdb 1.2.2] -- Earlier versions of MySQLdb have a bug in their
+        unicode handling. Note that even if you're experimenting with alternate
+        DB engines, there's a dependency on MySQLdb when generating queries.
+\end{description}
+\end{flushleft}
+
+\section{Installation}
+\subsection{Twisted}
+
+The modu libraries rely on some components of twisted.web2, which
+isn't released yet, so it's not installed by the default setup script.
+I usually like to run Twisted right out of the SVN checkout anyways,
+so I use setup.py to get the scripts and links in place.
+
+Then I delete the installed scripts, and replace them with an entry
+in a .pth file pointing to the SVN sandbox.
+
+\begin{verbatim}
+- svn co svn://svn.twistedmatrix.com/svn/Twisted/trunk Twisted
+- pushd Twisted
+- python setup.py install
+- popd
+
+Debian:
+- rm -rf /usr/lib/python2.5/site-packages/twisted
+- echo '/usr/local/dram/Twisted
+/usr/local/dram/modu' > /usr/lib/python2.5/site-packages/drampaths.pth
+
+Mac OS X
+- rm -rf /Library/Python/2.5/site-packages/twisted
+
+Leopard comes with a partial install of twisted that kind of screws everything
+up. This fix changes the ordering of the sys.path.
+
+Create a file at /Library/Python/2.5/site-packages/drampaths.pth with:
+
+import sys; sys.path = [s for s in sys.path if s != '/Library/Python/2.5/site-packages']
+import sys; sys.path.insert(0, '/Library/Python/2.5/site-packages')
+import sys; sys.path.insert(0, '/usr/local/dram/Twisted')
+/usr/local/dram/modu
+\end{verbatim}
+
