@@ -470,9 +470,12 @@ class Request(dict):
 		if(self.app.base_path == '/' and not args):
 			result = ''
 		
-		prefix = '%s://%s' % (self['REQUEST_SCHEME'], self.app.base_domain)
-		if('SERVER_PORT' in self and self['SERVER_PORT'] != '80' and self.app.base_domain.find(':') == -1):
-			prefix += ':' + self['SERVER_PORT']
+		domain = self.get('HTTP_X_FORWARDED_SERVER', self.get('HTTP_HOST', self.app.base_domain))
+		
+		prefix = '%s://%s' % (self['REQUEST_SCHEME'], domain)
+		if('HTTP_X_FORWARDED_SERVER' not in self):
+			if('SERVER_PORT' in self and self['SERVER_PORT'] != '80' and domain.find(':') == -1):
+				prefix += ':' + self['SERVER_PORT']
 		
 		result = prefix + result
 		

@@ -4,7 +4,7 @@
 body {
 	font-family: Helvetica, Arial, "MS Trebuchet", sans-serif;
 	font-size: 14px;
-	line-height: 110%;
+	line-height: 120%;
 }
 
 label.field-label {
@@ -22,6 +22,10 @@ label.field-label {
 	margin-top: 5px;
 	margin-bottom: 10px;
 	clear: both;
+}
+
+.help {
+	font-size: 11px;
 }
 
 .form-help {

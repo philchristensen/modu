@@ -112,6 +112,12 @@ class Theme(object):
 		return tags.input(type='text', **attribs)
 	
 	
+	def form_file(self, form_id, element):
+		attribs = element.attr('attributes', {})
+		attribs['name'] = element.get_element_name()
+		return tags.input(type='file', **attribs)
+	
+	
 	def form_password(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
@@ -379,14 +385,6 @@ class Theme(object):
 			]]
 		
 		return output
-	
-	
-	def form_file(self, form_id, element):
-		pass
-	
-	
-	def form_image(self, form_id, element):
-		pass
 	
 	
 	def page_guide(self, pages, url):

@@ -1,5 +1,6 @@
 h1, h2, h3, h4 {
 	font-weight: bold;
+	margin-top: 15px;
 	margin-bottom: 10px;
 }
 
@@ -24,10 +25,22 @@ label input {
 	margin-left: 5px;
 }
 
-ul, ol {
+ul, ol, dl {
 	padding-left: 20px;
 }
 
-ol li {
+dt {
+	font-weight: bold;
+}
+
+dd {
+	padding-left: 20px;
+}
+
+ol li{
 	list-style: decimal inside;
+}
+
+p {
+	margin-bottom: 10px;
 }
