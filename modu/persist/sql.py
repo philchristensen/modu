@@ -13,7 +13,7 @@ import types, datetime
 
 from modu.util import date
 
-def build_insert(table, data):
+def build_insert(table, data=None, **kwargs):
 	"""
 	Given a table name and a dictionary, construct an INSERT query. Keys are
 	sorted alphabetically before output, so the result of passing a semantically
@@ -30,6 +30,9 @@ def build_insert(table, data):
 	@returns: an SQL query
 	@rtype: str
 	"""
+	if(data is None and kwargs):
+		data = kwargs
+	
 	if not(data):
 		raise ValueError("`data` argument to build_insert() is empty.")
 	if not(isinstance(data, (list, tuple))):
@@ -51,7 +54,7 @@ def build_insert(table, data):
 	return interp(query, values)
 
 
-def build_replace(table, data):
+def build_replace(table, data=None, **kwargs):
 	"""
 	Given a table name and a dictionary, construct an REPLACE INTO query. Keys are
 	sorted alphabetically before output, so the result of running a semantically
@@ -69,10 +72,13 @@ def build_replace(table, data):
 	@rtype: str
 	"""
 	table = escape_dot_syntax(table)
+	if(data is None):
+		data = {}
+	data.update(kwargs)
 	query_stub = 'REPLACE INTO %s ' % table
 	return query_stub + build_set(data)
 
-def build_set(data):
+def build_set(data=None, **kwargs):
 	"""
 	Given a dictionary, construct a SET clause. Keys are sorted alphabetically
 	before output, so the result of passing a semantically identical dictionary
@@ -84,6 +90,10 @@ def build_set(data):
 	@returns: an SQL fragment
 	@rtype: str
 	"""
+	if(data is None):
+		data = {}
+	data.update(kwargs)
+	
 	keys = data.keys()
 	keys.sort()
 	values = [data[key] for key in keys]
@@ -116,7 +126,7 @@ def build_update(table, data, constraints):
 	return query_stub + build_set(data) + ' ' + build_where(constraints)
 
 
-def build_select(table, data):
+def build_select(table, data=None, **kwargs):
 	"""
 	Given a table name and a dictionary, construct a SELECT query. Keys are
 	sorted alphabetically before output, so the result of passing a semantically
@@ -140,6 +150,11 @@ def build_select(table, data):
 	@seealso: L{build_where()}
 	"""
 	table = escape_dot_syntax(table)
+	
+	if(data is None):
+		data = {}
+	data.update(kwargs)
+	
 	if('__select_keyword' in data):
 		query = "SELECT %s * FROM %s " % (data['__select_keyword'], table)
 	else:
@@ -148,7 +163,7 @@ def build_select(table, data):
 	return query + build_where(data)
 
 
-def build_delete(table, constraints):
+def build_delete(table, constraints=None, **kwargs):
 	"""
 	Given a table name, and a set of constraints, construct a DELETE query.
 	Keys are sorted alphabetically before output, so the result of passing
@@ -166,11 +181,14 @@ def build_delete(table, constraints):
 	@seealso: L{build_where()}
 	"""
 	table = escape_dot_syntax(table)
+	if(constraints is None):
+		constraints = {}
+	constraints.update(kwargs)
 	query_stub = 'DELETE FROM %s ' % table
 	return query_stub + build_where(constraints)
 
 
-def build_where(data, use_where=True):
+def build_where(data=None, use_where=True, **kwargs):
 	"""
 	Given a dictionary, construct a WHERE clause. Keys are sorted alphabetically
 	before output, so the result of passing a semantically identical dictionary
@@ -200,6 +218,10 @@ def build_where(data, use_where=True):
 	@returns: an SQL fragment
 	@rtype: str
 	"""
+	if(data is None):
+		data = {}
+	data.update(kwargs)
+	
 	query = ''
 	criteria = []
 	values = []

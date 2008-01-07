@@ -31,8 +31,18 @@ class SQLTestCase(unittest.TestCase):
 		expecting = "DELETE FROM `table` WHERE `col1` = 'col1_data' AND `col2` = 'col2_data'"
 		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 	
+	def test_build_delete2(self):
+		query = sql.build_delete('table', col1='col1_data', col2='col2_data');
+		expecting = "DELETE FROM `table` WHERE `col1` = 'col1_data' AND `col2` = 'col2_data'"
+		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+	
 	def test_build_insert(self):
 		query = sql.build_insert('table', {'col2':'col2_data', 'col1':sql.RAW("ENCRYPT('something')")});
+		expecting = "INSERT INTO `table` (`col1`, `col2`) VALUES (ENCRYPT('something'), 'col2_data')"
+		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+	
+	def test_build_insert2(self):
+		query = sql.build_insert('table', col2='col2_data', col1=sql.RAW("ENCRYPT('something')"));
 		expecting = "INSERT INTO `table` (`col1`, `col2`) VALUES (ENCRYPT('something'), 'col2_data')"
 		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 	
@@ -56,6 +66,11 @@ class SQLTestCase(unittest.TestCase):
 		expecting = "REPLACE INTO `table` SET `col1` = 'col1_data', `col2` = 'col2_data'"
 		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 	
+	def test_build_replace2(self):
+		query = sql.build_replace('table', col2='col2_data', col1='col1_data');
+		expecting = "REPLACE INTO `table` SET `col1` = 'col1_data', `col2` = 'col2_data'"
+		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+	
 	def test_build_replace_raw(self):
 		query = sql.build_replace('table', {'col2':'col2_data', 'col1':sql.RAW("ENCRYPT('something')")});
 		expecting = "REPLACE INTO `table` SET `col1` = ENCRYPT('something'), `col2` = 'col2_data'"
@@ -68,6 +83,11 @@ class SQLTestCase(unittest.TestCase):
 	
 	def test_build_select(self):
 		query = sql.build_select('table', {'col2':'col2_data', 'col1':'col1_data'});
+		expecting = "SELECT * FROM `table` WHERE `col1` = 'col1_data' AND `col2` = 'col2_data'"
+		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+	
+	def test_build_select2(self):
+		query = sql.build_select('table', col2='col2_data', col1='col1_data');
 		expecting = "SELECT * FROM `table` WHERE `col1` = 'col1_data' AND `col2` = 'col2_data'"
 		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 	
