@@ -1,0 +1,149 @@
+\chapter{Getting Started}
+
+The best way to become familiar with the modu toolkit is to build a sample
+site. This chapter will guide you through creating your first modu-based
+web project.
+
+The examples in this chapter assume you have a properly configured MySQL 5
+server. There is preliminary support for any DB-API 2.0-compliant web server,
+but that will not be addressed in this chapter.
+
+\section{Creating A Project Workspace}
+
+The first thing you'll want to do is navigate to a suitable work area, and
+use the mkmodu script to create a skeleton project directory.
+
+The various mkmodu command line arguments allow you to specify the project
+shortname (required) and two other variables that will be inserted into
+comment strings in the resulting output.
+
+\begin{verbatim}
+    Usage: mkmodu.py project [options]
+    Options:
+      -l, --longname=  The descriptive name for the new project.
+      -a, --author=    Name of copyright holder.
+          --version    
+          --help       Display this help and exit.
+
+    Generate a modu project directory.
+\end{verbatim}
+
+\subsection{What's Inside a modu Project?}
+
+\begin{figure}[ht]
+\label{layout}
+\caption{Sample modu project directory layout}
+\begin{verbatim}
+myproject/
+    docs/
+        database-schema.mysql
+    modu/
+        itemdefs/
+            page_itemdef.py
+            permission_itemdef.py
+            role_itemdef.py
+            user_itemdef.py
+        sites/
+            myproject_site.py
+    myproject/
+        __init__.py
+        model/
+            __init__.py
+            page.py
+        resource/
+            __init__.py
+            index.py
+    template/
+        index.html.tmpl
+    var/
+    webroot/
+        styles.css
+\end{verbatim}
+\end{figure}
+
+The resulting directory structure will look something like
+figure \ref{layout} on page \pageref{layout}.
+
+\begin{flushleft}
+\begin{description}
+    \item[\emph{docs/database-schema.mysql}]
+    -- A sample database schema, with additional SQL added to create default
+    users and other related records
+    \item[\emph{modu/itemdefs/}]
+    -- Configuration files for the Editable admin interface
+    \item[\emph{modu/sites/myproject\_site.py}]
+    -- Site configuration file for this project
+    \item[\emph{myproject/}]
+    -- Top-level package for the classes belonging to this project
+    \item[\emph{template/}]
+    -- Default root for display templates
+    \item[\emph{var/}]
+    -- Template cache directory, other transient data
+    \item[\emph{webroot/}]
+    -- The default webroot for unhandled URLs
+\end{description}
+\end{flushleft}
+
+\section{Configuring the Database}
+
+After you change to your new project directory, the first thing you'll
+need to do is configure the database. You'll need to create a database to
+use for the project, and then create a user to access it with.
+
+\begin{flushleft}
+\begin{enumerate}
+    \item Create the database:
+        \begin{verbatim}
+        mysql -u root -p -e "CREATE DATABASE myproject;"
+        mysql -u root -p -e "GRANT ALL ON myproject.* TO myproject@localhost 
+            IDENTIFIED BY 'h7HjkdW2';"
+        mysql -u root -p -e "FLUSH PRIVILEGES;"
+        \end{verbatim}
+    \item Load the generated schema:
+        \begin{verbatim}
+        mysql -u root -p myproject < docs/database-schema.mysql
+        \end{verbatim}
+    \item Modify the DB URL specified in \emph{modu/sites/myproject\_site.py} to
+        contain the proper SQL login, in the form \verb|driverName://user:password@hostname/dbname|
+\end{enumerate}
+\end{flushleft}
+
+\section{Launching the modu Server}
+
+Finally, to get the modu webserver up and running, change to your project
+directory, and run \verb|twistd -n modu-web| (the -n switch keeps the
+application in the foreground, useful in development or debugging).
+
+At this point you should have a functioning modu application running in the
+foreground. Connecting to \verb|http://localhost:8888| should display
+"Welcome to your new project..."
+
+If you wish to allow the application to daemonize, you can leave off the -n
+switch. The pid of the background process will be saved in the current directory.
+
+Many twistd-specific options can be of use here, as well as other UNIX-specific
+techniques. Here's an advanced example:
+
+\begin{verbatim}
+    su www-data -c "authbind /usr/bin/twistd --logfile=/var/log/modu/error.log
+        --pidfile=/var/run/modu/twistd.pid
+        modu-web -p 80 --logfile=/var/log/modu/access.log"
+\end{verbatim}
+
+You can see the following tricks being used here:
+
+\begin{flushleft}
+\begin{enumerate}
+    \item This is from an init script, and therefore runs as root, so use
+        \verb|su www-data| to run the main server command.
+    \item At this point the server is running as www-data, which normally
+        isn't allowed to bind to low ports. Use a configured \verb|authbind|
+        binary to launch the app with binding privileges.
+    \item Since this runs in the background, put the pidfile in a memorable
+        location. You'll need this to kill the process later.
+    \item Redirect logging to the appropriate places.
+    \item Run the server on port 80, instead of the default 8888.
+\end{enumerate}
+\end{flushleft}
+
+
