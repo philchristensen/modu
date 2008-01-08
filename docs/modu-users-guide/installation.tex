@@ -4,56 +4,97 @@
 
 \begin{flushleft}
 \begin{description}
-    \item[Python 2.5] -- Although modu should run properly under Python 2.4,
+    \item[\href{http://www.python.org}{Python 2.5}]
+        -- Although modu should run properly under Python 2.4,
         there are some memory release issues that can be a problem for long-
         running applications, such as web servers.
-    \item[Zope Interface 3.3.0] -- Zope.Interface is required by both Twisted
+    \item[\href{http://www.zope.org/Products/ZopeInterface}{Zope Interface 3.3.0}]
+        -- Zope.Interface is required by both Twisted
         and modu, but should be considered an essential part of any Python
         installation.
-    \item[Twisted 2.5.0] -- As a matter of personal preference, I run Twisted
+    \item[\href{http://www.twistedmatrix.com}{Twisted 2.5.0}]
+        -- As a matter of personal preference, I run Twisted
         from the most recent SVN checkout, but the most recent stable release
         should be fine.
-    \item[MySQL 5.0] -- Modu is generally DB-agnostic, but at this time only
+    \item[\href{http://www.mysql.com}{MySQL 5.0}]
+        -- Modu is generally DB-agnostic, but at this time only
         MySQL 5 is supported.
-    \item[MySQLdb 1.2.2] -- Earlier versions of MySQLdb have a bug in their
+    \item[\href{http://sourceforge.net/projects/mysql-python}{MySQLdb 1.2.2}]
+        -- Earlier versions of MySQLdb have a bug in their
         unicode handling. Note that even if you're experimenting with alternate
         DB engines, there's a dependency on MySQLdb when generating queries.
 \end{description}
 \end{flushleft}
 
-\section{Installation}
-\subsection{Twisted}
+\section{Install Notes}
 
-The modu libraries rely on some components of twisted.web2, which
-isn't released yet, so it's not installed by the default setup script.
-I usually like to run Twisted right out of the SVN checkout anyways,
-so I use setup.py to get the scripts and links in place.
+You should be able to install the items above in the order listed. There are
+no special configuration details for the dependencies in general, but there
+are a number of version- or platform-specific issues you might encounter.
 
-Then I delete the installed scripts, and replace them with an entry
-in a .pth file pointing to the SVN sandbox.
+Once the dependencies are all in place, you can uncompress a recent modu
+tarball in some convenient location, which for now we'll call \emph{/usr/local/modu}.
+
+Assuming root privileges, install the modu toolkit with:
 
 \begin{verbatim}
-- svn co svn://svn.twistedmatrix.com/svn/Twisted/trunk Twisted
-- pushd Twisted
-- python setup.py install
-- popd
+    python setup.py install
+\end{verbatim}
 
-Debian:
-- rm -rf /usr/lib/python2.5/site-packages/twisted
-- echo '/usr/local/dram/Twisted
-/usr/local/dram/modu' > /usr/lib/python2.5/site-packages/drampaths.pth
+\subsection{Twisted Python on Mac OS X 10.5.1}
 
-Mac OS X
-- rm -rf /Library/Python/2.5/site-packages/twisted
+The stock Leopard install includes a partial install of Twisted in:
+\begin{verbatim}
+    /System/Library/Frameworks/Python.framework/Versions/2.5/Extras
+\end{verbatim}
+If you attempt to run Twisted out of the SVN module itself (say, for development
+purposes), you can run into problems where the partial installed version preempts
+the newly installed copy.
 
-Leopard comes with a partial install of twisted that kind of screws everything
-up. This fix changes the ordering of the sys.path.
+To fix this, you can place the following in a .pth file inside your site-packages directory:
 
-Create a file at /Library/Python/2.5/site-packages/drampaths.pth with:
-
-import sys; sys.path = [s for s in sys.path if s != '/Library/Python/2.5/site-packages']
+\begin{verbatim}
+import sys; sys.path = [s for s in sys.path 
+                        if s != '/Library/Python/2.5/site-packages']
 import sys; sys.path.insert(0, '/Library/Python/2.5/site-packages')
 import sys; sys.path.insert(0, '/usr/local/dram/Twisted')
 /usr/local/dram/modu
+\end{verbatim}
+
+The first line removes the site-packages directories (to prevent duplicates),
+the next two lines insert the new paths at the top of the system path, and the
+last line adds a directory to the end of the system path.
+
+For more information, consult the \href{http://docs.python.org/lib/module-site.html}{Python documentation}.
+
+
+\subsection{MySQLdb on Mac OS X 10.5.1}
+
+There seems to be an issue with MySQLdb 1.2.2 (the Python MySQL driver) and
+Mac OS X Leopard. The symptom is this error:
+
+\begin{verbatim}
+    In file included from /usr/local/mysql/include/mysql.h:43,
+                     from _mysql.c:40:
+    /usr/include/sys/types.h:92: error: duplicate 'unsigned'
+    /usr/include/sys/types.h:92: error: two or more data types
+                     in declaration specifiers
+    error: command 'gcc' failed with exit status 1
+\end{verbatim}
+
+You'll need to edit \_mysql.c and comment out or remove the following lines:
+
+\begin{verbatim}
+    #ifndef uint
+    #define uint unsigned int
+    #endif
+\end{verbatim}
+
+Also, importing the MySQLdb module in Python may raise an exception about
+a 'missing image'. If so, you'll also need to create this impossible-
+looking symlink:
+
+\begin{verbatim}
+    ln -s /usr/local/mysql/lib /usr/local/mysql/lib/mysql
 \end{verbatim}
 
