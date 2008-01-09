@@ -314,7 +314,6 @@ def _scan_sites(env):
 	reload(modu.sites)
 	
 	for site_plugin in plugin.getPlugins(ISite, modu.sites):
-		#print 'found site config %r' % site_plugin
 		site = site_plugin()
 		app = Application(site)
 		
@@ -333,6 +332,8 @@ def _scan_sites(env):
 		base_path = app.base_path
 		if not(base_path):
 			base_path = '/'
+		
+		#print 'found site config at %s%s, %r' % (domain, base_path, site_plugin)
 		host_node.register(base_path, app, clobber=True)
 
 
