@@ -1,5 +1,5 @@
 # modu
-# Copyright (C) 2007 Phil Christensen
+# Copyright (C) 2007-2008 Phil Christensen
 #
 # $Id$
 #

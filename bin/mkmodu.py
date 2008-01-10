@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # modu
-# Copyright (C) 2007 Phil Christensen
+# Copyright (C) 2007-2008 Phil Christensen
 #
 # $Id: define.py 631 2007-12-14 18:35:07Z phil $
 #
@@ -16,6 +16,8 @@ the new application, and that the directory will be added to the
 Python search path, either globally, or by a web container-specific
 directive.
 """
+
+import modu
 
 import os, os.path, sys, time
 
@@ -49,8 +51,7 @@ if(__name__ == '__main__'):
 		print e.args[0]
 		sys.exit(1)
 	
-	
-	skelroot = os.path.normpath(os.path.dirname(__file__) + '/../skel')
+	skelroot = os.path.join(os.path.dirname(modu.__file__), '/skel')
 	destroot = os.path.abspath(os.path.normpath(config['shortname']))
 	
 	config['shortname'] = os.path.basename(destroot)
