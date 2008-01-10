@@ -118,11 +118,19 @@ At this point you should have a functioning modu application running in the
 foreground. Connecting to \verb|http://localhost:8888| should display
 "Welcome to your new project..."
 
-If you wish to allow the application to daemonize, you can leave off the -n
-switch. The pid of the background process will be saved in the current directory.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1\textwidth]{images/admin-intro/01-main-page.png}
+\caption{Default Home Page}
+\end{figure}
 
-Many twistd-specific options can be of use here, as well as other UNIX-specific
-techniques. Here's an advanced example:
+\subsection{Runtime Options}
+If you wish to allow the application to daemonize, you can leave off the -n
+switch. The pid of the background process will be saved in a file in the 
+current directory.
+
+Many twistd-specific options can be of use here, as well as other 
+UNIX-specific techniques. Here's an advanced example:
 
 \begin{verbatim}
     su www-data -c "authbind /usr/bin/twistd --logfile=/var/log/modu/error.log
@@ -146,4 +154,57 @@ You can see the following tricks being used here:
 \end{enumerate}
 \end{flushleft}
 
+\section{Using the Editable Admin Tool}
+
+The default project includes a customizable admin interface that you can use
+to provide content management features to site owners. We'll use it to create
+a couple of new pages on the site.
+
+Connect to your site at \href{http://localhost:8888/admin}{http://localhost:8888/admin}.
+You should see a login screen. Login with the sample admin user/password
+\verb|admin/admin|.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1\textwidth]{images/admin-intro/02-admin-login.png}
+\caption{Admin Login Page}
+\end{figure}
+
+Once you've logged in, you should see a (empty) list of 'pages'. We'll get to
+this in a second, but first we need to change our admin password.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1\textwidth]{images/admin-intro/03-page-listing.png}
+\caption{List of 'page' records}
+\end{figure}
+
+In the left-hand navigation are a list of content types, click on 'users' to
+see the list of currently available users.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1\textwidth]{images/admin-intro/04-user-listing.png}
+\caption{List of 'user' records}
+\end{figure}
+
+Click on the `admin' user to get to the detail page for that record.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1\textwidth]{images/admin-intro/05-user-detail.png}
+\caption{Detail of 'user' record}
+\end{figure}
+
+Take a minute to change your administrative password, typing it in twice to
+verify, then clicking the 'save' button. Go back to the 'pages' interface by
+clicking the link in the left-side navigation menu.
+
+You'll see a very simple form for creating or editing a page.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1\textwidth]{images/admin-intro/06-page-detail.png}
+\caption{Detail of 'page' record}
+\end{figure}
 
