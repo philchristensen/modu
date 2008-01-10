@@ -164,6 +164,8 @@ class AdminResource(resource.CheetahTemplateResource):
 		if(user and user.get_id()):
 			if(req.prepath[-1] == 'logout'):
 				req.session.set_user(None)
+				if('auth_redirect' in req.session):
+					del req.session['auth_redirect']
 				app.redirect(req.get_path(self.path))
 			
 			itemdefs = define.get_itemdefs()
@@ -177,8 +179,11 @@ class AdminResource(resource.CheetahTemplateResource):
 			# malicious URL access.
 			# TODO: Limit the itemdefs by user *first*, then modify
 			# get_itemdef_layout() to organize, but not limit.
-			itemdefs = dict([(itemdef.name, itemdef) for itemdef in
-								reduce(lambda x, y: x+y, self.itemdef_layout.values())])
+			if(self.itemdef_layout):
+				itemdefs = dict([(itemdef.name, itemdef) for itemdef in
+									reduce(lambda x, y: x+y, self.itemdef_layout.values())])
+			else:
+				itemdefs = {}
 			
 			self.set_slot('itemdef_layout', self.itemdef_layout)
 			
