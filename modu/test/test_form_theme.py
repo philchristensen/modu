@@ -185,7 +185,7 @@ class FormThemeTestCase(unittest.TestCase):
 		some_label = self.form['some_label']
 		
 		some_label_result = self.theme.form_label('node-form', some_label)
-		expected_result = '<label>this is a label</label>'
+		expected_result = '<span class="label">this is a label</span>'
 		self.failUnlessEqual(some_label_result, expected_result, 'Basic "some_label" field misrendered as \n`%s`, not \n`%s`' % (some_label_result, expected_result));
 		
 	def test_checkbox(self):
