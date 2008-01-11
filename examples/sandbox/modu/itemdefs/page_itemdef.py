@@ -3,6 +3,7 @@
 #
 # $Id$
 #
+# See LICENSE for details
 
 from modu import util
 from modu.editable import define

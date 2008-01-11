@@ -3,6 +3,7 @@
 #
 # $Id$
 #
+# See LICENSE for details
 
 import os.path
 

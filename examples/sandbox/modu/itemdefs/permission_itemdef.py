@@ -3,6 +3,7 @@
 #
 # $Id$
 #
+# See LICENSE for details
 
 from modu.editable import define
 from modu.editable.datatypes import string, relational

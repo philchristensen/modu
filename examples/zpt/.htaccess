@@ -1,5 +1,0 @@
-<IfModule mod_python.c>
-SetHandler mod_python
-PythonHandler modu.web.modpython
-PythonDebug On
-</IfModule>

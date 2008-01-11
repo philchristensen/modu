@@ -3,6 +3,7 @@
 #
 # $Id$
 #
+# See LICENSE for details
 
 from modu.web import resource, app
 
