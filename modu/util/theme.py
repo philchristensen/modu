@@ -92,9 +92,9 @@ class Theme(object):
 	
 	
 	def form_label(self, form_id, element):
-		attribs = element.attr('attributes', {})
+		attribs = element.attr('attributes', {'class':'label'})
 		value = element.attr('value', element.attr('default_value', ''))
-		return tags.label(**attribs)[value]
+		return tags.span(**attribs)[value]
 	
 	
 	def form_hidden(self, form_id, element):

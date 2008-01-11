@@ -51,7 +51,7 @@ if(__name__ == '__main__'):
 		print e.args[0]
 		sys.exit(1)
 	
-	skelroot = os.path.join(os.path.dirname(modu.__file__), '/skel')
+	skelroot = os.path.join(os.path.dirname(modu.__file__), 'skel')
 	destroot = os.path.abspath(os.path.normpath(config['shortname']))
 	
 	config['shortname'] = os.path.basename(destroot)
@@ -62,17 +62,21 @@ if(__name__ == '__main__'):
 		config['author'] = config['shortname']
 	
 	for dirpath, dirnames, filenames in os.walk(skelroot):
-		#print (dirpath, dirnames, filenames)
-		stub = dirpath[5:]
+		stub = dirpath[len(skelroot) + 1:]
 		if(stub.startswith('.')):
+			continue
+		if(stub.find('.svn') != -1):
 			continue
 		if(stub.startswith('project')):
 			stub = stub.replace('project', config['shortname'])
 		created_dir = os.path.join(destroot, stub)
+		
 		os.mkdir(created_dir)
 		
 		for filename in filenames:
 			if(filename.startswith('.')):
+				continue
+			elif(filename.find('.svn') != -1):
 				continue
 			elif(filename.endswith('.tmpl')):
 				template_path = os.path.join(dirpath, filename)
