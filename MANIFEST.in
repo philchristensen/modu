@@ -1,0 +1,15 @@
+include INSTALL README ChangeLog MANIFEST.in LICENSE
+
+exclude */CVS/*
+exclude */.svn/*
+
+global-exclude .*
+
+recursive-include bin *.py
+recursive-include twisted/plugins *.py
+
+graft modu/skel
+graft modu/assets
+graft docs
+graft examples
+
