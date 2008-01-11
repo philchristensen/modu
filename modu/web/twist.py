@@ -1,27 +1,17 @@
 # modu
-# Copyright (C) 2007-2008 Phil Christensen
+# Copyright (C) 2007 Phil Christensen
 #
 # $Id$
 #
 # See LICENSE for details
 
-import urllib, os, sys
+import urllib, os, sys, threading
 
-from twisted.internet import defer
+from twisted.internet import defer, threads
 from twisted.web import resource, server, util
-from twisted.web2 import wsgi, stream
-from twisted.python import log
+from twisted.python import log, failure
 
 headerNameTranslation = ''.join([c.isalnum() and c.upper() or '_' for c in map(chr, range(256))])
-
-# Python 2.4.2 (only) has a broken mmap that leaks a fd every time you call it.
-if sys.version_info[0:3] != (2,4,2):
-	try:
-		import mmap
-	except ImportError:
-		mmap = None
-else:
-	mmap = None
 
 def createCGIEnvironment(request):
 	# See http://hoohoo.ncsa.uiuc.edu/cgi/env.html for CGI interface spec
@@ -135,51 +125,241 @@ class WSGIResource(resource.Resource):
 		reactor.callInThread(handler.run)
 		return server.NOT_DONE_YET
 	
-	def _write(self, content, request):
-		request.write(content)
-		request.finish()
-	
-	def _finish(self, response, request):
-		request.setResponseCode(response.code)
-		
-		for key, values in response.headers.getAllRawHeaders():
-			for value in values:
-				request.setHeader(key, value)
-		
-		if(isinstance(response.stream, stream.FileStream)):
-			response.stream.useMMap = False
-			b = response.stream.read()
+	def _finish(self, content, request):
+		if(hasattr(content, 'read')):
+			b = content.read(8192)
 			while(b):
 				request.write(b)
-				b = response.stream.read()
-			request.finish()
-			return
+				b = content.read(8192)
+		elif(isinstance(content, (list, tuple))):
+			for item in content:
+				request.write(item)
 		
-		content = response.stream.read()
-		if(isinstance(content, defer.Deferred)):
-			content.addCallback(self._write, request)
-		else:
-			self._write(content, request)
+		request.finish()
 	
 	def _error(self, failure, request):
 		content = util.formatFailure(failure)
 		request.setHeader('Content-Type', 'text/html')
 		request.setHeader('Content-Length', len(content))
-		self._write(content, request)
+		request.write(content)
+		request.finish()
+	
 
+class AlreadyStartedResponse(Exception):
+	pass
 
-class WSGIHandler(wsgi.WSGIHandler):
+class ErrorStream(object):
+	"""
+	This class implements the 'wsgi.error' object.
+	"""
+	def flush(self):
+		# Called in application thread
+		return
+	
+	def write(self, s):
+		# Called in application thread
+		log.msg("[WSGI] "+s, isError=True)
+	
+	def writelines(self, seq):
+		# Called in application thread
+		s = ''.join(seq)
+		log.msg("[WSGI] "+s, isError=True)
+
+class WSGIHandler(object):
+	headersSent = False
+	stopped = False
+	stream = None
+
+	def __init__(self, application, request):
+		# Called in IO thread
+		self.setupEnvironment(request)
+		self.application = application
+		self.request = request
+		#self.response = None
+		self.started = False
+		self.responseDeferred = defer.Deferred()
+	
 	def setupEnvironment(self, request):
 		# Called in IO thread
 		env = createCGIEnvironment(request)
 		env['wsgi.version']      = (1, 0)
 		env['wsgi.url_scheme']   = env['REQUEST_SCHEME']
 		env['wsgi.input']        = request.content
-		env['wsgi.errors']       = wsgi.ErrorStream()
+		env['wsgi.errors']       = ErrorStream()
 		env['wsgi.multithread']  = True
 		env['wsgi.multiprocess'] = False
 		env['wsgi.run_once']     = False
-		env['wsgi.file_wrapper'] = wsgi.FileWrapper
+		env['wsgi.file_wrapper'] = FileWrapper
 		
 		self.environment = env
+	
+	def startWSGIResponse(self, status, response_headers, exc_info=None):
+		# Called in application thread
+		if exc_info is not None:
+			try:
+				if self.headersSent:
+					raise exc_info[0], exc_info[1], exc_info[2]
+			finally:
+				exc_info = None
+		elif self.started:
+			raise AlreadyStartedResponse, 'startWSGIResponse(%r)' % status
+		
+		self.request.setResponseCode(int(status.split(' ')[0]))
+		
+		#self.response = http.Response(status)
+		self.started = True
+		for key, value in response_headers:
+			#self.response.headers.addRawHeader(key, value)
+			self.request.setHeader(key, value)
+		
+		return self.write
+	
+	def run(self):
+		from twisted.internet import reactor
+		# Called in application thread
+		try:
+			result = self.application(self.environment, self.startWSGIResponse)
+			self.handleResult(result)
+		except:
+			if not self.headersSent:
+				reactor.callFromThread(self.__error, failure.Failure())
+			else:
+				reactor.callFromThread(self.stream.finish, failure.Failure())
+	
+	def __callback(self, data=None):
+		# Called in IO thread
+		self.responseDeferred.callback(data)
+		self.responseDeferred = None
+	
+	def __error(self, f):
+		# Called in IO thread
+		self.responseDeferred.errback(f)
+		self.responseDeferred = None
+	
+	def write(self, output):
+		# Called in application thread
+		from twisted.internet import reactor
+		if not self.started:
+			raise RuntimeError(
+				"Application didn't call startResponse before writing data!")
+		if not self.headersSent:
+			#self.stream=self.response.stream=stream.ProducerStream()
+			self.headersSent = True
+			
+			# threadsafe event object to communicate paused state.
+			self.unpaused = threading.Event()
+			
+			# After this, we cannot touch self.response from this
+			# thread any more
+			def _start():
+				# Called in IO thread
+				self.request.registerProducer(self, True)
+				self.__callback()
+				# Notify application thread to start writing
+				self.unpaused.set()
+			reactor.callFromThread(_start)
+		# Wait for unpaused to be true
+		self.unpaused.wait()
+		reactor.callFromThread(self.request.write, output)
 
+	def writeAll(self, result):
+		# Called in application thread
+		from twisted.internet import reactor
+		if not self.headersSent:
+			if not self.started:
+				raise RuntimeError(
+					"Application didn't call startResponse before writing data!")
+			
+			# for item in result:
+			# 	self.request.write(item)
+			# self.request.finish()
+			reactor.callFromThread(self.__callback, result)
+		else:
+			# Has already been started, cannot replace the stream
+			def _write():
+				# Called in IO thread
+				for s in result:
+					self.request.write(s)
+				self.request.finish()
+			reactor.callFromThread(_write)
+
+
+	def handleResult(self, result):
+		# Called in application thread
+		try:
+			from twisted.internet import reactor
+			if (isinstance(result, FileWrapper) and
+				   hasattr(result.filelike, 'fileno') and
+				   not self.headersSent):
+				if not self.started:
+					raise RuntimeError(
+						"Application didn't call startResponse before writing data!")
+				self.headersSent = True
+				# Make FileStream and output it. We make a new file
+				# object from the fd, just in case the original one
+				# isn't an actual file object.
+				# self.response.stream = stream.FileStream(
+				# 	os.fdopen(os.dup(result.filelike.fileno())))
+				reactor.callFromThread(self.__callback, 
+					os.fdopen(os.dup(result.filelike.fileno())))
+				return
+			
+			if type(result) in (list,tuple):
+				# If it's a list or tuple (exactly, not subtype!),
+				# then send the entire thing down to Twisted at once,
+				# and free up this thread to do other work.
+				self.writeAll(result)
+				return
+			
+			# Otherwise, this thread has to keep running to provide the
+			# data.
+			for data in result:
+				if self.stopped:
+					return
+				self.write(data)
+			
+			if not self.headersSent:
+				if not self.started:
+					raise RuntimeError(
+						"Application didn't call startResponse, and didn't send any data!")
+				
+				self.headersSent = True
+				reactor.callFromThread(self.__callback)
+			else:
+				reactor.callFromThread(self.request.finish)
+			
+		finally:
+			if hasattr(result,'close'):
+				result.close()
+	
+	def pauseProducing(self):
+		# Called in IO thread
+		self.unpaused.set()
+	
+	def resumeProducing(self):
+		# Called in IO thread
+		self.unpaused.clear()
+	
+	def stopProducing(self):
+		self.stopped = True
+
+class FileWrapper(object):
+	"""
+	Wrapper to convert file-like objects to iterables, to implement
+	the optional 'wsgi.file_wrapper' object.
+	"""
+	
+	def __init__(self, filelike, blksize=8192):
+		self.filelike = filelike
+		self.blksize = blksize
+		if hasattr(filelike,'close'):
+			self.close = filelike.close
+	
+	def __iter__(self):
+		return self
+	
+	def next(self):
+		data = self.filelike.read(self.blksize)
+		if data:
+			return data
+		raise StopIteration
