@@ -3,7 +3,7 @@
 # modu
 # Copyright (C) 2007-2008 Phil Christensen
 #
-# $Id: __init__.py 437 2007-08-14 20:26:01Z phil $
+# $Id$
 #
 # See LICENSE for details
 

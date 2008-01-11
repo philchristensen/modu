@@ -3,7 +3,7 @@
 # modu
 # Copyright (C) 2007-2008 Phil Christensen
 #
-# $Id: define.py 631 2007-12-14 18:35:07Z phil $
+# $Id$
 #
 # See LICENSE for details
 
