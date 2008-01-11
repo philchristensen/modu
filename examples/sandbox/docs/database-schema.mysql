@@ -1,0 +1,80 @@
+-- Modu Sandbox
+-- Copyright (C) 2008 Phil Christensen
+--
+-- $Id$
+--
+
+CREATE TABLE `guid` (
+  `guid` bigint(20) unsigned
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE `session` (
+  `id` varchar(255),
+  `user_id` bigint(20),
+  `auth_token` varchar(255),
+  `client_ip` varchar(255),
+  `created` int(11),
+  `accessed` int(11),
+  `timeout` int(11),
+  `data` BLOB,
+  PRIMARY KEY (id),
+  KEY `user_idx` (`user_id`),
+  KEY `auth_token_idx` (`auth_token`),
+  KEY `accessed_idx` (`accessed`),
+  KEY `timeout_idx` (`timeout`),
+  KEY `expiry_idx` (`accessed`, `timeout`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE `user` (
+  `id` bigint(20),
+  `username` varchar(255),
+  `first` varchar(255),
+  `last` varchar(255),
+  `crypt` varchar(255),
+  PRIMARY KEY (id),
+  UNIQUE KEY `username_idx` (`username`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE `user_role` (
+  `user_id` bigint(20),
+  `role_id` bigint(20),
+  PRIMARY KEY (`user_id`, `role_id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE `role` (
+  `id` bigint(20),
+  `name` varchar(255),
+  PRIMARY KEY (id),
+  UNIQUE KEY `name_idx` (`name`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE `role_permission` (
+  `role_id` bigint(20),
+  `permission_id` bigint(20),
+  PRIMARY KEY (`role_id`, `permission_id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE `permission` (
+  `id` bigint(20),
+  `name` varchar(255),
+  PRIMARY KEY (id),
+  UNIQUE KEY `name_idx` (`name`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE `page` (
+  `id` bigint(20),
+  `url_code` varchar(255),
+  `title` varchar(255),
+  `data` LONGBLOB,
+  `active` tinyint(1),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY url_code_idx(`url_code`),
+  KEY active_idx(`active`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+INSERT INTO `guid` (`guid`) VALUES (4);
+INSERT INTO `user` (`id`, `username`, `first`, `last`, `crypt`) VALUES (1, 'admin', 'Admin', 'User', ENCRYPT('admin'));
+INSERT INTO `role` (`id`, `name`) VALUES (2, 'admin user');
+INSERT INTO `user_role` (`user_id`, `role_id`) VALUES (1, 2);
+INSERT INTO `permission` (`id`, `name`) VALUES (3, 'access admin');
+INSERT INTO `role_permission` (`role_id`, `permission_id`) VALUES (2, 3);

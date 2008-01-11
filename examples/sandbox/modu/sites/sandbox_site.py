@@ -1,6 +1,8 @@
-\# $project_description
-\# Copyright (C) $year $copyright_holder
-#echo '#\n# $' + 'Id$\n#\n'
+# Modu Sandbox
+# Copyright (C) 2008 Phil Christensen
+#
+# $Id$
+#
 
 import os.path
 
@@ -13,7 +15,7 @@ from modu.web import app, static
 from modu.editable import resource
 from modu.editable.datatypes import fck
 
-from ${project_name}.resource import index
+from sandbox.resource import index, zpt, cherry, form
 
 class Site(object):
 	classProvides(plugin.IPlugin, app.ISite)
@@ -25,11 +27,16 @@ class Site(object):
 	
 	def initialize(self, application):
 		application.base_domain = 'localhost'
-		application.db_url = 'MySQLdb://$project_name@localhost/$project_name'
+		
+		application.db_url = 'MySQLdb://sandbox:sandbox@localhost/sandbox'
 		
 		modu_assets_path = os.path.join(os.path.dirname(modu.__file__), 'assets')
 		application.activate(static.FileResource, ['/assets'], modu_assets_path)
 		
 		application.activate(resource.AdminResource, default_listing='page')
 		application.activate(fck.FCKEditorResource)
+		
 		application.activate(index.Resource)
+		application.activate(zpt.Resource)
+		application.activate(cherry.Resource)
+		application.activate(form.Resource)

@@ -492,8 +492,11 @@ class ZPTemplateContent(TemplateContent):
 		@see: L{IContent.get_content()}
 		"""
 		super(ZPTemplateContent, self).get_content(req)
-		
-		from ZopePageTemplates import PageTemplate
+		try:
+			from ZopePageTemplates import PageTemplate
+		except:
+			from modu.web import app
+			app.raise500("The ZopePageTemplates package is missing.")
 		class ZPTmoduTemplate(PageTemplate):
 			def __call__(self, context={}, *args):
 				if not context.has_key('args'):
@@ -527,7 +530,11 @@ class CherryTemplateContent(TemplateContent):
 		"""
 		super(CherryTemplateContent, self).get_content(req)
 		
-		from cherrytemplate import renderTemplate
+		try:
+			from cherrytemplate import renderTemplate
+		except:
+			from modu.web import app
+			app.raise500("The cherrytemplate package is missing.")
 		self.data['_template_path'] = os.path.join(self.get_template_root(req), self.get_template(req))
 		self.data['_renderTemplate'] = renderTemplate
 		return eval('_renderTemplate(file=_template_path)', self.data)
