@@ -1,0 +1,96 @@
+#!/bin/bash
+#
+# modu	This shell script takes care of starting and stopping
+#		the modu subsystem via twistd.
+#
+
+MODU_HOME=/usr/local/dram/modu
+
+PROJECT_HOME=/usr/local/dram/modu
+PROJECT_PORT=80
+PROJECT_ACCESSLOG=/var/log/modu/access.log
+PROJECT_ERRORLOG=/var/log/modu/error.log
+
+TWISTD=/usr/local/bin/twistd
+TWISTD_PIDFILE=/var/run/modu/twistd.pid
+PROJECT_UID=nobody
+PROJECT_GID=staff
+
+export PYTHON_EGG_CACHE=/var/run/modu
+
+config(){
+	# Make sure the compiled template directory is there
+	if [ ! -e $PROJECT_HOME/var ]; then
+	    mkdir $PROJECT_HOME/var
+	fi
+	chown $PROJECT_UID:$PROJECT_GID $PROJECT_HOME/var
+	chmod 775 $PROJECT_HOME/var
+	
+	# Default permissions for the project root
+	chown -R root:$PROJECT_GID $PROJECT_HOME
+	chmod -R 775 $PROJECT_HOME
+	
+	# Default permissions for the logs
+	if [ ! -e /var/log/modu ]; then
+	    mkdir /var/log/modu
+	fi
+	chown -R $PROJECT_UID:$PROJECT_GID /var/log/modu
+	chmod -R 775 /var/log/modu
+	
+	# Default permissions for the pidfile directory
+	if [ ! -e /var/run/modu ]; then
+	    mkdir /var/run/modu
+	fi
+	chown $PROJECT_UID:$PROJECT_GID /var/run/modu
+	chmod 775 /var/run/modu
+	
+	# Make sure twisted can write the plugin cache
+	chown $PROJECT_UID:$PROJECT_GID $MODU_HOME/twisted/plugins
+	chmod 775 $MODU_HOME/twisted/plugins
+	
+	# Make sure twisted can write the cache for sites and itemdefs
+	chown $PROJECT_UID:$PROJECT_GID $PROJECT_HOME/modu/sites
+	chmod 775 $PROJECT_HOME/modu/sites
+	chown $PROJECT_UID:$PROJECT_GID $PROJECT_HOME/modu/itemdefs
+	chmod 775 $PROJECT_HOME/modu/itemdefs
+}
+
+start(){
+    if [ -f $TWISTD_PIDFILE ]; then
+        echo "Cannot start modu, it appears to already be running."
+    else
+        echo "Starting modu..."
+        $TWISTD --rundir=$PROJECT_HOME --uid=$PROJECT_UID --gid=$PROJECT_GID --logfile=$PROJECT_ERRORLOG --pidfile=$TWISTD_PIDFILE modu-web -p $PROJECT_PORT --logfile $PROJECT_ACCESSLOG
+    fi
+}
+
+stop(){
+    if [ -f $TWISTD_PIDFILE ]; then
+        echo "Stopping modu..."
+        kill `cat $TWISTD_PIDFILE`
+    else
+        echo "Cannot stop modu, it doesn't appear to be running."
+    fi
+}
+ 
+# See how we were called.
+case "$1" in
+  start)
+    config
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    stop
+    config
+    start
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop|restart}"
+    exit 1
+esac
+
+exit $?
+
