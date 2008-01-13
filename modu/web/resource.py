@@ -32,6 +32,8 @@ except:
 from zope import interface
 from zope.interface import implements
 
+from modu.web import HTTPStatus
+
 class IResource(interface.Interface):
 	"""
 	This class defines something that reacts when a path is requested.
@@ -240,6 +242,42 @@ class Resource(object):
 		"""
 		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
 
+
+class WSGIPassthroughResource(Resource):
+	implements(IContent)
+	
+	def __init__(self, paths, wsgi_app):
+		self.paths = paths
+		self.wsgi_app = wsgi_app
+		self.status = '200 OK'
+		self.content = []
+	
+	def prepare_content(self, req):
+		def _write(msg):
+			self.content.extend(list(msg))
+		def _start_response(status, headers, exc_info=None):
+			if exc_info is not None:
+				try:
+					raise exc_info[0], exc_info[1], exc_info[2]
+				finally:
+					exc_info = None
+			self.status = status
+			for k, v in headers:
+				req.add_header(k, v)
+			return _write
+		self.content.extend(self.wsgi_app(req, _start_response))
+	
+	def get_content(self, req):
+		raise HTTPStatus(self.status, req.get_headers(), self.content)
+	
+	def get_content_type(self, req):
+		if(req.has_header('Content-Type')):
+			return req.get_header('Content-Type')
+		return 'text/html'
+	
+	def get_paths(self):
+		return self.paths
+	
 
 class TemplateContent(object):
 	"""

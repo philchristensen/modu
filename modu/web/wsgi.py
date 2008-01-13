@@ -11,6 +11,7 @@ from twisted.internet import defer, threads
 from twisted.web import resource, server, util
 from twisted.python import log, failure
 
+
 headerNameTranslation = ''.join([c.isalnum() and c.upper() or '_' for c in map(chr, range(256))])
 
 def createCGIEnvironment(request):
@@ -169,7 +170,7 @@ class WSGIHandler(object):
 	headersSent = False
 	stopped = False
 	stream = None
-
+	
 	def __init__(self, application, request):
 		# Called in IO thread
 		self.setupEnvironment(request)
@@ -261,7 +262,7 @@ class WSGIHandler(object):
 		# Wait for unpaused to be true
 		self.unpaused.wait()
 		reactor.callFromThread(self.request.write, output)
-
+	
 	def writeAll(self, result):
 		# Called in application thread
 		from twisted.internet import reactor
@@ -282,8 +283,7 @@ class WSGIHandler(object):
 					self.request.write(s)
 				self.request.finish()
 			reactor.callFromThread(_write)
-
-
+	
 	def handleResult(self, result):
 		# Called in application thread
 		try:

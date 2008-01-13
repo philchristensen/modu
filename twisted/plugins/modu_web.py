@@ -17,7 +17,7 @@ from twisted.application import internet, service
 from twisted.internet import reactor
 from twisted.web import server, resource
 
-from modu.web import twist, app
+from modu.web import wsgi, app
 
 import os
 
@@ -43,9 +43,9 @@ class ModuServiceMaker(object):
 		Instantiate the service.
 		"""
 		if(config['logfile'] != '-'):
-			site = server.Site(twist.WSGIResource(app.handler), logPath=config['logfile'])
+			site = server.Site(wsgi.WSGIResource(app.handler), logPath=config['logfile'])
 		else:
-			site = server.Site(twist.WSGIResource(app.handler))
+			site = server.Site(wsgi.WSGIResource(app.handler))
 		server.Site.requestFactory = app.UnparsedRequest
 		
 		web_service = internet.TCPServer(int(config['port']), site)

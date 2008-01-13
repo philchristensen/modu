@@ -496,7 +496,7 @@ class Request(dict):
 		Check if a header has ever been set.
 		"""
 		for h, d in self.response_headers:
-			if(h == header):
+			if(h.lower() == header.lower()):
 				return True
 		return False
 	
@@ -505,6 +505,15 @@ class Request(dict):
 		Get accumulated headers
 		"""
 		return self.response_headers
+	
+	def get_header(self, header):
+		result = []
+		for item in self.response_headers:
+			if(item[0].lower() == header.lower()):
+				result.append(item[1])
+		if not(result):
+			raise AttributeError('No such header: %s' % header)
+		return result
 	
 
 class UnparsedRequest(server.Request):
