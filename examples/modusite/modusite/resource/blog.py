@@ -1,37 +1,40 @@
 # modusite
-# Copyright (C) 2008 Phil Christensen
+# Copyright (C) 2007 Phil Christensen
 #
 # $Id$
 #
 
 from modu.web import resource, app
 
-from modusite.model import page
+from modusite.model import blog
 
 class Resource(resource.CheetahTemplateResource):
 	def get_paths(self):
 		"""
 		@see: L{modu.web.resource.IResource.get_paths()}
 		"""
-		return ['/']
+		return ['/blog']
 	
 	def prepare_content(self, req):
 		"""
 		@see: L{modu.web.resource.IContent.prepare_content()}
 		"""
 		if not(req.postpath):
-			self.set_slot('content', None)
-			return
-		else:
-			page_code = req.postpath[0]
+			app.redirect(req.get_path('/'))
 		
-		req.store.ensure_factory('page', page.Page, force=True)
-		p = req.store.load_one('page', {'active':1, 'url_code':page_code})
+		try:
+			blog_id = int(req.postpath[0])
+		except ValueError:
+			app.redirect(req.get_path('/'))
 		
-		if(p is None):
-			app.raise404(page_code)
+		req.store.ensure_factory('blog', blog.Blog, force=True)
+		b = req.store.load_one('blog', {'active':1, 'id':blog_id})
 		
-		self.set_slot('content', p.data)
+		if(b is None):
+			app.raise404(blog_id)
+		
+		self.set_slot('title', b.title)
+		self.set_slot('blog', b)
 	
 	def get_content_type(self, req):
 		"""
@@ -43,5 +46,5 @@ class Resource(resource.CheetahTemplateResource):
 		"""
 		@see: L{modu.web.resource.ITemplate.get_template()}
 		"""
-		return 'index.html.tmpl'
+		return 'blog-detail.html.tmpl'
 

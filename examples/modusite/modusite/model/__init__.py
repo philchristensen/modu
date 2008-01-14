@@ -1,5 +1,5 @@
 # modusite
-# Copyright (C) 2008 modusite
+# Copyright (C) 2008 Phil Christensen
 #
 # $Id$
 #

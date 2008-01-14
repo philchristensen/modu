@@ -1,5 +1,5 @@
 # modusite
-# Copyright (C) 2008 modusite
+# Copyright (C) 2008 Phil Christensen
 #
 # $Id$
 #
@@ -15,4 +15,8 @@ class Resource(resource.WSGIPassthroughResource):
 		#print req
 		req['PATH_INFO'] = req['PATH_INFO'].replace('trac', '')
 		req['SCRIPT_NAME'] = '/trac'
+		
+		req['REMOTE_USER'] = 'anonymous'
+		if(req.user.get_id()):
+			req['REMOTE_USER'] = req.user.username
 		super(Resource, self).prepare_content(req)

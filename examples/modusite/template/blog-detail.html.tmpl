@@ -1,0 +1,17 @@
+#include 'header.html.tmpl'
+
+<h2 class="date"><i>$blog.category_code</i> - $blog.published_date.strftime('%B %d, %Y')</h2>
+
+<div class="blogbody">
+<h3 class="title">$blog.title</h3>
+#if $blog.teaser
+	$blog.teaser
+#end if
+$blog.body
+<br />
+<div class="posted">
+	Posted by $blog.get_author_name() at <a href="$req.get_path('blog', $blog.get_id())">$blog.published_date.strftime('%I:%M %p')</a>
+</div>
+</div>
+
+#include 'footer.html.tmpl'

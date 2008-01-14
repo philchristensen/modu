@@ -1,0 +1,19 @@
+#from modusite.model.blog import Blog
+#for blog in Blog.get_blogs($req.store)
+<div class="blogbody">
+<h2 class="date">#if $blog.category_code then '<i>' + $blog.category_code + '</i> -' else '' #$blog.published_date.strftime('%B %d, %Y')</h2>
+<h3 class="title">$blog.title</h3>
+#if $blog.teaser
+	$blog.teaser
+	<span class="extended">
+		<a href="$req.get_path('blog', $blog.get_id())">Continue reading "$blog.title"</a>
+	</span>
+#else
+	$blog.body
+#end if
+<br />
+<div class="posted">
+	Posted by $blog.get_author_name() at <a href="$req.get_path('blog', $blog.get_id())">$blog.published_date.strftime('%I:%M %p')</a>
+</div>
+</div>
+#end for

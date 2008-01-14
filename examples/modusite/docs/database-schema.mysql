@@ -1,5 +1,5 @@
 -- modusite
--- Copyright (C) 2008 modusite
+-- Copyright (C) 2008 Phil Christensen
 --
 -- $Id$
 --
@@ -69,6 +69,20 @@ CREATE TABLE `page` (
   `active` tinyint(1),
   PRIMARY KEY (`id`),
   UNIQUE KEY url_code_idx(`url_code`),
+  KEY active_idx(`active`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE `blog` (
+  `id` bigint(20),
+  `category_code` varchar(255),
+  `title` varchar(255),
+  `teaser` TEXT,
+  `body` LONGBLOB,
+  `active` tinyint(1),
+  `published_date` DATETIME,
+  `published_by` bigint(20),
+  PRIMARY KEY (`id`),
+  KEY cat_code_idx(`category_code`),
   KEY active_idx(`active`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
 

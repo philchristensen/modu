@@ -1,5 +1,5 @@
 # modusite
-# Copyright (C) 2008 modusite
+# Copyright (C) 2008 Phil Christensen
 #
 # $Id$
 #
@@ -17,7 +17,7 @@ from modu.editable import resource
 from modu.editable.datatypes import fck
 
 import modusite
-from modusite.resource import index, modutrac
+from modusite.resource import index, modutrac, blog
 
 class Site(object):
 	classProvides(plugin.IPlugin, app.ISite)
@@ -39,6 +39,7 @@ class Site(object):
 		application.activate(resource.AdminResource, default_listing='page')
 		application.activate(fck.FCKEditorResource)
 		application.activate(index.Resource)
+		application.activate(blog.Resource)
 		
 		import trac
 		trac_htdocs_path = os.path.join(os.path.dirname(trac.__file__), 'htdocs')
