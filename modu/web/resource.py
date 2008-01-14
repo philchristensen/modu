@@ -272,7 +272,7 @@ class WSGIPassthroughResource(Resource):
 	
 	def get_content_type(self, req):
 		if(req.has_header('Content-Type')):
-			return req.get_header('Content-Type')
+			return req.get_header('Content-Type')[0]
 		return 'text/html'
 	
 	def get_paths(self):

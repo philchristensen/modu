@@ -16,7 +16,7 @@ from modu.web.resource import WSGIPassthroughResource
 from modu.editable import resource
 from modu.editable.datatypes import fck
 
-from modusite.resource import index
+from modusite.resource import index, modutrac
 
 class Site(object):
 	classProvides(plugin.IPlugin, app.ISite)
@@ -39,5 +39,7 @@ class Site(object):
 		application.activate(fck.FCKEditorResource)
 		application.activate(index.Resource)
 		
-		from trac.web import main
-		application.activate(WSGIPassthroughResource, ['/trac'], main.dispatch_request)
+		import trac
+		trac_htdocs_path = os.path.join(os.path.dirname(trac.__file__), 'htdocs')
+		application.activate(static.FileResource, ['/trac/chrome/common'], trac_htdocs_path)
+		application.activate(modutrac.Resource)
