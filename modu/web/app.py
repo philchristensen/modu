@@ -475,7 +475,8 @@ class Request(dict):
 		
 		prefix = '%s://%s' % (self['REQUEST_SCHEME'], domain)
 		if('HTTP_X_FORWARDED_SERVER' not in self):
-			if('SERVER_PORT' in self and self['SERVER_PORT'] != '80' and domain.find(':') == -1):
+			if('SERVER_PORT' in self and domain.find(':') == -1
+				and self['SERVER_PORT'] != '80' and self['SERVER_PORT'] != '443'):
 				prefix += ':' + self['SERVER_PORT']
 		
 		result = prefix + result
