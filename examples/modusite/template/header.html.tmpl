@@ -3,8 +3,9 @@
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-	<title>modu: a web toolkit</title>
+	<title>$title</title>
 	<style type="text/css">@import '$req.get_path('styles.css')';</style>
+	<style type="text/css">@import '$req.get_path('assets/global.css')';</style>
 </head>
 <body>
 
@@ -22,17 +23,26 @@
 				
 			<div id="leftcol">
 				<div class="colbox">
-				<label>Navigation</label>
+				<div class="boxtitle">Navigation</div>
 				<ul class="navlist">
-					<li><a href="/home">home</a></li>
+					<li><a href="$req.get_path('/')">home</a></li>
 					<li>&nbsp;</li>
-					<li><a href="/about">about modu</a></li>
-					<li><a href="/documentation">documentation</a></li>
-					<li><a href="/faq">faq</a></li>
-					<li><a href="/trac/wiki">modu wiki</a></li>
+					<li><a href="$req.get_path('about-modu')">about modu</a></li>
+					<li><a href="$req.get_path('documentation')">documentation</a></li>
+					<li><a href="$req.get_path('faq')">faq</a></li>
+					<li><a href="$req.get_path('trac/wiki')">modu wiki</a></li>
 					<li>&nbsp;</li>
-					<li><a href="/download">download</a></li>
-					<li><a href="/trac/browser">browse source</a></li>
+					<li><a href="$req.get_path('download')">download</a></li>
+					<li><a href="$req.get_path('trac/browser')">browse source</a></li>
+				</ul>
+				</div>
+				<div class="colbox">
+				<div class="boxtitle">recent posts</div>
+				<ul class="navlist">
+					#from modusite.model.blog import Blog
+					#for blog in Blog.get_blogs($req.store)
+					<li><a href="$req.get_path('blog', $blog.get_id())">$blog.title</a></li>
+					#end for
 				</ul>
 				</div>
 			</div>

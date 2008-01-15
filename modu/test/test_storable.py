@@ -190,7 +190,47 @@ class StorableTestCase(unittest.TestCase):
 		t = TestStorable()
 		result = t.sample_cached_function()
 		self.failUnlessEqual(result, repr(t), "t.sample_cached_function didn't return the cached string")
+	
+	def _load_by_setup(self):
+		self.store.ensure_factory('page', force=True)
+		
+		s = storable.Storable('page')
+		s.code = 'url-code'
+		s.content = 'The quick brown fox jumps over the lazy dog.'
+		s.title = 'Old School'
+		
+		self.store.save(s)
+		self.failUnless(s.get_id(), 'Storable object has no id after being saved.')
+		return s
+	
+	def test_load_by_storable(self):
+		s = self._load_by_setup()
+		t1 = self.store.load_one('page', {'id':s.get_id()})
+		t2 = self.store.load_one(TrivialTestStorable(), {'id':s.get_id()})
+		
+		self.failUnlessEqual(t1.__class__, storable.Storable, 'Got back %r when expecting a Storable' % t1.__class__)
+		self.failUnlessEqual(t2.__class__, TrivialTestStorable, 'Got back %r when expecting a TrivialTestStorable' % t1.__class__)
+	
+	def test_load_by_storable_class(self):
+		s = self._load_by_setup()
+		t1 = self.store.load_one('page', {'id':s.get_id()})
+		t2 = self.store.load_one(TrivialTestStorable, {'id':s.get_id()})
+		
+		self.failUnlessEqual(t1.__class__, storable.Storable, 'Got back %r when expecting a Storable' % t1.__class__)
+		self.failUnlessEqual(t2.__class__, TrivialTestStorable, 'Got back %r when expecting a TrivialTestStorable' % t1.__class__)
+	
+	def test_load_by_factory(self):
+		s = self._load_by_setup()
+		factory = storable.DefaultFactory('page', model_class=TrivialTestStorable)
+		t1 = self.store.load_one('page', {'id':s.get_id()})
+		t2 = self.store.load_one(factory, {'id':s.get_id()})
+		
+		self.failUnlessEqual(t1.__class__, storable.Storable, 'Got back %r when expecting a Storable' % t1.__class__)
+		self.failUnlessEqual(t2.__class__, TrivialTestStorable, 'Got back %r when expecting a TrivialTestStorable' % t1.__class__)
 
+class TrivialTestStorable(storable.Storable):
+	def __init__(self):
+		super(TrivialTestStorable, self).__init__('page')
 
 class TestStorable(storable.Storable):
 	def __init__(self):

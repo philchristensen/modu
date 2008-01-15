@@ -119,7 +119,7 @@ class IStore(Interface):
 		Returns an iterable object.
 		
 		@param factory_id: the factory_id to use to load data
-		@type factory_id: str
+		@type factory_id: str, Storable, IFactory
 		
 		@param data: Implementor and Factory-specific data
 		@type data: dict
@@ -347,7 +347,7 @@ class Store(object):
 			return new_id
 		return id
 	
-	def load(self, table, data=None, **kwargs):
+	def load(self, factory_id, data=None, **kwargs):
 		"""
 		Load an object from the requested table.
 		
@@ -362,8 +362,8 @@ class Store(object):
 		
 		@see: L{IFactory.load()}
 		
-		@param table: the table to register the given factory for
-		@type table: str
+		@param factory_id: a registered table name, a Storable subclass, or an IFactory implementor
+		@type factory_id: str, IStorable, IFactory
 		
 		@param data: a column name to value map; possibly other Factory-specific values
 		@type data: dict
@@ -377,10 +377,22 @@ class Store(object):
 		elif(isinstance(data, dict)):
 			data.update(kwargs)
 		
-		if(table not in self._factories):
-			raise LookupError('There is no factory registered for the table `%s`' % table)
+		if(isinstance(factory_id, basestring)):
+			if(factory_id not in self._factories):
+				raise LookupError('There is no factory registered for the table `%s`' % factory_id)
+			
+			factory = self._factories[factory_id]
+		elif(storable.IStorable.providedBy(factory_id)):
+			factory = storable.DefaultFactory(factory_id.get_table(), factory_id.__class__)
+			factory.store = self
+		elif(callable(factory_id) and storable.IStorable.implementedBy(factory_id)):
+			s = factory_id()
+			factory = storable.DefaultFactory(s.get_table(), factory_id)
+			factory.store = self
+		elif(storable.IFactory.providedBy(factory_id)):
+			factory = factory_id
+			factory.store = self
 		
-		factory = self._factories[table]
 		if(isinstance(data, basestring)):
 			query = data
 		else:

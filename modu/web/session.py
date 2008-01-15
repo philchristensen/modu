@@ -403,7 +403,7 @@ class DbUserSession(BaseSession):
 		if(self._user_id):
 			store = self._req.store
 			if not(store.has_factory('user')):
-				store.ensure_factory('user', self.user_class)
+				store.ensure_factory('user', self.user_class, force=True)
 			self._user = store.load_one('user', {'id':self._user_id})
 		elif(self._req.app.enable_anonymous_users):
 			self._user = user.AnonymousUser()

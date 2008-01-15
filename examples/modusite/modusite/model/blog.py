@@ -23,5 +23,5 @@ class Blog(storable.Storable):
 	
 	def get_author_name(self):
 		store = self.get_store()
-		user = store.load_one('user', id=self.published_by)
+		user = store.load_one(storable.Storable('user'), id=self.published_by)
 		return user.username

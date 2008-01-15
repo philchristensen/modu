@@ -20,6 +20,7 @@ class Resource(resource.CheetahTemplateResource):
 		@see: L{modu.web.resource.IContent.prepare_content()}
 		"""
 		if not(req.postpath):
+			self.set_slot('title', 'modu: a web toolkit')
 			self.set_slot('content', None)
 			return
 		else:
@@ -31,6 +32,7 @@ class Resource(resource.CheetahTemplateResource):
 		if(p is None):
 			app.raise404(page_code)
 		
+		self.set_slot('title', p.title)
 		self.set_slot('content', p.data)
 	
 	def get_content_type(self, req):

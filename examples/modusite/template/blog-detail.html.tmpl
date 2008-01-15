@@ -1,8 +1,11 @@
 #include 'header.html.tmpl'
 
-<h2 class="date"><i>$blog.category_code</i> - $blog.published_date.strftime('%B %d, %Y')</h2>
-
 <div class="blogbody">
+<h2 class="date">
+#if $blog.category_code then '<i>' + $blog.category_code + '</i> -' else '' #
+$blog.published_date.strftime('%B %d, %Y')
+</h2>
+
 <h3 class="title">$blog.title</h3>
 #if $blog.teaser
 	$blog.teaser
