@@ -92,3 +92,13 @@ class NonNullSearchField(define.definition):
 	
 	def update_storable(self, req, form, storable):
 		pass
+
+class NonBlankSearchField(NonNullSearchField):
+	def get_search_value(self, value):
+		if(value == '0'):
+			return sql.RAW('ISNULL(%s)')
+		elif(value == '1'):
+			return sql.RAW("IFNULL(%s, '') <> ''")
+		else:
+			# a trick
+			return sql.RAW('IF(%s, 1, 1)')
