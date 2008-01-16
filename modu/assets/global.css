@@ -38,7 +38,8 @@ dd {
 }
 
 ol li{
-	list-style: decimal inside;
+	list-style: decimal;
+	padding-left: 5px;
 }
 
 p {

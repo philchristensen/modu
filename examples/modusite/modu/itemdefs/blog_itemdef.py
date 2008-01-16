@@ -54,7 +54,9 @@ __itemdef__ = define.itemdef(
 	
 	teaser				= fck.FCKEditorField(
 		label			= 'teaser:',
-		weight			= 4
+		weight			= 4,
+		height			= 150,
+		toolbar_set		= 'Basic'
 	),
 	
 	body				= fck.FCKEditorField(
