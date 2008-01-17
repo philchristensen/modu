@@ -161,33 +161,33 @@ def configure_request(env, application):
 	return Request(env)
 
 
-def get_application(req):
+def get_application(env):
 	"""
 	Return an application object for the site configured
-	at the path specified in req.
+	at the path specified in env.
 	
 	Note that ISite plugins are only searched when the
 	specified host/path is not found.
 	"""
 	global host_tree
 	
-	host = req.get('HTTP_HOST', req['SERVER_NAME'])
+	host = env.get('HTTP_HOST', env['SERVER_NAME'])
 	if(host.find(':') == -1):
-		host += ':' + req['SERVER_PORT']
+		host += ':' + env['SERVER_PORT']
 	
 	host_tree_lock.acquire()
 	try:
 		if not(host in host_tree):
-			_scan_sites(req)
+			_scan_sites(env)
 		if not(host in host_tree):
 			return None
 		
 		host_node = host_tree[host]
 		
-		if not(host_node.has_path(req['REQUEST_URI'])):
-			_scan_sites(req)
+		if not(host_node.has_path(env['REQUEST_URI'])):
+			_scan_sites(env)
 		
-		app = host_node.get_data_at(req['REQUEST_URI'])
+		app = host_node.get_data_at(env['REQUEST_URI'])
 	finally:
 		host_tree_lock.release()
 	
@@ -316,7 +316,10 @@ def _scan_sites(env):
 	import modu.sites
 	reload(modu.sites)
 	
-	for site_plugin in plugin.getPlugins(ISite, modu.sites):
+	plugins = plugin.getPlugins(ISite, modu.sites)
+	
+	for site_plugin in plugins:
+		#env['wsgi.errors'].write(str(site_plugin) + "\n")
 		site = site_plugin()
 		app = Application(site)
 		
@@ -336,7 +339,7 @@ def _scan_sites(env):
 		if not(base_path):
 			base_path = '/'
 		
-		#print 'found site config at %s%s, %r' % (domain, base_path, site_plugin)
+		#env['wsgi.errors'].write('found site config at %s%s, %r\n' % (domain, base_path, site_plugin))
 		host_node.register(base_path, app, clobber=True)
 
 
