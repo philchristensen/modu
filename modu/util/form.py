@@ -372,7 +372,8 @@ class NestedFieldStorage(cgi.FieldStorage):
 		self.parent = parent
 		if(fp is None):
 			fp = req['wsgi.input']
-			fp.seek(0)
+			if(hasattr(fp, 'seek')):
+				fp.seek(0)
 		if(environ is None):
 			environ = req
 		cgi.FieldStorage.__init__(self, fp, headers, outerboundary,
