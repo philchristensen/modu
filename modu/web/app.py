@@ -131,6 +131,11 @@ def configure_request(env, application):
 	Given a WSGI environment dict and an Application instance,
 	return a Request object that encapsulates this thread's data.
 	"""
+	if('wsgi.file_wrapper' not in env):
+		def _file_wrapper(file):
+			return iter(lambda: filelike.read(block_size), '')
+		env['wsgi.file_wrapper'] = _file_wrapper
+	
 	env['modu.app'] = application
 	
 	env['SCRIPT_NAME'] = application.base_path
