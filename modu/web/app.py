@@ -45,6 +45,7 @@ def handler(env, start_response):
 	"""
 	The primary WSGI application object.
 	"""
+	#env['wsgi.errors'].write(str(env) + "\n")
 	# just in case an error occurs before the request is created for real
 	# this lets the error pages add headers to the request response
 	req = Request()
@@ -150,7 +151,7 @@ def configure_request(env, application):
 	else:
 		env['PATH_INFO'] = uri
 	
-	env['modu.approot'] = env['SCRIPT_FILENAME']
+	env['modu.approot'] = env['MODU_ENV']
 	env['modu.path'] = env['PATH_INFO']
 	
 	approot = env['modu.approot']
@@ -309,8 +310,8 @@ def _scan_sites(env):
 	"""
 	global host_tree
 	
-	if(env.get('SCRIPT_FILENAME', sys.path[0]) not in sys.path):
-		sys.path.append(env['SCRIPT_FILENAME'])
+	if(env.get('MODU_ENV', sys.path[0]) not in sys.path):
+		sys.path.append(env['MODU_ENV'])
 	
 	import modu.sites
 	reload(modu.sites)
@@ -321,9 +322,9 @@ def _scan_sites(env):
 		
 		# We can't set up the default file resource if we
 		# don't know where we are
-		if('SCRIPT_FILENAME' in env):
+		if('MODU_ENV' in env):
 			root = app.tree.get_data_at('/')
-			webroot = os.path.join(env['SCRIPT_FILENAME'], app.webroot)
+			webroot = os.path.join(env['MODU_ENV'], app.webroot)
 			app.tree.register('/', (static.FileResource, (['/'], webroot, root), {}), clobber=True)
 		
 		domain = app.base_domain

@@ -117,7 +117,7 @@ class WSGIResource(resource.Resource):
 		from twisted.internet import reactor
 		# Do stuff with WSGIHandler.
 		handler = WSGIHandler(self.application, request)
-		handler.environment['SCRIPT_FILENAME'] = os.getcwd()
+		handler.environment['MODU_ENV'] = os.getcwd()
 		
 		handler.responseDeferred.addCallback(self._finish, request)
 		handler.responseDeferred.addErrback(self._error, request)
