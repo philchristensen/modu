@@ -126,6 +126,7 @@ def generate_test_wsgi_environment(post_data={}, multipart=True):
 	environ['REMOTE_HOST'] = socket.gethostname()
 	environ['REMOTE_PORT'] = '56546'
 	environ['REQUEST_SCHEME'] = 'http'
+	environ['wsgi.url_scheme'] = 'http'
 	environ['SCRIPT_NAME'] = ''
 	environ['SERVER_NAME'] = 'localhost'
 	environ['SERVER_PORT'] = '8888'

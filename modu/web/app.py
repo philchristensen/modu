@@ -476,7 +476,7 @@ class Request(dict):
 		
 		domain = self.get('HTTP_X_FORWARDED_SERVER', self.get('HTTP_HOST', self.app.base_domain))
 		
-		prefix = '%s://%s' % (self['REQUEST_SCHEME'], domain)
+		prefix = '%s://%s' % (self['wsgi.url_scheme'], domain)
 		if('HTTP_X_FORWARDED_SERVER' not in self):
 			if('SERVER_PORT' in self and domain.find(':') == -1
 				and self['SERVER_PORT'] != '80' and self['SERVER_PORT'] != '443'):
