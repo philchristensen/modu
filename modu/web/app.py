@@ -124,9 +124,6 @@ def handler(env, start_response):
 	start_response('200 OK', req.get_headers())
 	return content
 
-# mod_wsgi support
-application = handler
-
 def configure_request(env, application):
 	"""
 	Create a Request instance for the current HTTP request.
