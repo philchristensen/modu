@@ -133,7 +133,7 @@ def configure_request(env, application):
 	"""
 	if('wsgi.file_wrapper' not in env):
 		def _file_wrapper(filelike):
-			return iter(lambda: filelike.read(block_size), '')
+			return iter(lambda: filelike.read(8192), '')
 		env['wsgi.file_wrapper'] = _file_wrapper
 	
 	env['modu.app'] = application
