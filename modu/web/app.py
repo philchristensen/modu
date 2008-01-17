@@ -498,7 +498,7 @@ class Request(dict):
 		"""
 		Store headers for later retrieval.
 		"""
-		self.response_headers.append((header, data))
+		self.response_headers.append((header, str(data)))
 	
 	def has_header(self, header):
 		"""
