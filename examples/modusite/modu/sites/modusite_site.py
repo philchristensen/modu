@@ -4,7 +4,7 @@
 # $Id$
 #
 
-import os.path
+import os, os.path
 
 from zope.interface import classProvides
 
@@ -21,6 +21,7 @@ from modusite.resource import index, modutrac, blog
 
 class Site(object):
 	classProvides(plugin.IPlugin, app.ISite)
+	hostname = 'localhost'
 	
 	def configure_request(self, req):
 		compiled_template_root = os.path.join(req.approot, 'var')
@@ -30,7 +31,7 @@ class Site(object):
 		req['trac.env_path'] = os.path.abspath(os.path.join(os.path.dirname(modusite.__file__), '../trac'))
 	
 	def initialize(self, application):
-		application.base_domain = 'localhost'
+		application.base_domain = self.hostname
 		application.db_url = 'MySQLdb://modusite:yibHikmet3@localhost/modusite'
 		
 		modu_assets_path = os.path.join(os.path.dirname(modu.__file__), 'assets')
@@ -41,7 +42,13 @@ class Site(object):
 		application.activate(index.Resource)
 		application.activate(blog.Resource)
 		
+		os.environ['PYTHON_EGG_CACHE'] = '/tmp'
+		
 		import trac
 		trac_htdocs_path = os.path.join(os.path.dirname(trac.__file__), 'htdocs')
 		application.activate(static.FileResource, ['/trac/chrome/common'], trac_htdocs_path)
 		application.activate(modutrac.Resource)
+
+class megatron_local(Site):
+	classProvides(plugin.IPlugin, app.ISite)
+	hostname = 'megatron.local'

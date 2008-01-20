@@ -4,14 +4,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 	<title>$title</title>
-	<style type="text/css">@import '$req.get_path('styles.css')';</style>
 	<style type="text/css">@import '$req.get_path('assets/global.css')';</style>
+	<style type="text/css">@import '$req.get_path('styles.css')';</style>
 </head>
 <body>
 
 <div id="header">
 	<a href="$req.get_path('/')">
-	<img src="$req.get_path('images/logo-small.jpg')" border="0" />
+	<img src="$req.get_path('images/logo-small.png')" border="0" />
 	</a>
 </div>
 
@@ -23,7 +23,7 @@
 				
 			<div id="leftcol">
 				<div class="colbox">
-				<div class="boxtitle">Navigation</div>
+				<div class="boxtitle">navigation</div>
 				<ul class="navlist">
 					<li><a href="$req.get_path('/')">home</a></li>
 					<li>&nbsp;</li>
@@ -37,7 +37,7 @@
 				</ul>
 				</div>
 				<div class="colbox">
-				<div class="boxtitle">recent posts</div>
+				<div class="boxtitle">recent news</div>
 				<ul class="navlist">
 					#from modusite.model.blog import Blog
 					#for blog in Blog.get_blogs($req.store)
@@ -48,7 +48,13 @@
 			</div>
 				
 			<div id="rightcol">
-				
+				<div class="colbox">
+				<div class="boxtitle">sites using modu</div>
+				<ul class="navlist">
+					<li><a href="http://www.dramonline.org">dramonline.org</a></li>
+					<li><a href="http://www.winfieldhistorical.org">winfieldhistorical.org</a></li>
+				</ul>
+				</div>
 			</div>
 			
 			<div id="centercol">

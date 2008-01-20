@@ -42,18 +42,18 @@ __itemdef__ = define.itemdef(
 		listing			= True
 	),
 	
-	# data				= fck.FCKEditorField(
-	# 	label			= 'page body:',
-	# 	weight			= 4
-	# ),
-	
-	data				= string.TextAreaField(
+	data				= fck.FCKEditorField(
 		label			= 'page body:',
-		rows			= 20,
-		cols			= 80,
 		weight			= 4
 	),
 	
+	# data				= string.TextAreaField(
+	# 	label			= 'page body:',
+	# 	rows			= 20,
+	# 	cols			= 80,
+	# 	weight			= 4
+	# ),
+	# 
 	active				= boolean.CheckboxField(
 		label			= 'active:',
 		weight			= 4
