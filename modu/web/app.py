@@ -341,7 +341,7 @@ def _scan_sites(env):
 		if not(base_path):
 			base_path = '/'
 		
-		#env['wsgi.errors'].write('found site config at %s%s, %r\n' % (domain, base_path, site_plugin))
+		env['wsgi.errors'].write('found site config at %s%s, %r\n' % (domain, base_path, site_plugin))
 		host_node.register(base_path, app, clobber=True)
 
 
