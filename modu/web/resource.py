@@ -369,7 +369,6 @@ class TemplateContent(object):
 			self.set_slot('user', req['modu.user'])
 		else:
 			self.set_slot('user', None)
-		raise NotImplementedError('%s::get_content()' % self.__class__.__name__)
 	
 	def get_content_type(self, req):
 		"""
