@@ -30,11 +30,9 @@ CREATE TABLE `autoinc_table` (
 
 class StorableTestCase(unittest.TestCase):
 	def setUp(self):
-		self.store = persist.Store.get_store()
-		if not(self.store):
-			pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
-			self.store = persist.Store(pool)
-			#self.debug_file = sys.stderr
+		pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+		self.store = persist.Store(pool)
+		#self.store.debug_file = sys.stderr
 		self.store.ensure_factory('autoinc_table', guid_table=None)
 		
 		global TEST_TABLES

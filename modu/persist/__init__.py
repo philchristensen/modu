@@ -26,9 +26,7 @@ def activate_store(req):
 	Examine the req object and its internal modu.app object,
 	and create or fetch a store instance to be used by this request.
 	"""
-	store = Store.get_store()
-	if not(store):
-		store = Store(req.pool)
+	store = Store(req.pool)
 	if(req.app.debug_store):
 		debug_file = req['wsgi.errors']
 	else:
@@ -184,9 +182,6 @@ class Store(object):
 	and load any desired objects through this interface, after registering
 	factories for each table you wish to load objects from.
 	
-	@cvar _stores: pool of Store objects
-	@type _stores: dict
-	
 	@ivar pool: the connection object
 	@type pool: a SynchronousConnectionPool instance
 	
@@ -196,28 +191,9 @@ class Store(object):
 	@ivar _factories: table names mapped to registered factories
 	@type _factories: dict
 	"""
-	implements
-	_stores = {}
+	implements(IStore)
 	
-	@classmethod
-	def get_store(cls, name=DEFAULT_STORE_NAME):
-		"""
-		Return the current Store instance of the given name, if it exists.
-		
-		@param name: the name of the Store instance to retrieve
-		@type name: str
-		
-		@returns: requested Store, or None
-		"""
-		
-		name += '-%d' % thread.get_ident()
-		
-		if(hasattr(cls, '_stores')):
-			if(name in cls._stores):
-				return cls._stores[name]
-		return None
-	
-	def __init__(self, pool, name=DEFAULT_STORE_NAME):
+	def __init__(self, pool):
 		"""
 		Create a Store for a given DB connection object.
 		
@@ -240,11 +216,6 @@ class Store(object):
 		self.debug_file = None
 		
 		self._factories = {}
-		
-		name += '-%d' % thread.get_ident()
-		if(name in self._stores):
-			raise RuntimeError("There is already a Store instance by the name '%s'." % name)
-		self._stores[name] = self
 	
 	def register_factory(self, table, factory):
 		"""

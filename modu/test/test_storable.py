@@ -15,11 +15,9 @@ from twisted.trial import unittest
 
 class StorableTestCase(unittest.TestCase):
 	def setUp(self):
-		self.store = persist.Store.get_store()
-		if not(self.store):
-			pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
-			self.store = persist.Store(pool)
-			#self.store.debug_file = sys.stderr
+		pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+		self.store = persist.Store(pool)
+		#self.store.debug_file = sys.stderr
 		
 		for sql in test.TEST_TABLES.split(";"):
 			if(sql.strip()):
@@ -89,7 +87,7 @@ class StorableTestCase(unittest.TestCase):
 		s.content = 'The quick brown fox jumps over the lazy dog.'
 		s.title = 'Old School'
 		
-		s.populate_related_items()
+		s.populate_related_items(self.store)
 		# at this point, the related items are saved,
 		# so we can edit them
 		self.store.save(s)
@@ -111,7 +109,7 @@ class StorableTestCase(unittest.TestCase):
 		s.content = 'The quick brown fox jumps over the lazy dog.'
 		s.title = 'Old School'
 		
-		s.populate_related_items()
+		s.populate_related_items(self.store)
 		# at this point, the related items are saved,
 		# so we can DESTROY them! RARRRRGH!!!
 		self.store.save(s)
@@ -238,8 +236,7 @@ class TestStorable(storable.Storable):
 		self._related = []
 		self._sample_calc_ran = False
 	
-	def populate_related_items(self):
-		store = persist.Store.get_store()
+	def populate_related_items(self, store):
 		store.ensure_factory('subpage', force=True)
 		
 		page1 = store.load_one('subpage', {'code':'__sample-1__'})

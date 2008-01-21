@@ -20,11 +20,9 @@ GRANT ALL ON modu.* TO modu@localhost IDENTIFIED BY 'modu';
 
 class PaginatorTestCase(unittest.TestCase):
 	def setUp(self):
-		self.store = persist.Store.get_store()
-		if not(self.store):
-			pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
-			self.store = persist.Store(pool)
-			#self.store.debug_file = sys.stderr
+		pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+		self.store = persist.Store(pool)
+		#self.store.debug_file = sys.stderr
 		
 		for sql in test.TEST_TABLES.split(";"):
 			if(sql.strip()):

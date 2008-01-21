@@ -49,19 +49,17 @@ CREATE TABLE `guid` (
 
 class DbSessionTestCase(unittest.TestCase):
 	def setUp(self):
-		store = Store.get_store()
-		if not(store):
-			store = persist.Store(adbapi.connect('MySQLdb://modu:modu@localhost/modu'))
+		pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+		self.store = persist.Store(pool)
+		#self.store.debug_file = sys.stderr
 		
 		global TEST_TABLES
 		for sql in TEST_TABLES.split(";"):
 			if(sql.strip()):
 				try:
-					store.pool.runOperation(sql)
-				except store.pool.dbapi.Warning:
+					self.store.pool.runOperation(sql)
+				except self.store.pool.dbapi.Warning:
 					pass
-		
-		self.store = store
 	
 	def get_request(self):
 		environ = test.generate_test_wsgi_environment()
