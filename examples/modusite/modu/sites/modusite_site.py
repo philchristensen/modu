@@ -52,3 +52,11 @@ class Site(object):
 class megatron_local(Site):
 	classProvides(plugin.IPlugin, app.ISite)
 	hostname = 'megatron.local'
+
+class modu_bubblehouse_org(Site):
+	classProvides(plugin.IPlugin, app.ISite)
+	hostname = 'modu.bubblehouse.org'
+	
+	def initialize(self, application):
+		super(modu_bubblehouse_org, self).initialize(application)
+		os.environ['PYTHON_EGG_CACHE'] = '/var/cache/eggs'
