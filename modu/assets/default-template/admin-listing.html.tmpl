@@ -8,7 +8,7 @@
 </div>
 #end if
 
-#if not $selected_itemdef.get('export', False)
+#if $selected_itemdef.get('export', False)
 <div class="export-link">
 <a href="$req.get_path($req.prepath, 'export', $selected_itemdef.get_table())">Export Found Records</a>
 </div>
