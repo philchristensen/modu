@@ -165,7 +165,8 @@ def configure_request(env, application):
 
 def get_default_approot(site):
 	parts = site.__class__.__module__.split('.')
-	package = __import__('.'.join(parts[:-1]), globals(), locals(), parts[-1], 0)
+	# I left off the part that forces absolute imports, so this will work in py 2.4
+	package = __import__('.'.join(parts[:-1]), globals(), locals(), parts[-1])
 	mod = getattr(package, parts[-1])
 	return os.path.abspath(os.path.dirname(os.path.abspath(mod.__file__)) + '/../..')
 
