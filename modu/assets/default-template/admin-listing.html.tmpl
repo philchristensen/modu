@@ -2,13 +2,13 @@
 
 <h2>$getVar('title', 'record list')</h2>
 
-#if not $selected_itemdef.get('no_create', False)
+#if not $selected_itemdef.config.get('no_create', False)
 <div class="create-link">
 <a href="$req.get_path($req.prepath, 'detail', $selected_itemdef.get_table(), 'new')">Create New Record</a>
 </div>
 #end if
 
-#if $selected_itemdef.get('export', False)
+#if $selected_itemdef.config.get('export', False)
 <div class="export-link">
 <a href="$req.get_path($req.prepath, 'export', $selected_itemdef.get_table())">Export Found Records</a>
 </div>
