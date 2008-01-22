@@ -480,7 +480,7 @@ class itemdef(OrderedDict):
 					return False
 		
 		# save storable data
-		req.store.save(storable)
+		req.store.save(storable, save_related_storables=False)
 		
 		if(req.get('modu.messages')):
 			req.messages.report('message', 'Your changes have been saved.')
