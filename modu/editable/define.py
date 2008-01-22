@@ -527,7 +527,7 @@ class itemdef(OrderedDict):
 		
 		deleted_id = storable.get_id()
 		deleted_table = storable.get_table()
-		storable.get_store().destroy(storable)
+		storable.get_store().destroy(storable, self.config.get('delete_related_storables', False))
 		
 		if('postdelete_callback' in self.config):
 			self.config['postdelete_callback'](req, form, storable)

@@ -415,7 +415,6 @@ class Store(object):
 			raise LookupError('There is no factory registered for the table `%s`' % table)
 		factory = self._factories[table]
 		
-		self._save(storable, factory)
 		child_list = storable.get_related_storables()
 		id_list = []
 		while(child_list and save_related_storables):
@@ -430,12 +429,16 @@ class Store(object):
 			self._save(child, factory)
 			child_list.extend(child.get_related_storables())
 			id_list.append(child_id)
+		self._save(storable, factory)
 	
 	def _save(self, storable, factory):
 		"""
 		Internal function that is responsible for doing the
 		actual saving.
 		"""
+		if not(storable.is_dirty()):
+			return
+		
 		table = storable.get_table()
 		id = self.fetch_id(storable)
 		data = storable.get_data()
@@ -459,6 +462,7 @@ class Store(object):
 				#cur.fetchall()
 			self.pool.runOperation('UNLOCK TABLES')
 		
+		storable.clean()
 		storable.set_factory(factory)
 	
 	def destroy(self, storable, destroy_related_storables=False):
@@ -474,7 +478,7 @@ class Store(object):
 			L{Storable.get_related_storables()} be automatically destroyed?
 		@type destroy_related_storables: bool
 		"""
-		self._destroy(storable)
+		#print 'getting relations for #%s (%s - "%s")' % (storable.get_id(), storable.get_table(), getattr(storable, 'title', 'no-title'))
 		child_list = storable.get_related_storables()
 		id_list = []
 		while(child_list and destroy_related_storables):
@@ -482,9 +486,13 @@ class Store(object):
 			child_id = self.fetch_id(child)
 			if(child_id in id_list and factory.uses_guids()):
 				raise AssertionError('Found circular storable reference during save')
-			self._destroy(child)
+			#print 'appending relations for #%s (%s - "%s")' % (child.get_id(), child.get_table(), getattr(child, 'title', 'no-title'))
 			child_list.extend(child.get_related_storables())
+			#print 'destroying #%s (%s - "%s")' % (child.get_id(), child.get_table(), getattr(child, 'title', 'no-title'))
+			self._destroy(child)
 			id_list.append(child_id)
+		#print 'destroying #%s (%s - "%s")' % (storable.get_id(), storable.get_table(), getattr(storable, 'title', 'no-title'))
+		self._destroy(storable)
 	
 	def _destroy(self, storable):
 		"""

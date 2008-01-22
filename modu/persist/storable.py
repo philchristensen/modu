@@ -173,6 +173,8 @@ class Storable(object):
 		object.__setattr__(self, '_factory', None)
 	
 	def __setitem__(self, key, value):
+		if(object.__getattribute__(self, '_data').get(key) != value):
+			self.touch()
 		object.__getattribute__(self, '_data')[key] = value
 	
 	def __getitem__(self, key):
@@ -457,6 +459,7 @@ class DefaultFactory(object):
 		
 		item.load_data(data)
 		item.set_factory(self)
+		item.clean()
 		return item
 	
 	def create_item_query(self, data):
