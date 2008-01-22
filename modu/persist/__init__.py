@@ -425,7 +425,8 @@ class Store(object):
 				raise LookupError('There is no factory registered for the table `%s`' % child_table)
 			factory = self._factories[child_table]
 			if(child_id in id_list and factory.uses_guids()):
-				raise AssertionError('Found circular storable reference during save')
+				continue
+				#raise AssertionError('Found circular storable reference during save')
 			self._save(child, factory)
 			child_list.extend(child.get_related_storables())
 			id_list.append(child_id)
@@ -485,7 +486,8 @@ class Store(object):
 			child = child_list.pop()
 			child_id = self.fetch_id(child)
 			if(child_id in id_list and factory.uses_guids()):
-				raise AssertionError('Found circular storable reference during save')
+				#raise AssertionError('Found circular storable reference during destroy')
+				continue
 			#print 'appending relations for #%s (%s - "%s")' % (child.get_id(), child.get_table(), getattr(child, 'title', 'no-title'))
 			child_list.extend(child.get_related_storables())
 			#print 'destroying #%s (%s - "%s")' % (child.get_id(), child.get_table(), getattr(child, 'title', 'no-title'))
