@@ -422,7 +422,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		"""
 		result = util.OrderedDict()
 		for name, field in itemdef.items():
-			if(field.get('export_listing', False)):
+			if(field.get('listing', False)):
 				frm = field.get_element(req, 'listing', item)
 				
 				header = field.get('label', name)
