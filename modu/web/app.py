@@ -15,11 +15,11 @@ Primary components of the modu webapp foundation.
 @var host_tree_lock: lock on host_tree during C{app.get_application()}
 @type host_tree_lock: threading.BoundedSemaphore
 
-@var pool: pool of synchronous database connections, shared between threads
-@type pool: adbapi.SynchronousConnectionPool
+@var pools: map of synchronous database connections, shared between threads
+@type pools: adbapi.SynchronousConnectionPool
 
-@var pool_lock: lock on host_tree during site lookup
-@type pool_lock: threading.BoundedSemaphore
+@var pools_lock: lock on pools during site configuration
+@type pools_lock: threading.BoundedSemaphore
 """
 
 import os, os.path, sys, stat, copy, mimetypes, traceback, threading
@@ -175,6 +175,19 @@ def get_normalized_hostname(env):
 		host += ':' + env['SERVER_PORT']
 	return host
 
+def get_process_info():
+	import thread
+	return tags.table()[[
+		tags.tr()[[
+			tags.th()['Thread Name:'],
+			tags.td()[thread.get_ident()]
+		]],
+		tags.tr()[[
+			tags.th()['Process ID:'],
+			tags.td()[os.getpid()]
+		]]
+	]]
+
 def get_application(env):
 	"""
 	Return an application object for the site configured
@@ -245,6 +258,8 @@ def raise404(path=None):
 	content += tags.p()['There is no object registered at that path.']
 	if(path):
 		content += tags.strong()[path]
+	content += tags.hr()
+	content += get_process_info()
 	raise web.HTTPStatus('404 Not Found', [('Content-Type', 'text/html')], [content])
 
 def raise403(path=None):
