@@ -42,10 +42,12 @@ class ModuServiceMaker(object):
 		"""
 		Instantiate the service.
 		"""
+		env = {'MODU_PATH': lambda: os.getcwd()}
+		
 		if(config['logfile'] != '-'):
-			site = server.Site(wsgi.WSGIResource(app.handler), logPath=config['logfile'])
+			site = server.Site(wsgi.WSGIResource(app.handler, env=env), logPath=config['logfile'])
 		else:
-			site = server.Site(wsgi.WSGIResource(app.handler))
+			site = server.Site(wsgi.WSGIResource(app.handler, env=env))
 		server.Site.requestFactory = app.UnparsedRequest
 		
 		web_service = internet.TCPServer(int(config['port']), site)

@@ -153,7 +153,7 @@ def configure_request(env, application):
 	else:
 		env['PATH_INFO'] = uri
 	
-	env['modu.approot'] = env['MODU_ENV']
+	env['modu.approot'] = application.approot
 	env['modu.path'] = env['PATH_INFO']
 	
 	approot = env['modu.approot']
@@ -162,6 +162,17 @@ def configure_request(env, application):
 	
 	return Request(env)
 
+def get_default_approot(site):
+	parts = site.__class__.__module__.split('.')
+	package = __import__('.'.join(parts[:-1]), globals(), locals(), parts[-1], 0)
+	mod = getattr(package, parts[-1])
+	return os.path.abspath(os.path.dirname(os.path.abspath(mod.__file__)) + '/../..')
+
+def get_normalized_hostname(env):
+	host = env.get('HTTP_HOST', env['SERVER_NAME'])
+	if(host.find(':') == -1):
+		host += ':' + env['SERVER_PORT']
+	return host
 
 def get_application(env):
 	"""
@@ -173,9 +184,7 @@ def get_application(env):
 	"""
 	global host_tree
 	
-	host = env.get('HTTP_HOST', env['SERVER_NAME'])
-	if(host.find(':') == -1):
-		host += ':' + env['SERVER_PORT']
+	host = get_normalized_hostname(env)
 	
 	host_tree_lock.acquire()
 	try:
@@ -197,7 +206,6 @@ def get_application(env):
 	#return copy.deepcopy(app)
 	return app
 
-
 def redirect(url, permanent=False):
 	"""
 	Convenience method for raise301/raise302.
@@ -209,13 +217,11 @@ def redirect(url, permanent=False):
 	else:
 		raise302(url)
 
-
 def raise200(headers, content):
 	"""
 	Override the content currently being rendered in the current request.
 	"""
 	raise web.HTTPStatus('200 OK', headers, content)
-
 
 def raise301(url):
 	"""
@@ -223,13 +229,11 @@ def raise301(url):
 	"""
 	raise web.HTTPStatus('301 Moved Permanently', [('Location', url)], [''])
 
-
 def raise302(url):
 	"""
 	Return a temporary redirect status and content to the user.
 	"""
 	raise web.HTTPStatus('302 Found', [('Location', url)], [''])
-
 
 def raise404(path=None):
 	"""
@@ -242,7 +246,6 @@ def raise404(path=None):
 		content += tags.strong()[path]
 	raise web.HTTPStatus('404 Not Found', [('Content-Type', 'text/html')], [content])
 
-
 def raise403(path=None):
 	"""
 	You are not allowed to access that path.
@@ -253,7 +256,6 @@ def raise403(path=None):
 	if(path):
 		content += tags.strong()[path]
 	raise web.HTTPStatus('403 Forbidden', [('Content-Type', 'text/html')], [content])
-
 
 def raise401(path=None):
 	"""
@@ -268,7 +270,6 @@ def raise401(path=None):
 		content += tags.strong()[path]
 	raise web.HTTPStatus('401 Unauthorized', [('Content-Type', 'text/html')], [content])
 
-
 def raise500(message=None):
 	"""
 	Sorry, an error has occurred.
@@ -280,13 +281,11 @@ def raise500(message=None):
 		content += tags.strong()[message]
 	raise web.HTTPStatus('500 Internal Server Error', [('Content-Type', 'text/html')], content)
 
-
 def activate_pool(req):
 	"""
 	JIT Request handler for enabling DB support.
 	"""
 	req['modu.pool'] = acquire_db(req.app.db_url)
-
 
 def acquire_db(db_url):
 	"""
@@ -303,7 +302,6 @@ def acquire_db(db_url):
 	
 	return pool
 
-
 def _scan_sites(env):
 	"""
 	Search for available site configuration objects.
@@ -312,11 +310,14 @@ def _scan_sites(env):
 	"""
 	global host_tree
 	
-	if(env.get('MODU_ENV', sys.path[0]) not in sys.path):
-		sys.path.append(env['MODU_ENV'])
+	modu_path = env.get('MODU_PATH')
+	if(callable(modu_path)):
+		modu_path = modu_path()
+	if(modu_path and modu_path not in sys.path):
+		sys.path.append(modu_path)
 	
 	import modu.sites
-	reload(modu.sites)
+	#reload(modu.sites)
 	
 	plugins = plugin.getPlugins(ISite, modu.sites)
 	
@@ -325,12 +326,9 @@ def _scan_sites(env):
 		site = site_plugin()
 		app = Application(site)
 		
-		# We can't set up the default file resource if we
-		# don't know where we are
-		if('MODU_ENV' in env):
-			root = app.tree.get_data_at('/')
-			webroot = os.path.join(env['MODU_ENV'], app.webroot)
-			app.tree.register('/', (static.FileResource, (['/'], webroot, root), {}), clobber=True)
+		root = app.tree.get_data_at('/')
+		webroot = os.path.join(app.approot, app.webroot)
+		app.tree.register('/', (static.FileResource, (['/'], webroot, root), {}), clobber=True)
 		
 		domain = app.base_domain
 		if(domain.find(':') == -1):
@@ -341,7 +339,7 @@ def _scan_sites(env):
 		if not(base_path):
 			base_path = '/'
 		
-		#env['wsgi.errors'].write('found site config at %s%s, %r\n' % (domain, base_path, site_plugin))
+		#env['wsgi.errors'].write('found site config at %s%s, %r for %r\n' % (domain, base_path, site_plugin, app))
 		host_node.register(base_path, app, clobber=True)
 
 
@@ -355,7 +353,6 @@ class ISite(interface.Interface):
 		Configure the application object for this site. This method is
 		only called once for the lifetime of the app object.
 		"""
-
 
 class Request(dict):
 	"""
@@ -557,7 +554,6 @@ class UnparsedRequest(server.Request):
 		
 		self.process()
 
-
 class Application(object):
 	"""
 	An 'application' in the modu universe is simply a place
@@ -569,8 +565,7 @@ class Application(object):
 	in the request object for each page request.
 	"""
 	def __init__(self, site):
-		_dict = self.__dict__
-		_dict['config'] = {}
+		self.__dict__['config'] = {}
 		
 		self.base_domain = 'localhost'
 		self.base_path = '/'
@@ -586,6 +581,8 @@ class Application(object):
 		self.magic_mime_file = None
 		self.tree = url.URLNode()
 		self.site = site
+		
+		self.approot = get_default_approot(site)
 		
 		site.initialize(self)
 	

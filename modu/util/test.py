@@ -87,7 +87,6 @@ def generate_test_wsgi_environment(post_data={}, multipart=True):
 	"""
 	Set REQUEST_URI
 	Set SCRIPT_NAME to app.base_path
-	Set MODU_ENV to intended approot
 	"""
 	environ = {}
 	environ['wsgi.errors'] = StringIO.StringIO()

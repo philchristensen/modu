@@ -28,7 +28,6 @@ class FormTestCase(unittest.TestCase):
 		"""
 		environ = test.generate_test_wsgi_environment(post_data, multipart)
 		environ['REQUEST_URI'] = '/app-test/test-resource'
-		environ['MODU_ENV'] = ''
 		environ['HTTP_HOST'] = '____basic-test-domain____:1234567'
 		environ['SERVER_NAME'] = '____basic-test-domain____'
 		environ['HTTP_PORT'] = '1234567'

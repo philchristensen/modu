@@ -30,7 +30,6 @@ class AppTestCase(unittest.TestCase):
 		"""
 		environ = test.generate_test_wsgi_environment(form_data)
 		environ['REQUEST_URI'] = uri
-		environ['MODU_ENV'] = ''
 		environ['HTTP_HOST'] = '____basic-test-domain____:1234567'
 		environ['SERVER_NAME'] = '____basic-test-domain____'
 		environ['HTTP_PORT'] = '1234567'
@@ -72,7 +71,6 @@ class AppTestCase(unittest.TestCase):
 		req = self.get_request('/app-test/test-resource/this/is/a/long/path?query=some+query')
 		
 		self.failUnlessEqual(req['PATH_INFO'].find('?'), -1, 'Found query string in PATH_INFO')
-		self.failUnlessEqual(req['MODU_ENV'], req['modu.approot'], 'Found incorrect approot')
 		self.failUnlessEqual(req['PATH_INFO'], req['modu.path'], 'PATH_INFO was different from modu.path')
 		self.failUnlessEqual(req['modu.path'], '/test-resource/this/is/a/long/path', 'modu.path was not as expected: %s' % req['modu.path'])
 	
@@ -151,7 +149,6 @@ class AppTestCase(unittest.TestCase):
 		environ['SERVER_NAME'] = '____basic-test-domain____'
 		environ['HTTP_PORT'] = '1234567'
 		environ['REQUEST_URI'] = '/app-test/test-resource/this/is/a/long/path?query=some+query'
-		environ['MODU_ENV'] = ''
 		
 		# Test for valid path
 		d = defer.Deferred()

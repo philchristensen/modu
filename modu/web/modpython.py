@@ -70,13 +70,11 @@ def get_wsgi_environment(mp_req):
 	
 	env = dict(apache.sql.build_cgi_env(mp_req))
 	
-	# We'll set MODU_ENV, but SCRIPT_NAME will
-	# be misleading until the modu app code actually
-	# gets started. The next release of mod_python
-	# should be adding mp_req.hlist['location'],
+	# SCRIPT_NAME will be misleading until the modu
+	# app code actually gets started. The next release
+	# of mod_python should be adding mp_req.hlist['location'],
 	# which will fix this.
 	#env['SCRIPT_NAME'] = mp_req.hlist['location']
-	env['MODU_ENV'] = apache.get_handler_root()
 	
 	if('CONTENT_LENGTH' in mp_req.headers_in):
 		env['CONTENT_LENGTH'] = long(mp_req.headers_in['Content-Length'])

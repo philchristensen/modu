@@ -110,15 +110,20 @@ def createCGIEnvironment(request):
 class WSGIResource(resource.Resource):
 	isLeaf = True
 	
-	def __init__(self, application):
+	def __init__(self, application, env=None):
 		self.application = application
+		self.env = env
 	
 	def render(self, request):
 		from twisted.internet import reactor
 		# Do stuff with WSGIHandler.
 		handler = WSGIHandler(self.application, request)
-		handler.environment['MODU_ENV'] = os.getcwd()
-		
+		if(self.env):
+			for k, v in self.env.items():
+				if(callable(v)):
+					handler.environment[k] = v()
+				else:
+					handler.environment[k] = v
 		handler.responseDeferred.addCallback(self._finish, request)
 		handler.responseDeferred.addErrback(self._error, request)
 		
