@@ -425,8 +425,8 @@ class Store(object):
 				raise LookupError('There is no factory registered for the table `%s`' % child_table)
 			factory = self._factories[child_table]
 			if(child_id in id_list and factory.uses_guids()):
-				continue
 				#raise AssertionError('Found circular storable reference during save')
+				continue
 			self._save(child, factory)
 			child_list.extend(child.get_related_storables())
 			id_list.append(child_id)
@@ -460,7 +460,6 @@ class Store(object):
 				rows = self.pool.runQuery('SELECT MAX(%s) AS `id` FROM `%s`' % (factory.get_primary_key(), table))
 				new_id = rows[0]['id']
 				storable.set_id(new_id)
-				#cur.fetchall()
 			self.pool.runOperation('UNLOCK TABLES')
 		
 		storable.clean()
