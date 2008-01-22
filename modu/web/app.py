@@ -1,3 +1,4 @@
+
 # modu
 # Copyright (C) 2007-2008 Phil Christensen
 #
@@ -36,8 +37,8 @@ from zope import interface
 host_tree = {}
 host_tree_lock = threading.BoundedSemaphore()
 
-pool = None
-pool_lock = threading.BoundedSemaphore()
+pools = {}
+pools_lock = threading.BoundedSemaphore()
 
 mimetypes_init = False
 
@@ -188,15 +189,15 @@ def get_application(env):
 	
 	host_tree_lock.acquire()
 	try:
-		if not(host in host_tree):
+		if not(host_tree):
 			_scan_sites(env)
 		if not(host in host_tree):
 			return None
 		
 		host_node = host_tree[host]
 		
-		if not(host_node.has_path(env['REQUEST_URI'])):
-			_scan_sites(env)
+		#if not(host_node.has_path(env['REQUEST_URI'])):
+		#	_scan_sites(env)
 		
 		app = host_node.get_data_at(env['REQUEST_URI'])
 	finally:
@@ -285,20 +286,23 @@ def activate_pool(req):
 	"""
 	JIT Request handler for enabling DB support.
 	"""
-	req['modu.pool'] = acquire_db(req.app.db_url)
+	req['modu.pool'] = acquire_db(req.app)
 
-def acquire_db(db_url):
+def acquire_db(app):
 	"""
 	Create the shared connection pool for this process.
 	"""
-	global pool, pool_lock
-	pool_lock.acquire()
+	global pools, pools_lock
+	pools_lock.acquire()
 	try:
-		if not(pool):
+		if(app.db_url in pools):
+			pool = pools[app.db_url]
+		else:
 			from modu.persist import adbapi
-			pool = adbapi.connect(db_url)
+			pool = adbapi.connect(app.db_url)
+			pools[app.db_url] = pool
 	finally:
-		pool_lock.release()
+		pools_lock.release()
 	
 	return pool
 
@@ -310,11 +314,13 @@ def _scan_sites(env):
 	"""
 	global host_tree
 	
-	modu_path = env.get('MODU_PATH')
-	if(callable(modu_path)):
-		modu_path = modu_path()
-	if(modu_path and modu_path not in sys.path):
-		sys.path.append(modu_path)
+	modu_path = env.get('MODU_PATH', None)
+	
+	if(modu_path):
+		for component in modu_path.split(':'):
+			component = os.path.abspath(component)
+			if(component not in sys.path):
+				sys.path.append(component)
 	
 	import modu.sites
 	#reload(modu.sites)
@@ -339,7 +345,7 @@ def _scan_sites(env):
 		if not(base_path):
 			base_path = '/'
 		
-		#env['wsgi.errors'].write('found site config at %s%s, %r for %r\n' % (domain, base_path, site_plugin, app))
+		env['wsgi.errors'].write('found site config for %s%s' % (domain, base_path))
 		host_node.register(base_path, app, clobber=True)
 
 

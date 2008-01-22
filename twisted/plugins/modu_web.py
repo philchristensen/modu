@@ -42,7 +42,7 @@ class ModuServiceMaker(object):
 		"""
 		Instantiate the service.
 		"""
-		env = {'MODU_PATH': lambda: os.getcwd()}
+		env = {'MODU_PATH': os.environ.get('MODU_PATH', '.')}
 		
 		if(config['logfile'] != '-'):
 			site = server.Site(wsgi.WSGIResource(app.handler, env=env), logPath=config['logfile'])
