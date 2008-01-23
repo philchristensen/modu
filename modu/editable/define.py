@@ -426,9 +426,10 @@ class itemdef(OrderedDict):
 		if(form_data.get('cancel', form.nil()).value == frm.submit_button.value):
 			app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
 		elif(form_data.get('delete', form.nil()).value == frm.submit_button.value):
-			self.delete(req, frm, storable)
-			app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
-		
+			if(self.delete(req, frm, storable)):
+				app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
+			else:
+				return False
 		# call validate hook on each field, return false if they do
 		for field in frm:
 			if(field in self and 'validator' in self[field]):
