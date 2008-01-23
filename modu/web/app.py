@@ -203,15 +203,15 @@ def get_application(env):
 	
 	host_tree_lock.acquire()
 	try:
-		if not(host_tree):
+		if not(host in host_tree):
 			_scan_sites(env)
 		if not(host in host_tree):
 			return None
 		
 		host_node = host_tree[host]
 		
-		#if not(host_node.has_path(env['REQUEST_URI'])):
-		#	_scan_sites(env)
+		if not(host_node.has_path(env['REQUEST_URI'])):
+			_scan_sites(env)
 		
 		app = host_node.get_data_at(env['REQUEST_URI'])
 	finally:
