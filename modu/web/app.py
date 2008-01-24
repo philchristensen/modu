@@ -623,6 +623,7 @@ class Application(object):
 		if not resource.IResource.implementedBy(rsrc):
 			raise TypeError('%r does not implement IResource' % rsrc)
 		clobber = kwargs.get('clobber', False)
+		kwargs.pop('clobber', None)
 		for path in rsrc(*args, **kwargs).get_paths():
 			self.tree.register(path, (rsrc, args, kwargs), clobber=clobber)
 	
