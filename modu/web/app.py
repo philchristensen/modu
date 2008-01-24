@@ -186,7 +186,7 @@ def get_process_info():
 		tags.tr()[[
 			tags.th()['Process ID:'],
 			tags.td()[os.getpid()]
-		]]
+		]],
 		tags.tr()[[
 			tags.th()['Python Path:'],
 			tags.td()[str(sys.path)]
