@@ -87,6 +87,17 @@ class IContent(interface.Interface):
 		@type req: L{modu.web.app.Request}
 		"""
 	
+	def get_content_provider(self, req):
+		"""
+		Set the IContent implementor that will generate content for this resource.
+		
+		If there is no content provider set, but the current instance is a IContent
+		implementor (because of subclassing/inheritence), this method may return self.
+		
+		@returns: the object to generate content for this Resource
+		@rtype: L{IContent} implementor
+		"""
+	
 	def get_content_type(self, req):
 		"""
 		Return the mime type of this content.
@@ -204,13 +215,7 @@ class Resource(object):
 	
 	def get_content_provider(self):
 		"""
-		Set the IContent implementor that will generate content for this resource.
-		
-		If there is no content provider set, but the current instance is a IContent
-		implementor (because of subclassing/inheritence), this method may return self.
-		
-		@returns: the object to generate content for this Resource
-		@rtype: L{IContent} implementor
+		@see: L{IResource.get_content_provider()}
 		"""
 		if(not hasattr(self, 'content_provider') and IContent.providedBy(self)):
 			return self
