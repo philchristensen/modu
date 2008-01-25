@@ -33,6 +33,7 @@ class Site(object):
 	def initialize(self, application):
 		application.base_domain = self.hostname
 		application.db_url = 'MySQLdb://modusite:yibHikmet3@localhost/modusite'
+		application.session_cookie_params = {'Path':'/'}
 		
 		modu_assets_path = os.path.join(os.path.dirname(modu.__file__), 'assets')
 		application.activate(static.FileResource, ['/assets'], modu_assets_path)
