@@ -54,7 +54,7 @@ class EditableTestCase(unittest.TestCase):
 		self.failIf(application is  None, "Didn't get an application object.")
 		
 		req = app.configure_request(environ, application)
-		req['modu.pool'] = app.acquire_db(application.db_url)
+		req['modu.pool'] = app.acquire_db(application)
 		req['modu.user'] = None
 		persist.activate_store(req)
 		

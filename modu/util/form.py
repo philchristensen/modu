@@ -494,12 +494,12 @@ class _NestedFieldStorage(cgi.FieldStorage):
 		if not cgi.valid_boundary(ib):
 			raise ValueError, 'Invalid boundary in multipart form: %r' % (ib,)
 		self.list = []
-		part = NestedFieldStorage(self.req, self, self.fp, {}, ib,
+		part = _NestedFieldStorage(self.req, self, self.fp, {}, ib,
 					 environ, keep_blank_values, strict_parsing)
 		# Throw first part away
 		while not part.done:
 			headers = rfc822.Message(self.fp)
-			part = NestedFieldStorage(self.req, self, self.fp, headers, ib,
+			part = _NestedFieldStorage(self.req, self, self.fp, headers, ib,
 						 environ, keep_blank_values, strict_parsing)
 			
 			name, value, new = self.parse_field(part.name, part)
