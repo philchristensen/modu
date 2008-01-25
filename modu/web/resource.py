@@ -50,7 +50,17 @@ class IResource(interface.Interface):
 		@param req: the current request
 		@type req: L{modu.web.app.Request}
 		"""
-
+	
+	def get_content_provider(self, req):
+		"""
+		Set the IContent implementor that will generate content for this resource.
+		
+		If there is no content provider set, but the current instance is a IContent
+		implementor (because of subclassing/inheritence), this method may return self.
+		
+		@returns: the object to generate content for this Resource
+		@rtype: L{IContent} implementor
+		"""
 
 class IResourceDelegate(interface.Interface):
 	"""
@@ -85,17 +95,6 @@ class IContent(interface.Interface):
 		
 		@param req: the current request
 		@type req: L{modu.web.app.Request}
-		"""
-	
-	def get_content_provider(self, req):
-		"""
-		Set the IContent implementor that will generate content for this resource.
-		
-		If there is no content provider set, but the current instance is a IContent
-		implementor (because of subclassing/inheritence), this method may return self.
-		
-		@returns: the object to generate content for this Resource
-		@rtype: L{IContent} implementor
 		"""
 	
 	def get_content_type(self, req):
