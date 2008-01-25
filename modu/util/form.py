@@ -13,7 +13,6 @@ except:
 	import StringIO
 
 from modu.util import theme
-from modu.web import app
 
 NESTED_NAME = re.compile(r'([^\[]+)(\[([^\]]+)\])*')
 KEYED_FRAGMENT = re.compile(r'\[([^\]]+)\]*')
@@ -28,10 +27,11 @@ def nil():
 
 
 def NestedFieldStorage(req, *args, **kwargs):
+	from modu.web import app
 	if not(isinstance(req, app.Request)):
-		return NestedFieldStorage(req, *args, **kwargs)
+		return _NestedFieldStorage(req, *args, **kwargs)
 	if('modu.data' not in req):
-		req['modu.data'] = NestedFieldStorage(req, *args, **kwargs)
+		req['modu.data'] = _NestedFieldStorage(req, *args, **kwargs)
 	return req['modu.data']
 	
 
