@@ -476,7 +476,7 @@ class Request(dict):
 		return self.rsrc
 	
 	def log_error(self, data):
-		self['wsgi.errors'].write(data)
+		self['wsgi.errors'].write(str(data) + '\n')
 	
 	def has_form_data(self):
 		if(self['REQUEST_METHOD'] == 'POST'):
