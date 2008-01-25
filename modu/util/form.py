@@ -13,6 +13,7 @@ except:
 	import StringIO
 
 from modu.util import theme
+from modu.web import app
 
 NESTED_NAME = re.compile(r'([^\[]+)(\[([^\]]+)\])*')
 KEYED_FRAGMENT = re.compile(r'\[([^\]]+)\]*')
@@ -25,6 +26,14 @@ def nil():
 	"""
 	return cgi.MiniFieldStorage('nil-field', None)
 
+
+def NestedFieldStorage(req, *args, **kwargs):
+	if not(isinstance(req, app.Request)):
+		return NestedFieldStorage(req, *args, **kwargs)
+	if('modu.data' not in req):
+		req['modu.data'] = NestedFieldStorage(req, *args, **kwargs)
+	return req['modu.data']
+	
 
 class FormNode(object):
 	"""
@@ -357,7 +366,7 @@ class FieldStorageDict(dict):
 		return self.field_storage.keys() + dict.keys(self)
 
 
-class NestedFieldStorage(cgi.FieldStorage):
+class _NestedFieldStorage(cgi.FieldStorage):
 	"""
 	NestedFieldStorage allows you to use a dict-like syntax for
 	naming your form elements. This allows related values to be
@@ -511,6 +520,7 @@ class NestedFieldStorage(cgi.FieldStorage):
 			import tempfile
 			return tempfile.TemporaryFile("w+b")
 	
+
 
 class DictField(dict):
 	"""
