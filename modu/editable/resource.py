@@ -46,51 +46,6 @@ def select_template_root(req, template):
 	return os.path.join(os.path.dirname(modu.__file__), 'assets', 'default-template')
 
 
-def validate_login(req, form):
-	"""
-	Validation callback for login form.
-	
-	Ensures values in username and password fields.
-	
-	@param req: the current request
-	@type req: L{modu.web.app.Request}
-	
-	@param form: the form being validated
-	@type form: L{modu.util.form.FormNode}
-	
-	@return: True if all data is entered
-	@rtype: bool
-	"""
-	if not(form.data[form.name]['username']):
-		form.set_form_error('username', "Please enter your username.")
-	if not(form.data[form.name]['password']):
-		form.set_form_error('password', "Please enter your password.")
-	return not form.has_errors()
-
-
-def submit_login(req, form):
-	"""
-	Submission callback for login form.
-	
-	Logs in the user using crypt()-based passwords.
-	
-	@param req: the current request
-	@type req: L{modu.web.app.Request}
-	
-	@param form: the form being validated
-	@type form: L{modu.util.form.FormNode}
-	"""
-	req.store.ensure_factory('user', user.User)
-	form_data = form.data[form.name]
-	encrypt_sql = sql.interp('%%s = ENCRYPT(%s, SUBSTRING(crypt, 1, 2))', [form_data['password'].value])
-	u = req.store.load_one('user', username=form_data['username'].value, crypt=sql.RAW(encrypt_sql))
-	if(u):
-		req.session.set_user(u)
-		app.redirect(req.get_path(req.path))
-	else:
-		req.messages.report('error', "Sorry, that login was incorrect.")
-
-
 def configure_store(req, itemdef):
 	"""
 	Set up the current request environment for this itemdef.
@@ -231,12 +186,7 @@ class AdminResource(resource.CheetahTemplateResource):
 		"""
 		self.template = 'admin-login.html.tmpl'
 		
-		login_form = form.FormNode('login')
-		login_form['username'](type='textfield', label='Username')
-		login_form['password'](type='password', label='Password')
-		login_form['submit'](type='submit', value='login')
-		login_form.validate = validate_login
-		login_form.submit = submit_login
+		login_form = user.get_default_login_form()
 		
 		login_form.execute(req)
 		

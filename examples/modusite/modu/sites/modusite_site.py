@@ -48,6 +48,7 @@ class Site(object):
 		trac_htdocs_path = os.path.join(os.path.dirname(trac.__file__), 'htdocs')
 		application.activate(static.FileResource, ['/trac/chrome/common'], trac_htdocs_path)
 		application.activate(modutrac.Resource)
+		application.activate(modutrac.LoginSupportResource)
 
 class megatron_local(Site):
 	classProvides(plugin.IPlugin, app.ISite)
