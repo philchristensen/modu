@@ -343,7 +343,7 @@ def _scan_sites(env):
 				sys.path.append(component)
 	
 	import modu.sites
-	#reload(modu.sites)
+	reload(modu.sites)
 	
 	plugins = plugin.getPlugins(ISite, modu.sites)
 	
