@@ -193,7 +193,7 @@ def get_process_info():
 		]],
 		tags.tr()[[
 			tags.th()['Site Tree:'],
-			tags.td()[str(host_tree)]
+			tags.td()[tags.encode_htmlentities(str(host_tree))]
 		]],
 	]]
 
