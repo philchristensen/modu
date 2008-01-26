@@ -190,7 +190,11 @@ def get_process_info():
 		tags.tr()[[
 			tags.th()['Python Path:'],
 			tags.td()[str(sys.path)]
-		]]
+		]],
+		tags.tr()[[
+			tags.th()['Site Tree:'],
+			tags.td()[str(host_tree)]
+		]],
 	]]
 
 def get_application(env):
