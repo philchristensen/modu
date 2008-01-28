@@ -76,6 +76,7 @@ class ForeignSelectField(define.definition):
 		label = self['flabel']
 		table = self['ftable']
 		where = self.get('fwhere', '')
+		order_by = self.get('order_by', None)
 		
 		if(callable(where)):
 			where = where(storable)
@@ -85,6 +86,8 @@ class ForeignSelectField(define.definition):
 		foreign_query = 'SELECT %s, %s FROM %s ' % (q(value), q(label), q(table))
 		if(where):
 			foreign_query += where
+		if(order_by):
+			foreign_query += 'ORDER BY %s' % order_by
 		
 		results = store.pool.runQuery(foreign_query)
 		
