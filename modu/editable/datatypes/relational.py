@@ -14,7 +14,7 @@ import time
 from zope.interface import implements
 
 from modu.editable import IDatatype, define
-from modu.util import form, tags
+from modu.util import form, tags, OrderedDict
 from modu.persist import sql
 
 from modu.persist.sql import escape_dot_syntax as q
@@ -91,7 +91,7 @@ class ForeignSelectField(define.definition):
 		
 		results = store.pool.runQuery(foreign_query)
 		
-		options = dict([(item[value], item[label]) for item in results])
+		options = OrderedDict([(item[value], item[label]) for item in results])
 		
 		frm = form.FormNode(self.name)
 		if(style == 'listing' or self.get('read_only', False)):
