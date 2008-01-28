@@ -45,7 +45,6 @@ class Site(object):
 		
 		os.environ['PYTHON_EGG_CACHE'] = '/tmp'
 		
-		import modu
 		apidocs_path = os.path.abspath(os.path.join(os.path.dirname(modu.__file__), '../apidocs'))
 		application.activate(static.FileResource, ['/apidocs'], apidocs_path)
 		
