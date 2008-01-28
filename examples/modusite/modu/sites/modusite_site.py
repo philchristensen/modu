@@ -45,6 +45,10 @@ class Site(object):
 		
 		os.environ['PYTHON_EGG_CACHE'] = '/tmp'
 		
+		import modu
+		apidocs_path = os.path.abspath(os.path.join(os.path.dirname(modu.__file__), '../apidocs'))
+		application.activate(static.FileResource, ['/apidocs'], apidocs_path)
+		
 		import trac
 		trac_htdocs_path = os.path.join(os.path.dirname(trac.__file__), 'htdocs')
 		application.activate(static.FileResource, ['/trac/chrome/common'], trac_htdocs_path)
