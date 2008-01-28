@@ -225,7 +225,7 @@ class ForeignMultipleSelectField(define.definition):
 			return form.FormNode(self.name)(type='label', value=label_value)
 		
 		values = [item['value'] for item in results if item['selected']]
-		options = dict([(item['value'], item['label']) for item in results])
+		options = OrderedDict([(item['value'], item['label']) for item in results])
 		
 		frm = form.FormNode(self.name)
 		frm(type='select', multiple=True, value=values, options=options)
