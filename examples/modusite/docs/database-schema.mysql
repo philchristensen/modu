@@ -86,6 +86,15 @@ CREATE TABLE `blog` (
   KEY active_idx(`active`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
 
+CREATE TABLE `faq` (
+  `id` bigint(20),
+  `question` varchar(255),
+  `answer` LONGBLOB,
+  `answered_date` DATETIME,
+  `answered_by` bigint(20),
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
 INSERT INTO `guid` (`guid`) VALUES (4);
 INSERT INTO `user` (`id`, `username`, `first`, `last`, `crypt`) VALUES (1, 'admin', 'Admin', 'User', ENCRYPT('admin'));
 INSERT INTO `role` (`id`, `name`) VALUES (2, 'admin user');

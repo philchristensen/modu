@@ -1,0 +1,15 @@
+#include 'header.html.tmpl'
+
+<h3 class="section-header">frequently asked questions</h3>
+
+#for faq in $faqs
+<div class="faqbody">
+<h3 class="title">$faq.question</h3>
+<small>Answered at $faq.answered_date.strftime('%B %d, %Y')</small>
+
+$faq.answer
+
+</div>
+#end for
+
+#include 'footer.html.tmpl'

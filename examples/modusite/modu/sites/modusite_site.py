@@ -17,7 +17,7 @@ from modu.editable import resource
 from modu.editable.datatypes import fck
 
 import modusite
-from modusite.resource import index, modutrac, blog
+from modusite.resource import index, modutrac, blog, faq
 
 class Site(object):
 	classProvides(plugin.IPlugin, app.ISite)
@@ -42,6 +42,7 @@ class Site(object):
 		application.activate(fck.FCKEditorResource)
 		application.activate(index.Resource)
 		application.activate(blog.Resource)
+		application.activate(faq.Resource)
 		
 		os.environ['PYTHON_EGG_CACHE'] = '/tmp'
 		
