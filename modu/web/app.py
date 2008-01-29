@@ -157,9 +157,12 @@ def configure_request(env, application):
 	env['modu.approot'] = application.approot
 	env['modu.path'] = env['PATH_INFO']
 	
+	if not(env['PATH_INFO'].startswith('/')):
+		env['modu.path'] = env['PATH_INFO'] = '/' + env['PATH_INFO']
+	
 	approot = env['modu.approot']
 	webroot = os.path.join(approot, application.webroot)
-	env['PATH_TRANSLATED'] = os.path.realpath(webroot + env['modu.path'])
+	env['PATH_TRANSLATED'] = os.path.realpath(os.path.join(webroot, env['modu.path'][1:]))
 	
 	return Request(env)
 
