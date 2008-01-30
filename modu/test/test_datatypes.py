@@ -325,8 +325,12 @@ class DatatypesTestCase(unittest.TestCase):
 		# | 2007-09-26 23:40:00       | 
 		# +---------------------------+
 		test_storable.start_date = datetime.datetime.fromtimestamp(1190864400)
+		self.failUnlessEqual(test_storable.start_date.year, 2007, 'Test year was calculated incorrectly as %s' % test_storable.start_date.year)
 		
 		months, days, years = date.get_date_arrays(2005, 2012)
+		self.failUnlessEqual(years[0], 2005, 'Start year was calculated incorrectly as %s' % years[0])
+		self.failUnlessEqual(years[2], 2007, 'Target year was calculated incorrectly as %s' % years[2])
+		
 		hours, minutes = date.get_time_arrays()
 		
 		itemdef_form = test_itemdef.get_form(req, test_storable)
@@ -362,6 +366,10 @@ class DatatypesTestCase(unittest.TestCase):
 		# this just loads the data, since there was
 		# no submit button in the test post data
 		itemdef_form.execute(req)
+		
+		#self.failUnlessEqual(itemdef_form['start_date']['date'].value.year, 2007, 'Form contains wrong year %s' % itemdef_form['start_date']['date'].value.year)
+		#self.failUnlessEqual(test_storable.start_date.year, 2007, 'Date contains wrong year %s' % test_storable.start_date.year)
+		
 		test_itemdef['start_date'].update_storable(req, itemdef_form, test_storable)
 		self.failUnlessEqual(test_storable.start_date, datetime.datetime.fromtimestamp(1190864400), 'Date was calculated incorrectly as %s' % test_storable.start_date)
 	
@@ -381,12 +389,21 @@ class DatatypesTestCase(unittest.TestCase):
 		simple_element['start_date']['minute'](type='select', weight=4, options=minutes, value=40)
 		
 		date_element = form.FormNode('test-form')
-		date_element['start_date'](type='datetime', label='start date:', value=datetime.datetime.fromtimestamp(1190864400))
+		date_element['start_date'](type='datetime', start_year=2005, end_year=2012, label='start date:', value=datetime.datetime.fromtimestamp(1190864400))
 		
-		simple_element_html = simple_element.render(req)
-		date_element_html = date_element.render(req)
+		self.failUnlessEqual(date_element['start_date'].value.year, 2007, 'Test year was calculated incorrectly as %s' % date_element['start_date'].value.year)
+
+		simple_element_html = str(simple_element.render(req))
+		date_element_html = str(date_element.render(req))
+		
+		for i in range(len(date_element_html)):
+			if(simple_element_html[i] != date_element_html[i]):
+				self.fail('Found %s (%s) when expecting %s (%s) at position %d' % (
+					simple_element_html[i], simple_element_html[i-20:i+20], date_element_html[i], date_element_html[i-20:i+20], i
+				))
 		
 		self.failUnlessEqual(date_element_html, simple_element_html, "Didn't get expected form output, got:\n%s\n  instead of:\n%s" % (date_element_html, simple_element_html) )
+	
 	
 	def test_foreign_select_field(self):
 		"""
