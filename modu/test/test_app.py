@@ -137,6 +137,10 @@ class AppTestCase(unittest.TestCase):
 			status, headers = result
 			self.failUnlessEqual(status, '404 Not Found', "App handler returned unexpected status, '%s'" % status)
 		
+		def check500(result):
+			status, headers = result
+			self.failUnlessEqual(status, '500 Internal Server Error', "App handler returned unexpected status, '%s'" % status)
+		
 		# Shouldn'f find anything because server in environ is
 		# still set to 'localhost'
 		d = defer.Deferred()
@@ -160,4 +164,10 @@ class AppTestCase(unittest.TestCase):
 		environ['REQUEST_URI'] = '/app-test'
 		app.handler(environ, start_response)
 		d.addCallback(check404)
+		
+		# Test for exceptions
+		d = defer.Deferred()
+		environ['REQUEST_URI'] = '/app-test/test-resource/exception'
+		app.handler(environ, start_response)
+		d.addCallback(check500)
 

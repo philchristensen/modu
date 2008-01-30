@@ -35,7 +35,10 @@ class TestResource(resource.Resource):
 		"""
 		@see: L{modu.web.app.resource.IContent.prepare_content()}
 		"""
-		pass
+		if(req.postpath):
+			if(req.postpath[0] == 'exception'):
+				raise Exception('requested exception')
+			
 	
 	def get_content_type(self, req):
 		"""

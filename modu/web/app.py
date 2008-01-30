@@ -30,7 +30,7 @@ from modu import persist, web
 
 from twisted import plugin
 from twisted.web import server
-from twisted.python import log, failure
+from twisted.python import failure
 from twisted.web.util import formatFailure
 from zope import interface
 
@@ -113,7 +113,7 @@ def handler(env, start_response):
 			headers = [('Content-Type', content_provider.get_content_type(req))]
 		else:
 			reason = failure.Failure()
-			log.err(reason)
+			reason.printTraceback(env['wsgi.errors'])
 			content = ["<html><head><title>web.Server Traceback (most recent call last)</title></head>"
 				"<body><b>web.Server Traceback (most recent call last):</b>\n\n"
 				"%s\n\n</body></html>\n" % formatFailure(reason)]
