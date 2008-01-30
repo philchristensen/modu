@@ -98,11 +98,18 @@ class DateField(define.definition):
 		if(data.attr('null', 0)):
 			setattr(storable, self.get_column_name(), None)
 			return True
+			
+		#print form.data
+		#current_year = datetime.datetime.now().year
 		
-		start_year = form['start_date']['date'].start_year
-		end_year = form['start_date']['date'].end_year
+		start_year = data.start_year
+		end_year = data.end_year
 		
-		value = date.get_dateselect_value(form.data[form.name][self.name]['date'], self.get('style', 'datetime'), start_year, end_year)
+		date_data = form.data[form.name][self.name].get('date', None)
+		if(date_data):
+			value = date.get_dateselect_value(date_data, self.get('style', 'datetime'), start_year, end_year)
+		else:
+			value = None
 		
 		save_format = self.get('save_format', 'timestamp')
 		if(save_format == 'timestamp'):
