@@ -242,7 +242,7 @@ class AdminResource(resource.CheetahTemplateResource):
 				result = itemdef[key].get_search_value(value.value)
 				session_search_data[key] = value.value
 				key = itemdef[key].get('column', key)
-				if(result is not None):
+				if(result is not None and result is not ''):
 					if(isinstance(result, dict)):
 						for k, v in result.items():
 							data[k] = v

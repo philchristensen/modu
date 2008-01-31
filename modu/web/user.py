@@ -71,6 +71,7 @@ def submit_login(req, form):
 		app.redirect(req.get_path(req.path))
 	else:
 		req.messages.report('error', "Sorry, that login was incorrect.")
+	return False
 
 
 def get_default_login_form():

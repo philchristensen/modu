@@ -604,6 +604,7 @@ class Application(object):
 		self.base_path = '/'
 		self.db_url = 'MySQLdb://modu:modu@localhost/modu'
 		self.session_class = session.DbUserSession
+		self.session_cookie_params = {'Path':'/'}
 		self.initialize_store = True
 		self.webroot = 'webroot'
 		self.debug_session = False
