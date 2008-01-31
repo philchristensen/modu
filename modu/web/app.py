@@ -624,9 +624,10 @@ class Application(object):
 		self.config[key] = value
 	
 	def __getattr__(self, key):
-		if(key.startswith('_')):
+		if(not key.startswith('_') and key in self.config):
+			return self.config[key]
+		else:
 			return super(Application, self).__getattr__(key)
-		return self.__dict__['config'][key]
 	
 	def activate(self, rsrc, *args, **kwargs):
 		"""
