@@ -246,7 +246,7 @@ class AdminResource(resource.CheetahTemplateResource):
 					if(isinstance(result, dict)):
 						for k, v in result.items():
 							data[k] = v
-					elif(result is not ''):
+					else:
 						data[key] = result
 			#print 'post: %s' % data
 		elif(session_search_data):
@@ -262,7 +262,7 @@ class AdminResource(resource.CheetahTemplateResource):
 					if(isinstance(result, dict)):
 						for k, v in result.items():
 							data[k] = v
-					elif(result is not ''):
+					else:
 						data[key] = result
 			#print 'session: %s' % data
 		else:

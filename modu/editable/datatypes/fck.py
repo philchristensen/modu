@@ -91,6 +91,8 @@ class FCKEditorField(define.definition):
 		"""
 		@see: L{modu.editable.define.definition.get_search_value()}
 		"""
+		if(value is ''):
+			return None
 		if(self.get('fulltext_search')):
 			return sql.RAW(sql.interp("MATCH(%%s) AGAINST (%s)", [value]))
 		else:
