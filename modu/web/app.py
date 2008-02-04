@@ -106,14 +106,14 @@ def handler(env, start_response):
 		start_response(http.status, headers)
 		return content
 	except:
+		reason = failure.Failure()
+		reason.printTraceback(env['wsgi.errors'])
 		if('modu.app' in req and req.app.config.get('error_content')):
 			content_provider = req.app.error_content()
 			content_provider.prepare_content(req)
 			content = [content_provider.get_content(req)]
 			headers = [('Content-Type', content_provider.get_content_type(req))]
 		else:
-			reason = failure.Failure()
-			reason.printTraceback(env['wsgi.errors'])
 			content = ["<html><head><title>web.Server Traceback (most recent call last)</title></head>"
 				"<body><b>web.Server Traceback (most recent call last):</b>\n\n"
 				"%s\n\n</body></html>\n" % formatFailure(reason)]
