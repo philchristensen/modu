@@ -12,6 +12,8 @@ class Resource(resource.WSGIPassthroughResource):
 		super(Resource, self).__init__(['/trac'], main.dispatch_request)
 	
 	def prepare_content(self, req):
+		req['PATH_INFO'] = req['PATH_INFO'].replace('/trac', '')
+		# Some servers don't start PATH_INFO with a /
 		req['PATH_INFO'] = req['PATH_INFO'].replace('trac', '')
 		req['SCRIPT_NAME'] = '/trac'
 		
