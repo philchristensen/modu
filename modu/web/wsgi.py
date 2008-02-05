@@ -164,6 +164,8 @@ class ErrorStream(object):
 	
 	def write(self, s):
 		# Called in application thread
+		if(s.endswith('\n')):
+			s = s[:-1]
 		log.msg("[WSGI] "+s, isError=True)
 	
 	def writelines(self, seq):
