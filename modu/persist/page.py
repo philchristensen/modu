@@ -39,8 +39,8 @@ class Paginator(object):
 		return a maximum of self.per_page results, while
 		setting up all the other variables of the instance.
 		"""
-		args = copy.deepcopy(args)
-		kwargs = copy.deepcopy(kwargs)
+		args = copy.copy(args)
+		kwargs = copy.copy(kwargs)
 		
 		# FIXME: Make sure this works reasonably with both
 		# attribute dictionaries and direct queries

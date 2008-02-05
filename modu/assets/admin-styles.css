@@ -55,6 +55,13 @@ label.field-label {
 	width:210px;
 }
 
+.ac_input {
+	background-color: #f1efca;
+	background-image: url(images/ac-icon.png);
+	background-position: right;
+	background-repeat: no-repeat;
+}
+
 ul#nav-list {
 	list-style: none;
 	margin-left: 0px;

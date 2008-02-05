@@ -26,6 +26,9 @@ class StorableTestCase(unittest.TestCase):
 	def tearDown(self):
 		pass
 	
+	def test_tablename(self):
+		self.failUnlessEqual('page', storable.Storable('page').get_table(), 'Table name incorrect.')
+	
 	def test_create(self):
 		self.store.ensure_factory('page', force=True)
 		

@@ -110,6 +110,7 @@ def handler(env, start_response):
 		reason.printTraceback(env['wsgi.errors'])
 		if('modu.app' in req and req.app.config.get('error_content')):
 			content_provider = req.app.error_content()
+			req['modu.failure'] = reason
 			content_provider.prepare_content(req)
 			content = [content_provider.get_content(req)]
 			headers = [('Content-Type', content_provider.get_content_type(req))]
