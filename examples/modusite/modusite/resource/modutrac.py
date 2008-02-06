@@ -12,11 +12,14 @@ class Resource(resource.WSGIPassthroughResource):
 		super(Resource, self).__init__(['/trac'], main.dispatch_request)
 	
 	def prepare_content(self, req):
+		# req['PATH_INFO'] = req['PATH_INFO'].replace('/trac', '')
+		# # Some servers don't start PATH_INFO with a /
+		# req['PATH_INFO'] = req['PATH_INFO'].replace('trac', '')
 		path_info = req['PATH_INFO']
 		if(path_info.startswith('/trac')):
 			req['PATH_INFO'] = path_info[5:]
 		elif(path_info.startswith('trac')):
-			req['PATH_INFO'] = path_info[5:]
+			req['PATH_INFO'] = path_info[4:]
 		
 		req['SCRIPT_NAME'] = '/trac'
 		
