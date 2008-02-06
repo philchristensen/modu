@@ -219,7 +219,7 @@ class FormNode(object):
 		was pressed. If so, it begins the validation process, then, if
 		successful, initiates the submission process.
 		"""
-		self.data = NestedFieldStorage(req)
+		self.load_data(req)
 		
 		for submit in self.find_submit_buttons():
 			# NOTE: This assumes the browser sends the submit button's name
@@ -229,7 +229,6 @@ class FormNode(object):
 				break
 		
 		if(self.submit_button or force):
-			self.load_data(req, self.data)
 			result = self.validate(req, self)
 			if(result):
 				return self.submit(req, self)
@@ -280,16 +279,19 @@ class FormNode(object):
 		thm = self.theme(req)
 		return thm.form(self)
 	
-	def load_data(self, req, data):
+	def load_data(self, req, data=None):
 		"""
-		This function takes a FieldStorage object (more often
-		NestedFieldStorage) and populates this form.
+		This function takes a Request object and populates this form.
 		
 		This is invoked automatically by C{execute()}. Keep in mind that
 		this means that if a post value *looks* like it belongs to a form
 		(i.e., it is nested under the form's name), that form element will
 		have its 'value' attribute set to the post value.
 		"""
+		if(data is None):
+			data = NestedFieldStorage(req)
+			self.data = data
+		
 		if(self.name in data):
 			form_data = data[self.name]
 			if(isinstance(form_data, dict)):
