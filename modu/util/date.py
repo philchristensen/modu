@@ -24,6 +24,10 @@ def strftime(dt, fmt):
 	
 	# Created by Andrew Dalke
 	# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/306860
+	
+	if(dt == None):
+		return ''
+	
 	# WARNING: known bug with "%s", which is the number
 	# of seconds since the epoch.	This is too harsh
 	# of a check.	It should allow "%%s".
