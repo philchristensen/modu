@@ -494,10 +494,11 @@ class AdminResource(resource.CheetahTemplateResource):
 		if not(isinstance(rsrc, resource.CheetahTemplateContent)):
 			app.raise500('The resource at %s is invalid.' % req['REQUEST_URI'])
 		
-		self.template = rsrc.get_template(req)
-		self.content_type = rsrc.get_content_type(req)
-		
 		rsrc.prepare_content(req)
+		
+		self.content_type = rsrc.get_content_type(req)
+		self.template = rsrc.get_template(req)
+		
 		for slot in rsrc.get_slots():
 			self.set_slot(slot, rsrc.get_slot(slot))
 	
