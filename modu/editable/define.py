@@ -690,6 +690,9 @@ class definition(dict):
 		
 		@param storable: The Storable instance to fill form data with.
 		@type storable: L{modu.persist.storable.Storable} subclass
+		
+		@return: False to abort the save, True to continue
+		@rtype: bool
 		"""
 		form_name = '%s-form' % storable.get_table()
 		if(form_name in form.data):
