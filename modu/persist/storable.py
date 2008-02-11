@@ -197,12 +197,12 @@ class Storable(object):
 			return object.__cmp__(self, other)
 		
 		if(self.get_table() != other.get_table()):
-			return False
+			return 1
 		
 		if(self.get_data() != other.get_data()):
-			return False
+			return 1
 		
-		return True
+		return 0
 	
 	def __setattr__(self, key, value):
 		"""
