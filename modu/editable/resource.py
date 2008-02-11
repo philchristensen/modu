@@ -423,12 +423,16 @@ class AdminResource(resource.CheetahTemplateResource):
 				# we regenerate the form because some fields don't know their
 				# value until after the form is saved (e.g., postwrite fields)
 				new_frm = itemdef.get_form(req, selected_item)
+				# this is technically only necessary if errors are reported
+				# on form items but they do not prevent completion (e.g., return False)
 				new_frm.errors = frm.errors
 				frm = new_frm
 			else:
 				# If we haven't submitted the form, errors should definitely be empty
-				for field, err in frm.errors.items():
-					req.messages.report('error', err)
+				for field, errs in frm.get_errors().items():
+					for err in errs:
+						err = tags.a(href="#form-item-%s" % field)[err]
+						req.messages.report('error', '%s: %s' % (field, err))
 			
 			template_variable_callback = itemdef.config.get('template_variable_callback')
 			if(callable(template_variable_callback)):

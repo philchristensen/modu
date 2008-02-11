@@ -192,6 +192,18 @@ class Storable(object):
 	def iterkeys(self):
 		return object.__getattribute__(self, '_data').iterkeys()
 	
+	def __cmp__(self, other):
+		if not(isinstance(other, Storable)):
+			return object.__cmp__(self, other)
+		
+		if(self.get_table() != other.get_table()):
+			return False
+		
+		if(self.get_data() != other.get_data()):
+			return False
+		
+		return True
+	
 	def __setattr__(self, key, value):
 		"""
 		Whenever the data for this object is updated, a number of 

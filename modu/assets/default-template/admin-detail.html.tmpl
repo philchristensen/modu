@@ -13,7 +13,8 @@
 	
 	#for $field_name in $form
 	#set $element = $form[$field_name]
-	<div class="form-item#if element.get_errors() then ' form-error' else '' #"
+	<a name="form-item-#echo element.name #"></a>
+	<div class="form-item#if element.has_errors() then ' form-error' else '' #"
 		id="form-item-#echo element.name #">
 		#if element.attr('label', '')
 		<label class="field-label">#echo element.attr('label') #</label>
@@ -21,6 +22,11 @@
 		#echo $theme.basic_form_element($form.attr('name'), element) #
 		#if element.attr('help', '')
 		<div class="form-help">#echo element.attr('help') #</div>
+		#end if
+		#if element.has_errors()
+		#for err in element.get_errors()
+		<div class="form-help error">#echo err #</div>
+		#end for
 		#end if
 	</div>
 	#end for

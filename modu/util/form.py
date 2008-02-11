@@ -249,7 +249,10 @@ class FormNode(object):
 		"""
 		Return true if this form or any of its children have errors.
 		"""
-		return bool(len(self.get_errors()))
+		errs = self.get_errors()
+		if(errs is None):
+			errs = []
+		return bool(len([item for item in errs if item]))
 	
 	def get_errors(self):
 		"""

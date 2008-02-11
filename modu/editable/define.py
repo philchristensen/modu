@@ -483,13 +483,13 @@ class itemdef(OrderedDict):
 		# save storable data
 		req.store.save(storable, save_related_storables=False)
 		
-		if(req.get('modu.messages')):
-			req.messages.report('message', 'Your changes have been saved.')
+		postwrite_succeeded = True
 		
 		# handle postwrite fields
 		if(postwrite_fields):
 			for name, definition in postwrite_fields.items():
-				definition.update_storable(req, form, storable)
+				if not(definition.update_storable(req, form, storable)):
+					postwrite_succeeded = False
 			req.store.save(storable)
 		
 		# call postwrite_callback
@@ -498,12 +498,18 @@ class itemdef(OrderedDict):
 			if not(isinstance(postwrite_callback, (list, tuple))):
 				postwrite_callback = [postwrite_callback]
 			for callback in postwrite_callback:
-				callback(req, form, storable)
+				if not(callback(req, form, storable)):
+					postwrite_succeeded = False
 		
 		if(req.postpath and req.postpath[-1] == 'new'):
 			app.redirect(req.get_path(req.prepath, 'detail', storable.get_table(), storable.get_id()))
 		
-		return True
+		if(postwrite_succeeded):
+			req.messages.report('message', 'Your changes have been saved.')
+		else:
+			req.messages.report('error', 'There was an error in the postwrite process, but primary record data was saved.')
+		
+		return postwrite_succeeded
 	
 	def delete(self, req, form, storable):
 		"""
