@@ -276,6 +276,14 @@ def escape_dot_syntax(key):
 	return key
 
 
+def make_list(items):
+	"""
+	Convert a list of things to a string suitable for use with IN.
+	
+	Uses interp to escape values.
+	"""
+	return interp(','.join(['%s'] * len(items)), items)
+
 def interp(query, args=[], *vargs):
 	"""
 	Interpolate the provided arguments into the provided query, using

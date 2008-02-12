@@ -35,7 +35,8 @@ def activate_session(req):
 	if(hasattr(app, 'session_cookie_params')):
 		cookie_params.update(app.session_cookie_params)
 	
-	req['modu.session'] = app.session_class(req, req.pool, cookie_params=cookie_params)
+	session_timeout = getattr(app, 'session_timeout', 1800)
+	req['modu.session'] = app.session_class(req, req.pool, cookie_params=cookie_params, timeout=session_timeout)
 	if(app.debug_session):
 		req.log_error('session contains: ' + str(req.session))
 	if(app.disable_session_users):
@@ -130,7 +131,7 @@ class BaseSession(dict):
 	
 	This is where locking should be implemented, one day.
 	"""
-	def __init__(self, req, sid=None, cookie_params=None):
+	def __init__(self, req, sid=None, cookie_params=None, timeout=1800):
 		self._req = req
 		if(isinstance(cookie_params, dict)):
 			self._cookie_params = cookie_params
@@ -149,7 +150,7 @@ class BaseSession(dict):
 		self._auth_token = None
 		
 		self._created = int(time.time())
-		self._timeout = 1800
+		self._timeout = timeout
 		
 		dispatch_cookie = False
 		
@@ -350,9 +351,9 @@ class DbUserSession(BaseSession):
 	"""
 	user_class = user.User
 	
-	def __init__(self, req, pool, sid=None, cookie_params=None):
+	def __init__(self, req, pool, sid=None, cookie_params=None, timeout=1800):
 		self._pool = pool
-		BaseSession.__init__(self, req, sid=sid, cookie_params=cookie_params)
+		BaseSession.__init__(self, req, sid=sid, cookie_params=cookie_params, timeout=timeout)
 	
 	def do_load(self):
 		load_query = sql.build_select('session', {'id':self.id()})

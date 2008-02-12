@@ -194,7 +194,7 @@ class Storable(object):
 	
 	def __cmp__(self, other):
 		if not(isinstance(other, Storable)):
-			return object.__cmp__(self, other)
+			return -1
 		
 		if(self.get_table() != other.get_table()):
 			return 1
