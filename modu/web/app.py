@@ -60,18 +60,6 @@ def handler(env, start_response):
 			else:
 				raise404("No such application: %s" % env['REQUEST_URI'])
 			
-			if(req.app.db_url):
-				req.set_jit('modu.pool', activate_pool)
-			if(req.app.db_url and application.initialize_store):
-				req.set_jit('modu.store', persist.activate_store)
-			if(req.app.db_url and req.app.session_class):
-				req.set_jit('modu.session', session.activate_session)
-				req.set_jit('modu.user', session.activate_session)
-			if not(req.app.disable_message_queue):
-				req.set_jit('modu.messages', queue.activate_messages)
-			
-			req.set_jit('modu.content', queue.activate_content_queue)
-			
 			if(hasattr(application.site, 'configure_request')):
 				application.site.configure_request(req)
 			rsrc = req.get_resource()
@@ -165,7 +153,21 @@ def configure_request(env, application):
 	webroot = os.path.join(approot, application.webroot)
 	env['PATH_TRANSLATED'] = os.path.realpath(os.path.join(webroot, env['modu.path'][1:]))
 	
-	return Request(env)
+	req = Request(env)
+	
+	if(req.app.db_url):
+		req.set_jit('modu.pool', activate_pool)
+	if(req.app.db_url and application.initialize_store):
+		req.set_jit('modu.store', persist.activate_store)
+	if(req.app.db_url and req.app.session_class):
+		req.set_jit('modu.session', session.activate_session)
+		req.set_jit('modu.user', session.activate_session)
+	if not(req.app.disable_message_queue):
+		req.set_jit('modu.messages', queue.activate_messages)
+	
+	req.set_jit('modu.content', queue.activate_content_queue)
+	
+	return req
 
 def get_default_approot(site):
 	parts = site.__class__.__module__.split('.')
