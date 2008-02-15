@@ -415,22 +415,3 @@ class Theme(object):
 			tags.div()[prev, ' | ', next]
 		]]
 	
-	def progress_bar(self, value, maxvalue, **attribs):
-		self.req.content.report('header', tags.style(type='text/css')[
-			"@import '%s';" % self.req.get_path('assets/progress-bar/style.css')
-		])
-		
-		self.req.content.report('header', tags.script(type="text/javascript",
-			src=self.req.get_path("assets/jquery/jquery-1.2.1.js"))[''])
-			
-		self.req.content.report('header', tags.script(type='text/javascript',
-			src=self.req.get_path('assets/progress-bar/support.js'))[''])
-		
-		element_id = attribs.get('element_id', 'progress-bar')
-		
-		content = tags.div(_id=element_id, _class='progress-field', **attribs)[[
-			tags.div(_class='progress-bar')[''],
-			tags.div(_class='progress-text')['']
-		]]
-		content += tags.script(type='text/javascript')['set_progress("%s", %d, %d);' % (element_id, value, maxvalue)]
-		return content
