@@ -121,7 +121,8 @@ def validate_sid(sid):
 	File based-sessions could potentially be exploited by using
 	slashes and .. to access non-session data.
 	"""
-	return VALIDATE_SID_RE.match(sid)
+	result = VALIDATE_SID_RE.match(sid)
+	return bool(result)
 
 class BaseSession(dict):
 	"""
@@ -157,7 +158,8 @@ class BaseSession(dict):
 		if(sid and validate_sid(sid)):
 			self._sid = sid
 		else:
-			self._cookie = Cookie.SimpleCookie(req.setdefault('HTTP_COOKIE', ''))
+			cookie = req.setdefault('HTTP_COOKIE', '')
+			self._cookie = Cookie.SimpleCookie(cookie)
 			if('sid' in self._cookie and validate_sid(self._cookie['sid'].value)):
 				self._sid = self._cookie['sid'].value
 			else:
@@ -179,8 +181,7 @@ class BaseSession(dict):
 		
 		self._accessed = int(time.time())
 		
-		if(req.app.debug_session):
-			req.log_error('session contains: ' + str(self))
+		self.debug('session contains: ' + str(self))
 		
 		if(random.randint(1, CLEANUP_CHANCE) == 1):
 			self.cleanup()
@@ -221,13 +222,16 @@ class BaseSession(dict):
 		"""
 		result = self.do_load()
 		if result is None:
+			self.debug("do_load() returned None")
 			return False
 		
 		if (int(time.time()) - result["accessed"]) > result["timeout"]:
+			self.debug("Session is expired")
 			self.delete()
 			return False
 		
 		if(self._req['REMOTE_ADDR'] != result['client_ip']):
+			self.debug("Session IP changed")
 			return False
 		
 		self._created  = result["created"]
