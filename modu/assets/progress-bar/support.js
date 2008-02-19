@@ -1,23 +1,19 @@
 var task_ids = {}
 
-function set_progress(progress_id, value, maxvalue){
+function setProgress(progress_id, value, maxvalue){
 	var progressField = $('#' + progress_id);
 	var progressBar = progressField.children('.progress-bar');
 	var progressText = progressField.children('.progress-text');
 	
 	if(value > 0 && value == maxvalue){
 		progressBar.css('width', progressField.width() + "px");
-		progressText.html('100%');
+		progressText.html('Complete!');
 	}
 	else if(value == 0){
 		progressBar.css('width', 0);
 		progressText.html('Waiting...');
 	}
-	else if(value == 'complete'){
-		progressBar.css('width', progressField.width());
-		progressText.html('Complete!');
-	}
-	else if(value == 'error'){
+	else if(value == -1){
 		progressText.html('Error!');
 	}
 	else{
@@ -29,7 +25,6 @@ function set_progress(progress_id, value, maxvalue){
 		progressText.html(Math.round(percent * 100) + '%');
 	}
 }
-
 function waitForCompletion(progress_id, callback_url, interval){
 	var progressField = $('#' + progress_id);
 	var progressText = progressField.children('.progress-text');
@@ -38,7 +33,6 @@ function waitForCompletion(progress_id, callback_url, interval){
 	task_id = setInterval(checkProgress, interval, callback_url, progress_id);
 	task_ids[progress_id] = 'task-' + task_id;
 }
-
 function checkProgress(callback_url, progress_id){
 	jQuery.ajax({
 		url: 		callback_url + '/' + progress_id,
@@ -51,31 +45,31 @@ function checkProgress(callback_url, progress_id){
 					}
 	});
 }
-
 function checkProgressCallback(data, textStatus, progress_id){
-	if(data == 'complete'){
+	var stats = data.split('/');
+	var value = parseInt(stats[0]);
+	var maxvalue = parseInt(stats[1]);
+	
+	if(value > 0 && value == maxvalue){
 		clearInterval(task_ids[progress_id])
 		delete task_ids[progress_id];
-		set_progress(progress_id, 'complete', 1);
-		return;
 	}
 	
-	var stats = data.split('/');
-	var value = stats[0];
-	var maxvalue = stats[1];
-	
-	if(value == 0){
-		set_progress(progress_id, 0, 1);
-	}
-	else{
-		set_progress(progress_id, value, maxvalue);
-	}
+	setProgress(progress_id, value, maxvalue);
 }
-
 function checkProgressErrback(request, textStatus, errorThrown, progress_id) {
-	set_progress(progress_id, 'error', 0);
+	setProgress(progress_id, -1, 0);
 	if(task_ids[progress_id]){
 		clearInterval(task_ids[progress_id])
 		delete task_ids[progress_id];
 	}
+}
+
+
+function reconcileUnknown(type, value){
+	alert('unknown: ' + value);
+}
+
+function reconcileAmbiguous(type, value){
+	alert('ambiguous: ' + value);
 }

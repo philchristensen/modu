@@ -42,7 +42,7 @@ class ProgressBar(object):
 			]
 		else:
 			content += tags.script(type='text/javascript')[
-				'set_progress("%s", %d, %d);' % (element_id, self.value, self.maxvalue)
+				'setProgress("%s", %d, %d);' % (element_id, self.value, self.maxvalue)
 			]
 		
 		return content
