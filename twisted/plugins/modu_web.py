@@ -26,6 +26,7 @@ class Options(usage.Options):
 	Implement usage parsing for the modu-web plugin.
 	"""
 	optParameters = [["port", "p", 8888, "Port to use for web server."],
+					 ['interface', 'i', None, 'Interface to listen on.'],
 					 ['logfile', 'l', 'twistd-access.log', 'Path to access log.']
 					]
 
@@ -50,7 +51,10 @@ class ModuServiceMaker(object):
 			site = server.Site(wsgi.WSGIResource(app.handler, env=env))
 		server.Site.requestFactory = app.UnparsedRequest
 		
-		web_service = internet.TCPServer(int(config['port']), site)
+		if(config['interface'] is not None):
+			web_service = internet.TCPServer(int(config['port']), site, interface=config['interface'])
+		else:
+			web_service = internet.TCPServer(int(config['port']), site)
 		
 		return web_service
 
