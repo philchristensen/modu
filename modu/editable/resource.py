@@ -15,7 +15,7 @@ specific code should go in L{modu.editable.define}.
 
 import os.path, copy, re, datetime
 
-from modu import util
+from modu import util, web
 from modu.web import resource, app, user
 from modu.editable import define
 from modu.util import form, theme, tags, csv
@@ -68,7 +68,41 @@ def configure_store(req, itemdef):
 		req.store.ensure_factory(table_name)
 
 
-class AdminResource(resource.CheetahTemplateResource):
+class CustomRequestWrapper(object):
+	"""
+	This modifies the request object when used with custom admin interfaces.
+	"""
+	def __init__(self, req):
+		self._req = req
+	
+	def __getattr__(self, key):
+		if(key == 'prepath'):
+			return self._req.prepath + self._req.postpath[0:2]
+		elif(key == 'postpath'):
+			return self._req.postpath[2:]
+		return getattr(self._req, key)
+	
+	def __getitem__(self, key):
+		return self._req[key]
+	
+	def __setitem__(self, key, value):
+		self._req[key] = value
+	
+	def __contains__(self, key):
+		return key in self._req
+
+class AdminTemplateResourceMixin(object):
+	def get_template_root(self, req, template=None):
+		"""
+		@see: L{modu.web.resource.ITemplate.get_template_root()}
+		"""
+		if(template is None):
+			template = self.get_template(req)
+		
+		return select_template_root(req, template)
+
+
+class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource):
 	"""
 	Provides a configurable administrative/content management interface.
 	
@@ -498,13 +532,20 @@ class AdminResource(resource.CheetahTemplateResource):
 		if not(isinstance(rsrc, resource.CheetahTemplateContent)):
 			app.raise500('The resource at %s is invalid.' % req['REQUEST_URI'])
 		
-		rsrc.prepare_content(req)
+		# rsrc.prepare_content(req)
+		# 
+		# self.content_type = rsrc.get_content_type(req)
+		# self.template = rsrc.get_template(req)
+		# 
+		# for slot in rsrc.get_slots():
+		# 	self.set_slot(slot, rsrc.get_slot(slot))
 		
-		self.content_type = rsrc.get_content_type(req)
-		self.template = rsrc.get_template(req)
+		if(resource.ITemplate.providedBy(rsrc)):
+			for key in self.get_slots():
+				rsrc.set_slot(key, self.get_slot(key))
 		
-		for slot in rsrc.get_slots():
-			self.set_slot(slot, rsrc.get_slot(slot))
+		content = rsrc.get_response(req)
+		raise web.HTTPStatus('200 OK', req.get_headers(), content)
 	
 	
 	def get_content_type(self, req):
@@ -534,20 +575,9 @@ class AdminResource(resource.CheetahTemplateResource):
 		@see: L{modu.web.resource.ITemplate.get_template()}
 		"""
 		return self.template
-	
-	
-	def get_template_root(self, req, template=None):
-		"""
-		@see: L{modu.web.resource.ITemplate.get_template_root()}
-		"""
-		if(template is None):
-			template = self.get_template(req)
-		
-		return select_template_root(req, template)
-	
 
 
-class ACLResource(resource.CheetahTemplateResource):
+class ACLResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource):
 	"""
 	A convenience resource for managing ACLs.
 	

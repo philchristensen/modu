@@ -310,6 +310,9 @@ class Theme(object):
 		if(value is None):
 			month, day, year = (months[0], 1, years[0])
 		else:
+			if(isinstance(value, (int, float))):
+				value = datetime.datetime.utcfromtimestamp(value)
+			
 			month, day, year = date.strftime(value, '%B:%d:%Y').split(':')
 			#month, day, year = time.strftime('%B:%d:%Y', time.localtime(value)).split(':')
 		
