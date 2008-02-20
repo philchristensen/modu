@@ -64,12 +64,3 @@ function checkProgressErrback(request, textStatus, errorThrown, progress_id) {
 		delete task_ids[progress_id];
 	}
 }
-
-
-function reconcileUnknown(type, value){
-	alert('unknown: ' + value);
-}
-
-function reconcileAmbiguous(type, value){
-	alert('ambiguous: ' + value);
-}

@@ -526,23 +526,24 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		@param itemdef: an itemdef with custom resource info
 		@type itemdef: L{modu.editable.define.itemdef}
 		"""
-		rsrc = itemdef.config.get('resource')
-		if not(rsrc):
+		result = itemdef.config.get('resource')
+		
+		if(isinstance(result, (list, tuple))):
+			rsrc_class, args, kwargs = result
+		else:
+			rsrc_class = result
+			args = []
+			kwargs = {}
+		
+		if not(rsrc_class):
 			app.raise404('There is no resource at the path: %s' % req['REQUEST_URI'])
-		if not(isinstance(rsrc, resource.CheetahTemplateContent)):
-			app.raise500('The resource at %s is invalid.' % req['REQUEST_URI'])
+		if not(resource.ITemplate.implementedBy(rsrc_class)):
+			app.raise500('The resource at %s is invalid, it must be an ITemplate implementor.' % req['REQUEST_URI'])
 		
-		# rsrc.prepare_content(req)
-		# 
-		# self.content_type = rsrc.get_content_type(req)
-		# self.template = rsrc.get_template(req)
-		# 
-		# for slot in rsrc.get_slots():
-		# 	self.set_slot(slot, rsrc.get_slot(slot))
+		rsrc = rsrc_class(*args, **kwargs)
 		
-		if(resource.ITemplate.providedBy(rsrc)):
-			for key in self.get_slots():
-				rsrc.set_slot(key, self.get_slot(key))
+		for key in self.get_slots():
+			rsrc.set_slot(key, self.get_slot(key))
 		
 		content = rsrc.get_response(req)
 		raise web.HTTPStatus('200 OK', req.get_headers(), content)
@@ -591,7 +592,7 @@ class ACLResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource):
 		        category        = 'accounts',
 		        acl             = 'access admin',
 		        weight          = -10,
-		        resource        = resource.ACLResource()
+		        resource        = resource.ACLResource
 		    )
 		)
 	

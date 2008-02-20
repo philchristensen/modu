@@ -488,7 +488,7 @@ class CheetahTemplateContent(TemplateContent):
 			if(os.access(module_path, os.F_OK) and not needs_recompile):
 				#load module and instantiate template
 				execfile(module_path, moduleGlobals)
-				self.template_class = moduleGlobals[module_name]
+				template_class = moduleGlobals[module_name]
 			# if I know I will be able to save a template class
 			elif(needs_recompile and (os.access(module_path, os.W_OK) or not os.access(module_path, os.F_OK))):
 				pysrc = CheetahModuTemplate.compile(file=open(template_path),
@@ -502,15 +502,15 @@ class CheetahTemplateContent(TemplateContent):
 				module_file.close()
 		
 				exec pysrc in moduleGlobals
-				self.template_class = moduleGlobals[module_name]
+				template_class = moduleGlobals[module_name]
 			else:
-				self.template_class = CheetahModuTemplate.compile(file=open(template_path),
+				template_class = CheetahModuTemplate.compile(file=open(template_path),
 															baseclass=CheetahModuTemplate,
 															moduleGlobals=moduleGlobals)
 		finally:
 			cheetah_lock.release()
 		
-		return str(self.template_class(searchList=[self.data]))
+		return str(template_class(searchList=[self.data]))
 	
 	def prepare_content(self, req):
 		"""
