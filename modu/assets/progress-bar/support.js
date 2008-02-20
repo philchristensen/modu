@@ -25,14 +25,16 @@ function setProgress(progress_id, value, maxvalue){
 		progressText.html(Math.round(percent * 100) + '%');
 	}
 }
+
 function waitForCompletion(progress_id, callback_url, interval){
 	var progressField = $('#' + progress_id);
 	var progressText = progressField.children('.progress-text');
 	
 	progressText.html('0%');
 	task_id = setInterval(checkProgress, interval, callback_url, progress_id);
-	task_ids[progress_id] = 'task-' + task_id;
+	task_ids[progress_id] = task_id;
 }
+
 function checkProgress(callback_url, progress_id){
 	jQuery.ajax({
 		url: 		callback_url + '/' + progress_id,
@@ -45,6 +47,7 @@ function checkProgress(callback_url, progress_id){
 					}
 	});
 }
+
 function checkProgressCallback(data, textStatus, progress_id){
 	var stats = data.split('/');
 	var value = parseInt(stats[0]);
@@ -57,8 +60,16 @@ function checkProgressCallback(data, textStatus, progress_id){
 	
 	setProgress(progress_id, value, maxvalue);
 }
+
 function checkProgressErrback(request, textStatus, errorThrown, progress_id) {
-	setProgress(progress_id, -1, 0);
+	stopProgressBar(progress_id, true);
+}
+
+function stopProgressBar(progress_id, is_error){
+	if(is_error){
+		setProgress(progress_id, -1, 0);
+	}
+	
 	if(task_ids[progress_id]){
 		clearInterval(task_ids[progress_id])
 		delete task_ids[progress_id];
