@@ -54,8 +54,7 @@ function checkProgressCallback(data, textStatus, progress_id){
 	var maxvalue = parseInt(stats[1]);
 	
 	if(value > 0 && value == maxvalue){
-		clearInterval(task_ids[progress_id])
-		delete task_ids[progress_id];
+		stopProgressBar(progress_id, false);
 	}
 	
 	setProgress(progress_id, value, maxvalue);
