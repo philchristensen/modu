@@ -81,6 +81,9 @@ def format_seconds(seconds):
 	"""
 	Format seconds as HH:MM:SS.
 	"""
+	if(seconds is None):
+		return ''
+	
 	hours, remainder = divmod(int(seconds), 3600)
 	minutes, remainder = divmod(remainder, 60)
 	seconds = remainder
