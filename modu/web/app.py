@@ -80,6 +80,8 @@ def handler(env, start_response):
 			if(req.get('modu.session', None) is not None):
 				req.session.save()
 	except web.HTTPStatus, http:
+		reason = failure.Failure()
+		
 		headers = http.headers
 		if(application):
 			headers += req.get_headers()
@@ -88,6 +90,7 @@ def handler(env, start_response):
 		if('modu.app' in req and req.app.config.get('status_content')):
 			content_provider = req.app.status_content()
 			if(hasattr(content_provider, 'handles_status') and content_provider.handles_status(http)):
+				req['modu.failure'] = reason
 				content_provider.prepare_content(req)
 				content = [content_provider.get_content(req)]
 		
