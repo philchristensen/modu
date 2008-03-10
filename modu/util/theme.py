@@ -94,21 +94,31 @@ class Theme(object):
 	def form_label(self, form_id, element):
 		attribs = element.attr('attributes', {'class':'label'})
 		value = element.attr('value', element.attr('default_value', ''))
+		if(value is None):
+			value = ''
 		return tags.span(**attribs)[value]
 	
 	
 	def form_hidden(self, form_id, element):
+		value = element.attr('value', element.attr('default_value', ''))
+		if(value is None):
+			value = ''
+		
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
-		attribs['value'] = element.attr('value', element.attr('default_value', ''))
+		attribs['value'] = value
 		return tags.input(type='hidden', **attribs)
 	
 	
 	def form_textfield(self, form_id, element):
+		value = element.attr('value', element.attr('default_value', ''))
+		if(value is None):
+			value = ''
+		
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
 		attribs['size'] = element.attr('size', 30)
-		attribs['value'] = element.attr('value', element.attr('default_value', ''))
+		attribs['value'] = value
 		return tags.input(type='text', **attribs)
 	
 	
@@ -127,11 +137,15 @@ class Theme(object):
 	
 	
 	def form_textarea(self, form_id, element):
+		value = element.attr('value', element.attr('default_value', ''))
+		if(value is None):
+			value = ''
+		
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
 		attribs['cols'] = element.attr('cols', 40)
 		attribs['rows'] = element.attr('rows', 5)
-		return tags.textarea(**attribs)[element.attr('value', element.attr('default_value', ''))]
+		return tags.textarea(**attribs)[value]
 	
 	
 	def form_submit(self, form_id, element):
