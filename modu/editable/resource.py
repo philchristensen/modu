@@ -366,6 +366,10 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		
 		rows = [export_formatter(req, itemdef, item) for item in items]
 		
+		export_callback = itemdef.config.get('export_callback')
+		if(callable(export_callback)):
+			export_callback(req)
+		
 		if(export_type == 'csv'):
 			self.content_type = 'text/csv; charset=UTF-8'
 			self.content = csv.generate_csv(rows, le)

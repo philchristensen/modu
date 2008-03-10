@@ -77,7 +77,7 @@ def strftime(dt, fmt):
 		s = s[:site] + syear + s[site+4:]
 	return s
 
-def format_seconds(seconds):
+def format_seconds(seconds, colon_format=True):
 	"""
 	Format seconds as HH:MM:SS.
 	"""
@@ -94,9 +94,20 @@ def format_seconds(seconds):
 			__found = True
 			return num
 	
-	result = ':'.join(map(lambda(i): str(i).zfill(2), [hours, minutes, seconds])).lstrip('0:')
-	if(result and result.find(':') == -1):
-		result = ':' + result
+	if(colon_format):
+		# hic sunt dracones
+		result = ':'.join(map(lambda(i): str(i).zfill(2), [hours, minutes, seconds])).lstrip('0:')
+		# ...seriously, what was i thinking? that was so uneccessary...
+		if(result and result.find(':') == -1):
+			result = ':' + result
+	else:
+		result = ''
+		if(hours):
+			result += str(hours) + 'h'
+		if(minutes):
+			result += str(minutes) + 'm'
+		if(seconds):
+			result += str(seconds) + 's'
 	return result
 
 
