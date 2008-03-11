@@ -444,23 +444,29 @@ class Store(object):
 		id = self.fetch_id(storable)
 		data = storable.get_data()
 		
+		use_locks = False
+		
 		if(id or factory.uses_guids()):
 			data[factory.get_primary_key()] = id
 			query = sql.build_replace(table, data)
 		else:
 			query = sql.build_insert(table, data)
+			use_locks = True
 			self.pool.runOperation('LOCK TABLES `%s` WRITE' % table)
 	
 		self.log(query)
-	
-		self.pool.runOperation(query)
-	
-		if not(factory.uses_guids()):
-			if not(storable.get_id()):
-				rows = self.pool.runQuery('SELECT MAX(%s) AS `id` FROM `%s`' % (factory.get_primary_key(), table))
-				new_id = rows[0]['id']
-				storable.set_id(new_id)
-			self.pool.runOperation('UNLOCK TABLES')
+		
+		try:
+			self.pool.runOperation(query)
+			
+			if not(factory.uses_guids()):
+				if not(storable.get_id()):
+					rows = self.pool.runQuery('SELECT MAX(%s) AS `id` FROM `%s`' % (factory.get_primary_key(), table))
+					new_id = rows[0]['id']
+					storable.set_id(new_id)
+		finally:
+			if(use_locks):
+				self.pool.runOperation('UNLOCK TABLES')
 		
 		storable.clean()
 		storable.set_factory(factory)
