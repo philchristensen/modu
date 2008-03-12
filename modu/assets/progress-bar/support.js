@@ -22,7 +22,7 @@ function setProgress(progress_id, value, maxvalue){
 		var width = Math.round(percent * client_width) + "px";
 		
 		progressBar.css('width', width);
-		progressText.html(Math.round(percent * 100) + '%');
+		progressText.html(Math.floor(percent * 100) + '%');
 	}
 }
 
