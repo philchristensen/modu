@@ -105,10 +105,17 @@ class Tag(object):
 		return self
 	
 	def __str__(self):
+		return self.stringify(str)
+	
+	def __unicode__(self):
+		return self.stringify(unicode)
+	
+	def stringify(self, stringtype):
 		"""
 		Render as ASCII.
 		"""
-		output = '<' + self.tag
+		output = stringtype()
+		output += '<' + self.tag
 		fragments = ''
 		keys = self.attributes.keys()
 		keys.sort()
@@ -123,7 +130,7 @@ class Tag(object):
 		if(self.children):
 			output += '>'
 			for child in self.children:
-				output += str(child)
+				output += stringtype(child)
 			if not(self.attributes.get('_no_close', False)):
 				output += '</%s>' % self.tag
 		else:
