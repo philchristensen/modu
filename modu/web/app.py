@@ -631,7 +631,7 @@ class Application(object):
 	
 	def __getattr__(self, key):
 		if(not key.startswith('_') and key in self.config):
-			return self.config[key]
+			return self.config.get(key, None)
 		else:
 			return super(Application, self).__getattr__(key)
 	
