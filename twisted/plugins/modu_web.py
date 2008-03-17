@@ -27,7 +27,7 @@ class Options(usage.Options):
 	"""
 	optParameters = [["port", "p", 8888, "Port to use for web server."],
 					 ['interface', 'i', None, 'Interface to listen on.'],
-					 ['logfile', 'l', 'twistd-access.log', 'Path to access log.']
+					 ['logfile', 'l', '-', 'Path to access log.']
 					]
 
 class ModuServiceMaker(object):
