@@ -630,8 +630,8 @@ class Application(object):
 		self.config[key] = value
 	
 	def __getattr__(self, key):
-		if(not key.startswith('_')):
-			return self.config.get(key, None)
+		if(not key.startswith('_') and key in self.config):
+			return self.config[key]
 		else:
 			raise AttributeError(key)
 	
