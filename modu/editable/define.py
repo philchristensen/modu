@@ -42,17 +42,20 @@ from modu.persist import storable
 from modu.web.user import AnonymousUser
 from modu.web import app
 
-def get_itemdefs(): 
+def get_itemdefs(itemdef_module=None): 
 	""" 
 	Search the system path for any available itemdefs. 
 	
 	@return: all available itemdefs
 	@rtype: dict(str=itemdef)
-	""" 
-	import modu.itemdefs
-	#reload(modu.itemdefs)
+	"""
+	if(itemdef_module is None):
+		import modu.itemdefs
+		#reload(modu.itemdefs)
+		itemdef_module = modu.itemdefs
+	
 	itemdefs = {}
-	for itemdef in plugin.getPlugins(editable.IItemdef, modu.itemdefs):
+	for itemdef in plugin.getPlugins(editable.IItemdef, itemdef_module):
 		if(itemdef.name):
 			itemdefs[itemdef.name] = itemdef
 	return itemdefs

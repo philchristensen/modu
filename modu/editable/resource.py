@@ -157,7 +157,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 					del req.session['auth_redirect']
 				app.redirect(req.get_path(self.path))
 			
-			itemdefs = define.get_itemdefs()
+			itemdefs = define.get_itemdefs(itemdef_module=self.options.get('itemdef_module', None))
 			
 			# get_itemdef_layout adds some data and clones the itemdef
 			self.itemdef_layout = define.get_itemdef_layout(req, itemdefs)
