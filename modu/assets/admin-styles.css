@@ -12,6 +12,10 @@ label.field-label {
 	font-weight: bold;
 }
 
+strong {
+	font-weight: bold;
+}
+
 .current-user-info {
 	margin-top: 15px;
 	margin-bottom: 15px;

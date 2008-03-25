@@ -53,11 +53,11 @@ function checkProgressCallback(data, textStatus, progress_id){
 	var value = parseInt(stats[0]);
 	var maxvalue = parseInt(stats[1]);
 	
+	setProgress(progress_id, value, maxvalue);
+	
 	if(value > 0 && value == maxvalue){
 		stopProgressBar(progress_id, false);
 	}
-	
-	setProgress(progress_id, value, maxvalue);
 }
 
 function checkProgressErrback(request, textStatus, errorThrown, progress_id) {
@@ -70,7 +70,7 @@ function stopProgressBar(progress_id, is_error){
 	}
 	
 	if(task_ids[progress_id]){
-		clearInterval(task_ids[progress_id])
+		clearInterval(task_ids[progress_id]);
 		delete task_ids[progress_id];
 	}
 }
