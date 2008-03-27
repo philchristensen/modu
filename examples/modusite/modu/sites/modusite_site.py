@@ -44,7 +44,7 @@ class Site(object):
 		application.activate(blog.Resource)
 		application.activate(faq.Resource)
 		
-		os.environ['PYTHON_EGG_CACHE'] = '/tmp'
+		os.environ['PYTHON_EGG_CACHE'] = '/var/cache/eggs'
 		
 		apidocs_path = os.path.abspath(os.path.join(os.path.dirname(modu.__file__), '../apidocs'))
 		application.activate(static.FileResource, ['/apidocs'], apidocs_path)
