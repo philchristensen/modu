@@ -67,8 +67,7 @@ def submit_login(req, form):
 	u = req.store.load_one('user', username=form_data['username'].value, crypt=sql.RAW(encrypt_sql))
 	if(u):
 		req.session.set_user(u)
-		from modu.web import app
-		app.redirect(req.get_path(req.path))
+		return True
 	else:
 		req.messages.report('error', "Sorry, that login was incorrect.")
 	return False

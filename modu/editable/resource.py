@@ -222,7 +222,8 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		
 		login_form = user.get_default_login_form()
 		
-		login_form.execute(req)
+		if(login_form.execute(req)):
+			app.redirect(req.get_path(req.path))
 		
 		self.set_slot('login_form', login_form.render(req))
 		self.set_slot('title', self.options.get('login_title', 'admin login'))

@@ -58,3 +58,19 @@
 			</div>
 			
 			<div id="centercol">
+				#if $req.messages.count('error')
+				<ul>
+				#for $err in $req.messages.get('error')
+				<li class="error">$err</li>
+				#end for
+				</ul>
+				#end if
+				
+				#if $req.messages.count('message')
+				<ul>
+				#for $msg in $req.messages.get('message')
+				<li class="message">$msg</li>
+				#end for
+				</ul>
+				#end if
+
