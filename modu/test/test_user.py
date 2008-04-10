@@ -7,7 +7,7 @@
 
 from twisted.trial import unittest
 
-from modu.persist import storable, adbapi, sql
+from modu.persist import storable, dbapi, sql
 from modu.util import test
 from modu.web import user, app
 from modu import persist
@@ -62,7 +62,7 @@ CREATE TABLE `guid` (
 
 class UserTestCase(unittest.TestCase):
 	def setUp(self):
-		pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+		pool = dbapi.connect('MySQLdb://modu:modu@localhost/modu')
 		self.store = persist.Store(pool)
 		#self.store.debug_file = sys.stderr
 		

@@ -19,7 +19,7 @@ from modu import persist
 from modu.editable.datatypes import string, relational, boolean, select
 from modu.web import app
 from modu.editable import define
-from modu.persist import storable, adbapi
+from modu.persist import storable, dbapi
 from modu.util import form, test, tags, queue, date
 
 class DatatypesTestCase(unittest.TestCase):
@@ -31,7 +31,7 @@ class DatatypesTestCase(unittest.TestCase):
 		"""
 		Initializes the testing tables in the modu test database.
 		"""
-		pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+		pool = dbapi.connect('MySQLdb://modu:modu@localhost/modu')
 		self.store = persist.Store(pool)
 		#self.store.debug_file = sys.stderr
 		
@@ -57,7 +57,7 @@ class DatatypesTestCase(unittest.TestCase):
 		self.failIf(application is  None, "Didn't get an application object.")
 		
 		req = app.configure_request(environ, application)
-		req['modu.pool'] = app.acquire_db(application)
+		req['modu.pool'] = dbapi.acquire_db(application.db_url)
 		req['modu.user'] = None
 		queue.activate_content_queue(req)
 		persist.activate_store(req)

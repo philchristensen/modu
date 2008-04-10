@@ -9,7 +9,7 @@ import time, sys, copy
 
 from modu.util import test
 from modu import persist
-from modu.persist import storable, adbapi, page
+from modu.persist import storable, dbapi, page
 
 from twisted.trial import unittest
 
@@ -20,7 +20,7 @@ GRANT ALL ON modu.* TO modu@localhost IDENTIFIED BY 'modu';
 
 class PaginatorTestCase(unittest.TestCase):
 	def setUp(self):
-		pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+		pool = dbapi.connect('MySQLdb://modu:modu@localhost/modu')
 		self.store = persist.Store(pool)
 		#self.store.debug_file = sys.stderr
 		

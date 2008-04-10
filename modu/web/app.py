@@ -16,7 +16,7 @@ Primary components of the modu webapp foundation.
 @type host_tree_lock: threading.BoundedSemaphore
 
 @var pools: map of synchronous database connections, shared between threads
-@type pools: adbapi.SynchronousConnectionPool
+@type pools: dbapi.SynchronousConnectionPool
 
 @var pools_lock: lock on pools during site configuration
 @type pools_lock: threading.BoundedSemaphore
@@ -24,9 +24,10 @@ Primary components of the modu webapp foundation.
 
 import os, os.path, sys, stat, copy, mimetypes, traceback, threading
 
+from modu import persist, web
 from modu.util import url, tags, queue
 from modu.web import session, user, resource, static
-from modu import persist, web
+from modu.persist import dbapi
 
 from twisted import plugin
 from twisted.web import server
@@ -36,9 +37,6 @@ from zope import interface
 
 host_tree = {}
 host_tree_lock = threading.BoundedSemaphore()
-
-pools = {}
-pools_lock = threading.BoundedSemaphore()
 
 mimetypes_init = False
 
@@ -159,7 +157,7 @@ def configure_request(env, application):
 	req = Request(env)
 	
 	if(req.app.db_url):
-		req.set_jit('modu.pool', activate_pool)
+		req.set_jit('modu.pool', dbapi.activate_pool)
 	if(req.app.db_url and application.initialize_store):
 		req.set_jit('modu.store', persist.activate_store)
 	if(req.app.db_url and req.app.session_class):
@@ -314,30 +312,6 @@ def raise500(message=None):
 	if(message):
 		content += tags.strong()[message]
 	raise web.HTTPStatus('500 Internal Server Error', [('Content-Type', 'text/html')], content)
-
-def activate_pool(req):
-	"""
-	JIT Request handler for enabling DB support.
-	"""
-	req['modu.pool'] = acquire_db(req.app)
-
-def acquire_db(app):
-	"""
-	Create the shared connection pool for this process.
-	"""
-	global pools, pools_lock
-	pools_lock.acquire()
-	try:
-		if(app.db_url in pools):
-			pool = pools[app.db_url]
-		else:
-			from modu.persist import adbapi
-			pool = adbapi.connect(app.db_url)
-			pools[app.db_url] = pool
-	finally:
-		pools_lock.release()
-	
-	return pool
 
 def _scan_sites(env):
 	"""

@@ -17,7 +17,7 @@ from modu import persist
 from modu.web import app
 from modu.editable import define
 from modu.editable.datatypes import string
-from modu.persist import storable, adbapi
+from modu.persist import storable, dbapi
 from modu.util import form, test
 
 class EditableTestCase(unittest.TestCase):
@@ -29,7 +29,7 @@ class EditableTestCase(unittest.TestCase):
 		"""
 		Initializes the testing tables in the modu test database.
 		"""
-		pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+		pool = dbapi.connect('MySQLdb://modu:modu@localhost/modu')
 		self.store = persist.Store(pool)
 		#self.store.debug_file = sys.stderr
 		
@@ -54,7 +54,7 @@ class EditableTestCase(unittest.TestCase):
 		self.failIf(application is  None, "Didn't get an application object.")
 		
 		req = app.configure_request(environ, application)
-		req['modu.pool'] = app.acquire_db(application)
+		req['modu.pool'] = dbapi.acquire_db(application.db_url)
 		req['modu.user'] = None
 		persist.activate_store(req)
 		

@@ -9,11 +9,39 @@
 Provides synchronous access to the Twisted adbapi DB layer.
 """
 
+import threading
+
 from twisted.enterprise import adbapi
 
 from modu.util import url
 
 debug = False
+pools = {}
+pools_lock = threading.BoundedSemaphore()
+
+def activate_pool(req):
+	"""
+	JIT Request handler for enabling DB support.
+	"""
+	req['modu.pool'] = acquire_db(req.app.db_url)
+
+def acquire_db(db_url):
+	"""
+	Create the shared connection pool for this process.
+	"""
+	global pools, pools_lock
+	pools_lock.acquire()
+	try:
+		if(db_url in pools):
+			pool = pools[db_url]
+		else:
+			from modu.persist import dbapi
+			pool = dbapi.connect(db_url)
+			pools[db_url] = pool
+	finally:
+		pools_lock.release()
+	
+	return pool
 
 def connect(db_url=None, async=False, *args, **kwargs):
 	"""
@@ -38,7 +66,7 @@ def connect(db_url=None, async=False, *args, **kwargs):
 	del dsn['dbapiName']
 	
 	globs = {}
-	exec('from modu.persist import adbapi_%s as db_driver' % dbapiName, globs)
+	exec('from modu.persist import dbapi_%s as db_driver' % dbapiName, globs)
 	dargs, dkwargs = globs['db_driver'].process_dsn(dsn)
 	kwargs.update(dkwargs)
 	args = list(args)

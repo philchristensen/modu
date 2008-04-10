@@ -9,13 +9,13 @@ import time, sys, copy
 
 from modu.util import test
 from modu import persist
-from modu.persist import storable, adbapi
+from modu.persist import storable, dbapi
 
 from twisted.trial import unittest
 
 class StorableTestCase(unittest.TestCase):
 	def setUp(self):
-		pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+		pool = dbapi.connect('MySQLdb://modu:modu@localhost/modu')
 		self.store = persist.Store(pool)
 		#self.store.debug_file = sys.stderr
 		

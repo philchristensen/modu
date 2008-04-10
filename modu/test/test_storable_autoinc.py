@@ -10,7 +10,7 @@ import MySQLdb, time, sys
 from MySQLdb import cursors
 
 from modu import persist
-from modu.persist import storable, adbapi
+from modu.persist import storable, dbapi
 
 from twisted.trial import unittest
 
@@ -30,7 +30,7 @@ CREATE TABLE `autoinc_table` (
 
 class StorableTestCase(unittest.TestCase):
 	def setUp(self):
-		pool = adbapi.connect('MySQLdb://modu:modu@localhost/modu')
+		pool = dbapi.connect('MySQLdb://modu:modu@localhost/modu')
 		self.store = persist.Store(pool)
 		#self.store.debug_file = sys.stderr
 		self.store.ensure_factory('autoinc_table', guid_table=None)
