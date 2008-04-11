@@ -126,7 +126,8 @@ def parse(stream, column_names=None, separator=",", qualifier='"', le="\n"):
 					fields.append(buff)
 				if(column_names):
 					fields = dict(zip(column_names, fields))
-				rows.append(fields)
+				if(fields):
+					rows.append(fields)
 				qualified = False
 				fields = []
 				buff = ''
@@ -141,7 +142,8 @@ def parse(stream, column_names=None, separator=",", qualifier='"', le="\n"):
 		fields.append(buff)
 	if(column_names):
 		fields = dict(zip(column_names, fields))
-	rows.append(fields)
+	if(fields):
+		rows.append(fields)
 	fields = []
 	buff = ''
 	
