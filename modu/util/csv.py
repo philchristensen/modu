@@ -92,11 +92,12 @@ def parse_line(line, column_names=None, separator=",", qualifier='"'):
 	result = parse(io, column_names=column_names, separator=separator, qualifier=qualifier)
 	return result[0]
 
-def parse(stream, column_names=None, separator=",", qualifier='"', le="\n"):
+def parse(stream, column_names=None, separator=",", qualifier='"'):
 	rows = []
 	fields = []
 	buff = ''
 	qualified = False
+	line_endings = ('\n', '\r')
 	
 	c = stream.read(1)
 	while(c != ''):
@@ -118,19 +119,27 @@ def parse(stream, column_names=None, separator=",", qualifier='"', le="\n"):
 					buff = buff[0:-1]
 				fields.append(buff)
 				buff = ''
-		elif(c == le):
+		elif(c in line_endings):
 			if(qualified):
 				buff += c
 			else:
+				old_c = c
+				c = stream.read(1)
 				if(buff):
+					if(buff[-1] == qualifier):
+						buff = buff[0:-1]
 					fields.append(buff)
 				if(column_names):
 					fields = dict(zip(column_names, fields))
 				if(fields):
 					rows.append(fields)
+				
 				qualified = False
 				fields = []
 				buff = ''
+				
+				if(c == old_c or c not in line_endings):
+					continue
 		else:
 			buff += c
 		
