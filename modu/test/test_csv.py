@@ -23,7 +23,14 @@ tabs = 'one\ttwo\tthree\tfour'
 tabs_quoted = 'one\t"two here"\tthree\tfour'
 tabs_oo = '"#1234"	something else here	"another quoted string"	1234'
 
+known_bad_1 = '"LCD1066"\t"Take Your Time"\t\t\t"LCD1066-4"\t"Letter From Home, The Harmonic Branching"\t"9m34s"\t"Lovely Music"\t"Tyranny, ""Blue"" Gene"\t"Tyranny, ""Blue"" Gene (piano)"\t\t\t\t\t\t\t\t\t\t'
+
 class CSVTestCase(unittest.TestCase):
+	def test_known_bad_1(self):
+		expected = ['LCD1066', 'Take Your Time', '', '', 'LCD1066-4', 'Letter From Home, The Harmonic Branching', '9m34s', 'Lovely Music', 'Tyranny, "Blue" Gene', 'Tyranny, "Blue" Gene (piano)', '', '', '', '', '', '', '', '', '']
+		got = csv.parse_line(known_bad_1, separator="\t")
+		self.failUnlessEqual(got, expected, 'Got %s when expecting %s' % (got, expected))
+	
 	def test_simplest(self):
 		expected = ['one', 'two', 'three', 'four']
 		got = csv.parse_line(simplest)

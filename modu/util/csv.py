@@ -9,6 +9,11 @@
 Contains ASCII import/export functions.
 """
 
+try:
+	import cStringIO as StringIO
+except ImportError, e:
+	import StringIO
+
 from modu import util
 
 def generate_csv(rows, le='\n'):
@@ -82,46 +87,62 @@ def generate_tsv(rows, le='\n'):
 	
 	return header_string + content_string
 
-def parse(f, column_names=None, separator=",", qualifier='"'):
-	for line in f:
-		yield parse_line(line, column_names, separator, qualifier)
-
 def parse_line(line, column_names=None, separator=",", qualifier='"'):
+	io = StringIO.StringIO(line)
+	result = parse(io, column_names=column_names, separator=separator, qualifier=qualifier)
+	return result[0]
+
+def parse(stream, column_names=None, separator=",", qualifier='"', le="\n"):
+	rows = []
 	fields = []
 	buff = ''
-	infield = False
-	qualignore = False
+	qualified = False
 	
-	for i in range(len(line)):
-		c = line[i]
+	c = stream.read(1)
+	while(c != ''):
 		if(c == qualifier):
-			if(infield):
-				if(i < len(line) - 1 and line[i + 1] == qualifier):
-					if(qualignore):
-						qualignore = False
-					else:
-						qualignore = True
-						buff += c
-				else:
-					infield = False
+			if(qualified):
+				buff += c
+				c = stream.read(1)
+				if(c != qualifier):
+					qualified = False
+					continue
 			else:
-				if(qualignore):
-					qualignore = False
-				else:
-					infield = True
+				qualified = True
 		elif(c == separator):
-			if(infield):
+			if(qualified):
 				buff += c
 			else:
+				qualified = False
+				if(buff and buff[-1] == qualifier):
+					buff = buff[0:-1]
 				fields.append(buff)
+				buff = ''
+		elif(c == le):
+			if(qualified):
+				buff += c
+			else:
+				if(buff):
+					fields.append(buff)
+				if(column_names):
+					fields = dict(zip(column_names, fields))
+				rows.append(fields)
+				qualified = False
+				fields = []
 				buff = ''
 		else:
 			buff += c
+		
+		c = stream.read(1)
 	
 	if(buff):
+		if(buff[-1] == qualifier):
+			buff = buff[0:-1]
 		fields.append(buff)
+	if(column_names):
+		fields = dict(zip(column_names, fields))
+	rows.append(fields)
+	fields = []
+	buff = ''
 	
-	if(column_names == None):
-		return fields
-	
-	return dict(zip(column_names, fields))
+	return rows
