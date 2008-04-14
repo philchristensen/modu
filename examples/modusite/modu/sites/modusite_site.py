@@ -38,7 +38,7 @@ class Site(object):
 		modu_assets_path = os.path.join(os.path.dirname(modu.__file__), 'assets')
 		application.activate(static.FileResource, ['/assets'], modu_assets_path)
 		
-		application.activate(resource.AdminResource, default_listing='page')
+		application.activate(resource.AdminResource, default_path='admin/listing/page')
 		application.activate(fck.FCKEditorResource)
 		application.activate(index.Resource)
 		application.activate(blog.Resource)

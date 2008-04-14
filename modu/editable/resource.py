@@ -199,9 +199,11 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 				else:
 					app.raise403()
 			else:
-				default_listing = self.options.get('default_listing')
-				if(default_listing):
-					redirect_path = req.get_path(self.path, 'listing', default_listing)
+				default_path = self.options.get('default_path')
+				if(callable(default_path)):
+					default_path = default_path(req)
+				if(default_path):
+					redirect_path = req.get_path(default_path)
 					app.redirect(redirect_path)
 				
 				app.raise404('There is no item list at the path: %s' % req['REQUEST_URI'])
