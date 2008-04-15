@@ -25,6 +25,14 @@ CREATE TABLE `session` (
   KEY `expiry_idx` (`accessed`, `timeout`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
 
+CREATE TABLE `variable` (
+  `id` bigint(20),
+  `name` varchar(255),
+  `value` BLOB,
+  PRIMARY KEY (id),
+  KEY `name_idx` (`name`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
 CREATE TABLE `user` (
   `id` bigint(20),
   `username` varchar(255),
