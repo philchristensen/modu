@@ -295,22 +295,28 @@ class FormNode(object):
 			data = NestedFieldStorage(req)
 			self.data = data
 		
-		if(self.name in data):
-			form_data = data[self.name]
-			if(isinstance(form_data, dict)):
-				if(self.children):
-					for name, child in self.children.items():
-						child.load_data(req, form_data)
-				else:
-					# this would happen if a theme function
-					# generated nested form data for a single
-					# form object
-					loader = self.attr('loader', None)
-					loader_func = 'form_%s_loader' % self.attr('type', 'markup')
-					if(not loader and hasattr(self.theme, loader_func)):
-						loader = getattr(self.theme(req), loader_func, None)
-					if(callable(loader)):
-						loader(self, form_data)
+		form_data = data.get(self.name)
+		if(hasattr(form_data, 'value') and form_data.value == None):
+			return
+		
+		if(isinstance(form_data, dict)):
+			if(self.children):
+				for name, child in self.children.items():
+					child.load_data(req, form_data)
+			else:
+				# this would happen if a theme function
+				# generated nested form data for a single
+				# form object
+				loader = self.attr('loader', None)
+				loader_func = 'form_%s_loader' % self.attr('type', 'markup')
+				if(not loader and hasattr(self.theme, loader_func)):
+					loader = getattr(self.theme(req), loader_func, None)
+				if(callable(loader)):
+					loader(self, form_data)
+		elif(form_data):
+			# It's unfortunate to have to hard-code this, but....
+			if(self.attributes['type'] == 'checkbox'):
+				self.attributes['checked'] = True
 			else:
 				if(hasattr(form_data, 'value')):
 					self.attributes['value'] = form_data.value

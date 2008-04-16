@@ -73,6 +73,25 @@ class StringField(SearchFieldMixin, define.definition):
 		return frm
 
 
+class HiddenField(SearchFieldMixin, define.definition):
+	"""
+	Allow editing of a string field value.
+	"""
+	implements(IDatatype)
+	
+	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
+		frm = form.FormNode(self.name)
+		frm(value=getattr(storable, self.get_column_name(), ''))
+		if(style == 'listing' or self.get('read_only', False)):
+			frm(type='label')
+		else:
+			frm(type='hidden')
+		return frm
+
+
 class TextAreaField(SearchFieldMixin, define.definition):
 	"""
 	Allow editing of a string field value using a TextArea field.
