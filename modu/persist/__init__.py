@@ -491,6 +491,10 @@ class Store(object):
 			while(child_list and destroy_related_storables):
 				child = child_list.pop()
 				child_id = self.fetch_id(child)
+				child_table = child.get_table()
+				if(child_table not in self._factories):
+					raise LookupError('There is no factory registered for the table `%s`' % child_table)
+				factory = self._factories[child_table]
 				if(child_id in id_list and factory.uses_guids()):
 					#raise AssertionError('Found circular storable reference during destroy')
 					continue
