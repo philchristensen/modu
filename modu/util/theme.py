@@ -36,8 +36,13 @@ class Theme(object):
 	def form_element(self, form_id, element):
 		content = ''
 		
+		if(element.attr('required', False)):
+			asterisk = tags.span(_class="required")['*']
+		else:
+			asterisk = ''
+		
 		if(hasattr(element, 'label')):
-			content += tags.label(_class="field-label")[element.label]
+			content += tags.label(_class="field-label")[[element.label, asterisk]]
 		
 		content += self.basic_form_element(form_id, element)
 		

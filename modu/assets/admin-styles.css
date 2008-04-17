@@ -148,6 +148,9 @@ ul#nav-list .subnav-list li.active {
 	vertical-align: top;
 }
 
+label .required {
+	color: #800;
+}
 .error {
 	color: #800;
 }
