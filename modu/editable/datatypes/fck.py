@@ -121,13 +121,6 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 	@type content: str
 	"""
 	
-	def get_paths(self):
-		"""
-		@see: L{modu.web.resource.IResource.get_paths()}
-		"""
-		return ['/fck']
-	
-	
 	def prepare_content(self, req):
 		"""
 		@see: L{modu.web.resource.IContent.prepare_content()}
@@ -208,7 +201,7 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		"""
-		data = form.NestedFieldStorage(req)
+		data = req.data
 		
 		if(req['REQUEST_METHOD'] == 'POST'):
 			get_data = form.NestedFieldStorage({'QUERY_STRING':req['QUERY_STRING'],
@@ -346,7 +339,7 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		"""
 		result = UL_ACCESS_DENIED
 		
-		data = form.NestedFieldStorage(req)
+		data = req.data
 		fileitem = data['NewFile']
 		
 		filename = fileitem.filename

@@ -33,7 +33,6 @@ class FileResource(object):
 	implements(resource.IResource, resource.IResourceDelegate)
 	
 	def __init__(self, root, alternate=None):
-		#self.paths = paths
 		self.alternate = alternate
 		self.root = root
 	
@@ -63,8 +62,5 @@ class FileResource(object):
 			return self.alternate
 		from modu.web import app
 		app.raise404(req['REQUEST_URI'])
-	
-	def get_paths(self):
-		return self.paths
 
 

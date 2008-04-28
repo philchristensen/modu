@@ -17,6 +17,12 @@ from modu.util import theme
 NESTED_NAME = re.compile(r'([^\[]+)(\[([^\]]+)\])*')
 KEYED_FRAGMENT = re.compile(r'\[([^\]]+)\]*')
 
+def activate_form_data(req):
+	"""
+	Queue stylesheets or javascript for display by a content queue-aware template.
+	"""
+	req['modu.data'] = _NestedFieldStorage(req)
+
 def nil():
 	"""
 	A convenience method for testing values in a NestedFieldStorage object.

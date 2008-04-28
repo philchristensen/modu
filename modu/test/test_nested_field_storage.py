@@ -34,7 +34,7 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 		
 		for name, style in encodings:
 			req = self.get_request(post_data, style)
-			fields = form.NestedFieldStorage(req)
+			fields = req.data
 			self.assertEqual(fields['test']['one']['two']['three'].value, 'value 3', 'Did not find "value 3" where expected in %s test.' % name)
 			self.assertEqual(len(fields.__dict__['list']), 2, 'Found %d fields in  %s test of NestedFieldStorage::list, expected 2.' % (len(fields.__dict__['list']), name))
 	
@@ -43,7 +43,7 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 		
 		for name, style in encodings:
 			req = self.get_request(post_data, style)
-			fields = form.NestedFieldStorage(req)
+			fields = req.data
 			value = fields['test']['one']['two']['three'].value
 			self.failUnless(isinstance(value, list), "Didn't get list back from multivalue post.")
 			
@@ -58,7 +58,7 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 		for name, style in encodings:
 			req = self.get_request(post_data, style)
 			
-			fields = form.NestedFieldStorage(req)
+			fields = req.data
 			self.assertEqual(fields['test']['one'].value, 'value 1', 'Did not find "value 1" where expected in %s test.' % name)
 			self.assertEqual(fields['test[one][two][three]'].value, 'value 3', 'Did not find "value 3" where expected in %s test.' % name)
 			self.assertEqual(len(fields.__dict__['list']), 3, 'Found %d fields in %s test of NestedFieldStorage::list, expected 3.' % (len(fields.__dict__['list']), name))
@@ -69,7 +69,7 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 		for name, style in encodings:
 			req = self.get_request(post_data, style)
 			
-			fields = form.NestedFieldStorage(req)
+			fields = req.data
 			self.assertEqual(fields['sample-form']['title'].value, 'title field data', 'Did not find sample-form[title] data in %s test.' % name)
 			self.assertEqual(fields['sample-form']['body'].value, 'body field data', 'Did not find sample-form[body] data in %s test.' % name)
 			self.assertEqual(fields['test_normal'].value, 'test_normal', 'Found "%s" expecting "test_normal_multipart" in %s test.' % (fields['test_normal'].value, name))

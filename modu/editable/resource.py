@@ -494,7 +494,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		@type itemdef: L{modu.editable.define.itemdef}
 		"""
 		definition = itemdef[req.postpath[2]]
-		post_data = form.NestedFieldStorage(req)
+		post_data = req.data
 		results = []
 		
 		if('q' in post_data):
@@ -591,17 +591,11 @@ class ACLResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource):
 	
 	
 	"""
-	def get_paths(self):
-		"""
-		@see: L{modu.web.resource.IResource.get_paths()}
-		"""
-		return ['/acl']
-	
 	def prepare_content(self, req):
 		"""
 		@see: L{modu.web.resource.IContent.prepare_content()}
 		"""
-		form_data = form.NestedFieldStorage(req)
+		form_data = req.data
 		if('new' in form_data):
 			new_data = form_data['new']
 			if('permission' in new_data):

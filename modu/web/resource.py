@@ -38,11 +38,6 @@ class IResource(interface.Interface):
 	"""
 	This class defines something that reacts when a path is requested.
 	"""
-	def get_paths(self):
-		"""
-		Return all paths that this controller supports.
-		"""
-	
 	def get_response(self, req):
 		"""
 		Do whatever this thing should do when a path is loaded.
@@ -239,12 +234,6 @@ class Resource(object):
 			return [content]
 		else:
 			return content
-	
-	def get_paths(self):
-		"""
-		@see: L{IResource.get_paths()}
-		"""
-		raise NotImplementedError('%s::get_paths()' % self.__class__.__name__)
 
 
 class WSGIPassthroughResource(Resource):

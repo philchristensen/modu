@@ -25,7 +25,7 @@ Primary components of the modu webapp foundation.
 import os, os.path, sys, stat, copy, mimetypes, traceback, threading
 
 from modu import persist, web
-from modu.util import url, tags, queue
+from modu.util import url, tags, queue, form
 from modu.web import session, user, resource, static
 from modu.persist import dbapi
 
@@ -166,6 +166,7 @@ def configure_request(env, application):
 	if not(req.app.disable_message_queue):
 		req.set_jit('modu.messages', queue.activate_messages)
 	
+	req.set_jit('modu.data', form.activate_form_data)
 	req.set_jit('modu.content', queue.activate_content_queue)
 	
 	return req
