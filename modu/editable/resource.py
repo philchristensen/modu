@@ -137,7 +137,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		
 		user = req['modu.user']
 		if(user and user.get_id()):
-			if(req.postpath[0] == 'logout'):
+			if(req.postpath and req.postpath[0] == 'logout'):
 				req.session.set_user(None)
 				if('auth_redirect' in req.session):
 					del req.session['auth_redirect']
