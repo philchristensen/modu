@@ -36,8 +36,6 @@ def NestedFieldStorage(req, *args, **kwargs):
 	from modu.web import app
 	if not(isinstance(req, app.Request)):
 		return _NestedFieldStorage(req, *args, **kwargs)
-	if('modu.data' not in req):
-		req['modu.data'] = _NestedFieldStorage(req, *args, **kwargs)
 	return req['modu.data']
 	
 
@@ -62,7 +60,6 @@ class FormNode(object):
 		self.submit = self._submit
 		self.validate = self._validate
 		self.theme = theme.Theme
-		self.data = {}
 		
 		self.submit_button = None
 	
@@ -230,7 +227,7 @@ class FormNode(object):
 		for submit in self.find_submit_buttons():
 			# NOTE: This assumes the browser sends the submit button's name
 			# in the submit POST data. This may not always work.
-			if(self.name in self.data and submit.name in self.data[self.name]):
+			if(self.name in req.data and submit.name in req.data[self.name]):
 				self.submit_button = submit
 				break
 		
@@ -297,11 +294,7 @@ class FormNode(object):
 		(i.e., it is nested under the form's name), that form element will
 		have its 'value' attribute set to the post value.
 		"""
-		if(data is None):
-			data = NestedFieldStorage(req)
-			self.data = data
-		
-		form_data = data.get(self.name)
+		form_data = req.data.get(self.name)
 		if(hasattr(form_data, 'value') and form_data.value == None):
 			return
 		

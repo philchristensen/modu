@@ -176,8 +176,8 @@ class ForeignAutocompleteField(define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		form_name = '%s-form' % storable.get_table()
-		if(form_name in frm.data):
-			form_data = frm.data[form_name]
+		if(form_name in req.data):
+			form_data = req.data[form_name]
 			if not(form_data.get(self.name, {}).get('%s-autocomplete' % self.name, form.nil()).value):
 				setattr(storable, self.get_column_name(), None)
 			elif(self.name in form_data and self.name in form_data[self.name]):
@@ -235,7 +235,7 @@ class ForeignMultipleSelectField(define.definition):
 		"""
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
-		form_data = form.data[form.name]
+		form_data = req.data[form.name]
 		store = storable.get_store()
 		item_id = storable.get_id()
 		

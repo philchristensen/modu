@@ -166,11 +166,11 @@ class PasswordField(define.definition):
 		form_name = '%s-form' % storable.get_table()
 		
 		# There should be either a fieldset or a field at the regular name
-		if(form_name not in form.data):
-			#print '%s or %s not found in %s' % (form_name, name, form.data)
+		if(form_name not in req.data):
+			#print '%s or %s not found in %s' % (form_name, name, req.data)
 			return False
 		
-		form_data = form.data[form_name]
+		form_data = req.data[form_name]
 		
 		# if 'verify' is in the definition, we expect a fieldset
 		if(self.get('verify', True)):

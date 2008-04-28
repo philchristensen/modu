@@ -99,13 +99,13 @@ class DateField(define.definition):
 			setattr(storable, self.get_column_name(), None)
 			return True
 			
-		#print form.data
+		#print req.data
 		#current_year = datetime.datetime.now().year
 		
 		start_year = data.start_year
 		end_year = data.end_year
 		
-		date_data = form.data[form.name][self.name].get('date', None)
+		date_data = req.data[form.name][self.name].get('date', None)
 		if(date_data):
 			value = date.get_dateselect_value(date_data, self.get('style', 'datetime'), start_year, end_year)
 		else:

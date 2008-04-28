@@ -59,8 +59,8 @@ class CheckboxField(define.definition):
 		@see: L{modu.editable.define.definition.update_storable()}
 		"""
 		form_name = '%s-form' % storable.get_table()
-		if(form_name in form.data):
-			form_data = form.data[form_name]
+		if(form_name in req.data):
+			form_data = req.data[form_name]
 			if(self.name in form_data):
 				setattr(storable, self.get_column_name(), form_data[self.name].value)
 			else:

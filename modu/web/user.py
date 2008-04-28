@@ -42,9 +42,9 @@ def validate_login(req, form):
 	@return: True if all data is entered
 	@rtype: bool
 	"""
-	if not(form.data[form.name]['username']):
+	if not(req.data[form.name]['username']):
 		form.set_form_error('username', "Please enter your username.")
-	if not(form.data[form.name]['password']):
+	if not(req.data[form.name]['password']):
 		form.set_form_error('password', "Please enter your password.")
 	return not form.has_errors()
 
@@ -62,7 +62,7 @@ def submit_login(req, form):
 	@type form: L{modu.util.form.FormNode}
 	"""
 	req.store.ensure_factory('user', User)
-	form_data = form.data[form.name]
+	form_data = req.data[form.name]
 	encrypt_sql = sql.interp('%%s = ENCRYPT(%s, SUBSTRING(crypt, 1, 2))', [form_data['password'].value])
 	u = req.store.load_one('user', username=form_data['username'].value, crypt=sql.RAW(encrypt_sql))
 	if(u):

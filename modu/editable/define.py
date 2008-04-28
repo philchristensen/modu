@@ -425,7 +425,7 @@ class itemdef(OrderedDict):
 		@return: True if valid
 		@rtype: bool
 		"""
-		form_data = frm.data[frm.name]
+		form_data = req.data[frm.name]
 		if(form_data.get('cancel', form.nil()).value == frm.submit_button.value):
 			app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
 		elif(form_data.get('delete', form.nil()).value == frm.submit_button.value):
@@ -704,8 +704,8 @@ class definition(dict):
 		@rtype: bool
 		"""
 		form_name = '%s-form' % storable.get_table()
-		if(form_name in form.data):
-			form_data = form.data[form_name]
+		if(form_name in req.data):
+			form_data = req.data[form_name]
 			if(self.name in form_data):
 				setattr(storable, self.get_column_name(), form_data[self.name].value)
 		return True
