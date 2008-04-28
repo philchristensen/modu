@@ -116,7 +116,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 	@ivar template: The template the current request has selected.
 	@type template: str
 	"""
-	def __init__(self, path=None, **options):
+	def __init__(self, **options):
 		"""
 		Create an instance of the admin tool.
 		
@@ -125,20 +125,8 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		"""
 		if(path is None):
 			path = '/admin'
-		self.path = path
 		self.options = options
 		self.content_type = 'text/html; charset=UTF-8'
-	
-	
-	def get_paths(self):
-		"""
-		This resource will respond to /admin by default.
-		
-		"%s/logout" % self.path will also be registered.
-		
-		@see: L{modu.web.resource.IResource.get_paths()}
-		"""
-		return [self.path, '%s/logout' % self.path]
 	
 	
 	def prepare_content(self, req):
@@ -151,7 +139,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		
 		user = req['modu.user']
 		if(user and user.get_id()):
-			if(req.prepath[-1] == 'logout'):
+			if(req.postpath[0] == 'logout'):
 				req.session.set_user(None)
 				if('auth_redirect' in req.session):
 					del req.session['auth_redirect']
