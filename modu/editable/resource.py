@@ -251,7 +251,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		limits = None
 		
 		if(search_form.execute(req)):
-			search_data = search_form.data[search_form.name]
+			search_data = req.data[search_form.name]
 			if('clear_search' in search_data):
 				req.session.setdefault('search_form', {})[itemdef.name] = {}
 				app.redirect(req.get_path(self.prepath, 'listing', table_name))
