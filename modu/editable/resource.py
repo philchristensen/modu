@@ -123,8 +123,6 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		@param path: The path this instance should respond to.
 		@type path: str
 		"""
-		if(path is None):
-			path = '/admin'
 		self.options = options
 		self.content_type = 'text/html; charset=UTF-8'
 	
@@ -143,7 +141,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 				req.session.set_user(None)
 				if('auth_redirect' in req.session):
 					del req.session['auth_redirect']
-				app.redirect(req.get_path(self.path))
+				app.redirect(req.get_path(self.prepath))
 			
 			itemdefs = define.get_itemdefs(itemdef_module=self.options.get('itemdef_module', None))
 			
@@ -256,7 +254,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			search_data = search_form.data[search_form.name]
 			if('clear_search' in search_data):
 				req.session.setdefault('search_form', {})[itemdef.name] = {}
-				app.redirect(req.get_path(self.path, 'listing', table_name))
+				app.redirect(req.get_path(self.prepath, 'listing', table_name))
 			
 			for submit in search_form.find_submit_buttons():
 				search_data.pop(submit.name, None)
