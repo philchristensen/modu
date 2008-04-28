@@ -25,12 +25,6 @@ class TestResource(resource.Resource):
 	"""
 	implements(resource.IContent)
 	
-	def get_paths(self):
-		"""
-		@see: L{modu.web.app.resource.IResource.get_paths()}
-		"""
-		return ['/test-resource']
-	
 	def prepare_content(self, req):
 		"""
 		@see: L{modu.web.app.resource.IContent.prepare_content()}
@@ -60,12 +54,6 @@ class TestDelegateResource(resource.Resource):
 	"""
 	implements(resource.IResourceDelegate)
 	
-	def get_paths(self):
-		"""
-		@see: L{modu.web.app.resource.IResource.get_paths()}
-		"""
-		return ['/test-delegate']
-	
 	def get_delegate(self, req):
 		"""
 		@see: L{modu.web.app.resource.IResourceDelegate.get_delegate()}
@@ -80,12 +68,6 @@ class TestAccessControlResource(resource.Resource):
 	requested.
 	"""
 	implements(resource.IAccessControl)
-	
-	def get_paths(self):
-		"""
-		@see: L{modu.web.app.resource.IResource.get_paths()}
-		"""
-		return ['/test-access']
 	
 	def check_access(self, req):
 		"""
@@ -109,9 +91,9 @@ class BasicTestSite(object):
 		application.db_url = None
 		application.session_class = None
 		application.initialize_store = False
-		application.activate(TestResource)
-		application.activate(TestDelegateResource)
-		application.activate(TestAccessControlResource)
+		application.activate('/test-resource', TestResource)
+		application.activate('/test-delegate', TestDelegateResource)
+		application.activate('/test-access', TestAccessControlResource)
 
 
 class BasicRootTestSite(object):
@@ -128,9 +110,9 @@ class BasicRootTestSite(object):
 		application.db_url = None
 		application.session_class = None
 		application.initialize_store = False
-		application.activate(TestResource)
-		application.activate(TestDelegateResource)
-		application.activate(TestAccessControlResource)
+		application.activate('/test-resource', TestResource)
+		application.activate('/test-delegate', TestDelegateResource)
+		application.activate('/test-access', TestAccessControlResource)
 
 
 class StoreTestSite(object):
@@ -146,8 +128,8 @@ class StoreTestSite(object):
 		application.base_domain = '____store-test-domain____:1234567'
 		application.base_path = '/app-test'
 		application.session_class = None
-		application.activate(TestResource)
-		application.activate(TestDelegateResource)
-		application.activate(TestAccessControlResource)
+		application.activate('/test-resource', TestResource)
+		application.activate('/test-delegate', TestDelegateResource)
+		application.activate('/test-access', TestAccessControlResource)
 
 

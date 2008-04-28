@@ -250,8 +250,7 @@ class Resource(object):
 class WSGIPassthroughResource(Resource):
 	implements(IContent)
 	
-	def __init__(self, paths, wsgi_app):
-		self.paths = paths
+	def __init__(self, wsgi_app):
 		self.wsgi_app = wsgi_app
 		self.status = '200 OK'
 		self.content = []
@@ -278,10 +277,7 @@ class WSGIPassthroughResource(Resource):
 		if(req.has_header('Content-Type')):
 			return req.get_header('Content-Type')[0]
 		return 'text/html'
-	
-	def get_paths(self):
-		return self.paths
-	
+
 
 class TemplateContent(object):
 	"""

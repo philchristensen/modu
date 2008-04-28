@@ -8,12 +8,6 @@ from modu.web import resource, app
 from modu.persist import storable
 
 class Resource(resource.CheetahTemplateResource):
-	def get_paths(self):
-		"""
-		@see: L{modu.web.resource.IResource.get_paths()}
-		"""
-		return ['/faq']
-	
 	def prepare_content(self, req):
 		"""
 		@see: L{modu.web.resource.IContent.prepare_content()}

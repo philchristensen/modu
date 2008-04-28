@@ -32,8 +32,8 @@ def get_file_essentials(req, path):
 class FileResource(object):
 	implements(resource.IResource, resource.IResourceDelegate)
 	
-	def __init__(self, paths, root, alternate=None):
-		self.paths = paths
+	def __init__(self, root, alternate=None):
+		#self.paths = paths
 		self.alternate = alternate
 		self.root = root
 	

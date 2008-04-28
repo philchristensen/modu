@@ -10,12 +10,6 @@ from modu.web import resource, app
 from sandbox.model import page
 
 class Resource(resource.CheetahTemplateResource):
-	def get_paths(self):
-		"""
-		@see: L{modu.web.resource.IResource.get_paths()}
-		"""
-		return ['/']
-	
 	def prepare_content(self, req):
 		"""
 		@see: L{modu.web.resource.IContent.prepare_content()}

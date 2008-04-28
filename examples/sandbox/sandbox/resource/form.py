@@ -31,9 +31,6 @@ def sample_form(req):
 	return frm
 
 class Resource(resource.CheetahTemplateResource):
-	def get_paths(self):
-		return ['/form']
-	
 	def prepare_content(self, req):
 		frm = sample_form(req)
 		frm.submit = self.submit_form

@@ -8,9 +8,6 @@
 from modu.web import resource
 
 class Resource(resource.CherryTemplateResource):
-	def get_paths(self):
-		return ['/cherry']
-	
 	def prepare_content(self, req):
 		self.set_slot('test', 'This is my test string.')
 		self.set_slot('sample_array', ['one', 'two', 'three'])

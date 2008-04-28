@@ -32,12 +32,12 @@ class Site(object):
 		application.db_url = 'MySQLdb://sandbox:sandbox@localhost/sandbox'
 		
 		modu_assets_path = os.path.join(os.path.dirname(modu.__file__), 'assets')
-		application.activate(static.FileResource, ['/assets'], modu_assets_path)
+		application.activate('/assets', static.FileResource, modu_assets_path)
 		
-		application.activate(resource.AdminResource, default_listing='page')
-		application.activate(fck.FCKEditorResource)
+		application.activate('/admin', resource.AdminResource, default_listing='page')
+		application.activate('/fck', fck.FCKEditorResource)
 		
-		application.activate(index.Resource)
-		application.activate(zpt.Resource)
-		application.activate(cherry.Resource)
-		application.activate(form.Resource)
+		application.activate('/', index.Resource)
+		application.activate('/zpt', zpt.Resource)
+		application.activate('/cherry', cherry.Resource)
+		application.activate('/form', form.Resource)

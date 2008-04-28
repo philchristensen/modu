@@ -341,7 +341,7 @@ def _scan_sites(env):
 		
 		root = app.tree.get_data_at('/')
 		webroot = os.path.join(app.approot, app.webroot)
-		app.tree.register('/', (static.FileResource, (['/'], webroot, root), {}), clobber=True)
+		app.tree.register('/', (static.FileResource, (webroot, root), {}), clobber=True)
 		
 		domain = app.base_domain
 		if(domain.find(':') == -1):
@@ -609,15 +609,20 @@ class Application(object):
 		else:
 			raise AttributeError(key)
 	
-	def activate(self, rsrc, *args, **kwargs):
+	def activate(self, paths, rsrc, *args, **kwargs):
 		"""
 		Add a resource to this site's URLNode tree
 		"""
-		if not resource.IResource.implementedBy(rsrc):
-			raise TypeError('%r does not implement IResource' % rsrc)
 		clobber = kwargs.get('clobber', False)
 		kwargs.pop('clobber', None)
-		for path in rsrc(*args, **kwargs).get_paths():
+		
+		if not resource.IResource.implementedBy(rsrc):
+			raise TypeError('%r does not implement IResource' % rsrc)
+		
+		if not(isinstance(paths, (list, tuple))):
+			paths = [paths]
+		
+		for path in paths:
 			self.tree.register(path, (rsrc, args, kwargs), clobber=clobber)
 	
 	def get_tree(self):

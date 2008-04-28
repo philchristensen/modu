@@ -8,9 +8,6 @@
 from modu.web import resource
 
 class Resource(resource.ZPTemplateResource):
-	def get_paths(self):
-		return ['/zpt']
-	
 	def prepare_content(self, req):
 		self.set_slot('title', 'modu ZPT example page')
 	

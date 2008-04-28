@@ -10,7 +10,7 @@ from trac.web.api import HTTPForbidden
 
 class Resource(resource.WSGIPassthroughResource):
 	def __init__(self):
-		super(Resource, self).__init__(['/trac'], main.dispatch_request)
+		super(Resource, self).__init__(main.dispatch_request)
 	
 	def prepare_content(self, req):
 		path_info = req['PATH_INFO']
@@ -33,9 +33,6 @@ class Resource(resource.WSGIPassthroughResource):
 			app.redirect(req.get_path('trac/login'))
 
 class LoginSupportResource(resource.CheetahTemplateResource):
-	def get_paths(self):
-		return ['/trac/login', '/trac/logout']
-	
 	def prepare_content(self, req):
 		if(req.prepath[-1] == 'login'):
 			login_form = user.get_default_login_form()

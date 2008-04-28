@@ -15,9 +15,6 @@ from twisted import plugin
 import os, time, urllib
 
 class RootResource(resource.CheetahTemplateResource):
-	def get_paths(self):
-		return ['/']
-	
 	def prepare_content(self, req):
 		tree = req.app.tree
 		session = req.session
@@ -60,4 +57,4 @@ class FileUploadSite(object):
 		application.initialize_store = False
 		application.debug_session = True
 		application.disable_session_users = True
-		application.activate(RootResource())
+		application.activate('/', RootResource())

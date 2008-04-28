@@ -36,24 +36,24 @@ class Site(object):
 		application.session_cookie_params = {'Path':'/'}
 		
 		modu_assets_path = os.path.join(os.path.dirname(modu.__file__), 'assets')
-		application.activate(static.FileResource, ['/assets'], modu_assets_path)
+		application.activate('/assets', static.FileResource, modu_assets_path)
 		
-		application.activate(resource.AdminResource, default_path='admin/listing/page')
-		application.activate(fck.FCKEditorResource)
-		application.activate(index.Resource)
-		application.activate(blog.Resource)
-		application.activate(faq.Resource)
+		application.activate('/admin', resource.AdminResource, default_path='admin/listing/page')
+		application.activate('/fck', fck.FCKEditorResource)
+		application.activate('/', index.Resource)
+		application.activate('/blog', blog.Resource)
+		application.activate('/faq', faq.Resource)
 		
 		os.environ['PYTHON_EGG_CACHE'] = '/var/cache/eggs'
 		
 		apidocs_path = os.path.abspath(os.path.join(os.path.dirname(modu.__file__), '../apidocs'))
-		application.activate(static.FileResource, ['/apidocs'], apidocs_path)
+		application.activate('/apidocs', static.FileResource, apidocs_path)
 		
 		import trac
 		trac_htdocs_path = os.path.join(os.path.dirname(trac.__file__), 'htdocs')
-		application.activate(static.FileResource, ['/trac/chrome/common'], trac_htdocs_path)
-		application.activate(modutrac.Resource)
-		application.activate(modutrac.LoginSupportResource)
+		application.activate('/trac/chrome/common', static.FileResource, trac_htdocs_path)
+		application.activate('/trac', modutrac.Resource)
+		application.activate(['/trac/login', '/trac/logout'], modutrac.LoginSupportResource)
 
 class megatron_local(Site):
 	classProvides(plugin.IPlugin, app.ISite)
