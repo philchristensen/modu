@@ -294,7 +294,8 @@ class FormNode(object):
 		(i.e., it is nested under the form's name), that form element will
 		have its 'value' attribute set to the post value.
 		"""
-		form_data = req.data.get(self.name)
+		form_data = req.data.get_path(self.get_element_path())
+		
 		if(hasattr(form_data, 'value') and form_data.value == None):
 			return
 		
@@ -408,6 +409,17 @@ class _NestedFieldStorage(cgi.FieldStorage):
 			return True
 		else:
 			return False
+	
+	def get_path(self, path, default=None):
+		node = self
+		for item in path:
+			node = node.get(item, None)
+			#print 'found %s at %s' % (node, item)
+			if(node is None or isinstance(node, cgi.MiniFieldStorage)):
+				break
+		if(node is None):
+			return default
+		return node
 	
 	def get(self, key, default=None):
 		"""

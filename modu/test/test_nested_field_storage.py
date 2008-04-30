@@ -38,6 +38,15 @@ class NestedFieldStorageTestCase(unittest.TestCase):
 			self.assertEqual(fields['test']['one']['two']['three'].value, 'value 3', 'Did not find "value 3" where expected in %s test.' % name)
 			self.assertEqual(len(fields.__dict__['list']), 2, 'Found %d fields in  %s test of NestedFieldStorage::list, expected 2.' % (len(fields.__dict__['list']), name))
 	
+	def test_basic_path(self):
+		post_data = [("test[one][two][three]","value 3"), ('test_basic','test_basic')]
+		
+		for name, style in encodings:
+			req = self.get_request(post_data, style)
+			fields = req.data
+			self.assertEqual(fields.get_path(['test','one','two','three']).value, 'value 3', 'Did not find "value 3" where expected in %s test.' % name)
+			self.assertEqual(len(fields.__dict__['list']), 2, 'Found %d fields in  %s test of NestedFieldStorage::list, expected 2.' % (len(fields.__dict__['list']), name))
+	
 	def test_list(self):
 		post_data = [("test[one][two][three]","value 1"), ("test[one][two][three]","value 2"), ("test[one][two][three]","value 3"), ('test_list','test_list')]
 		
