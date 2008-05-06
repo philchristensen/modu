@@ -66,38 +66,55 @@ strong {
 	background-repeat: no-repeat;
 }
 
+ul#nav-list a,
+ul#nav-list a:link,
+ul#nav-list a:active,
+ul#nav-list a:visited {
+	color: #0b1591;
+	text-decoration: none;
+}
+
+ul#nav-list a:hover {
+	color: #0b1591;
+	text-decoration: underline;
+}
+
 ul#nav-list {
 	list-style: none;
 	margin-left: 0px;
 	padding-left: 0px;
+	font-size: 12px;
 }
 
 ul#nav-list li {
 	margin-bottom: 5px;
-	padding: 2px 2px 2px 2px;
-	text-transform: capitalize;
-	background-color: #2d5fb8;
+	padding: 4px 0px 0px 0px;
+	text-transform: lowercase;
+	background-color: #5c76e2;
 	color: #fff;
+	font-weight: bold;
+	text-align: center;
 }
 
 ul#nav-list .subnav-list {
-	list-style: none;
 	margin-left: 0px;
 	padding-left: 0px;
-	background-color: #b7b7e5;
+	background-color: #ccd3f5;
 }
 
 ul#nav-list .subnav-list li {
+	color: #000;
+	list-style: circle inside;
 	margin-bottom: 0;
 	padding: 2px 0 2px 12px;
 	text-transform: none;
 	font-weight: normal;
-	background-color: #b7b7e5;
+	background-color: #ccd3f5;
+	text-align: left;
 }
 
 ul#nav-list .subnav-list li.active {
 	font-weight: bold;
-	background-color: #ced1fb;
 }
 
 #content {
