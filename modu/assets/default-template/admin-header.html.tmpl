@@ -17,28 +17,27 @@
 #end if
 
 #if $itemdef_layout and len($itemdef_layout)
-<ul id="nav-list">
+<div id="nav-menu">
 	#set categories = $itemdef_layout.keys()
 	#silent categories.sort()
 	#for $category in $categories
 	#set itemdefs = $itemdef_layout[category]
-	<li>
+	<div class="nav-list">
 		$category
-		<ul class="subnav-list">
+		<div class="subnav-list">
 		#for itemdef in $itemdefs
-			<li class="#if $selected_itemdef.get_name() == $itemdef.get_name() then 'active' else ''#">
 			#if 'resource' in itemdef.config
-			<a href="$req.get_path($req.prepath, 'custom', $itemdef.get_name())">$itemdef.config.get('label', $itemdef.get_name())</a>
+			<a href="$req.get_path($req.prepath, 'custom', $itemdef.get_name())" class="#if $selected_itemdef.get_name() == $itemdef.get_name() then 'active' else ''#">&raquo; $itemdef.config.get('label', $itemdef.get_name())</a>
 			#else
-			<a href="$req.get_path($req.prepath, 'listing', $itemdef.get_name())">$itemdef.config.get('label', $itemdef.get_name())</a>
+			<a href="$req.get_path($req.prepath, 'listing', $itemdef.get_name())" class="#if $selected_itemdef.get_name() == $itemdef.get_name() then 'active' else ''#">&raquo; $itemdef.config.get('label', $itemdef.get_name())</a>
 			#end if
-			</li>
 		#end for
-		</ul>
-	</li>
+		</div>
+	</div>
 	#end for
-</ul>
+</div>
 #end if
+
 </div>
 
 <div id="content">
