@@ -442,19 +442,21 @@ class Store(object):
 			return
 		
 		table = storable.get_table()
-		id = self.fetch_id(storable)
 		data = storable.get_data()
 		
 		use_locks = False
 		
-		if(id or factory.uses_guids()):
-			data[factory.get_primary_key()] = id
-			query = sql.build_replace(table, data)
-		else:
+		if(storable.is_new()):
+			if(factory.uses_guids()):
+				data[factory.get_primary_key()] = self.fetch_id(storable)
+			else:
+				use_locks = True
+				self.pool.runOperation('LOCK TABLES `%s` WRITE' % table)
+			
 			query = sql.build_insert(table, data)
-			use_locks = True
-			self.pool.runOperation('LOCK TABLES `%s` WRITE' % table)
-	
+		else:
+			query = sql.build_update(table, data, {'id':storable.get_id()})
+		
 		self.log(query)
 		
 		try:
@@ -470,6 +472,7 @@ class Store(object):
 				self.pool.runOperation('UNLOCK TABLES')
 		
 		storable.clean()
+		storable.set_new(False)
 		storable.set_factory(factory)
 	
 	def destroy(self, storable, destroy_related_storables=False):

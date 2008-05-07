@@ -483,8 +483,12 @@ class itemdef(OrderedDict):
 					#print 'prewrite returned false'
 					return False
 		
-		# save storable data
-		req.store.save(storable, save_related_storables=False)
+		try:
+			# save storable data
+			req.store.save(storable, save_related_storables=False)
+		except Exception, e:
+			req.messages.report('error', "An exception occurred during primary save: %s" % e)
+			return False
 		
 		postwrite_succeeded = True
 		
@@ -493,7 +497,11 @@ class itemdef(OrderedDict):
 			for name, definition in postwrite_fields.items():
 				if not(definition.update_storable(req, form, storable)):
 					postwrite_succeeded = False
-			req.store.save(storable)
+			try:
+				req.store.save(storable)
+			except Exception, e:
+				req.messages.report('error', "An exception occurred during postwrite: %s" % e)
+				postwrite_succeeded = False
 		
 		# call postwrite_callback
 		if('postwrite_callback' in self.config):

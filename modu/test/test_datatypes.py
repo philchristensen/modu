@@ -500,7 +500,6 @@ class DatatypesTestCase(unittest.TestCase):
 		req.store.ensure_factory('page')
 		
 		test_storable = storable.Storable('page')
-		test_storable.set_factory(req.store.get_factory('page'))
 		test_storable.title = "My Title"
 		test_storable.category_id = 3
 		test_storable.content = 'Sample content'
@@ -514,7 +513,6 @@ class DatatypesTestCase(unittest.TestCase):
 		self.failIfEqual(test_storable.title, "Text Before Encryption", "Title field wasn't encrypted by password datatype")
 		
 		test_storable = storable.Storable('page')
-		test_storable.set_factory(req.store.get_factory('page'))
 		test_storable.title = "My Title"
 		test_storable.category_id = 3
 		test_storable.content = 'Sample content'
@@ -540,7 +538,6 @@ class DatatypesTestCase(unittest.TestCase):
 		self.failIfEqual(test_storable.title, "Text Before Encryption", "Title field wasn't encrypted by password datatype")
 		
 		test_storable = storable.Storable('page')
-		test_storable.set_factory(req.store.get_factory('page'))
 		test_storable.title = "My Title"
 		test_storable.category_id = 3
 		test_storable.content = 'Sample content'
@@ -583,7 +580,6 @@ class DatatypesTestCase(unittest.TestCase):
 		req.store.ensure_factory('page')
 		
 		test_storable = storable.Storable('page')
-		test_storable.set_factory(req.store.get_factory('page'))
 		test_storable.title = "My Title"
 		test_storable.category_id = 3
 		test_storable.content = 'Sample content'
@@ -615,7 +611,6 @@ class DatatypesTestCase(unittest.TestCase):
 		req.store.ensure_factory('page')
 		
 		test_storable = storable.Storable('page')
-		test_storable.set_factory(req.store.get_factory('page'))
 		test_storable.title = "My Title"
 		test_storable.category_id = 3
 		test_storable.content = 'Sample content'

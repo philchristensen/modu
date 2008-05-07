@@ -168,6 +168,7 @@ class Storable(object):
 		"""
 		object.__setattr__(self, '_id', 0)
 		object.__setattr__(self, '_dirty', True)
+		object.__setattr__(self, '_new', True)
 		object.__setattr__(self, '_data', {})
 		object.__setattr__(self, '_table', table)
 		object.__setattr__(self, '_factory', None)
@@ -244,6 +245,12 @@ class Storable(object):
 			return _data[key]
 			
 		raise AttributeError('No such attribute "%s" on %r' % (key, self))
+	
+	def is_new(self):
+		return object.__getattribute__(self, '_new')
+	
+	def set_new(self, newness):
+		object.__setattr__(self, '_new', newness)
 	
 	def set_id(self, id):
 		"""
@@ -471,6 +478,7 @@ class DefaultFactory(object):
 		
 		item.load_data(data)
 		item.set_factory(self)
+		item.set_new(False)
 		item.clean()
 		return item
 	
