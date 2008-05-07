@@ -4,8 +4,34 @@ body {
 	margin: 10px;
 	padding: 0;
 	font: normal 0.8em/1.2em verdana,aria,sans-serif;
-	color: #666;
+	color: #000;
 	background-color: #312d78;
+}
+
+pre {
+	border: 1px dotted #6765ad;
+	padding: 5px 10px 5px 10px;
+	font-size: 12px;
+	background-color: #d5cdf1;
+}
+
+h1 {
+	font-size: 36px;
+}
+
+h2 {
+	font-size: 28px;
+}
+
+h3 {
+	font-size: 20px;
+	margin-top: 25px;
+	padding-bottom: 2px;
+	border-bottom: 1px dotted #6765ad;
+}
+
+h4 {
+	font-size: 14px;
 }
 
 #wrapper1 {
@@ -29,7 +55,7 @@ body {
 
 #maincol {
 	position: relative;
-	margin: 0;
+	margin: 0 0 100px 0;
 }
 
 #leftcol { 
@@ -64,7 +90,8 @@ body {
 
 #centercol {
 	position: relative;
-	padding: 10px 240px;
+/*	padding: 10px 240px 100px 240px;
+*/	padding: 10px 240px;
 	background-color: #fff;
 }
 
