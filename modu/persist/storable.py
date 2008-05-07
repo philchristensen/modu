@@ -252,13 +252,15 @@ class Storable(object):
 	def set_new(self, newness):
 		object.__setattr__(self, '_new', newness)
 	
-	def set_id(self, id):
+	def set_id(self, id, set_old=True):
 		"""
 		Set the ID of this object. This method may only be called once
 		in a Storable object's lifetime.
 		"""
 		if(self.get_id()):
 			raise RuntimeError("%r already has the id %d, cannot be set to %d" % (self, self.get_id(), id))
+		if(set_old):
+			object.__setattr__(self, '_new', False)
 		object.__setattr__(self, '_id', id)
 	
 	def get_id(self):

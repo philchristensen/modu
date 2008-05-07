@@ -314,7 +314,7 @@ class Store(object):
 				raise LookupError('There is no factory registered for the table `%s`' % table)
 			factory = self.get_factory(table)
 			new_id = factory.get_id()
-			storable.set_id(new_id)
+			storable.set_id(new_id, set_old=False)
 			return new_id
 		return id
 	
