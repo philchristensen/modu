@@ -5,7 +5,7 @@
 #for faq in $faqs
 <div class="faqbody">
 <h3 class="title">$faq.question</h3>
-<small>Answered at $faq.answered_date.strftime('%B %d, %Y')</small>
+<small>Answered by $faq.get_answerer() on $faq.answered_date.strftime('%B %d, %Y')</small>
 
 $faq.answer
 

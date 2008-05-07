@@ -7,12 +7,14 @@
 from modu.web import resource, app
 from modu.persist import storable
 
+from modusite.model import faq
+
 class Resource(resource.CheetahTemplateResource):
 	def prepare_content(self, req):
 		"""
 		@see: L{modu.web.resource.IContent.prepare_content()}
 		"""
-		faqs = req.store.load(storable.Storable('faq'))
+		faqs = req.store.load(faq.FAQ, __order_by='weight')
 		
 		self.set_slot('title', 'modu: faq')
 		self.set_slot('faqs', faqs)
