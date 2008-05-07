@@ -24,13 +24,21 @@ h2 {
 
 h3 {
 	font-size: 20px;
-	margin-top: 25px;
+	margin-top: 20px;
 	padding-bottom: 2px;
 	border-bottom: 1px dotted #6765ad;
 }
 
 h4 {
 	font-size: 14px;
+}
+
+a,
+a:link,
+a:active,
+a:hover,
+a:visited {
+	color: #49228c;
 }
 
 #wrapper1 {
@@ -113,10 +121,9 @@ h3.section-header {
 	line-height: 100%;
 	font-weight: bold;
 	text-transform: lowercase;
-	color: #fff;
-	background-color: #5b5395;
-	padding: 6px 2px 5px 4px;
-	margin: 0;
+	color: #2e307f;
+	margin: 0 0 5px 0;
+	padding-top: 3px;
 }
 
 .exec-summary {
@@ -149,6 +156,10 @@ ul.navlist {
 	padding: 2px 4px 3px 4px;
 }
 
+.colbox li {
+	list-style: none;
+}
+
 #rightcol .colbox {
 	text-align: right;
 }
@@ -157,7 +168,7 @@ ul.navlist {
 	font-size: 16px; 
 	color: #333; 
 	border-bottom:1px solid #999;
-	margin-bottom:10px;
+	margin: 5px 0 0 0;
 	font-weight:bold;
 }
 

@@ -21,12 +21,12 @@ h4 {
 }
 
 label input {
-	margin-left: 2px;
 	margin-left: 5px;
 }
 
 ul, ol, dl {
-	padding-left: 20px;
+	margin: 10px 0 10px 15px;
+	padding-left: 10px;
 }
 
 dt {
@@ -39,7 +39,10 @@ dd {
 
 ol li{
 	list-style: decimal;
-	padding-left: 5px;
+}
+
+ul li{
+	list-style: disc;
 }
 
 p {
