@@ -3,9 +3,8 @@
 body {
 	margin: 10px;
 	padding: 0;
-	font: normal 0.8em/1.2em verdana,aria,sans-serif;
+	font: normal 0.8em/1.2em helvetica,arial,sans-serif;
 	color: #000;
-	background-color: #312d78;
 }
 
 pre {
@@ -38,7 +37,6 @@ h4 {
 	position: relative;
 	text-align: left;
 	width: 100%;
-	background-color: #6765ad;
 }
 
 #wrapper2 {
@@ -55,7 +53,7 @@ h4 {
 
 #maincol {
 	position: relative;
-	margin: 0 0 100px 0;
+	margin: 0 0 0 0;
 }
 
 #leftcol { 
@@ -90,8 +88,7 @@ h4 {
 
 #centercol {
 	position: relative;
-/*	padding: 10px 240px 100px 240px;
-*/	padding: 10px 240px;
+	padding: 10px 240px 100px 240px;
 	background-color: #fff;
 }
 
@@ -104,27 +101,29 @@ h4 {
 	padding: 1% 0;
 	text-align: left;
 	font-size: 9px;
-	color: #CCC;
+	color: #aaa;
 	padding-left: 10px;
 }
 
 #footer a {
-	color: #CCC;
+	color: #aaa;
 }
 
 h3.section-header {
 	line-height: 100%;
-	font-weight: normal;
+	font-weight: bold;
 	text-transform: lowercase;
 	color: #fff;
 	background-color: #5b5395;
-	padding: 2px 2px 5px 2px;
+	padding: 6px 2px 5px 4px;
 	margin: 0;
 }
 
 .exec-summary {
 	color: #312d78;
 	font-size: 18px;
+	padding-top: 4px;
+	line-height: 125%;
 }
 
 ul.navlist {

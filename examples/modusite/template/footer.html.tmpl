@@ -2,7 +2,9 @@
 		</div>
 				
 		<div id="footer">
-			&copy; 2007-2008 Phil Christensen. See <a href="/trac/browser/trunk/LICENSE">LICENSE</a> for details.
+			#import datetime
+			#set year = datetime.date.today().year
+			&copy; 2007-$year Phil Christensen. See <a href="/trac/browser/trunk/LICENSE">LICENSE</a> for details.
 		</div>
 	
 	</div>
