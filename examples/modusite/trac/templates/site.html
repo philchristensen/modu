@@ -1,4 +1,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://genshi.edgewall.org/" py:strip="">
   <!-- Custom match templates go here -->
+	<head py:match="head" py:attrs="select('@*')">
+		${select('*|comment()|text()')}
+		<link rel="stylesheet" type="text/css" href="${href.chrome('site/style.css')}" />
+	</head>
 </html>

@@ -52,6 +52,10 @@ class Site(object):
 		import trac
 		trac_htdocs_path = os.path.join(os.path.dirname(trac.__file__), 'htdocs')
 		application.activate('/trac/chrome/common', static.FileResource, trac_htdocs_path)
+		
+		site_htdocs_path = os.path.abspath(os.path.join(os.path.dirname(modusite.__file__), '../trac/htdocs'))
+		application.activate('/trac/chrome/site', static.FileResource, site_htdocs_path)
+		
 		application.activate('/trac', modutrac.Resource)
 		application.activate(['/trac/login', '/trac/logout'], modutrac.LoginSupportResource)
 
