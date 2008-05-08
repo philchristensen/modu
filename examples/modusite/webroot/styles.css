@@ -1,5 +1,7 @@
 /* CSS Document */
 
+@import '/assets/navmenu-styles.css';
+
 body {
 	margin: 10px;
 	padding: 0;
@@ -133,35 +135,38 @@ h3.section-header {
 	line-height: 125%;
 }
 
-ul.navlist {
-	list-style-type: none;
-	padding-left: 10px;
-	padding-right: 10px;
-	margin-top: 4px;
-	line-height: 125%;
+.nav-menu a,
+.nav-menu a:link,
+.nav-menu a:active,
+.nav-menu a:hover,
+.nav-menu a:visited {
+	color: #2e307f;
 }
 
-.colbox {
-	background-color: #d5cdf1;
-	padding: 0 0 5px 0;
-	margin-bottom: 10px;
-}
-
-.colbox .boxtitle {
+.nav-menu .nav-list{
 	background-color: #5b5395;
 	color: #fff;
-	font-size: 14px;
-	font-weight: bold;
-	text-transform: lowercase;
-	padding: 2px 4px 3px 4px;
 }
 
-.colbox li {
-	list-style: none;
+.nav-menu .subnav-list {
+	background-color: #d5cdf1;
 }
 
-#rightcol .colbox {
+.nav-menu .subnav-list {
+	color: #000;
+	background-color: #d5cdf1;
+}
+
+.nav-menu .subnav-list a:hover {
+	background-color: #b8b0ec;
+}
+
+#rightcol .subnav-list {
 	text-align: right;
+}
+
+#rightcol .subnav-list a {
+	padding-right: 12px;
 }
 
 .blogbody .date {

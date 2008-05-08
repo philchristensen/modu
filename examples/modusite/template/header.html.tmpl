@@ -23,38 +23,47 @@
 		<div id="maincol">
 				
 			<div id="leftcol">
-				<div class="colbox">
-				<div class="boxtitle">navigation</div>
-				<ul class="navlist">
-					<li><a href="$req.get_path('/')">home</a></li>
-					<li>&nbsp;</li>
-					<li><a href="$req.get_path('trac/wiki/About')">about modu</a></li>
-					<li><a href="$req.get_path('documentation')">documentation</a></li>
-					<li><a href="$req.get_path('faq')">faq</a></li>
-					<li><a href="$req.get_path('trac/wiki')">modu wiki</a></li>
-					<li>&nbsp;</li>
-					<li><a href="$req.get_path('downloads')">downloads</a></li>
-					<li><a href="$req.get_path('trac/browser')">browse source</a></li>
-				</ul>
+				<div class="nav-menu">
+				
+				<div class="nav-list">
+					nagivation
+					<div class="subnav-list">
+						<a href="$req.get_path('/')">&raquo; home</a>
+						<br/>
+						<a href="$req.get_path('trac/wiki/About')">&raquo; about modu</a>
+						<a href="$req.get_path('documentation')">&raquo; documentation</a>
+						<a href="$req.get_path('faq')">&raquo; faq</a>
+						<a href="$req.get_path('trac/wiki')">&raquo; modu wiki</a>
+						<br/>
+						<a href="$req.get_path('downloads')">&raquo; downloads</a>
+						<a href="$req.get_path('trac/browser')">&raquo; browse source</a>
+					</div>
 				</div>
-				<div class="colbox">
-				<div class="boxtitle">recent news</div>
-				<ul class="navlist">
-					#from modusite.model.blog import Blog
-					#for blog in Blog.get_blogs($req.store)
-					<li><a href="$req.get_path('blog', $blog.get_id())">$blog.title</a></li>
-					#end for
-				</ul>
+				
+				<div class="nav-list">
+					recent news
+					<div class="subnav-list">
+						#from modusite.model.blog import Blog
+						#for blog in Blog.get_blogs($req.store)
+						<a href="$req.get_path('blog', $blog.get_id())">&raquo; $blog.title</a>
+						#end for
+					</div>
+				</div>
+				
 				</div>
 			</div>
 				
 			<div id="rightcol">
-				<div class="colbox">
-				<div class="boxtitle">sites using modu</div>
-				<ul class="navlist">
-					<li><a href="http://www.dramonline.org">dramonline.org</a></li>
-					<li><a href="http://www.winfieldhistorical.org">winfieldhistorical.org</a></li>
-				</ul>
+				<div class="nav-menu">
+				
+				<div class="nav-list">
+					sites using modu
+					<div class="subnav-list">
+						<a href="http://www.dramonline.org">dramonline.org &laquo;</a>
+						<a href="http://www.winfieldhistorical.org">winfieldhistorical.org &laquo;</a>
+					</div>
+				</div>
+				
 				</div>
 			</div>
 			

@@ -1,0 +1,60 @@
+.nav-menu a,
+.nav-menu a:link,
+.nav-menu a:active,
+.nav-menu a:hover,
+.nav-menu a:visited {
+	color: #0b1591;
+	text-decoration: none;
+	display: block;
+}
+
+.nav-menu {
+	margin-left: 0px;
+	padding-left: 0px;
+	font-size: 12px;
+	width: 100%;
+}
+
+.nav-menu .nav-list{
+	margin-bottom: 5px;
+	padding: 4px 0px 0px 0px;
+	text-transform: lowercase;
+	background-color: #5c76e2;
+	color: #fff;
+	font-weight: bold;
+	text-align: center;
+}
+
+.nav-menu .subnav-list {
+	margin-left: 0px;
+	padding-left: 0px;
+	background-color: #ccd3f5;
+	width: 100%;
+}
+
+.nav-menu .subnav-list {
+	color: #000;
+	margin-bottom: 0;
+	padding: 2px 0 2px 0px;
+	text-transform: none;
+	font-weight: normal;
+	background-color: #ccd3f5;
+	text-align: left;
+}
+
+.nav-menu .subnav-list a,
+.nav-menu .subnav-list a:active,
+.nav-menu .subnav-list a:link,
+.nav-menu .subnav-list a:hover,
+.nav-menu .subnav-list a:visited {
+	padding-left: 12px;
+	display: block;
+}
+
+.nav-menu .subnav-list a:hover {
+	background-color: #9eaadd;
+}
+
+.nav-menu .subnav-list a.active {
+	font-weight: bold;
+}
