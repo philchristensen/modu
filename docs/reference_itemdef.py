@@ -12,13 +12,32 @@ An example itemdef that contains all available options and field types.
 from modu.util import theme
 from modu.editable import define
 from modu.editable.datatypes import string, relational, boolean, select
-from modu.persist import storable
+from modu.persist import storable, sql
 
-def noop(req, form, storable):
+def pre_post_write_callback(req, form, storable):
 	"""
-	A dummy function.
+	Called before or after the primary write.
 	"""
-	pass
+	return True
+
+def pre_post_delete_callback(req, form, storable):
+	"""
+	Called before or after an item is deleted.
+	
+	The return value from a postdelete callback has no effect.
+	"""
+	return True
+
+def template_variable_callback(req, form, storable):
+	"""
+	Returns a dictionary to populate the template with.
+	
+	On a listing page, form will actually be an array of forms.
+	"""
+	return {}
+
+def validator(req, frm, storable):
+	return True
 
 def fwhere_callback(storable):
 	pass
@@ -32,143 +51,391 @@ def autocomplete_callback(req, partial, definition):
 def form_alter_callback(req, style, form, storable, definition):
 	pass
 
+def export_query_builder(req, itemdef, attribs):
+	return sql.build_select(itemdef.name, attribs)
+
+def export_formatter(req, itemdef, item):
+	# Use m.u.OrderedDict to enforce column order
+	return dict()
+
+def export_callback(req):
+	pass
+
 # Itemdefs can be bound to any variable name, but they must be assigned to **something**
 __itemdef__ = define.itemdef(
 	# The configuration dict
 	__config		= dict(
-		name		= 'page',					# [r] A unique identifier for this itemdef, usually the table name
-		table		= '[default:<name>]',		# [o] If the identifier is not the table name, it must be set here
-		label		= '[default:<name>]',		# [o] The display name of this itemdef
-		category	= "[default:'other']",		# [o] The itemdef category
-		weight		= 5,						# [o] The position of this itemdef in relation to others in its category
-		acl			= '[default:'']',			# [o] The required user permission to use this itemdef
-		# acl			= ['access pages',		# Alternate usage specifying multiple required permissions
-		# 				'access admin'],
-		# TODO:
-		# acl			= {'view':'view pages',	# Alternate usage
-		#  				'edit':'edit pages'}
-		prewrite_callback	= noop,				# [o] This is called during validation. If it returns false,
-												# validation will fail.
-		postwrite_callback	= noop,				# [o] Called during submit, after writing the storable.
-		theme				= theme.Theme,		# [o] Overrides the default theme class for form generation.
-		factory				= storable.DefaultFactory,		# [o] Factory to use to build Storable objects
-		model_class			= storable.Storable,			# [o] Model class to use with DefaultFactory
-		list_template		= "[default:'admin-listing.tmpl.html']",	# [o] Overrides the default list template.
-		detail_template		= "[default:'admin-detail.tmpl.html']",		# [o] Overrides the default detail template.
-		template_variable_callback = noop		# [o] A dict of name-value pairs returned from this function
-												# will be added to the template
+		# [r] A unique identifier for this itemdef, usually the table name
+		name		= 'page',
+		
+		# [o] If the identifier is not the table name, it must be set here
+		table		= '[default:<name>]',
+		
+		# [o] The display name of this itemdef
+		label		= '[default:<name>]',
+		
+		# [o] The itemdef category
+		category	= "[default:'other']",
+		
+		# [o] The position of this itemdef in relation to others in its category
+		weight		= 5,
+		
+		# [o] The required user permission to use this itemdef
+		acl			= '[default:'']',
+		
+		# [o] Alternate usage specifying multiple required permissions
+		acl			= ['access pages',
+		 				'access admin'],
+		
+		# [o] This is called during validation. If it returns false,
+		#     validation will fail.
+		prewrite_callback	= pre_post_write_callback,
+		
+		# [o] Called during submit, after writing the storable.
+		postwrite_callback	= pre_post_write_callback,
+		
+		# [o] This is called during validation. If it returns false,
+		#     validation will fail.
+		predelete_callback	= pre_post_delete_callback,
+		
+		# [o] Called during submit, after writing the storable.
+		postdelete_callback	= pre_post_delete_callback,
+		
+		# [o] Overrides the default theme class for form generation.
+		theme				= theme.Theme,
+		
+		# [o] Factory to use to build Storable objects
+		factory				= storable.DefaultFactory,
+		
+		# [o] Model class to use with DefaultFactory
+		model_class			= storable.Storable,
+		
+		# [o] Overrides the default list template.
+		list_template		= "[default:'admin-listing.tmpl.html']",
+		
+		# [o] Overrides the default detail template.
+		detail_template		= "[default:'admin-detail.tmpl.html']",
+		
+		# [o] A dict of name-value pairs returned from this function
+		#     will be added to the template
+		template_variable_callback = template_variable_callback,
+		
+		# [o] The name of a result column that should be used as the title
+		#     of a record
+		title_column		= 'title',
+		
+		# [o] Don't allow anyone to create a new item.
+		no_create			= False,
+		
+		# [o] The number of results to show per listing page.
+		per_page			= 25,
+		
+		# [o] The title to be displayed on listing pages.
+		listing_title		= "[default:'Listing <Name> Records']",
+		
+		# [o] When using the export feature, this function will be called to generate the query
+		export_query_builder = export_query_builder
+		
+		# [o] Export type (may be 'csv' or 'tsv'
+		export_type 		= 'csv',
+		
+		# [o] Line endings to use in exported CSV
+		export_le 			= '\n',
+		
+		# [o] When using the export feature, this function will be called to generate the query
+		export_formatter = export_formatter,
+		
+		# [o] When using the export feature, this function will be called to generate the query
+		export_callback = export_callback,
+		
+		# [o] If `resource` is defined, this resource will provide the content for this 
+		#     itemdef while most other itemdef configuration variables (and any defined
+		#     fields) will be ignored.
+		resource		= None,
+		
+		# [o] TODO: Alternate usage
+		# acl			= {'view':'view pages',
+		#  				'edit':'edit pages'},
 	),
 	
 	# The name of a field is automatically set by the parent itemdef, so it doesn't
 	# appear in the definition constructor
 	# the attributes of this example field are available on all fields
-	example			= define.definition(		# Normally you wouldn't ever instantiate this
-		label		= '[default:field-name]',	# [o] The label to appear on this form item
-		help		= '[default:'']',			# [o] Help text (tooltip) for this field.
-		listing		= False,					# [o] Should this field appear in list view?
-		link		= False,					# [o] If True, this field will have a hyperlink added as a
-												# form prefix/suffix that will link to the detail URL.
-		detail		= True,						# [o] Should this field appear in detail view?
-		read_only	= False,					# [o] If supported, this field should be uneditable/disabled
-		search		= False,					# [o] Should this field appear in the listing search form?
-		weight		= 0,						# [o] The weight (relative position) of this field
-		attributes	= {},						# [o] Attributes set here will define or override 
-												# values on the resulting FormNode instance.
-		form_alter	= form_alter_callback		# [o] After a form is generated, it will be passed to
-												# this function, if defined, which may modify the resulting
-												# form element.
+	# Normally you wouldn't ever instantiate define.definition
+	example			= define.definition(
+		# [o] The column in the result for this field.
+		column		= '[default:field-name]',
+		
+		# [o] The label to appear on this form item
+		label		= '[default:field-name]',
+		
+		# [o] Help text for this field.
+		help		= '[default:'']',
+		
+		# [o] Should this field appear in list view?
+		listing		= False,
+		
+		# [o] If True, this field will have a hyperlink added as a
+		#     form prefix/suffix that will link to the detail URL.
+		link		= False,
+		
+		# [o] Should this field appear in detail view?
+		detail		= True,
+		
+		# [o] If supported, this field should be uneditable/disabled
+		read_only	= False,
+		
+		# [o] Should this field appear in the listing search form?
+		search		= False,
+		
+		# [o] The weight (relative position) of this field
+		weight		= 0,
+		
+		# [o] Attributes set here will define or override 
+		#     values on the resulting FormNode instance.
+		attributes	= {},
+		
+		# [o] After a form is generated, it will be passed to
+		#     this function, if defined, which may modify the resulting
+		#     form element.
+		form_alter	= form_alter_callback,
+		
+		# [o] a function to validate this field's contents
+		validator	= validator,
+		
+		# [o] If False, this field's contents will never be saved/updated
+		implicit_save = True,
 	),
 	
 	id					= string.LabelField(
-		fulltext_search	= False					# [o] Should search on this field use MATCH() AGAINST()?
+		# [o] Should search on this field use MATCH() AGAINST()?
+		#     This overrides an `exact_match` setting if both are present.
+		fulltext_search	= False
+		# [o] Should search on this field use equals?
+		exact_match		= False
 	),
 	
 	active				= boolean.CheckboxField(
-		checked_value	=	1,					# [o] The value saved to the DB field when checked
-		unchecked_value	=	0					# [o] The value saved to the DB field when unchecked
+		# [o] The value saved to the DB field when checked
+		checked_value	=	1,
+		
+		# [o] The value saved to the DB field when unchecked
+		unchecked_value	=	0
 	),
 	
 	title				= string.StringField(
-		size			= 30,					# [o] the textfield displayed size
-		maxlength 		= None,					# [o] the max number of chars, if defined
-		fulltext_search	= False					# [o] Should search on this field use MATCH() AGAINST()?
+		# [o] the textfield displayed size
+		size			= 30,
+		
+		# [o] the max number of chars, if defined
+		maxlength 		= None,
+		
+		# [o] Should search on this field use MATCH() AGAINST()?
+		#     This overrides an `exact_match` setting if both are present.
+		fulltext_search	= False
+		
+		# [o] Should search on this field use equals?
+		exact_match		= False
 	),
 	
 	body				= string.TextAreaField(
-		cols			= 40,					# [o] the number of displayed columns
-		rows			= 5,					# [o] the number of displayed columns rows
-		fulltext_search	= False					# [o] Should search on this field use MATCH() AGAINST()?
+		# [o] the number of displayed columns
+		cols			= 40,
+		
+		# [o] the number of displayed columns rows
+		rows			= 5,
+		
+		# [o] Should search on this field use MATCH() AGAINST()?
+		#     This overrides an `exact_match` setting if both are present.
+		fulltext_search	= False
+		
+		# [o] Should search on this field use equals?
+		exact_match		= False
+	),
+	
+	htmlbody			= fck.FCKEditorField(
+		# [o] Should search on this field use MATCH() AGAINST()?
+		fulltext_search	= False,
+		# [o] The path where FCKEditorResource was registered.
+		fck_root		= '/fck'
+		# [o] The width of the FCKEditor in pixels
+		width			= 600,
+		# [o] The height of the FCKEditor in pixels
+		heght			= 400,
+		# [o] The toolbar set to use, as defined in the FCK config
+		toolbar_set		= 'Standard'
 	),
 	
 	password			= string.PasswordField(
-		obfuscate		= True,					# [o] Should this field be protected from view?
-		encrypt			= True,					# [o] Should this field use ENCRYPT() when saving?
-		verify			= True					# [o] Should a second field be displayed for verification?
+		# [o] Should this field be protected from view?
+		obfuscate		= True,
+		
+		# [o] Should this field use ENCRYPT() when saving?
+		encrypt			= True,
+		
+		# [o] Should a second field be displayed for verification?
+		verify			= True
 	),
 	 
 	type				= select.SelectField(
-		options			= True					# [r] The available options for this field. If a dict, the
-												# **keys** are saved to the database. If a sequence, the
-												# **indices** are saved.
+		# [r] The available options for this field. If a dict, the
+		#     **keys** are saved to the database. If a sequence, the
+		#     **indices** are saved.
+		options			= True
+	),
+	 
+	created_date		= date.DateField(
+		# [o] When printed in list or read-only views, use this format string.
+		format_string	= '%B %d, %Y at %I:%M%p',
+		
+		# [o] Starting year for year select field
+		start_year		= '[default: this year - 2]',
+		
+		# [o] Ending year for year select field
+		end_year		= '[default: this year + 5]'
+		
+		# [o] If True, when this field is NULL (or is a part of new record), 
+		#     pre-set the date selector to the current date/time.
+		default_now		= False,
+		
+		# [o] Is this a date, datetime, or time field?
+		style			= 'datetime',
+		
+		# [o] Should the field value be saved as a timestamp (int(11)),
+		#     or date/datetime/time object (date, datetime, or time columns)
+		save_format		= 'timestamp'
 	),
 	 
 	creator_id			= relational.ForeignLabelField(
-		ftable			= 'user',				# [r] The name of the foreign table
-		fvalue			= 'id',					# [r] The name of the value field in the foreign table
-		flabel			= 'username'			# [r] The name of the foreign field to display as a label
+		# [r] The name of the foreign table
+		ftable			= 'user',
+		
+		# [r] The name of the value field in the foreign table
+		fvalue			= 'id',
+		
+		# [r] The name of the foreign field to display as a label
+		flabel			= 'username'
 	),
 	
 	category_id			= relational.ForeignSelectField(
-		ftable			= 'category',			# [r] The name of the foreign table
-		fvalue			= 'id',					# [r] The name of the value field in the foreign table
-		flabel			= 'name',				# [r] The name of the foreign field to display as a label
-		fwhere			= 'WHERE active = 1',	# [o] A string specifying the WHERE clause, OR
-		# fwhere			= {'active':1},		# [o] An array to use to build the WHERE clause, OR
-		# fwhere			= fwhere_callback	# [o] A callable that returns either a string or a dict
+		# [r] The name of the foreign table
+		ftable			= 'category',
+		
+		# [r] The name of the value field in the foreign table
+		fvalue			= 'id',
+		
+		# [r] The name of the foreign field to display as a label
+		flabel			= 'name',
+		
+		# [o] A string specifying the WHERE clause, OR
+		fwhere			= 'WHERE active = 1',
+		
+		# [o] An array to use to build the WHERE clause, OR
+		# fwhere			= {'active':1},
+		
+		# [o] A callable that returns either a string or a dict
+		# fwhere			= fwhere_callback
 	),
 	 
 	topic_id			= relational.ForeignAutocompleteField(
-		ftable			= 'topic',						# [r] The name of the foreign table
-		fvalue			= 'id',							# [r] The name of the value field in the foreign table
-		flabel			= 'name',						# [r] The name of the foreign field to display as a label
-		fwhere			= "[default:'']",				# [o] A string specifying the WHERE clause, OR
-		# fwhere			= {'active':1},				# [o] An array to use to build the WHERE clause, OR
-		# fwhere			= fwhere_callback			# [o] A callable that returns either a string or a dict
-		min_chars		= 3,							# [o] The number of chars that must be typed to start a lokup
-		max_choices		= 10,							# [o] The number of matches to display
-		autocomplete_callback = autocomplete_callback	# [r] Use this function to generate autocomplete results
+		# [r] The name of the foreign table
+		ftable			= 'topic',
+		
+		# [r] The name of the value field in the foreign table
+		fvalue			= 'id',
+		
+		# [r] The name of the foreign field to display as a label
+		flabel			= 'name',
+		
+		# [o] A string specifying the WHERE clause, OR
+		fwhere			= "[default:'']",
+		
+		# [o] An array to use to build the WHERE clause, OR
+		# fwhere			= {'active':1},
+		
+		# [o] A callable that returns either a string or a dict
+		# fwhere			= fwhere_callback
+		
+		# [o] The number of chars that must be typed to start a lokup
+		min_chars		= 3,
+		
+		# [o] The number of matches to display
+		max_choices		= 10,
+		
+		# [r] Use this function to generate autocomplete results
+		autocomplete_callback = autocomplete_callback
 	),
 	
 	# In foreign multiple field (e.g., n2m relationships), the m table is considered the
 	# 'foreign table', and this itemdef's table the 'n' table, hence the prefix 'f' and 'n'
 	other_categories	= relational.ForeignMultipleSelectField(
-		ftable			= 'category',			# [r] The name of the foreign table
-		fvalue			= 'id',					# [o] The name of the value field in the foreign table
-		flabel			= 'title',				# [r] The name of the foreign field to display as a label
-		fwhere			= "[default:'']",		# [o] A string specifying the WHERE clause, OR
-		# fwhere			= {'active':1},		# [o] An array to use to build the WHERE clause, OR
-		# fwhere			= fwhere_callback	# [o] A callable that returns either a string or a dict
-		ntof			= 'page_category',		# [r] The name of the n2m table
-		ntof_f_id		= 'category_id',		# [r] The name of the foreign table's id column in the
-												# n2m table (where fvalue is saved)
-		ntof_n_id		= 'page_id'				# [r] The name of this itemdef's table's id column in
-												# the n2m table
+		# [r] The name of the foreign table
+		ftable			= 'category',
+		
+		# [o] The name of the value field in the foreign table
+		fvalue			= 'id',
+		
+		# [r] The name of the foreign field to display as a label
+		flabel			= 'title',
+		
+		# [o] A string specifying the WHERE clause, OR
+		fwhere			= "[default:'']",
+		
+		# [o] An array to use to build the WHERE clause, OR
+		# fwhere			= {'active':1},
+		
+		# [o] A callable that returns either a string or a dict
+		# fwhere			= fwhere_callback
+		
+		# [r] The name of the n2m table
+		ntof			= 'page_category',
+		
+		# [r] The name of the foreign table's id column in the
+		#     n2m table (where fvalue is saved)
+		ntof_f_id		= 'category_id',
+		
+		# [r] The name of this itemdef's table's id column in
+		#     the n2m table
+		ntof_n_id		= 'page_id'
 	),
 
 	other_topics		= relational.ForeignMultipleAutocompleteField(
-		ftable			= 'category',					# [r] The name of the foreign table
-		fvalue			= 'id',							# [o] The name of the value field in the foreign table
-		flabel			= 'title',						# [r] The name of the foreign field to display as a label
-		fwhere			= "[default:'']",				# [o] A string specifying the WHERE clause, OR
-		# fwhere			= {'active':1},				# [o] An array to use to build the WHERE clause, OR
-		# fwhere			= fwhere_callback			# [o] A callable that returns either a string or a dict
-		ntof			= 'page_category',				# [r] The name of the n2m table
-		ntof_f_id		= 'category_id',				# [r] The name of the foreign table's id column in the
-														# n2m table (where fvalue is saved)
-		ntof_n_id		= 'page_id',					# [r] The name of this itemdef's table's id column in
-														# the n2m table
-		min_chars		= 3,							# [o] The number of chars that must be typed to start a lokup
-		max_choices		= 10,							# [o] The number of matches to display
-		autocomplete_callback = autocomplete_callback	# [r] Use this function to generate autocomplete results
+		# [r] The name of the foreign table
+		ftable			= 'category',
+		
+		# [o] The name of the value field in the foreign table
+		fvalue			= 'id',
+		
+		# [r] The name of the foreign field to display as a label
+		flabel			= 'title',
+		
+		# [o] A string specifying the WHERE clause, OR
+		fwhere			= "[default:'']",
+		
+		# [o] An array to use to build the WHERE clause, OR
+		# fwhere			= {'active':1},
+		
+		# [o] A callable that returns either a string or a dict
+		# fwhere			= fwhere_callback
+		
+		# [r] The name of the n2m table
+		ntof			= 'page_category',
+		
+		# [r] The name of the foreign table's id column in the
+		#     n2m table (where fvalue is saved)
+		ntof_f_id		= 'category_id',
+		
+		# [r] The name of this itemdef's table's id column in
+		#     the n2m table
+		ntof_n_id		= 'page_id',
+		
+		# [o] The number of chars that must be typed to start a lokup
+		min_chars		= 3,
+		
+		# [o] The number of matches to display
+		max_choices		= 10,
+		
+		# [r] Use this function to generate autocomplete results
+		autocomplete_callback = autocomplete_callback
 	)
 )
