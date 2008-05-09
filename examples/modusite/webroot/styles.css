@@ -10,10 +10,12 @@ body {
 }
 
 pre {
-	border: 1px dotted #6765ad;
-	padding: 5px 10px 5px 10px;
 	font-size: 12px;
 	background-color: #d5cdf1;
+	border: 1px solid #6765ad;
+	margin: 1em 1.75em;
+	padding: 5px 10px 5px 10px;
+	overflow: auto;
 }
 
 h1 {
