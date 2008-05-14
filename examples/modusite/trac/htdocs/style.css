@@ -49,6 +49,7 @@ h2 {
 #navigation {
 	position: absolute;
 	top: 100px;
+	width: 210px;
 }
 
 #proj-search-label {
