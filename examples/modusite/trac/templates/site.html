@@ -5,4 +5,25 @@
 		${select('*|comment()|text()')}
 		<link rel="stylesheet" type="text/css" href="${href.chrome('site/style.css')}" />
 	</head>
+	
+	<body py:match="body" py:attrs="select('@*')">
+		${select('*//div[@class!="nav"]|comment()|text()')}
+		<div id="navigation">
+		${select('//*[@class="nav"]')}
+		</div>
+	</body>
+
+	<label py:match="label[@for='proj-search']" for="proj-search" id="proj-search-label">
+	${select('*|comment()|text()')}
+	</label>
+	
+	<div py:match="div[@id='metanav']" py:attrs="select('@*')">
+	<h2>Trac</h2>
+	${select('*|comment()|text()')}
+	</div>
+	
+	<div py:match="div[@id='mainnav']" py:attrs="select('@*')">
+	<h2>Project</h2>
+	${select('*|comment()|text()')}
+	</div>
 </html>
