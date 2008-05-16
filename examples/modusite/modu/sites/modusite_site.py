@@ -17,7 +17,7 @@ from modu.editable import resource
 from modu.editable.datatypes import fck
 
 import modusite
-from modusite.resource import index, modutrac, blog, faq
+from modusite.resource import index, modutrac, blog, faq, downloads
 
 class Site(object):
 	classProvides(plugin.IPlugin, app.ISite)
@@ -42,6 +42,7 @@ class Site(object):
 		application.activate('/admin', resource.AdminResource, itemdef_module=itemdefs, default_path='admin/listing/page')
 		application.activate('/fck', fck.FCKEditorResource)
 		application.activate('/', index.Resource)
+		application.activate('/downloads', downloads.DownloadsResource)
 		application.activate('/blog', blog.Resource)
 		application.activate('/faq', faq.Resource)
 		

@@ -161,6 +161,16 @@ class ITemplate(interface.Interface):
 		@returns: the dirname of the template directory.
 		@rtype: str
 		"""
+	
+	def get_template_type(self):
+		"""
+		Template resources by default return a filename from get_template(). To
+		return the template as a string, this function must be overriden to
+		return 'str' instead of the default 'filename'.
+		
+		@returns: the type of the get_template() return value ('filename', or 'str').
+		@rtype: str
+		"""
 
 
 class IAccessControl(interface.Interface):
@@ -382,6 +392,12 @@ class TemplateContent(object):
 		@see: L{IContent.get_template_root()}
 		"""
 		return os.path.join(req.approot, 'template')
+	
+	def get_template_type(self):
+		"""
+		@see: L{IContent.get_template_root()}
+		"""
+		return 'filename'
 
 
 # According to the docs, Template can take awhile to load,
@@ -446,12 +462,22 @@ class CheetahTemplateContent(TemplateContent):
 		"""
 		super(CheetahTemplateContent, self).get_content(req)
 		
-		template = self.get_template(req)
 		template_root = self.get_template_root(req)
 		
-		template_path = os.path.join(template_root, template)
+		options = {}
+		template = self.get_template(req)
+		if(self.get_template_type() == 'filename'):
+			template_path = os.path.join(template_root, template)
+			template_file = open(template_path)
+			module_name = re.sub(r'\W+', '_', template)
+			options['file'] = template_file
+		elif(self.get_template_type() == 'str'):
+			template_path = None
+			options['source'] = template
+			module_name = 'MODU_Dyn_%s' % self.__class__.__name__
+		else:
+			raise RuntimeError('unknown template type: %s' % self.get_template_type())
 		
-		module_name = re.sub(r'\W+', '_', template)
 		module_root = req.app.config.get('compiled_template_root', template_root)
 		module_path = os.path.join(module_root, module_name + '.py')
 		
@@ -464,6 +490,8 @@ class CheetahTemplateContent(TemplateContent):
 			CheetahModuTemplate.moduTemplateDirectoryCallback = _template_cb
 		
 			try:
+				# note that this might raise an exception because
+				# template_path is None, but that's okay.
 				needs_recompile = (os.stat(template_path).st_mtime > os.stat(module_path).st_mtime)
 			except:
 				needs_recompile = True
@@ -477,12 +505,11 @@ class CheetahTemplateContent(TemplateContent):
 				template_class = moduleGlobals[module_name]
 			# if I know I will be able to save a template class
 			elif(needs_recompile and (os.access(module_path, os.W_OK) or not os.access(module_path, os.F_OK))):
-				pysrc = CheetahModuTemplate.compile(file=open(template_path),
-												returnAClass=False,
+				pysrc = CheetahModuTemplate.compile(returnAClass=False,
 												moduleName=module_name,
 												className=module_name,
 												baseclass=CheetahModuTemplate,
-												moduleGlobals=moduleGlobals)
+												moduleGlobals=moduleGlobals, **options)
 				module_file = open(module_path, 'w')
 				module_file.write(pysrc)
 				module_file.close()
@@ -490,9 +517,8 @@ class CheetahTemplateContent(TemplateContent):
 				exec pysrc in moduleGlobals
 				template_class = moduleGlobals[module_name]
 			else:
-				template_class = CheetahModuTemplate.compile(file=open(template_path),
-															baseclass=CheetahModuTemplate,
-															moduleGlobals=moduleGlobals)
+				template_class = CheetahModuTemplate.compile(baseclass=CheetahModuTemplate,
+															moduleGlobals=moduleGlobals, **options)
 		finally:
 			cheetah_lock.release()
 		

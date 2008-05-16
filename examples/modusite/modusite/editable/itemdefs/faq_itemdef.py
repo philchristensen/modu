@@ -32,17 +32,15 @@ __itemdef__ = define.itemdef(
 		listing			= True
 	),
 	
-	question				= string.StringField(
+	question				= string.TextAreaField(
 		label			= 'question:',
-		size			= 60,
-		maxlength 		= 255,
 		weight			= 1,
 		listing			= True,
 		link			= True,
 		search			= True
 	),
 	
-	answer				= fck.FCKEditorField(
+	answer				= string.TextAreaField(
 		label			= 'answer:',
 		weight			= 5
 	),

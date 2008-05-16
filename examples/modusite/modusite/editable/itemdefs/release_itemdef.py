@@ -56,7 +56,7 @@ __itemdef__ = define.itemdef(
 		weight			= 4.5
 	),
 	
-	description			= fck.FCKEditorField(
+	description			= string.TextAreaField(
 		label			= 'page body:',
 		weight			= 5
 	),

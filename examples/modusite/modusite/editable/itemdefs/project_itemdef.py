@@ -34,14 +34,18 @@ __itemdef__ = define.itemdef(
 		search			= True
 	),
 	
-	teaser				= fck.FCKEditorField(
+	head_tarball_path   = string.StringField(
+		label			= 'SVN head tarball:',
+		weight			= 2,
+	),
+	
+	teaser				= string.TextAreaField(
 		label			= 'teaser:',
 		weight			= 4,
 		height			= 150,
-		toolbar_set		= 'Basic'
 	),
 	
-	body				= fck.FCKEditorField(
+	body				= string.TextAreaField(
 		label			= 'page body:',
 		weight			= 5
 	),
