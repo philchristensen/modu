@@ -38,7 +38,8 @@ class Site(object):
 		modu_assets_path = os.path.join(os.path.dirname(modu.__file__), 'assets')
 		application.activate('/assets', static.FileResource, modu_assets_path)
 		
-		application.activate('/admin', resource.AdminResource, default_path='admin/listing/page')
+		import modusite.editable.itemdefs as itemdefs
+		application.activate('/admin', resource.AdminResource, itemdef_module=itemdefs, default_path='admin/listing/page')
 		application.activate('/fck', fck.FCKEditorResource)
 		application.activate('/', index.Resource)
 		application.activate('/blog', blog.Resource)

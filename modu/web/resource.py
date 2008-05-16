@@ -448,6 +448,7 @@ class CheetahTemplateContent(TemplateContent):
 		
 		template = self.get_template(req)
 		template_root = self.get_template_root(req)
+		
 		template_path = os.path.join(template_root, template)
 		
 		module_name = re.sub(r'\W+', '_', template)

@@ -95,9 +95,25 @@ CREATE TABLE `faq` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
 
-INSERT INTO `guid` (`guid`) VALUES (4);
-INSERT INTO `user` (`id`, `username`, `first`, `last`, `crypt`) VALUES (1, 'admin', 'Admin', 'User', ENCRYPT('admin'));
-INSERT INTO `role` (`id`, `name`) VALUES (2, 'admin user');
-INSERT INTO `user_role` (`user_id`, `role_id`) VALUES (1, 2);
-INSERT INTO `permission` (`id`, `name`) VALUES (3, 'access admin');
-INSERT INTO `role_permission` (`role_id`, `permission_id`) VALUES (2, 3);
+CREATE TABLE `project` (
+  `id` bigint(20),
+  `name` varchar(255),
+  `teaser` TEXT,
+  `body` LONGBLOB,
+  `active` tinyint(1),
+  PRIMARY KEY (`id`),
+  KEY active_idx(`active`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE `release` (
+  `id` bigint(20),
+  `project_id` bigint(20),
+  `version_id` int(11),
+  `version_string` varchar(255),
+  `description` TEXT,
+  `filename` varchar(255),
+  `active` tinyint(1),
+  PRIMARY KEY (`id`),
+  KEY active_idx(`active`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
