@@ -310,9 +310,9 @@ class itemdef(OrderedDict):
 				frm[name] = field.get_form_element(req, 'detail', storable)
 		
 		if(not frm.has_submit_buttons()):
-			frm['cancel'](type='submit', value='cancel', weight=1001)
-			frm['save'](type='submit', value='save', weight=1000)
-			frm['delete'](type='submit', value='delete', weight=1002,
+			frm['save'](type='submit', value='save')
+			frm['cancel'](type='submit', value='cancel')
+			frm['delete'](type='submit', value='delete',
 							attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
 		def _validate(req, form):

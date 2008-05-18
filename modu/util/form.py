@@ -12,7 +12,7 @@ try:
 except:
 	import StringIO
 
-from modu.util import theme
+from modu.util import theme, OrderedDict
 
 NESTED_NAME = re.compile(r'([^\[]+)(\[([^\]]+)\])*')
 KEYED_FRAGMENT = re.compile(r'\[([^\]]+)\]*')
@@ -39,7 +39,7 @@ def NestedFieldStorage(req, *args, **kwargs):
 	return req['modu.data']
 	
 
-class FormNode(object):
+class FormNode(OrderedDict):
 	"""
 	In an attempt to mimic the Drupal form-building process in a slightly more
 	Pythonic way, this class allows you to populate a Form object using
@@ -50,9 +50,10 @@ class FormNode(object):
 	"""
 	
 	def __init__(self, name):
+		super(FormNode, self).__init__()
+		
 		self.name = name
 		self.parent = None
-		self.children = {}
 		self.attributes = {}
 		
 		self.errors = {}
@@ -95,14 +96,23 @@ class FormNode(object):
 		"""
 		Allows child selection via hash syntax.
 		"""
-		if(key not in self.children):
+		if(key not in self):
+			# This is needed to keep Cheetah's NameMapper at bay
+			try:
+				func = getattr(self, key)
+				if(callable(func) and key not in ('theme', 'validate', 'submit')):
+					return func
+			except:
+				pass
+			
 			if('type' in self.attributes):
 				if(self.parent is not None and self.attributes['type'] != 'fieldset'):
 					raise TypeError('Only forms and fieldsets can have child fields.')
 			else:
 				self.attributes['type'] = 'fieldset'
-			self[key] = FormNode(key)(weight=len(self.children))
-		return self.children[key]
+			self[key] = FormNode(key)
+		
+		return super(FormNode, self).__getitem__(key)
 	
 	def __nonzero__(self):
 		"""
@@ -114,46 +124,17 @@ class FormNode(object):
 		"""
 		Allows insertion of child forms.
 		"""
-		self.children[key] = child
+		# This is needed to keep Cheetah's NameMapper at bay
+		try:
+			func = getattr(self, key)
+			if(callable(func)):
+				raise KeyError('You cannot create a field that has the same name as a FormNode method.')
+		except:
+			pass
+		
+		super(FormNode, self).__setitem__(key, child)
 		child.name = key
 		child.parent = self
-	
-	def __delitem__(self, key):
-		"""
-		Child form deletion.
-		"""
-		del self.children[key]
-	
-	def __len__(self):
-		"""
-		Return number of child form elements.
-		"""
-		return len(self.children)
-	
-	def __iter__(self):
-		"""
-		Iterate through child form names.
-		"""
-		return self.iterkeys()
-	
-	def __contains__(self, key):
-		"""
-		Implement containment for child names.
-		"""
-		return key in self.children
-	
-	def iterkeys(self):
-		"""
-		Order key results by weight.
-		"""
-		def __weighted_cmp(a, b):
-			a = self.children[a]
-			b = self.children[b]
-			return cmp(a.attr('weight', 0), b.attr('weight', 0))
-		
-		keys = self.children.keys()
-		keys.sort(__weighted_cmp)
-		return iter(keys)
 	
 	def attr(self, name, default=None):
 		"""
@@ -188,11 +169,11 @@ class FormNode(object):
 		"""
 		See if a submit button has been defined in this form.
 		"""
-		for name in self.children:
-			element = self.children[name]
+		for name in self:
+			element = self[name]
 			if(element.type == 'submit'):
 				return True
-			elif(element.children):
+			elif(len(element)):
 				if(element.has_submit_buttons()):
 					return True
 		return False
@@ -206,11 +187,11 @@ class FormNode(object):
 		array of results.
 		"""
 		submits = []
-		for name in self.children:
-			element = self.children[name]
+		for name in self:
+			element = self[name]
 			if(element.type == 'submit'):
 				submits.append(element)
-			elif(element.children):
+			elif(len(element)):
 				submits.extend(element.find_submit_buttons())
 		return submits
 	
@@ -300,8 +281,8 @@ class FormNode(object):
 			return
 		
 		if(isinstance(form_data, dict)):
-			if(self.children):
-				for name, child in self.children.items():
+			if(len(self)):
+				for name, child in self.items():
 					child.load_data(req, form_data)
 			else:
 				# this would happen if a theme function
@@ -337,8 +318,8 @@ class FormNode(object):
 		"""
 		result = True
 		
-		for child in self.children:
-			child = self.children[child]
+		for child in self:
+			child = self[child]
 			result = result and child.validate(req, form)
 		
 		return result

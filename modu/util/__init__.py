@@ -116,6 +116,9 @@ class OrderedDict(dict):
 		"""
 		return list(self.itervalues())
 	
+	def __iter__(self):
+		return self.iterkeys()
+	
 	def iterkeys(self):
 		"""
 		Maintain key order.

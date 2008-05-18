@@ -72,7 +72,7 @@ class FormTestCase(unittest.TestCase):
 		frm['title-area']['title'](type='textfield', title='Title', required=True, description='This is the title field')
 		
 		self.failUnlessEqual(frm['title-area'].attributes['type'], 'fieldset', "Didn't find correct type.")
-		self.failUnlessEqual(frm['title-area'].children['title'], frm['title-area']['title'], "Didn't find nested child.")
+		self.failUnlessEqual(frm['title-area']['title'], frm['title-area']['title'], "Didn't find nested child.")
 	
 	
 	def test_validation(self):
