@@ -141,6 +141,11 @@ class itemdef(OrderedDict):
 		"""
 		Create a new itemdef by specifying a list of fields.
 		
+		Fields can either be specified as additional keyword arguments to the
+		itemdef constructor, or can be added via hash syntax. Items added via
+		the constructor will be ordered randomly unless the 'weight'
+		attribute is specified.
+		
 		Example::
 		
 			itemdef = define.itemdef(
@@ -148,32 +153,30 @@ class itemdef(OrderedDict):
 			                        name        = 'customer',
 			                        label       = 'Customers'
 			                    ),
-			
 			    name            = string.StringField(
 			                        label       = 'Name',
 			                        listing     = True
-			                    ),
+			                    )
+			)
 			
-			    address         = string.StringField(
+			itemdef.config['no_delete'] = True
+			
+			itemdef['address']  = string.StringField(
 			                        label       = 'Address',
 			                        listing     = True
-			                    ),
-			
-			    city            = string.StringField(
+			                    )
+			itemdef['city']     = string.StringField(
 			                        label       = 'City',
 			                        listing     = True
-			                    ),
-			 
-			    state           = string.SelectField(
+			                    )
+			itemdef['state']    = string.SelectField(
 			                        label       = 'State'
 			                        options     = {'AK':'Arkansas', 'AL':'Alabama', ... }
-			                    ),
-			
-			    zip         = string.StringField(
+			                    )
+			itemdef['zip']      = string.StringField(
 			                        label       = 'Zip',
 			                        size        = 10
 			                    )
-			)
 		
 		@param __config: the itemdef configuration data
 		@type __config: dict
@@ -191,15 +194,10 @@ class itemdef(OrderedDict):
 			# I was pretty sure I knew how kwargs worked, but...
 			if(name == '__config'):
 				__config = field
-				#del fields[name]
 				continue
 			
-			if not(isinstance(field, definition)):
-				raise ValueError("'%s' is not a valid definition." % name)
-			
-			field.name = name.strip('_')
-			field.itemdef = self
-			
+			# weight is meaningless once added
+			field.pop('weight', None)
 			self[name] = field
 		
 		if(__config):
@@ -209,6 +207,14 @@ class itemdef(OrderedDict):
 			self.config = definition()
 			self.name = None
 	
+	def __setitem__(self, name, field):
+		if not(isinstance(field, definition)):
+			raise ValueError("'%s' is not a valid definition." % name)
+		
+		super(itemdef, self).__setitem__(name, field)
+		
+		field.name = name
+		field.itemdef = self
 	
 	def __getstate__(self):
 		"""
