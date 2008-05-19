@@ -98,12 +98,12 @@ class FormNode(OrderedDict):
 		"""
 		if(key not in self):
 			# This is needed to keep Cheetah's NameMapper at bay
-			try:
-				func = getattr(self, key)
-				if(callable(func) and key not in ('theme', 'validate', 'submit')):
-					return func
-			except:
-				pass
+			# try:
+			# 	func = getattr(self, key)
+			# 	if(callable(func) and key not in ('theme', 'validate', 'submit')):
+			# 		return func
+			# except:
+			# 	pass
 			
 			if('type' in self.attributes):
 				if(self.parent is not None and self.attributes['type'] != 'fieldset'):
@@ -125,12 +125,12 @@ class FormNode(OrderedDict):
 		Allows insertion of child forms.
 		"""
 		# This is needed to keep Cheetah's NameMapper at bay
-		try:
-			func = getattr(self, key)
-			if(callable(func)):
-				raise KeyError('You cannot create a field that has the same name as a FormNode method.')
-		except:
-			pass
+		# try:
+		# 	func = getattr(self, key)
+		# 	if(callable(func)):
+		# 		raise KeyError('You cannot create a field that has the same name as a FormNode method.')
+		# except:
+		# 	pass
 		
 		super(FormNode, self).__setitem__(key, child)
 		child.name = key

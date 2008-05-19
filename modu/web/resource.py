@@ -504,6 +504,7 @@ class CheetahTemplateContent(TemplateContent):
 												moduleName=module_name,
 												className=module_name,
 												baseclass=CheetahModuTemplate,
+												#useNameMapper=False,
 												moduleGlobals=moduleGlobals, **options)
 				module_file = open(module_path, 'w')
 				module_file.write(pysrc)
@@ -513,6 +514,7 @@ class CheetahTemplateContent(TemplateContent):
 				template_class = moduleGlobals[module_name]
 			else:
 				template_class = CheetahModuTemplate.compile(baseclass=CheetahModuTemplate,
+															#useNameMapper=False,
 															moduleGlobals=moduleGlobals, **options)
 		finally:
 			cheetah_lock.release()
