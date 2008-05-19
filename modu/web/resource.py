@@ -24,11 +24,6 @@ is available for CherryTemplate and ZPT templates.
 
 import os, os.path, re, threading, stat, mimetypes
 
-try:
-	import cPickle as pickle
-except:
-	import pickle
-
 from zope import interface
 from zope.interface import implements
 
