@@ -105,8 +105,10 @@ table.code {
 }
 
 #mainnav.nav ul li a,
+#mainnav.nav ul li.active a,
 #mainnav.nav ul li a:hover {
-	padding: 2px 0px 3px 12px;
+	padding: 4px 0px 3px 12px;
+	width: 188px;
 }
 
 #ctxtnav {
