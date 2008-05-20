@@ -26,27 +26,34 @@
 				<div class="nav-menu">
 				
 				<div class="nav-list">
-					<span class="title">nagivation</span>
+					<div class="title">navigation</div>
 					<div class="subnav-list">
-						<a href="$req.get_path('/')">&raquo; home</a>
+						<a href="$req.get_path('trac/wiki/About')">about modu</a>
+						<a href="$req.get_path('documentation')">documentation</a>
+						<a href="$req.get_path('faq')">faq</a>
+						<a href="$req.get_path('downloads')">downloads</a>
 						<br/>
-						<a href="$req.get_path('trac/wiki/About')">&raquo; about modu</a>
-						<a href="$req.get_path('documentation')">&raquo; documentation</a>
-						<a href="$req.get_path('faq')">&raquo; faq</a>
-						<a href="$req.get_path('trac/wiki')">&raquo; modu wiki</a>
-						<br/>
-						<a href="$req.get_path('downloads')">&raquo; downloads</a>
-						<a href="$req.get_path('trac/browser')">&raquo; browse source</a>
+						#if $req.user.get_id()
+						<div class="login-message">logged in as $req.user.username</div>
+						<a href="/trac/logout">Logout</a>
+						#else
+						<a href="/trac/login">Login</a>
+						#end if
+						<a href="/trac/prefs">Preferences</a>
+						<a href="/trac/wiki/TracGuide">Help/Guide</a>
+						<a href="/trac/about">About Trac</a>
 					</div>
 				</div>
 				
 				<div class="nav-list">
-					<span class="title">recent news</span>
+					<div class="title">project info</div>
 					<div class="subnav-list">
-						#from modusite.model.blog import Blog
-						#for blog in Blog.get_blogs($req.store)
-						<a href="$req.get_path('blog', $blog.get_id())">&raquo; $blog.title</a>
-						#end for
+						<a href="/trac/wiki">Wiki</a>
+						<a href="/trac/timeline">Timeline</a>
+						<a href="/trac/roadmap">Roadmap</a>
+						<a href="/trac/browser">Browse Source</a>
+						<a href="/trac/report">View Tickets</a>
+						<a href="/trac/search">Search</a>
 					</div>
 				</div>
 				
@@ -57,9 +64,29 @@
 				<div class="nav-menu">
 				
 				<div class="nav-list">
-					<span class="title">sites using modu</span>
+					<div class="title">sites using modu</div>
 					<div class="subnav-list">
-						<a href="http://www.dramonline.org">dramonline.org &laquo;</a>
+						<a href="http://www.dramonline.org">dramonline.org</a>
+					</div>
+				</div>
+				
+				<div class="nav-list">
+					<div class="title">modu essentials</div>
+					<div class="subnav-list">
+						<a href="http://www.python.org">python</a>
+						<a href="http://www.zope.org/Products/ZopeInterface">zope interface</a>
+						<a href="http://www.twistedmatrix.com">twisted python</a>
+						<a href="http://www.cheetahtemplate.org">cheetah template</a>
+					</div>
+				</div>
+				
+				<div class="nav-list">
+					<div class="title">recent news</div>
+					<div class="subnav-list">
+						#from modusite.model.blog import Blog
+						#for blog in Blog.get_blogs($req.store)
+						<a href="$req.get_path('blog', $blog.get_id())">$blog.title</a>
+						#end for
 					</div>
 				</div>
 				

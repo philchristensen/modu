@@ -1,5 +1,5 @@
 body {
-	font-family: helvetica,arial,sans-serif;
+	font: normal 0.8em/1.2em helvetica,arial,sans-serif;
 }
 
 a,
@@ -53,7 +53,7 @@ table.code {
 
 #navigation {
 	position: absolute;
-	top: 100px;
+	top: 103px;
 	width: 210px;
 }
 
@@ -91,6 +91,7 @@ table.code {
 #mainnav :link:hover,
 #mainnav .active :hover{
 	color: #2e307f;
+	padding-left: 0px;
 	border: 0;
 	background: #b8b0ec;
 	font-size: 12px;
@@ -98,9 +99,14 @@ table.code {
 	font-family: helvetica,arial,sans-serif;
 }
 
-#mainnav li {
+#mainnav.nav ul li{
 	margin: 0;
-	padding: 2px 0px 2px 12px;
+	padding: 2px 0px 2px 0px;
+}
+
+#mainnav.nav ul li a,
+#mainnav.nav ul li a:hover {
+	padding: 2px 0px 3px 12px;
 }
 
 #ctxtnav {
@@ -122,8 +128,9 @@ table.code {
 	color: #fff;
 	border: 0;
 	margin: 0;
-	padding: 4px 0 2px 6px;
+	padding: 5px 0 2px 6px;
 	font-size: 12px;
+	line-height: 100%;
 }
 
 .nav .active :visited:hover,
@@ -141,26 +148,36 @@ table.code {
 }
 
 .nav ul li {
-	display: block;
+	display: inline;
 	font-size: 12px;
 	text-align: left;
 	border-right: 0;
 	margin: 0;
-	padding: 3px 0px 2px 12px;
+	line-height: 100%;
 }
 
-.nav ul li:before {
+.nav ul li a:before {
 	color: #49228c;
 	content: "\BB  ";
 }
 
 .nav ul li a {
+	display: block;
+	line-height: 100%;
+	padding: 4px 0px 3px 12px;
+	margin: 0;
 	border: 0;
-	width: 100%;
+	width: 188px;
 }
 
 #content {
 	clear: right;
 	padding-top: 25px;
 	margin-left: 240px;
+}
+
+#warning {
+	position: relative;
+	width: 75%;
+	left: 220px;
 }

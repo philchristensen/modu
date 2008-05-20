@@ -143,6 +143,7 @@ h3.section-header {
 .nav-menu a:hover,
 .nav-menu a:visited {
 	color: #2e307f;
+	padding: 1px 0 2px 0;
 }
 
 .nav-menu .nav-list{
@@ -152,12 +153,16 @@ h3.section-header {
 }
 
 .nav-menu .nav-list .title{
-	padding-left: 5px;
-	padding-right: 5px;
+	margin: 0;
+	padding: 1px 6px 2px 6px;
+	font-size: 12px;
+	line-height: 100%;
+	letter-spacing: -0.018em
 }
 
 .nav-menu .subnav-list {
 	background-color: #d5cdf1;
+	text-transform: lowercase;
 }
 
 .nav-menu .subnav-list {
@@ -167,6 +172,16 @@ h3.section-header {
 
 .nav-menu .subnav-list a:hover {
 	background-color: #b8b0ec;
+}
+
+#leftcol .nav-menu .subnav-list a:before {
+	color: #2e307f;
+	content: "\BB  ";
+}
+
+#rightcol .nav-menu .subnav-list a:after {
+	color: #2e307f;
+	content: "  \AB";
 }
 
 #rightcol .nav-menu .subnav-list {
@@ -212,6 +227,11 @@ label.field-label {
 
 .help {
 	font-size: 11px;
+}
+
+.login-message {
+	text-align: right;
+	padding-right: 5px;
 }
 
 .error {

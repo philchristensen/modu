@@ -9,7 +9,7 @@
 	<body py:match="body" py:attrs="select('@*')">
 		${select('*//div[@class!="nav"]|comment()|text()')}
 		<div id="navigation">
-		${select('//*[@class="nav"]')}
+			${select('//*[@class="nav"]')}
 		</div>
 	</body>
 
@@ -18,12 +18,25 @@
 	</label>
 	
 	<div py:match="div[@id='metanav']" py:attrs="select('@*')">
-	<h2>Trac</h2>
+	<h2>Navigation</h2>
 	${select('*|comment()|text()')}
 	</div>
 	
 	<div py:match="div[@id='mainnav']" py:attrs="select('@*')">
-	<h2>Project</h2>
+	<h2>Project Info</h2>
 	${select('*|comment()|text()')}
 	</div>
+
+	<ul py:match="div[@id='metanav']/ul" py:attrs="select('@*')">
+	<li class="first"><a href="/trac/wiki/About">about modu</a></li>
+	<li><a href="/documentation">documentation</a></li>
+	<li><a href="/faq">faq</a></li>
+	<li class="last"><a href="/downloads">downloads</a><br/></li>
+	
+	${select('*|comment()|text()')}
+	</ul>
+
+	<h2 py:match="div[@id='ctxtnav']/h2" py:attrs="select('@*')">
+		Context
+	</h2>
 </html>
