@@ -137,7 +137,7 @@ def configure_request(env, application):
 		uri = env['REQUEST_URI']
 	else:
 		# twisted.web2.wsgi includes the query string in the request_uri
-		uri, qs = env['REQUEST_URI'].split('?')
+		uri, qs = env['REQUEST_URI'].split('?', 1)
 	
 	if(uri.startswith(env['SCRIPT_NAME'])):
 		env['PATH_INFO'] = uri[len(env['SCRIPT_NAME']):]
