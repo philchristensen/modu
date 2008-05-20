@@ -79,11 +79,12 @@ table.code {
 #mainnav :link {
 	color: #2e307f;
 	border: 0;
-	padding-left: 0px;
 	background: transparent;
 	font-size: 12px;
 	font-weight: normal;
 	font-family: helvetica,arial,sans-serif;
+	padding: 4px 0px 3px 12px;
+	width: 188px;
 }
 
 #mainnav .active :visited:hover,
@@ -91,24 +92,18 @@ table.code {
 #mainnav :link:hover,
 #mainnav .active :hover{
 	color: #2e307f;
-	padding-left: 0px;
 	border: 0;
 	background: #b8b0ec;
 	font-size: 12px;
 	font-weight: normal;
 	font-family: helvetica,arial,sans-serif;
+	padding: 4px 0px 3px 12px;
+	width: 188px;
 }
 
 #mainnav.nav ul li{
 	margin: 0;
 	padding: 2px 0px 2px 0px;
-}
-
-#mainnav.nav ul li a,
-#mainnav.nav ul li.active a,
-#mainnav.nav ul li a:hover {
-	padding: 4px 0px 3px 12px;
-	width: 188px;
 }
 
 #ctxtnav {

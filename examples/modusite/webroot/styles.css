@@ -251,3 +251,8 @@ label.field-label {
 	background-color: #ff9999;
 }
 
+.answered-by {
+	display: block;
+	color: #aaa;
+	margin-bottom: 4px;
+}
