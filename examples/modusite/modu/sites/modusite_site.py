@@ -10,6 +10,7 @@ from zope.interface import classProvides
 
 from twisted import plugin
 
+import modu
 from modu import assets
 from modu.web import app, static
 from modu.web.resource import WSGIPassthroughResource
