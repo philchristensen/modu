@@ -109,6 +109,10 @@ class User(storable.Storable):
 		self.__load_roles()
 		return role in self._roles
 	
+	def get_roles(self):
+		self.__load_roles()
+		return self._roles
+	
 	def __load_roles(self):
 		if(self._roles is not None):
 			return
