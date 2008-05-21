@@ -5,6 +5,7 @@
 #
 # See LICENSE for details
 
+from modu import assets
 from modu.util import tags
 
 class ProgressBar(object):
@@ -22,7 +23,7 @@ class ProgressBar(object):
 		])
 	
 		self.req.content.report('header', tags.script(type="text/javascript",
-			src=self.req.get_path("assets/jquery/jquery-1.2.1.js"))[''])
+			src=assets.get_jquery_path(self.req))[''])
 		
 		self.req.content.report('header', tags.script(type='text/javascript',
 			src=self.req.get_path('assets/progress-bar/support.js'))[''])

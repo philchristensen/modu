@@ -10,7 +10,7 @@ from zope.interface import classProvides
 
 from twisted import plugin
 
-import modu
+from modu import assets
 from modu.web import app, static
 from modu.web.resource import WSGIPassthroughResource
 from modu.editable import resource
@@ -35,8 +35,7 @@ class Site(object):
 		application.db_url = 'MySQLdb://modusite:yibHikmet3@localhost/modusite'
 		application.session_cookie_params = {'Path':'/'}
 		
-		modu_assets_path = os.path.join(os.path.dirname(modu.__file__), 'assets')
-		application.activate('/assets', static.FileResource, modu_assets_path)
+		application.activate('/assets', static.FileResource, os.path.dirname(assets.__file__))
 		
 		import modusite.editable.itemdefs as itemdefs
 		application.activate('/admin', resource.AdminResource, itemdef_module=itemdefs, default_path='admin/listing/page')

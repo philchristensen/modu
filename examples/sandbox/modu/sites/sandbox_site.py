@@ -11,7 +11,7 @@ from zope.interface import classProvides
 
 from twisted import plugin
 
-import modu
+from modu import assets
 from modu.web import app, static
 from modu.editable import resource
 from modu.editable.datatypes import fck
@@ -31,8 +31,7 @@ class Site(object):
 		
 		application.db_url = 'MySQLdb://sandbox:sandbox@localhost/sandbox'
 		
-		modu_assets_path = os.path.join(os.path.dirname(modu.__file__), 'assets')
-		application.activate('/assets', static.FileResource, modu_assets_path)
+		application.activate('/assets', static.FileResource, os.path.dirname(assets.__file__))
 		
 		application.activate('/admin', resource.AdminResource, default_listing='page')
 		application.activate('/fck', fck.FCKEditorResource)

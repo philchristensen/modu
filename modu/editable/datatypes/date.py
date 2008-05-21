@@ -15,7 +15,7 @@ from zope.interface import implements
 
 from modu.editable import IDatatype, define
 from modu.util import form, tags, date
-from modu import persist
+from modu import persist, assets
 
 DAY = 86400
 MONTH = DAY * 31
@@ -61,7 +61,7 @@ class DateField(define.definition):
 			attributes=dict(onChange='enableDateField(this);'))
 		
 		req.content.report('header', tags.script(type="text/javascript",
-			src=req.get_path("/assets/jquery/jquery-1.2.1.js"))[''])
+			src=assets.get_jquery_path(req))[''])
 		req.content.report('header', tags.script(type='text/javascript')["""
 			function enableDateField(checkboxField){
 				var formItem = $(checkboxField).parent().parent()

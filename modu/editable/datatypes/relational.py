@@ -13,6 +13,7 @@ import time
 
 from zope.interface import implements
 
+from modu import assets
 from modu.editable import IDatatype, define
 from modu.util import form, tags, OrderedDict
 from modu.persist import sql
@@ -159,7 +160,7 @@ class ForeignAutocompleteField(define.definition):
 			"""@import '%s';""" % req.get_path('/assets/jquery/jquery.autocomplete.css')])
 		
 		req.content.report('header', tags.script(type="text/javascript",
-			src=req.get_path("/assets/jquery/jquery-1.2.1.js"))[''])
+			src=assets.get_jquery_path(req))[''])
 		req.content.report('header', tags.script(type="text/javascript",
 			src=req.get_path("/assets/jquery/jquery.autocomplete.js"))[''])
 		req.content.report('header', tags.script(type="text/javascript",
@@ -339,7 +340,7 @@ class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 			"""@import '%s';""" % req.get_path('/assets/jquery/jquery.autocomplete.css')])
 		
 		req.content.report('header', tags.script(type="text/javascript",
-			src=req.get_path("/assets/jquery/jquery-1.2.1.js"))[''])
+			src=assets.get_jquery_path(req))[''])
 		req.content.report('header', tags.script(type="text/javascript",
 			src=req.get_path("/assets/jquery/jquery.autocomplete.js"))[''])
 		req.content.report('header', tags.script(type="text/javascript",
