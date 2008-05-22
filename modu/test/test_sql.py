@@ -125,3 +125,13 @@ class SQLTestCase(unittest.TestCase):
 		query = sql.build_select('table', {'col1':sql.NOT("somestring")});
 		expecting = "SELECT * FROM `table` WHERE `col1` <> 'somestring'"
 		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+
+	def test_build_select_gt(self):
+		query = sql.build_select('table', {'col1':sql.GT("somestring")});
+		expecting = "SELECT * FROM `table` WHERE `col1` > 'somestring'"
+		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+
+	def test_build_select_lt(self):
+		query = sql.build_select('table', {'col1':sql.LT("somestring")});
+		expecting = "SELECT * FROM `table` WHERE `col1` < 'somestring'"
+		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))

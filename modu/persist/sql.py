@@ -137,6 +137,7 @@ def build_select(table, data=None, **kwargs):
 	Special keys can be inserted in the provided dictionary, such that:
 	
 		- B{__select_keyword}:	is inserted between 'SELECT' and '*'
+		- B{__select_fields}:	is used after 'SELECT' instead of '*'
 	
 	@param table: the desired table name
 	@type table: str
@@ -155,10 +156,18 @@ def build_select(table, data=None, **kwargs):
 		data = {}
 	data.update(kwargs)
 	
-	if('__select_keyword' in data):
-		query = "SELECT %s * FROM %s " % (data['__select_keyword'], table)
+	fields = data.get('__select_fields', None)
+	if(fields is None):
+		fields = '*'
 	else:
-		query = "SELECT * FROM %s " % table
+		if(isinstance(fields, (list, tuple))):
+			fields = '`,`'.join(fields)
+		fields = '`%s`' % fields
+	
+	if('__select_keyword' in data):
+		query = "SELECT %s %s FROM %s " % (data['__select_keyword'], fields, table)
+	else:
+		query = "SELECT %s FROM %s " % (fields, table)
 	
 	return query + build_where(data)
 
@@ -235,6 +244,17 @@ def build_where(data=None, use_where=True, **kwargs):
 		if(isinstance(value, list) or isinstance(value, tuple)):
 			criteria.append('%s IN (%s)' % (key, ', '.join(['%s'] * len(value))))
 			values.extend(value)
+		elif(isinstance(value, NOT)):
+			criteria.append('%s <> %%s' % key)
+			values.append(value.value)
+		elif(isinstance(value, GT)):
+			criteria.append('%s > %%s' % key)
+			values.append(value.value)
+		elif(isinstance(value, LT)):
+			criteria.append('%s < %%s' % key)
+			values.append(value.value)
+		# This goes last, since the NOT, GT, and LT are RAW subclasses,
+		# and I don't like the more specific syntax
 		elif(isinstance(value, RAW)):
 			if(value.value.find('%s') != -1):
 				criteria.append(value.value % key)
@@ -242,9 +262,6 @@ def build_where(data=None, use_where=True, **kwargs):
 				criteria.append('%s%s' % (key, value.value))
 		elif(value is None):
 			criteria.append('ISNULL(%s)' % key)
-		elif(isinstance(value, NOT)):
-			criteria.append('%s <> %%s' % key)
-			values.append(value.value)
 		else:
 			criteria.append('%s = %%s' % key)
 			values.append(value)
@@ -329,29 +346,6 @@ def Raw2Literal(o, d):
 	return o.value
 
 
-class NOT:
-	"""
-	Allows NOTs to be embedded in constructed queries.
-	
-	When persist.NOT(value) is included in the constraint array passed
-	to a query building function, it will generate the SQL fragment
-	'column <> value'
-	
-	@ivar value: The value to NOT be
-	"""
-	def __init__(self, value):
-		"""
-		Create a NOT instance
-		"""
-		self.value = value
-	
-	def __repr__(self):
-		"""
-		Printable version.
-		"""
-		return "NOT(%r)" % self.value
-
-
 class RAW:
 	"""
 	Allows RAW SQL to be embedded in constructed queries.
@@ -368,6 +362,39 @@ class RAW:
 		"""
 		Printable version.
 		"""
-		return "RAW(%s)" % self.value
+		return "%s(%r)" % (self.__class__.__name__, self.value)
 
+
+class NOT(RAW):
+	"""
+	Allows NOTs to be embedded in constructed queries.
+	
+	When sql.NOT(value) is included in the constraint array passed
+	to a query building function, it will generate the SQL fragment
+	'column <> value'
+	
+	@ivar value: The value to NOT be
+	"""
+
+class GT(RAW):
+	"""
+	Allow for use of a greater-than.
+	
+	When sql.GT(value) is included in the constraint array passed
+	to a query building function, it will generate the SQL fragment
+	'column > value'
+	
+	@ivar value: The value to be greater-than
+	"""
+
+class LT(RAW):
+	"""
+	Allow for use of a less-than.
+	
+	When sql.LT(value) is included in the constraint array passed
+	to a query building function, it will generate the SQL fragment
+	'column < value'
+	
+	@ivar value: The value to be less-than
+	"""
 
