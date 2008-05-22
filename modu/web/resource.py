@@ -22,12 +22,12 @@ is available for CherryTemplate and ZPT templates.
 @see: modu.util.url.URLNode
 """
 
-import os, os.path, re, threading, stat, mimetypes
+import os.path
 
 from zope import interface
 from zope.interface import implements
 
-from modu.web import HTTPStatus
+from modu.web import HTTPStatus, cheetah
 
 class IResource(interface.Interface):
 	"""
@@ -395,51 +395,6 @@ class TemplateContent(object):
 		return 'filename'
 
 
-# According to the docs, Template can take awhile to load,
-# so it's loaded on startup.
-try:
-	from Cheetah.Template import Template as CheetahTemplate
-except:
-	class CheetahTemplate(object):
-		"""
-		CheetahTemplate substitution class for when Cheetah isn't installed.
-		
-		This class allows the loading of the Cheetah Template system on
-		modu startup.
-		"""
-		@staticmethod
-		def compile(*args, **kwargs):
-			"""
-			Raise a intelligent error message.
-			"""
-			raise RuntimeError("Cannot find the Cheetah Template modules.")
-		
-		def __init__(*args, **kwargs):
-			"""
-			Raise a intelligent error message.
-			"""
-			raise RuntimeError("Cannot find the Cheetah Template modules.")
-
-class CheetahModuTemplate(CheetahTemplate):
-	"""
-	An adapter class to provide Cheetah Template #include support in modu.
-	
-	@ivar moduTemplateDirectory: the path to the current template engine's
-		template directory.
-	@type moduTemplateDirectory: str
-	"""
-	def serverSidePath(self, path=None, normpath=os.path.normpath, abspath=os.path.abspath):
-		"""
-		Return the proper template directory, if set by the user.
-		"""
-		if(hasattr(self, 'moduTemplateDirectoryCallback')):
-			templatePath = os.path.join(self.moduTemplateDirectoryCallback(path), path)
-			return normpath(abspath(templatePath))
-		return super(CheetahModuTemplate, self).serverSidePath(path, normpath, abspath)
-
-
-cheetah_lock = threading.BoundedSemaphore()
-
 class CheetahTemplateContent(TemplateContent):
 	"""
 	Implement support for the Cheetah Template library.
@@ -456,70 +411,19 @@ class CheetahTemplateContent(TemplateContent):
 		@see: L{IContent.get_content()}
 		"""
 		super(CheetahTemplateContent, self).get_content(req)
+		kwargs = {}
+		compiled_template_root = req.app.config.get('compiled_template_root', None)
+		if(compiled_template_root):
+			kwargs['compiled_template_root'] = compiled_template_root
 		
-		template_root = self.get_template_root(req)
+		def _template_callback(template):
+			return self.get_template_root(req, template)
 		
-		options = {}
-		template = self.get_template(req)
-		if(self.get_template_type() == 'filename'):
-			template_path = os.path.join(template_root, template)
-			template_file = open(template_path)
-			module_name = re.sub(r'\W+', '_', template)
-			options['file'] = template_file
-		elif(self.get_template_type() == 'str'):
-			template_path = None
-			options['source'] = template
-			module_name = 'MODU_Dyn_%s' % self.__class__.__name__
-		else:
-			raise RuntimeError('unknown template type: %s' % self.get_template_type())
-		
-		module_root = req.app.config.get('compiled_template_root', template_root)
-		module_path = os.path.join(module_root, module_name + '.py')
-		
-		# because we have to manage moduTemplateDirectoryCallback on the class instance
-		cheetah_lock.acquire()
-		try:
-			def _template_cb(parent_template, template):
-				return self.get_template_root(req, template)
-			
-			CheetahModuTemplate.moduTemplateDirectoryCallback = _template_cb
-		
-			try:
-				# note that this might raise an exception because
-				# template_path is None, but that's okay.
-				needs_recompile = (os.stat(template_path).st_mtime > os.stat(module_path).st_mtime)
-			except:
-				needs_recompile = True
-			
-			moduleGlobals = {'CHEETAH_dynamicallyAssignedBaseClass_CheetahModuTemplate':CheetahModuTemplate}
-		
-			# if I can't read the template class, i'll try to create one
-			if(os.access(module_path, os.F_OK) and not needs_recompile):
-				#load module and instantiate template
-				execfile(module_path, moduleGlobals)
-				template_class = moduleGlobals[module_name]
-			# if I know I will be able to save a template class
-			elif(needs_recompile and (os.access(module_path, os.W_OK) or not os.access(module_path, os.F_OK))):
-				pysrc = CheetahModuTemplate.compile(returnAClass=False,
-												moduleName=module_name,
-												className=module_name,
-												baseclass=CheetahModuTemplate,
-												#useNameMapper=False,
-												moduleGlobals=moduleGlobals, **options)
-				module_file = open(module_path, 'w')
-				module_file.write(pysrc)
-				module_file.close()
-		
-				exec pysrc in moduleGlobals
-				template_class = moduleGlobals[module_name]
-			else:
-				template_class = CheetahModuTemplate.compile(baseclass=CheetahModuTemplate,
-															#useNameMapper=False,
-															moduleGlobals=moduleGlobals, **options)
-		finally:
-			cheetah_lock.release()
-		
-		return str(template_class(searchList=[self.data]))
+		return cheetah.render(self.get_template(req), self.get_template_type(), self.data,
+								template_root=self.get_template_root(req),
+								module_name=self.__class__.__name__,
+								template_callback=_template_callback,
+								**kwargs)
 	
 	def prepare_content(self, req):
 		"""
