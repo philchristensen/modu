@@ -12,5 +12,6 @@ class FAQ(storable.Storable):
 	
 	def get_answerer(self):
 		store = self.get_store()
+		store.ensure_factory('user')
 		user = store.load_one('user', id=self.answered_by)
 		return user.username
