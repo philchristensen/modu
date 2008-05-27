@@ -415,23 +415,23 @@ class Store(object):
 			raise LookupError('There is no factory registered for the table `%s`' % table)
 		factory = self._factories[table]
 		
-		if(storable.get_id()):
-			child_list = storable.get_related_storables()
-			id_list = []
-			while(child_list and save_related_storables):
-				child = child_list.pop()
-				child_id = self.fetch_id(child)
-				child_table = child.get_table()
-				if(child_table not in self._factories):
-					raise LookupError('There is no factory registered for the table `%s`' % child_table)
-				factory = self._factories[child_table]
-				if(child_id in id_list and factory.uses_guids()):
-					#raise AssertionError('Found circular storable reference during save')
-					continue
-				self._save(child, factory)
-				child_list.extend(child.get_related_storables())
-				id_list.append(child_id)
 		self._save(storable, factory)
+		
+		child_list = storable.get_related_storables()
+		id_list = []
+		while(child_list and save_related_storables):
+			child = child_list.pop()
+			child_id = self.fetch_id(child)
+			child_table = child.get_table()
+			if(child_table not in self._factories):
+				raise LookupError('There is no factory registered for the table `%s`' % child_table)
+			factory = self._factories[child_table]
+			if(child_id in id_list and factory.uses_guids()):
+				#raise AssertionError('Found circular storable reference during save')
+				continue
+			self._save(child, factory)
+			child_list.extend(child.get_related_storables())
+			id_list.append(child_id)
 	
 	def _save(self, storable, factory):
 		"""
@@ -488,7 +488,7 @@ class Store(object):
 			L{Storable.get_related_storables()} be automatically destroyed?
 		@type destroy_related_storables: bool
 		"""
-		if(storable.get_id()):
+		if not(storable.is_new()):
 			child_list = storable.get_related_storables()
 			id_list = []
 			while(child_list and destroy_related_storables):
