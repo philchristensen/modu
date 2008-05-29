@@ -321,7 +321,8 @@ class Storable(object):
 		pairs, but this is also a convenient way to populate
 		or update Storable objects quickly.
 		"""
-		object.__getattribute__(self, '_data').update(data)
+		for key, value in data.items():
+			self[key] = value
 	
 	def get_data(self):
 		"""
