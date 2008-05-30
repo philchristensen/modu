@@ -30,7 +30,12 @@ class Theme(object):
 		action = form.attr('action', None)
 		if(action):
 			attribs['action'] = action
-		return tags.form(**attribs)["\n" + content]
+		
+		result = form.attr('prefix', '')
+		result += tags.form(**attribs)["\n" + content]
+		result += form.attr('suffix', '')
+		
+		return result
 	
 	
 	def form_element(self, form_id, element):
