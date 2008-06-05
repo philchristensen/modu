@@ -49,7 +49,7 @@ class ModuServiceMaker(object):
 			site = server.Site(wsgi.WSGIResource(app.handler, env=env), logPath=config['logfile'])
 		else:
 			site = server.Site(wsgi.WSGIResource(app.handler, env=env))
-		server.Site.requestFactory = app.UnparsedRequest
+		server.Site.requestFactory = wsgi.UnparsedRequest
 		
 		if(config['interface'] is not None):
 			web_service = internet.TCPServer(int(config['port']), site, interface=config['interface'])
