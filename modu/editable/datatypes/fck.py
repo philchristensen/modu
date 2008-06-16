@@ -13,7 +13,7 @@ import os, os.path, time, stat, shutil, array
 
 from zope.interface import implements
 
-from modu import editable
+from modu import editable, assets
 from modu.persist import sql
 from modu.editable import define
 from modu.editable import resource as admin_resource
@@ -98,6 +98,42 @@ class FCKEditorField(define.definition):
 		else:
 			return sql.RAW(sql.interp("INSTR(%%s, %s)", [value]))
 
+class FCKFileField(define.definition):
+	"""
+	Select a file from a given directory and save its path to the Storable.
+	"""
+	implements(editable.IDatatype)
+	
+	def get_element(self, req, style, storable):
+		default_value = getattr(storable, self.get_column_name(), '')
+		
+		frm = form.FormNode(self.name)
+		if(style == 'listing' or self.get('read_only', False)):
+			frm(type='label', value=default_value)
+			return frm
+		
+		filemgr_path = req.get_path('assets/fckeditor/editor/filemanager/browser/default/browser.html')
+		
+		req.content.report('header', tags.script(type="text/javascript",
+			src=assets.get_jquery_path(req))[''])
+		
+		suffix = tags.input(type="button", value="Select...", id='%s-select-button' % self.name, onclick="getFile('#%s-value-field')" % self.name)
+		suffix += tags.script(type="text/javascript")[[
+			"function getFile(elementName){\n",
+			"    window.SetUrl = function(value){\n",
+			"        var e = $(elementName);\n",
+			"        e.val(value);\n",
+			"    };\n",
+			"    var filemanager = '%s';\n" % filemgr_path,
+			"    var connector = '%s';\n" % self.get('fck_root', '/fck'),
+			"    var win = window.open(filemanager+'?Connector='+connector+'&Type=Image','fileupload','width=600,height=400');\n",
+			"    win.focus();\n",
+			"}\n",
+		]]
+		
+		frm(type="textfield", value=default_value, suffix=suffix, attributes=dict(id='%s-value-field' % self.name))
+		return frm
+
 
 class FCKEditorResource(resource.CheetahTemplateResource):
 	"""
@@ -106,11 +142,8 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 	This resource implements the server-side portions of FCKEditor, namely
 	the image/file upload and server-side file browser.
 	
-	@ivar upload_dir: The absolute path to the file upload directory.
-	@type upload_dir: str
-	
-	@ivar upload_url: An equivalent URL root to access the upload directory.
-	@type upload_url: str
+	@ivar selected_root: Details for the file upload directory.
+	@type selected_root: dict
 	
 	@ivar content_type: The content type to be returned by this resource,
 		which changes depending on the particular paths accessed.
@@ -121,24 +154,48 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 	@type content: str
 	"""
 	
+	def __init__(self, **options):
+		self.allowed_roots = {
+			'__default__'	: dict(
+				perms			= 'access admin',
+				root_callback	= lambda req: os.path.join(req.approot, req.app.webroot),
+				url_callback 	= lambda req, *path: req.get_path(*path),
+			),
+		}
+		
+		for key, config in options.get('allowed_roots', {}).items():
+			if('perms' not in config):
+				config['perms'] = self.allowed_roots['__default__']['perms']
+			if('url_callback' not in config):
+				config['url_callback'] = self.allowed_roots['__default__']['url_callback']
+			self.allowed_roots[key] = config
+	
 	def prepare_content(self, req):
 		"""
 		@see: L{modu.web.resource.IContent.prepare_content()}
 		"""
-		self.upload_dir = os.path.join(req.approot, req.app.webroot)
-		self.upload_url = req.get_path()
-		
 		self.content_type = 'text/html'
 		self.content = None
 		self.template = None
 		try:
+			if(req.postpath and req.postpath[0] == 'fckconfig-custom.js'):
+				self.prepare_config_request(req)
+				return
+			
 			if(req.postpath):
-				if(req.postpath[0] == 'fckconfig-custom.js'):
-					self.prepare_config_request(req)
-				elif(req.postpath[0] == 'upload'):
-					self.prepare_quick_upload(req)
-				else:
-					self.prepare_browser(req)
+				root_key = req.postpath[0]
+			else:
+				root_key = '__default__'
+			
+			#self.upload_dir = os.path.join(req.approot, req.app.webroot)
+			#self.upload_url = req.get_path()
+			self.selected_root = self.allowed_roots[root_key]
+			
+			if not(req.user.is_allowed(self.selected_root['perms'])):
+				app.raise403()
+			
+			if(req.postpath and req.postpath[0] == 'upload'):
+				self.prepare_quick_upload(req)
 			else:
 				self.prepare_browser(req)
 		except:
@@ -179,6 +236,12 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		return admin_resource.select_template_root(req, template)
 	
 	
+	def get_selected_root(self, req):
+		if('root_callback' in self.selected_root):
+			return self.selected_root['root_callback'](req)
+		return self.selected_root['root']
+	
+	
 	def prepare_quick_upload(self, req):
 		"""
 		Provides support for the FCK quick upload feature.
@@ -186,8 +249,9 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		"""
-		result, filename = self.handle_upload(req, self.upload_dir)
-		file_url = os.path.join(self.upload_url, filename)
+		result, filename = self.handle_upload(req, self.get_selected_root(req))
+		#file_url = os.path.join(self.upload_url, filename)
+		file_url = self.selected_root['url_callback'](req, filename)
 		
 		self.content = [str(tags.script(type="text/javascript")[
 						"window.parent.OnUploadCompleted(%s, '%s', '%s', '');\n" % (result, file_url, filename)
@@ -218,16 +282,17 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		elif(folder_path.startswith('/')):
 			folder_path = folder_path[1:]
 		
-		folder_url = os.path.join(self.upload_url, folder_path)
+		#folder_url = os.path.join(self.upload_url, folder_path)
+		folder_url = self.selected_root['url_callback'](req, folder_path)
 		
 		content = tags.Tag('CurrentFolder')(path=folder_path, url=folder_url)
 		
 		if(command_name == 'GetFolders'):
-			content += self.get_directory_items(folder_path, True)
+			content += self.get_directory_items(req, folder_path, True)
 		elif(command_name == 'GetFoldersAndFiles'):
-			content += self.get_directory_items(folder_path, False)
+			content += self.get_directory_items(req, folder_path, False)
 		elif(command_name == 'CreateFolder'):
-			content += self.create_folder(folder_path, new_folder_name)
+			content += self.create_folder(req, folder_path, new_folder_name)
 		elif(command_name == 'FileUpload'):
 			self.file_upload(req, folder_path)
 			return
@@ -252,11 +317,11 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		self.template = 'fckconfig-custom.js.tmpl'
 	
 	
-	def get_directory_items(self, folder_path, folders_only):
+	def get_directory_items(self, req, folder_path, folders_only):
 		"""
 		Used by browser code to support directory listing.
 		
-		@param folder_path: The current folder, relative to C{self.upload_dir}
+		@param folder_path: The current folder, relative to C{self.selected_root['root_callback']}
 		@type folder_path: str
 		
 		@param folders_only: If True, only list folders
@@ -265,7 +330,7 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		folder_content = ''
 		file_content = ''
 		
-		directory_path = os.path.join(self.upload_dir, folder_path)
+		directory_path = os.path.join(self.get_selected_root(req), folder_path)
 		for item in os.listdir(directory_path):
 			full_path = os.path.join(directory_path, item)
 			finfo = os.stat(full_path)
@@ -281,17 +346,17 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		return content
 	
 	
-	def create_folder(self, folder_path, new_folder_name):
+	def create_folder(self, req, folder_path, new_folder_name):
 		"""
 		Used by browser code to support new folder creation.
 		
-		@param folder_path: The current folder, relative to C{self.upload_dir}
+		@param folder_path: The current folder, relative to C{self.selected_root['root_callback']}
 		@type folder_path: str
 		
 		@param new_folder_name: The name of the folder to create
 		@type new_folder_name: str
 		"""
-		directory_path = os.path.join(self.upload_dir, folder_path)
+		directory_path = os.path.join(self.get_selected_root(req), folder_path)
 		
 		#prevent shenanigans
 		new_folder_name = new_folder_name.split('/').pop()
@@ -316,11 +381,12 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
-		@param folder_path: The current folder, relative to C{self.upload_dir}
+		@param folder_path: The current folder, relative to C{self.selected_root['root_callback']}
 		@type folder_path: str
 		"""
 		result, filename = self.handle_upload(req, folder_path)
-		file_url = os.path.join(self.upload_url, folder_path, filename)
+		#file_url = os.path.join(self.upload_url, folder_path, filename)
+		file_url = self.selected_root['url_callback'](req, folder_path, filename)
 		
 		self.content_type = 'text/html'
 		self.content = [str(tags.script(type="text/javascript")[
@@ -334,7 +400,7 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		@param req: The current request
 		@type req: L{modu.web.app.Request}
 		
-		@param folder_path: The folder to save to, relative to C{self.upload_dir}
+		@param folder_path: The folder to save to, relative to C{self.selected_root['root_callback']}
 		@type folder_path: str
 		"""
 		result = UL_ACCESS_DENIED
@@ -343,7 +409,7 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		fileitem = data['NewFile']
 		
 		filename = fileitem.filename
-		destination_path = os.path.join(self.upload_dir, folder_path, filename)
+		destination_path = os.path.join(self.get_selected_root(req), folder_path, filename)
 		if(os.access(destination_path, os.F_OK)):
 			parts = filename.split('.')
 			if(len(parts) > 1):
