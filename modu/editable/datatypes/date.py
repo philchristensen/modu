@@ -32,7 +32,7 @@ class DateField(define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		value = getattr(storable, self.get_column_name(), None)
-		if(isinstance(value, (int, long))):
+		if(isinstance(value, (int, long, float))):
 			value = datetime.datetime.utcfromtimestamp(value)
 		
 		if(self.get('read_only', False) or style == 'listing'):

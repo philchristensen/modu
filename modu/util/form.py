@@ -215,7 +215,8 @@ class FormNode(OrderedDict):
 		if(self.submit_button or force):
 			result = self.validate(req, self)
 			if(result):
-				return self.submit(req, self)
+				result = self.submit(req, self)
+				return result
 		
 		return False
 	

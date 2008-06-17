@@ -117,11 +117,14 @@ class FCKFileField(define.definition):
 		req.content.report('header', tags.script(type="text/javascript",
 			src=assets.get_jquery_path(req))[''])
 		
-		suffix = tags.input(type="button", value="Select...", id='%s-select-button' % self.name, onclick="getFile('#%s-value-field')" % self.name)
-		suffix += tags.script(type="text/javascript")[[
+		suffix = tags.input(type="button", value="Select...", id='%s-select-button' % self.name, onclick="getFile('%s')" % self.name)
+		
+		req.content.report('header', tags.script(type="text/javascript")[[
 			"function getFile(elementName){\n",
 			"    window.SetUrl = function(value){\n",
-			"        var e = $(elementName);\n",
+			"        var e = $('#' + elementName + '-value-field');\n",
+			"        e.val(value);\n",
+			"        e = $('#' + elementName + '-value-label');\n",
 			"        e.val(value);\n",
 			"    };\n",
 			"    var filemanager = '%s';\n" % filemgr_path,
@@ -129,10 +132,20 @@ class FCKFileField(define.definition):
 			"    var win = window.open(filemanager+'?Connector='+connector+'&Type=Image','fileupload','width=600,height=400');\n",
 			"    win.focus();\n",
 			"}\n",
-		]]
+		]])
 		
-		frm(type="textfield", value=default_value, suffix=suffix, attributes=dict(id='%s-value-field' % self.name))
+		frm['label'](type="textfield", value=default_value, attributes=dict(id='%s-value-label' % self.name, disabled="1"))
+		frm['value'](type="hidden", value=default_value, suffix=suffix, attributes=dict(id='%s-value-field' % self.name))
+		
 		return frm
+	
+	def update_storable(self, req, frm, storable):
+		form_name = '%s-form' % storable.get_table()
+		if(form_name in req.data):
+			form_data = req.data[form_name]
+			if(self.name in form_data):
+				setattr(storable, self.get_column_name(), form_data[self.name]['value'].value)
+		return True
 
 
 class FCKEditorResource(resource.CheetahTemplateResource):

@@ -67,6 +67,10 @@ def configure_store(req, itemdef):
 	else:
 		req.store.ensure_factory(table_name)
 
+def populate_new_item(req, selected_item):
+	if('init' in req.data):
+		for k, v in req.data['init'].items():
+			setattr(selected_item, k, v.value)
 
 class CustomRequestWrapper(object):
 	"""
@@ -432,6 +436,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 				if(itemdef.config.get('no_create')):
 					app.raise403('Sorry, record creation is turned off for this itemdef.')
 				selected_item = storable.Storable(table_name)
+				populate_new_item(req, selected_item)
 				# we can be sure the factory is there, because configure_store
 				# already took care of it during prepare_content
 				factory = req.store.get_factory(table_name)
