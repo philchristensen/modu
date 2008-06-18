@@ -46,14 +46,14 @@ class CheckboxField(define.definition):
 		return frm
 	
 	def get_search_value(self, value, req, frm):
-		value = value.value
-		if(value == '0'):
-			return self.get('checked_value', 1)
-		elif(value == '1'):
-			return self.get('checked_value', 0)
-		else:
-			# a trick
-			return sql.RAW('IF(%s, 1, 1)')
+		if(value is not None):
+			value = value.value
+			if(value == '0'):
+				return self.get('checked_value', 1)
+			elif(value == '1'):
+				return self.get('checked_value', 0)
+		# a trick
+		return sql.RAW('IF(%s, 1, 1)')
 	
 	def update_storable(self, req, form, storable):
 		"""
@@ -83,25 +83,25 @@ class NonNullSearchField(define.definition):
 			return frm
 	
 	def get_search_value(self, value, req, frm):
-		value = value.value
-		if(value == '0'):
-			return sql.RAW('ISNULL(%s)')
-		elif(value == '1'):
-			return sql.RAW('NOT(ISNULL(%s))')
-		else:
-			# a trick
-			return sql.RAW('IF(%s, 1, 1)')
+		if(value is not None):
+			if(value.value == '0'):
+				return sql.RAW('ISNULL(%s)')
+			elif(value.value == '1'):
+				return sql.RAW('NOT(ISNULL(%s))')
+		
+		# a trick
+		return sql.RAW('IF(%s, 1, 1)')
 	
 	def update_storable(self, req, form, storable):
 		pass
 
 class NonBlankSearchField(NonNullSearchField):
 	def get_search_value(self, value, req, frm):
-		value = value.value
-		if(value == '0'):
-			return sql.RAW('ISNULL(%s)')
-		elif(value == '1'):
+		if(value is not None):
+			if(value.value == '0'):
+				return sql.RAW('ISNULL(%s)')
+			elif(value.value == '1'):
 			return sql.RAW("IFNULL(%s, '') <> ''")
-		else:
-			# a trick
-			return sql.RAW('IF(%s, 1, 1)')
+		
+		# a trick
+		return sql.RAW('IF(%s, 1, 1)')
