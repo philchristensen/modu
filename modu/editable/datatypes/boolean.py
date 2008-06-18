@@ -101,7 +101,6 @@ class NonBlankSearchField(NonNullSearchField):
 			if(value.value == '0'):
 				return sql.RAW('ISNULL(%s)')
 			elif(value.value == '1'):
-			return sql.RAW("IFNULL(%s, '') <> ''")
 		
 		# a trick
 		return sql.RAW('IF(%s, 1, 1)')
