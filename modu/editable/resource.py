@@ -266,8 +266,8 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			data = {}
 			data.update(ordering_dict)
 			for key, value in search_data.items():
-				result = itemdef[key].get_search_value(value.value)
-				session_search_data[key] = value.value
+				result = itemdef[key].get_search_value(value, req, search_form)
+				session_search_data[key] = value
 				key = itemdef[key].get('column', key)
 				if(result is not None):
 					if(isinstance(result, dict)):
@@ -283,7 +283,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			data = {}
 			data.update(ordering_dict)
 			for key, value in session_search_data.items():
-				result = itemdef[key].get_search_value(value)
+				result = itemdef[key].get_search_value(value, req, search_form)
 				key = itemdef[key].get('column', key)
 				if(result is not None):
 					if(isinstance(result, dict)):

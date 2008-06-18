@@ -87,10 +87,11 @@ class FCKEditorField(define.definition):
 		return frm
 	
 	
-	def get_search_value(self, value):
+	def get_search_value(self, value, req, frm):
 		"""
 		@see: L{modu.editable.define.definition.get_search_value()}
 		"""
+		value = value.value
 		if(value is ''):
 			return None
 		if(self.get('fulltext_search')):

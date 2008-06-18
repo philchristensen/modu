@@ -287,9 +287,11 @@ def escape_dot_syntax(key):
 	"""
 	dot_index = key.find('.')
 	if(dot_index == -1):
-		key = '`%s`' % key
+		if not(key.startswith('`')):
+			key = '`%s`' % key
 	else:
-		key = key.replace('.', '.`') + '`'
+		if not(key.endswith('`')):
+			key = key.replace('.', '.`') + '`'
 	return key
 
 

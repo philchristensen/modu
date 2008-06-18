@@ -725,7 +725,7 @@ class definition(dict):
 		return True
 	
 	
-	def get_search_value(self, value):
+	def get_search_value(self, value, req, frm):
 		"""
 		Convert the value in this field to a search value.
 		
@@ -737,7 +737,9 @@ class definition(dict):
 		@return: a value suitable for inclusion in L{modu.persist.sql.build_where()}
 			constraint argument dictionary
 		"""
-		return value
+		if(value is None):
+			return value
+		return value.value
 	
 	
 	def is_postwrite_field(self):

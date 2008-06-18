@@ -45,7 +45,8 @@ class CheckboxField(define.definition):
 		
 		return frm
 	
-	def get_search_value(self, value):
+	def get_search_value(self, value, req, frm):
+		value = value.value
 		if(value == '0'):
 			return self.get('checked_value', 1)
 		elif(value == '1'):
@@ -81,7 +82,8 @@ class NonNullSearchField(define.definition):
 			frm(type='radiogroup', options=self.search_list, value=2)
 			return frm
 	
-	def get_search_value(self, value):
+	def get_search_value(self, value, req, frm):
+		value = value.value
 		if(value == '0'):
 			return sql.RAW('ISNULL(%s)')
 		elif(value == '1'):
@@ -94,7 +96,8 @@ class NonNullSearchField(define.definition):
 		pass
 
 class NonBlankSearchField(NonNullSearchField):
-	def get_search_value(self, value):
+	def get_search_value(self, value, req, frm):
+		value = value.value
 		if(value == '0'):
 			return sql.RAW('ISNULL(%s)')
 		elif(value == '1'):
