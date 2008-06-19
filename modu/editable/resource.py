@@ -68,8 +68,8 @@ def configure_store(req, itemdef):
 		req.store.ensure_factory(table_name)
 
 def populate_new_item(req, selected_item):
-	if('init' in req.data):
-		for k, v in req.data['init'].items():
+	if('__init__' in req.data):
+		for k, v in req.data['__init__'].items():
 			setattr(selected_item, k, v.value)
 
 class CustomRequestWrapper(object):
