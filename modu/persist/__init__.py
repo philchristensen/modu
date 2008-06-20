@@ -106,6 +106,23 @@ class IStore(Interface):
 		@raises LookupError: if no factory has been registered for this Storable's table
 		"""
 	
+	def iterate(self, factory_id, limit_start=0, limit_end=None):
+		"""
+		Returns a generator that efficiently iterates through all records in a table.
+		
+		Useful for migration/conversion scripts, etc.
+		
+		@param factory_id: the factory_id to use to load data
+		@type factory_id: str, Storable, IFactory
+		
+		@param limit_start: the index to start loading records at
+		@type limit_start: int
+		
+		@param limit_end: the index to stop loading records at
+		@type limit_end: int
+		
+		@returns: a generator for individual table rows
+		"""
 	
 	def load(self, factory_id, data=None, **kwargs):
 		"""
@@ -317,6 +334,37 @@ class Store(object):
 			storable.set_id(new_id, set_old=False)
 			return new_id
 		return id
+	
+	def iterate(self, factory_id, limit_start=0, limit_end=None):
+		"""
+		Returns a generator that efficiently iterates through all records in a table.
+		
+		Useful for migration/conversion scripts, etc.
+		
+		@param factory_id: the factory_id to use to load data
+		@type factory_id: str, Storable, IFactory
+		
+		@param limit_start: the index to start loading records at
+		@type limit_start: int
+		
+		@param limit_end: the index to stop loading records at
+		@type limit_end: int
+		
+		@returns: a generator for individual table rows
+		"""
+		import sys
+		limit = limit_start
+		# ...load each record in the table...
+		while(True):
+			if(limit == limit_end):
+				sys.stderr.write('$')
+				return
+			item = self.load_one(factory_id, __limit='%d,1' % limit)
+			if(item is None):
+				return
+			else:
+				yield item
+			limit += 1
 	
 	def load(self, factory_id, data=None, **kwargs):
 		"""
