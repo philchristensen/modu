@@ -9,13 +9,20 @@ $content
 <p class="exec-summary">modu is a high-level toolkit for building database-driven
 web applications in Python.</p>
 
-<p>modu was created to bring together elements of various frameworks and
-design patterns encountered over several years of professional web application
-development.</p>
+<p>modu encourages a number of conventions intended to keep large-scale web
+projects organized and maintainable, while providing a number of optional
+services that can be used or ignored by the programmer.</p>
 
-<p>modu is both a tribute and a response to tools like Ruby on Rails, CakePHP,
-Drupal, Django, Twisted.Web, and many others. Aspects of these systems have
-been borrowed in various ways, and all have been an inspiration.</p>
+<p>modu provides all the common components needed to build custom web 
+applications in Python, including form generation, object-relational database 
+mapping support, pluggable template systems, database-resident session and 
+user support, and more. It supports Twisted.Web for deployment of small to 
+medium-sized sites, and Apache 2.2 with mod_wsgi for high-performance 
+environments, but can be adapted to any WSGI-compatible container.</p>
+
+<p>modu encourages a lightweight Model-View-Controller approach; if you're an 
+MVC purist, you'll find your needs met, and if you aren't, you'll find more 
+than enough rope to hang yourself by.</p>
 
 #include 'blog-summary.html.tmpl'
 
