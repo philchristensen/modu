@@ -296,14 +296,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			#print 'default: %s' % ordering_dict
 			data = ordering_dict
 		
-		template_variable_callback = itemdef.config.get('template_variable_callback')
-		if(callable(template_variable_callback)):
-			for key, value in template_variable_callback(req, forms, search_storable).items():
-				self.set_slot(key, value)
-		
 		if(req.postpath[0] == 'listing'):
-			self.template = itemdef.config.get('list_template', 'admin-listing.html.tmpl')
-			
 			pager = page.Paginator()
 			if('page' in query_data):
 				pager.page = int(query_data['page'].value)
@@ -325,6 +318,13 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			default_title = 'Listing %s Records' % itemdef.name.title()
 			custom_title = itemdef.config.get('listing_title', default_title)
 			self.set_slot('title', tags.encode_htmlentities(custom_title))
+			
+			template_variable_callback = itemdef.config.get('template_variable_callback')
+			if(callable(template_variable_callback)):
+				for key, value in template_variable_callback(req, forms, search_storable).items():
+					self.set_slot(key, value)
+			
+			self.template = itemdef.config.get('list_template', 'admin-listing.html.tmpl')
 		elif(req.postpath[0] == 'export'):
 			if(callable(itemdef.config.get('export_query_builder'))):
 				data = itemdef.config['export_query_builder'](req, itemdef, data)
