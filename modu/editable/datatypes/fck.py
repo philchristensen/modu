@@ -110,6 +110,8 @@ class FCKFileField(define.definition):
 		
 		frm = form.FormNode(self.name)
 		if(style == 'listing' or self.get('read_only', False)):
+			if not(default_value):
+				default_value = '(none)'
 			frm(type='label', value=default_value)
 			return frm
 		

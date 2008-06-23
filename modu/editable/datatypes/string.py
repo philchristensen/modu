@@ -12,7 +12,7 @@ Datatypes for managing stringlike data.
 from zope.interface import implements
 
 from modu.editable import IDatatype, define
-from modu.util import form
+from modu.util import form, tags
 from modu.persist import sql
 
 class SearchFieldMixin(object):
@@ -49,7 +49,32 @@ class LabelField(SearchFieldMixin, define.definition):
 		if(style == 'search'):
 			frm(type='textfield', size=10) 
 		else:
-			frm(type='label', value=getattr(storable, self.get_column_name(), ''))
+			value = getattr(storable, self.get_column_name(), '')
+			if not(value):
+				value = '(none)'
+			frm(type='label', value=value)
+		return frm
+
+
+class LabelValueField(SearchFieldMixin, define.definition):
+	"""
+	Display this field's contents as a read-only value.
+	"""
+	implements(IDatatype)
+	
+	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
+		frm = form.FormNode(self.name)
+		if(style == 'search'):
+			frm(type='textfield', size=10) 
+		else:
+			value = getattr(storable, self.get_column_name(), '')
+			if not(value):
+				value = '(none)'
+			prefix = tags.label()[value]
+			frm(type='hidden', value=value, prefix=prefix)
 		return frm
 
 
@@ -66,11 +91,14 @@ class StringField(SearchFieldMixin, define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		frm = form.FormNode(self.name)
-		frm(value=getattr(storable, self.get_column_name(), ''))
+		value = getattr(storable, self.get_column_name(), '')
 		if(style == 'listing' or self.get('read_only', False)):
+			if not(value):
+				value = '(none)'
 			frm(type='label')
 		else:
 			frm(type='textfield')
+		frm(value=value)
 		return frm
 
 
