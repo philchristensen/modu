@@ -303,6 +303,17 @@ def raise401(path=None):
 		content += tags.strong()[path]
 	raise web.HTTPStatus('401 Unauthorized', [('Content-Type', 'text/html')], [content])
 
+def raise400(path=None):
+	"""
+	Bad Request
+	"""
+	content = tags.h1()['Bad Request']
+	content += tags.hr()
+	content += tags.p()['Your browser sent an invalid request.']
+	if(path):
+		content += tags.strong()[path]
+	raise web.HTTPStatus('400 Bad Request', [('Content-Type', 'text/html')], [content])
+
 def raise500(message=None):
 	"""
 	Sorry, an error has occurred.
