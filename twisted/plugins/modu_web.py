@@ -29,6 +29,9 @@ class Options(usage.Options):
 					 ['interface', 'i', None, 'Interface to listen on.'],
 					 ['logfile', 'l', '-', 'Path to access log.']
 					]
+	
+	optFlags =		[["debug-db", "d", "Turn on dbapi debugging."]
+					]
 
 class ModuServiceMaker(object):
 	"""
@@ -44,6 +47,10 @@ class ModuServiceMaker(object):
 		Instantiate the service.
 		"""
 		env = {'MODU_PATH': os.environ.get('MODU_PATH', '.')}
+		
+		if(config['debug-db']):
+			from modu.persist import dbapi
+			dbapi.debug = True
 		
 		if(config['logfile'] != '-'):
 			site = server.Site(wsgi.WSGIResource(app.handler, env=env), logPath=config['logfile'])
