@@ -27,7 +27,7 @@ class URLNode(object):
 		self.leaf_data = leaf_data
 	
 	def __str__(self):
-		content = "URLNode(%r)[" % self.leaf_data
+		content = "URLNode(%r)[" % (self.leaf_data,)
 		for key in self.children:
 			content += "%s:%s, " % (key, str(self.children[key]))
 		content += "]"
