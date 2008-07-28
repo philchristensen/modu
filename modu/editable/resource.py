@@ -39,7 +39,7 @@ def select_template_root(req, template):
 	"""
 	import modu
 	
-	template_root = os.path.join(req.approot, 'template')
+	template_root = getattr(req.app, 'template_dir', os.path.join(req.approot, 'template'))
 	if(os.access(os.path.join(template_root, template), os.F_OK)):
 		return template_root
 	
