@@ -390,6 +390,7 @@ class TemplateContent(object):
 			template_root = req.resource.template_dir
 		else:
 			template_root = getattr(req.app, 'template_dir', os.path.join(req.approot, 'template'))
+		return template_root
 	
 	def get_template_type(self):
 		"""
