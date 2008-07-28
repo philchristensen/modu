@@ -1,7 +1,7 @@
 # modu
 # Copyright (C) 2007-2008 Phil Christensen
 #
-# $Id: sql.py 764 2008-02-12 19:45:58Z phil $
+# $Id$
 #
 # See LICENSE for details
 

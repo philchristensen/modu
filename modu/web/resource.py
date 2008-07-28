@@ -386,7 +386,10 @@ class TemplateContent(object):
 		"""
 		@see: L{IContent.get_template_root()}
 		"""
-		return getattr(req.app, 'template_dir', os.path.join(req.approot, 'template'))
+		if(hasattr(req.resource, 'template_dir')):
+			template_root = req.resource.template_dir
+		else:
+			template_root = getattr(req.app, 'template_dir', os.path.join(req.approot, 'template'))
 	
 	def get_template_type(self):
 		"""

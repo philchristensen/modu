@@ -39,7 +39,11 @@ def select_template_root(req, template):
 	"""
 	import modu
 	
-	template_root = getattr(req.app, 'template_dir', os.path.join(req.approot, 'template'))
+	if(hasattr(req.resource, 'template_dir')):
+		template_root = req.resource.template_dir
+	else:
+		template_root = getattr(req.app, 'template_dir', os.path.join(req.approot, 'template'))
+	
 	if(os.access(os.path.join(template_root, template), os.F_OK)):
 		return template_root
 	
@@ -128,6 +132,8 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		@type path: str
 		"""
 		self.options = options
+		if('template_dir' in options):
+			self.template_dir = options['template_dir']
 		self.content_type = 'text/html; charset=UTF-8'
 	
 	
@@ -539,6 +545,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			app.raise500('The resource at %s is invalid, it must be an ITemplate implementor.' % req['REQUEST_URI'])
 		
 		rsrc = rsrc_class(*args, **kwargs)
+		req['modu.resource'] = rsrc
 		
 		for key in self.get_slots():
 			rsrc.set_slot(key, self.get_slot(key))
