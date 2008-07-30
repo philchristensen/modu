@@ -122,7 +122,7 @@ class ForeignAutocompleteField(define.definition):
 		ac_cb_id = '%s-%s-ac-callback' % (form_name, self.name)
 		ac_url = req.get_path(req.prepath, 'autocomplete', storable.get_table(), self.name)
 		
-		prefs = 'autoFill:1, selectFirst:1, matchSubset:0, selectOnly:1, extraParams:{t:%d}, minChars:%d' % (int(time.time()), self.get('min_chars', 3))
+		prefs = 'autoFill:1, selectFirst:1, matchSubset:0, selectOnly:1, formatItem:formatItem, extraParams:{t:%d}, minChars:%d' % (int(time.time()), self.get('min_chars', 3))
 		ac_javascript = '$("#%s").autocomplete("%s", '
 		ac_javascript += '{onItemSelect:select_foreign_item("%s"), %s});'
 		ac_javascript = ac_javascript % (ac_id, ac_url, ac_cb_id, prefs)
@@ -158,6 +158,14 @@ class ForeignAutocompleteField(define.definition):
 		
 		req.content.report('header', tags.style(type="text/css")[
 			"""@import '%s';""" % req.get_path('/assets/jquery/jquery.autocomplete.css')])
+		
+		req.content.report('header', tags.script(type="text/javascript")[
+			"""
+			function formatItem(item, index, totalItems){
+				return item[0].replace('<', '&lt;').replace('>', '&gt;')
+			}
+			"""
+		])
 		
 		req.content.report('header', tags.script(type="text/javascript",
 			src=assets.get_jquery_path(req))[''])

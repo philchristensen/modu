@@ -441,7 +441,12 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			if(item_id == 'new'):
 				if(itemdef.config.get('no_create')):
 					app.raise403('Sorry, record creation is turned off for this itemdef.')
-				selected_item = storable.Storable(table_name)
+				
+				if('model_class' in itemdef.config):
+					selected_item = itemdef.config['model_class']()
+				else:
+					selected_item = storable.Storable(table_name)
+				
 				populate_new_item(req, selected_item)
 				# we can be sure the factory is there, because configure_store
 				# already took care of it during prepare_content

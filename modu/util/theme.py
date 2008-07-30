@@ -70,10 +70,15 @@ class Theme(object):
 		elif(prefix):
 			content += str(prefix)
 		
-		if(element.attr('type', False)):
-			theme_func = getattr(self, 'form_' + element.type)
+		if(element.theme is self.__class__):
+			theme = self
 		else:
-			theme_func = self.form_markup
+			theme = element.theme(self.req)
+
+		if(element.attr('type', False)):
+			theme_func = getattr(theme, 'form_' + element.type)
+		else:
+			theme_func = theme.form_markup
 		
 		content += theme_func(form_id, element)
 		
