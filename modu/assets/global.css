@@ -48,3 +48,7 @@ ul li{
 p {
 	margin-bottom: 10px;
 }
+
+th {
+	font-weight: bold;
+}
