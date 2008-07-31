@@ -143,7 +143,7 @@ class FormThemeTestCase(unittest.TestCase):
 			else:
 				expected += EXPECTED_RADIO % (key, '', radio_options[key])
 		
-		result = self.theme.form_radiogroup('test-form', frm['radio'])
+		result = self.theme.theme_radiogroup('test-form', frm['radio'])
 		
 		self.failUnlessEqual(result, expected, "Radiogroup rendered as \n%s\n instead of \n%s" % (result, expected))
 	
@@ -152,7 +152,7 @@ class FormThemeTestCase(unittest.TestCase):
 		Test fieldset rendering.
 		"""
 		fieldset = self.form['advanced']
-		fieldset_result = self.theme.form_element('node-form', fieldset)
+		fieldset_result = self.theme.theme_element('node-form', fieldset)
 		
 		content = ''
 		for field_name in fieldset:
@@ -168,7 +168,7 @@ class FormThemeTestCase(unittest.TestCase):
 		Test brief fieldset rendering.
 		"""
 		fieldset = self.form['options']
-		fieldset_result = self.theme.form_element('node-form', fieldset)
+		fieldset_result = self.theme.theme_element('node-form', fieldset)
 		
 		content = ''
 		for field_name in fieldset:
@@ -184,7 +184,7 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		some_label = self.form['some_label']
 		
-		some_label_result = self.theme.form_label('node-form', some_label)
+		some_label_result = self.theme.theme_label('node-form', some_label)
 		expected_result = '<span class="label">this is a label</span>'
 		self.failUnlessEqual(some_label_result, expected_result, 'Basic "some_label" field misrendered as \n`%s`, not \n`%s`' % (some_label_result, expected_result));
 		
@@ -194,7 +194,7 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		checkbox = self.form['checkbox'](text='Checkbox')
 		
-		checkbox_result = self.theme.form_checkbox('node-form', checkbox)
+		checkbox_result = self.theme.theme_checkbox('node-form', checkbox)
 		self.failUnlessEqual(checkbox_result, EXPECTED_CHECKBOX, 'Basic "checkbox" field misrendered as \n`%s`, not \n`%s`' % (checkbox_result, EXPECTED_CHECKBOX));
 		
 	def test_selected_checkbox(self):
@@ -204,7 +204,7 @@ class FormThemeTestCase(unittest.TestCase):
 		checkbox = self.form['checkbox'](text='Selected Checkbox')
 		checkbox(checked=True)
 		
-		checkbox_result = self.theme.form_checkbox('node-form', checkbox)
+		checkbox_result = self.theme.theme_checkbox('node-form', checkbox)
 		self.failUnlessEqual(checkbox_result, EXPECTED_SELECTED_CHECKBOX, 'Basic "checkbox" field misrendered as \n`%s`, not \n`%s`' % (checkbox_result, EXPECTED_SELECTED_CHECKBOX));
 		
 	def test_title(self):
@@ -213,7 +213,7 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		title = self.form['title']
 		
-		title_result = self.theme.form_textfield('node-form', title)
+		title_result = self.theme.theme_textfield('node-form', title)
 		self.failUnlessEqual(title_result, EXPECTED_TITLE, 'Basic "title" field misrendered as \n`%s`, not \n`%s`' % (title_result, EXPECTED_TITLE));
 		
 	def test_prefix_suffix(self):
@@ -223,7 +223,7 @@ class FormThemeTestCase(unittest.TestCase):
 		title = self.form['title']
 		title(prefix='##PREFIX##', suffix='##SUFFIX##')
 		
-		titlefield_result = self.theme.form_element('node-form', title)
+		titlefield_result = self.theme.theme_element('node-form', title)
 		titlefield_check = EXPECTED_ELEMENT % ('title', (EXPECTED_LABEL % title.label) + ('##PREFIX##%s##SUFFIX##' % EXPECTED_TITLE) + (EXPECTED_HELP % title.help))
 		self.failUnlessEqual(titlefield_result, titlefield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (titlefield_result, titlefield_check));
 		
@@ -233,7 +233,7 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		title = self.form['title']
 		
-		titlefield_result = self.theme.form_element('node-form', title)
+		titlefield_result = self.theme.theme_element('node-form', title)
 		titlefield_check = EXPECTED_ELEMENT % ('title', (EXPECTED_LABEL % title.label) + EXPECTED_TITLE + (EXPECTED_HELP % title.help))
 		self.failUnlessEqual(titlefield_result, titlefield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (titlefield_result, titlefield_check));
 
@@ -244,7 +244,7 @@ class FormThemeTestCase(unittest.TestCase):
 		self.form.set_error('title', 'There is an error in the title field.')
 		title = self.form['title']
 		
-		titlefield_result = self.theme.form_element('node-form', title)
+		titlefield_result = self.theme.theme_element('node-form', title)
 		titlefield_check = EXPECTED_ERROR_ELEMENT % ('title', (EXPECTED_LABEL % title.label) + EXPECTED_TITLE + (EXPECTED_HELP % title.help))
 		self.failUnlessEqual(titlefield_result, titlefield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (titlefield_result, titlefield_check));
 
@@ -254,7 +254,7 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		category = self.form['category']
 		
-		category_result = self.theme.form_select('node-form', category)
+		category_result = self.theme.theme_select('node-form', category)
 		self.failUnlessEqual(category_result, EXPECTED_CATEGORY, 'Basic "category" field misrendered as \n`%s`, not \n`%s`' % (category_result, EXPECTED_CATEGORY));
 		
 	def test_other_category(self):
@@ -263,7 +263,7 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		other_category = self.form['other_category']
 		
-		category_result = self.theme.form_select('node-form', other_category)
+		category_result = self.theme.theme_select('node-form', other_category)
 		
 		self.failUnlessEqual(category_result, EXPECTED_MULTIPLE_CATEGORY, '"other_category" field misrendered as \n`%s`, not \n`%s`' % (category_result, EXPECTED_MULTIPLE_CATEGORY));
 		
@@ -273,7 +273,7 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		body = self.form['body']
 		
-		body_result = self.theme.form_textarea('node-form', body)
+		body_result = self.theme.theme_textarea('node-form', body)
 		self.failUnlessEqual(body_result, EXPECTED_BODY, 'Basic "body" field misrendered as \n`%s`, not \n`%s`' % (body_result, EXPECTED_BODY));
 		
 	def test_body_field(self):
@@ -282,7 +282,7 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		body = self.form['body']
 		
-		bodyfield_result = self.theme.form_element('node-form', body)
+		bodyfield_result = self.theme.theme_element('node-form', body)
 		bodyfield_check = EXPECTED_ELEMENT % ('body', (EXPECTED_LABEL % body.label) + EXPECTED_BODY + (EXPECTED_HELP % body.help))
 		self.failUnlessEqual(bodyfield_result, bodyfield_check, '"body" form field misrendered as \n`%s`, not \n`%s`' % (bodyfield_result, bodyfield_check));
 	
@@ -292,7 +292,7 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		submit = self.form['submit']
 		
-		submit_result = self.theme.form_submit('node-form', submit)
+		submit_result = self.theme.theme_submit('node-form', submit)
 		self.failUnlessEqual(submit_result, EXPECTED_SUBMIT, 'Basic "submit" field misrendered as \n`%s`, not \n`%s`' % (submit_result, EXPECTED_SUBMIT));
 		
 	def test_submit_field(self):
@@ -301,7 +301,7 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		submit = self.form['submit']
 		
-		submitfield_result = self.theme.form_element('node-form', submit)
+		submitfield_result = self.theme.theme_element('node-form', submit)
 		submitfield_check = EXPECTED_ELEMENT % ('submit', EXPECTED_SUBMIT)
 		self.failUnlessEqual(submitfield_result, submitfield_check, '"title" form field misrendered as \n`%s`, not \n`%s`' % (submitfield_result, submitfield_check));
 

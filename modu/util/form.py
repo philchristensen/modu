@@ -101,7 +101,10 @@ class FormNode(OrderedDict):
 				if(self.parent is not None and self.attributes['type'] != 'fieldset'):
 					raise TypeError('Only forms and fieldsets can have child fields.')
 			else:
-				self.attributes['type'] = 'fieldset'
+				if(self.parent):
+					self.attributes['type'] = 'fieldset'
+				else:
+					self.attributes['type'] = 'form'
 			self[key] = FormNode(key)
 		
 		return super(FormNode, self).__getitem__(key)
@@ -122,7 +125,13 @@ class FormNode(OrderedDict):
 		child.name = key
 		child.parent = self
 		if('type' not in self.attributes):
-			self.attributes['type'] = 'fieldset'
+			if(self.parent):
+				self.attributes['type'] = 'fieldset'
+			else:
+				self.attributes['type'] = 'form'
+		
+		if(child.attributes.get('type', 'markup') == 'form'):
+			child.attributes['type'] = 'fieldset'
 	
 	def attr(self, name, default=None):
 		"""
@@ -251,7 +260,15 @@ class FormNode(OrderedDict):
 		this form and request, and returns HTML for display.
 		"""
 		thm = self.theme(req)
-		return thm.form(self)
+		
+		element_type = self.attributes.get('type', None)
+		if(element_type is None):
+			if(self.parent):
+				element_type = 'markup'
+			else:
+				element_type = 'form'
+		
+		return getattr(thm, 'theme_' + element_type)(self.name, self)
 	
 	def load_data(self, req, data=None):
 		"""
