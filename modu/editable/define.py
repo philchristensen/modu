@@ -676,7 +676,7 @@ class definition(dict):
 			href = req.get_path(req.prepath, 'detail', storable.get_table(), storable.get_id())
 			frm(prefix=tags.a(href=href, __no_close=True), suffix='</a>')
 		
-		if('form_alter' in self):
+		if(callable(self.get('form_alter', None))):
 			self['form_alter'](req, style, frm, storable, self)
 		
 		return frm

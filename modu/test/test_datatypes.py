@@ -470,7 +470,7 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['name']['name-autocomplete'](type='textfield', weight=0,
 								attributes={'id':'test-form-name-autocomplete'})
 		reference_form['name']['ac-support'](weight=1, value=tags.script(type='text/javascript')
-									['$("#test-form-name-autocomplete").autocomplete("http://____store-test-domain____:1234567/app-test/autocomplete/test/name", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, matchSubset:0, selectOnly:1, extraParams:{t:%d}, minChars:3});' % int(time.time())])
+									['$("#test-form-name-autocomplete").autocomplete("http://____store-test-domain____:1234567/app-test/autocomplete/test/name", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, matchSubset:0, selectOnly:1, formatItem:formatItem, extraParams:{t:%d}, minChars:3});' % int(time.time())])
 		reference_form['name']['name'](type='hidden', weight=2, value=0,
 								attributes={'id':'test-form-name-ac-callback'})
 		reference_form['save'](type='submit', value='save', weight=1000)
