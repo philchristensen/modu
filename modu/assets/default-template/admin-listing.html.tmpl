@@ -19,20 +19,21 @@ $search_form
 $page_guide
 
 #if($forms)
-#set $first_row = $forms[0]
+#set first_row = $forms[0]
 <form id="#echo first_row.attr('name') #" name="#echo first_row.attr('name').replace('-', '_') #"
 	method="#echo first_row.attr('method', 'post') #"
 	enctype="#echo first_row.attr('enctype', 'application/x-www-form-urlencoded') #">
 	<table class="listing-table">
 		<tr>
-		#for $column in $first_row
-			<th>#echo $first_row[$column].attr('label', $first_row[$column].attr('name')) #</th>
+		#for column in first_row.values()
+			#set name = column.attr('label', column.attr('name'))
+			<th>$name</th>
 		#end for
 		</tr>
-		#for $row in $forms
+		#for row in $forms
 		<tr>
-		#for $column in $row
-			<td>#echo $theme.basic_form_element($first_row.attr('name'), $row[$column]) #</td>
+		#for column in row
+			<td>#echo row[column].render($req) #</td>
 		#end for
 		</tr>
 		#end for

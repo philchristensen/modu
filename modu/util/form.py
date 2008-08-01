@@ -97,16 +97,8 @@ class FormNode(OrderedDict):
 		Allows child selection via hash syntax.
 		"""
 		if(key not in self):
-			if('type' in self.attributes):
-				if(self.parent is not None and self.attributes['type'] != 'fieldset'):
-					raise TypeError('Only forms and fieldsets can have child fields.')
-			else:
-				if(self.parent):
-					self.attributes['type'] = 'fieldset'
-				else:
-					self.attributes['type'] = 'form'
 			self[key] = FormNode(key)
-		
+
 		return super(FormNode, self).__getitem__(key)
 	
 	def __nonzero__(self):
@@ -119,19 +111,11 @@ class FormNode(OrderedDict):
 		"""
 		Allows insertion of child forms.
 		"""
-		if(self.parent is not None and self.attributes.get('type', 'fieldset') != 'fieldset'):
-			raise TypeError('Only forms and fieldsets can have child fields.')
+		if not(isinstance(child, FormNode)):
+			raise ValueError('%r is not a FormNode' % child)
 		super(FormNode, self).__setitem__(key, child)
 		child.name = key
 		child.parent = self
-		if('type' not in self.attributes):
-			if(self.parent):
-				self.attributes['type'] = 'fieldset'
-			else:
-				self.attributes['type'] = 'form'
-		
-		if(child.attributes.get('type', 'markup') == 'form'):
-			child.attributes['type'] = 'fieldset'
 	
 	def attr(self, name, default=None):
 		"""
@@ -166,7 +150,7 @@ class FormNode(OrderedDict):
 		"""
 		for name in self:
 			element = self[name]
-			if(element.type == 'submit'):
+			if(element.attr('type') == 'submit'):
 				return True
 			elif(len(element)):
 				if(element.has_submit_buttons()):
@@ -184,7 +168,7 @@ class FormNode(OrderedDict):
 		submits = []
 		for name in self:
 			element = self[name]
-			if(element.type == 'submit'):
+			if(element.attr('type') == 'submit'):
 				submits.append(element)
 			elif(len(element)):
 				submits.extend(element.find_submit_buttons())
@@ -261,12 +245,11 @@ class FormNode(OrderedDict):
 		"""
 		thm = self.theme(req)
 		
-		element_type = self.attributes.get('type', None)
-		if(element_type is None):
-			if(self.parent):
-				element_type = 'markup'
-			else:
-				element_type = 'form'
+		default_type = 'form'
+		if(self.parent):
+			default_type = 'fieldset'
+		
+		element_type = self.attributes.get('type', default_type)
 		
 		return getattr(thm, 'theme_' + element_type)(self.name, self)
 	
@@ -293,7 +276,7 @@ class FormNode(OrderedDict):
 				# generated nested form data for a single
 				# form object
 				loader = self.attr('loader', None)
-				loader_func = 'form_%s_loader' % self.attr('type', 'markup')
+				loader_func = 'theme_%s_loader' % self.attr('type', 'markup')
 				if(not loader and hasattr(self.theme, loader_func)):
 					loader = getattr(self.theme(req), loader_func, None)
 				if(callable(loader)):

@@ -71,7 +71,8 @@ class DatatypesTestCase(unittest.TestCase):
 		"""
 		test_itemdef = define.itemdef(
 			selected		= boolean.CheckboxField(
-								label		= 'Selected'
+								label		= 'Selected',
+								attributes	= dict(basic_element=False),
 							)
 		)
 		
@@ -101,7 +102,8 @@ class DatatypesTestCase(unittest.TestCase):
 		test_itemdef = define.itemdef(
 			selected		= boolean.CheckboxField(
 								label		= 'Selected',
-								listing		= True
+								listing		= True,
+								attributes	= dict(basic_element=False),
 							)
 		)
 		
@@ -135,7 +137,8 @@ class DatatypesTestCase(unittest.TestCase):
 			linked_name		= string.LabelField(
 								label		= 'Name',
 								link		= True,
-								listing		= True
+								listing		= True,
+								attributes	= dict(basic_element=False),
 							)
 		)
 		
@@ -162,7 +165,8 @@ class DatatypesTestCase(unittest.TestCase):
 		"""
 		test_itemdef = define.itemdef(
 			name			= string.StringField(
-								label		= 'Name'
+								label		= 'Name',
+								attributes	= dict(basic_element=False),
 							)
 		)
 		
@@ -192,7 +196,8 @@ class DatatypesTestCase(unittest.TestCase):
 		test_itemdef = define.itemdef(
 			name			= string.StringField(
 								label		= 'Name',
-								listing		= True
+								listing		= True,
+								attributes	= dict(basic_element=False),
 							)
 		)
 		
@@ -221,7 +226,8 @@ class DatatypesTestCase(unittest.TestCase):
 								label		= 'Category',
 								ftable		= 'category',
 								fvalue		= 'code',
-								flabel		= 'title'
+								flabel		= 'title',
+								attributes	= dict(basic_element=False),
 							)
 		)
 		
@@ -255,7 +261,8 @@ class DatatypesTestCase(unittest.TestCase):
 		test_itemdef = define.itemdef(
 			user_type		= select.SelectField(
 								label		= 'Type',
-								options		= options
+								options		= options,
+								attributes	= dict(basic_element=False),
 							)
 		)
 		
@@ -307,7 +314,8 @@ class DatatypesTestCase(unittest.TestCase):
 		test_itemdef = define.itemdef(
 			start_date			= date_datatype.DateField(
 				label			= 'start date:',
-				save_format		= 'datetime'
+				save_format		= 'datetime',
+				attributes	= dict(basic_element=False),
 			)
 		)
 		
@@ -415,7 +423,8 @@ class DatatypesTestCase(unittest.TestCase):
 								label		= 'Category',
 								ftable		= 'category',
 								fvalue		= 'id',
-								flabel		= 'title'
+								flabel		= 'title',
+								attributes	= dict(basic_element=False),
 							)
 		)
 		
@@ -452,7 +461,8 @@ class DatatypesTestCase(unittest.TestCase):
 								label		= 'Name',
 								fvalue		= 'id',
 								flabel		= 'title',
-								ftable		= 'category'
+								ftable		= 'category',
+								attributes	= dict(basic_element=False),
 							)
 		)
 		
@@ -469,7 +479,7 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['name'](type='fieldset', style='brief', label='Name')
 		reference_form['name']['name-autocomplete'](type='textfield', weight=0,
 								attributes={'id':'test-form-name-autocomplete'})
-		reference_form['name']['ac-support'](weight=1, value=tags.script(type='text/javascript')
+		reference_form['name']['ac-support'](type="markup", weight=1, value=tags.script(type='text/javascript')
 									['$("#test-form-name-autocomplete").autocomplete("http://____store-test-domain____:1234567/app-test/autocomplete/test/name", {onItemSelect:select_foreign_item("test-form-name-ac-callback"), autoFill:1, selectFirst:1, matchSubset:0, selectOnly:1, formatItem:formatItem, extraParams:{t:%d}, minChars:3});' % int(time.time())])
 		reference_form['name']['name'](type='hidden', weight=2, value=0,
 								attributes={'id':'test-form-name-ac-callback'})
@@ -492,7 +502,8 @@ class DatatypesTestCase(unittest.TestCase):
 					 ('page-form[save]','save')]
 		test_itemdef = define.itemdef(
 			title		= string.PasswordField(
-								label		= 'Encrypted Title'
+								label		= 'Encrypted Title',
+								attributes	= dict(basic_element=False),
 							)
 		)
 		
@@ -572,7 +583,8 @@ class DatatypesTestCase(unittest.TestCase):
 		test_itemdef = define.itemdef(
 			title		= string.PasswordField(
 								label		= 'Encrypted Title',
-								verify		= False
+								verify		= False,
+								attributes	= dict(basic_element=False),
 							)
 		)
 		
@@ -603,7 +615,8 @@ class DatatypesTestCase(unittest.TestCase):
 		test_itemdef = define.itemdef(
 			title		= string.PasswordField(
 								label		= 'Encrypted Title',
-								encrypt		= False
+								encrypt		= False,
+								attributes	= dict(basic_element=False),
 							)
 		)
 		

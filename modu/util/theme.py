@@ -9,103 +9,110 @@ import copy, datetime
 
 from modu.util import tags, OrderedDict, date
 
+def formelement(func):
+	def _form_render(self, form_id, form):
+		return self.theme_element(form_id, form, func(self, form_id, form))
+	return _form_render
+
 class Theme(object):
 	def __init__(self, req):
 		self.req = req
 	
-	
-	def theme_form(self, form_id, form):
+	def theme_form(self, form_id, element):
 		content = ''
-		for child in form:
-			content += self.theme_element(form.name, form[child])
+		for child_id in element:
+			child = element[child_id]
+			if(child.theme is self.__class__):
+				theme = self
+			else:
+				theme = child.theme(self.req)
+			
+			theme_func = getattr(theme, 'theme_' + child.attr('type', 'fieldset'))
+			
+			content += theme_func(element.name, child)
 			content += "\n"
 		
-		attribs = form.attr('attributes', {})
-		attribs['name'] = form.name.replace('-', '_')
-		attribs['id'] = form.name
-		attribs['enctype'] = form.attr('enctype', 'application/x-www-form-urlencoded')
-		attribs['method'] = form.attr('method', 'post')
-		attribs['action'] = form.attr('action', '')
+		attribs = element.attr('attributes', {})
+		attribs['name'] = element.name.replace('-', '_')
+		attribs['id'] = element.name
+		attribs['enctype'] = element.attr('enctype', 'application/x-www-form-urlencoded')
+		attribs['method'] = element.attr('method', 'post')
+		attribs['action'] = element.attr('action', '')
 		
-		action = form.attr('action', None)
+		action = element.attr('action', None)
 		if(action):
 			attribs['action'] = action
 		
-		result = form.attr('prefix', '')
+		result = element.attr('prefix', '')
 		result += tags.form(**attribs)["\n" + content]
-		result += form.attr('suffix', '')
+		result += element.attr('suffix', '')
 		
 		return result
 	
-	
-	def theme_element(self, form_id, element):
+	def theme_element(self, form_id, element, rendered_element):
 		content = ''
 		
-		if(element.attr('required', False)):
-			asterisk = tags.span(_class="required")['*']
-		else:
-			asterisk = ''
-		
-		if(hasattr(element, 'label')):
-			content += tags.label(_class="field-label")[[element.label, asterisk]]
-		
-		content += self.basic_form_element(form_id, element)
-		
-		if(hasattr(element, 'help')):
-			content += tags.div(_class='form-help')[element.help]
-		
-		if(element.get_errors()):
-			element_class = 'form-item form-error'
-		else:
-			element_class = 'form-item'
-		
-		return tags.div(_class=element_class, _id='form-item-%s' % element.name)[content]
-	
-	
-	def basic_form_element(self, form_id, element):
-		content = ''
+		if not(element.attr('basic_element', False)):
+			if(element.attr('required', False)):
+				asterisk = tags.span(_class="required")['*']
+			else:
+				asterisk = ''
+			
+			if(hasattr(element, 'label')):
+				content += tags.label(_class="field-label")[[element.label, asterisk]]
+			
 		prefix = element.attr('prefix', False)
 		if(callable(prefix)):
 			content += prefix(element)
 		elif(prefix):
 			content += str(prefix)
 		
-		if(element.theme is self.__class__):
-			theme = self
-		else:
-			theme = element.theme(self.req)
-
-		if(element.attr('type', False)):
-			theme_func = getattr(theme, 'theme_' + element.type)
-		else:
-			theme_func = theme.theme_markup
-		
-		content += theme_func(form_id, element)
-		
+		content += rendered_element
+			
 		suffix = element.attr('suffix', False)
 		if(callable(suffix)):
 			content += suffix(element)
 		elif(suffix):
 			content += str(suffix)
 		
+		if not(element.attr('basic_element', False)):
+			if(hasattr(element, 'help')):
+				content += tags.div(_class='form-help')[element.help]
+			
+			if(element.get_errors()):
+				element_class = 'form-item form-error'
+			else:
+				element_class = 'form-item'
+			
+			content = tags.div(_class=element_class, _id='form-item-%s' % element.name)[content]
+		
 		return content
 	
-	
+	@formelement
 	def theme_markup(self, form_id, element):
 		return element.attr('value', '')
 	
-	
+	@formelement
 	def theme_fieldset(self, form_id, element):
 		element_style = element.attr('style', 'brief')
-		if(element_style == 'full'):
-			return ''.join([str(self.theme_element(form_id, element[child])) for child in element])
-		else:
-			content = ''
-			for child_name in element:
-				content += self.basic_form_element(form_id, element[child_name])
-			return content
+		content = ''
+		for child_id in element:
+			child = element[child_id]
+			if(child.theme is self.__class__):
+				theme = self
+			else:
+				theme = child.theme(self.req)
+		
+			theme_func = getattr(theme, 'theme_' + child.attr('type', 'fieldset'))
+			
+			if(element_style != 'full'):
+				child(basic_element=True)
+			
+			content += theme_func(element.name, child)
+		
+		return content
 	
-	
+	@formelement
 	def theme_label(self, form_id, element):
 		attribs = element.attr('attributes', {'class':'label'})
 		value = element.attr('value', element.attr('default_value', ''))
@@ -113,7 +120,7 @@ class Theme(object):
 			value = ''
 		return tags.span(**attribs)[value]
 	
-	
+	@formelement
 	def theme_hidden(self, form_id, element):
 		value = element.attr('value', element.attr('default_value', ''))
 		if(value is None):
@@ -124,7 +131,7 @@ class Theme(object):
 		attribs['value'] = value
 		return tags.input(type='hidden', **attribs)
 	
-	
+	@formelement
 	def theme_textfield(self, form_id, element):
 		value = element.attr('value', element.attr('default_value', ''))
 		if(value is None):
@@ -136,13 +143,13 @@ class Theme(object):
 		attribs['value'] = value
 		return tags.input(type='text', **attribs)
 	
-	
+	@formelement
 	def theme_file(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
 		return tags.input(type='file', **attribs)
 	
-	
+	@formelement
 	def theme_password(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
@@ -150,7 +157,7 @@ class Theme(object):
 		attribs['value'] = element.attr('value', element.attr('default_value', ''))
 		return tags.input(type='password', **attribs)
 	
-	
+	@formelement
 	def theme_textarea(self, form_id, element):
 		value = element.attr('value', element.attr('default_value', ''))
 		if(value is None):
@@ -162,14 +169,14 @@ class Theme(object):
 		attribs['rows'] = element.attr('rows', 5)
 		return tags.textarea(**attribs)[value]
 	
-	
+	@formelement
 	def theme_submit(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
 		attribs['value'] = element.attr('value', 'Submit')
 		return tags.input(type='submit', **attribs)
 	
-	
+	@formelement
 	def theme_checkbox(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
@@ -183,7 +190,7 @@ class Theme(object):
 			element.attr('text', '')
 		]]
 	
-	
+	@formelement
 	def theme_radio(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
@@ -192,7 +199,7 @@ class Theme(object):
 			attribs['checked'] = None
 		return tags.input(type='radio', **attribs)
 	
-	
+	@formelement
 	def theme_select(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
@@ -230,7 +237,7 @@ class Theme(object):
 		
 		return tags.select(**attribs)[options]
 	
-	
+	@formelement
 	def theme_radiogroup(self, form_id, element):
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
@@ -267,7 +274,7 @@ class Theme(object):
 		
 		return (option_keys, option_data)
 	
-	
+	@formelement
 	def theme_timestamp(self, form_id, element):
 		style = element.attr('style', 'date')
 		if(style == 'date' or style == 'datetime'):
@@ -275,7 +282,7 @@ class Theme(object):
 		if(style == 'datetime' or style == 'time'):
 			pass
 		
-	
+	@formelement
 	def theme_datetime(self, form_id, element):
 		import time
 		attribs = element.attr('attributes', {})
@@ -322,7 +329,7 @@ class Theme(object):
 										int(form_data['hour'].value), int(form_data['minute'].value))
 		form(value=value)
 	
-	
+	@formelement
 	def theme_date(self, form_id, element):
 		import time
 		attribs = element.attr('attributes', {})
@@ -370,7 +377,7 @@ class Theme(object):
 			value = datetime.datetime(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, max_day)
 		form(value=value)
 	
-	
+	@formelement
 	def theme_time(self, form_id, element):
 		import time
 		attribs = element.attr('attributes', {})

@@ -19,7 +19,7 @@
 		#if element.attr('label', '')
 		<label class="field-label">#echo element.attr('label') #</label>
 		#end if
-		#echo $theme.basic_form_element($form.attr('name'), element) #
+		#echo element.render($req) #
 		#if element.attr('help', '')
 		<div class="form-help">#echo element.attr('help') #</div>
 		#end if

@@ -672,6 +672,12 @@ class definition(dict):
 		for name, value in self.get('attributes', {}).iteritems():
 			frm.attributes[name] = value
 		
+		# Since the templates take care of the wrapper, all
+		# elements are defined as basic elements unless set
+		# explicitly by the field definition.
+		if(style != 'search' and 'basic_element' not in frm.attributes):
+			frm(basic_element=True)
+		
 		if(style == 'listing' and self.get('link', False)):
 			href = req.get_path(req.prepath, 'detail', storable.get_table(), storable.get_id())
 			frm(prefix=tags.a(href=href, __no_close=True), suffix='</a>')
