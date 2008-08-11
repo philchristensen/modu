@@ -60,7 +60,7 @@ class FormNode(OrderedDict):
 		
 		self.submit = self._submit
 		self.validate = self._validate
-		self.theme = theme.Theme
+		self.theme = None
 		
 		self.submit_button = None
 	
@@ -243,7 +243,7 @@ class FormNode(OrderedDict):
 		This method calls the appropriate theme functions against
 		this form and request, and returns HTML for display.
 		"""
-		thm = self.theme(req)
+		thm = self.get_theme(req)
 		
 		default_type = 'form'
 		if(self.parent):
@@ -252,6 +252,16 @@ class FormNode(OrderedDict):
 		element_type = self.attributes.get('type', default_type)
 		
 		return getattr(thm, 'theme_' + element_type)(self.name, self)
+	
+	def get_theme(self, req, current=None):
+		if(self.theme is None):
+			if(current is None):
+				thm = theme.Theme(req)
+			else:
+				thm = current
+		else:
+			thm = self.theme(req)
+		return thm
 	
 	def load_data(self, req, data=None):
 		"""

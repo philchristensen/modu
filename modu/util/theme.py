@@ -22,10 +22,7 @@ class Theme(object):
 		content = ''
 		for child_id in element:
 			child = element[child_id]
-			if(child.theme is self.__class__):
-				theme = self
-			else:
-				theme = child.theme(self.req)
+			theme = child.get_theme(self.req, current=self)
 			
 			theme_func = getattr(theme, 'theme_' + child.attr('type', 'fieldset'))
 			
@@ -98,10 +95,7 @@ class Theme(object):
 		content = ''
 		for child_id in element:
 			child = element[child_id]
-			if(child.theme is self.__class__):
-				theme = self
-			else:
-				theme = child.theme(self.req)
+			theme = child.get_theme(self.req, current=self)
 		
 			theme_func = getattr(theme, 'theme_' + child.attr('type', 'fieldset'))
 			

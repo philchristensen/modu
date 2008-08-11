@@ -485,7 +485,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 						self.set_slot(key, value)
 			
 			self.set_slot('form', frm)
-			self.set_slot('theme', frm.theme(req))
+			self.set_slot('theme', frm.get_theme(req))
 			self.set_slot('selected_item', selected_item)
 			
 			if('title_column' in itemdef.config and item_id != 'new'):
