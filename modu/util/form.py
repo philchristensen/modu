@@ -96,6 +96,7 @@ class FormNode(OrderedDict):
 		"""
 		Allows child selection via hash syntax.
 		"""
+		key = str(key)
 		if(key not in self):
 			self[key] = FormNode(key)
 
@@ -111,6 +112,7 @@ class FormNode(OrderedDict):
 		"""
 		Allows insertion of child forms.
 		"""
+		key = str(key)
 		if not(isinstance(child, FormNode)):
 			raise ValueError('%r is not a FormNode' % child)
 		super(FormNode, self).__setitem__(key, child)
@@ -238,14 +240,18 @@ class FormNode(OrderedDict):
 		else:
 			return item.errors.get(self.name)
 	
-	def render(self, req):
+	def render(self, req, fieldset=False):
 		"""
 		This method calls the appropriate theme functions against
 		this form and request, and returns HTML for display.
 		"""
 		thm = self.get_theme(req)
 		
-		default_type = 'form'
+		if(fieldset):
+			default_type = 'fieldset'
+		else:
+			default_type = 'form'
+		
 		if(self.parent):
 			default_type = 'fieldset'
 		
