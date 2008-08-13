@@ -84,6 +84,7 @@ class FormNode(OrderedDict):
 			return self
 		
 		for key, value in kwargs.iteritems():
+			key = key.strip('_')
 			if(key in ('theme', 'validate', 'submit')):
 				if not(callable(value)):
 					raise TypeError("'%s' must be a callable object" % key)
