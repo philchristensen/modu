@@ -248,6 +248,10 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		search_storable.set_factory(req.store.get_factory(table_name))
 		# build the form tree
 		search_form = itemdef.get_search_form(req, search_storable)
+		# this will make sure that if we're on a page other than 1,
+		# a search submission will take us back to page 1
+		search_form(action=req.get_path(req.path))
+		
 		# get any saved search data
 		session_search_data = req.session.setdefault('search_form', {}).setdefault(itemdef.name, {})
 		
