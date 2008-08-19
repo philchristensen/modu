@@ -73,6 +73,7 @@ class FormNode(OrderedDict):
 		self.name = name
 		self.parent = None
 		self.attributes = {}
+		self.submitted = False
 		
 		self.errors = {}
 		
@@ -117,6 +118,9 @@ class FormNode(OrderedDict):
 		"""
 		key = str(key)
 		if(key not in self):
+			# once it's been submitted, we don't auto-add fields anymore.
+			if(self.submitted):
+				raise KeyError(key)
 			self[key] = FormNode(key)
 
 		return super(FormNode, self).__getitem__(key)
@@ -211,6 +215,8 @@ class FormNode(OrderedDict):
 			if(check_submission(req, submit)):
 				self.submit_button = submit
 				break
+		
+		self.submitted = True
 		
 		if(self.submit_button or force):
 			result = self.validate(req, self)
