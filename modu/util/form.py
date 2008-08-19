@@ -17,6 +17,24 @@ from modu.util import theme, OrderedDict
 NESTED_NAME = re.compile(r'([^\[]+)(\[([^\]]+)\])*')
 KEYED_FRAGMENT = re.compile(r'\[([^\]]+)\]*')
 
+def check_submission(req, submit_button):
+	"""
+	Return true if this button was used to submit the current post data.
+	"""
+	path = submit_button.get_element_path()
+	d = req.data
+	for segment in path:
+		if(segment in d):
+			d = d[segment]
+		else:
+			d = None
+			break
+	
+	if(d is None):
+		return False
+	
+	return True
+
 def activate_form_data(req):
 	"""
 	Queue stylesheets or javascript for display by a content queue-aware template.
@@ -190,7 +208,7 @@ class FormNode(OrderedDict):
 		for submit in self.find_submit_buttons():
 			# NOTE: This assumes the browser sends the submit button's name
 			# in the submit POST data. This may not always work.
-			if(self.name in req.data and submit.name in req.data[self.name]):
+			if(check_submission(req, submit)):
 				self.submit_button = submit
 				break
 		

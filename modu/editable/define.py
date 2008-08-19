@@ -309,11 +309,13 @@ class itemdef(OrderedDict):
 				
 				frm[name] = field.get_form_element(req, 'detail', storable)
 		
-		if(not frm.has_submit_buttons()):
-			frm['save'](type='submit', value='save')
-			frm['cancel'](type='submit', value='cancel')
-			frm['delete'](type='submit', value='delete',
-							attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
+		# if you don't want these, you may need to try something else
+		#if(not frm.has_submit_buttons()):
+		
+		frm['save'](type='submit', value='save')
+		frm['cancel'](type='submit', value='cancel')
+		frm['delete'](type='submit', value='delete',
+						attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
 		def _validate(req, form):
 			return self.validate(req, form, storable)
@@ -432,23 +434,31 @@ class itemdef(OrderedDict):
 		@rtype: bool
 		"""
 		form_data = req.data[frm.name]
-		if(form_data.get('cancel', form.nil()).value == frm.submit_button.value):
+		if(frm.submit_button.value == form_data.get('cancel', form.nil()).value):
 			app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
-		elif(form_data.get('delete', form.nil()).value == frm.submit_button.value):
+		elif(frm.submit_button.value == form_data.get('delete', form.nil()).value):
 			if(self.delete(req, frm, storable)):
 				app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
 			else:
 				return False
-		# call validate hook on each field, return false if they do
-		for field in frm:
-			if(field in self and 'validator' in self[field]):
-				validator = self[field]['validator']
-				if(validator):
-					if not(validator(req, frm, storable)):
+		
+		if(frm.submit_button.value != form_data.get('save', form.nil()).value):
+			validator = frm.submit_button.attr('validator', None)
+			if(callable(validator)):
+				return validator(req, frm, storable)
+			req.messages.report('error', "A custom submit button was used, but no validator function found.")
+			return False
+		else:
+			# call validate hook on each field, return false if they do
+			for field in frm:
+				if(field in self and 'validator' in self[field]):
+					validator = self[field]['validator']
+					if(validator):
+						if not(validator(req, frm, storable)):
+							return False
+				else:
+					if not(frm[field].validate(req, frm)):
 						return False
-			else:
-				if not(frm[field].validate(req, frm)):
-					return False
 		
 		return True
 	
@@ -466,6 +476,13 @@ class itemdef(OrderedDict):
 		@param storable: The Storable instance to submit.
 		@type storable: list(L{modu.persist.storable.Storable})
 		"""
+		if(form.submit_button.value != 'save'):
+			submitter = form.submit_button.attr('submitter', None)
+			if(callable(submitter)):
+				return submitter(req, form, storable)
+			req.messages.report('error', "A custom submit button was used, but no submitter function found.")
+			return False
+		
 		postwrite_fields = {}
 		for name, definition in self.iteritems():
 			if not(definition.get('implicit_save', True)):
