@@ -322,6 +322,11 @@ class FormNode(OrderedDict):
 		"""
 		result = True
 		
+		if(self.parent or self.attributes.get('type', 'form') != 'form'):
+			if(not self.attr('value', '') and self.attr('required', False)):
+				form.set_error(self.name, 'You must enter a value for this field.')
+				result = False
+		
 		for child in self:
 			child = self[child]
 			result = result and child.validate(req, form)

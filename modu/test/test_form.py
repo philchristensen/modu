@@ -107,5 +107,23 @@ class FormTestCase(unittest.TestCase):
 		frm.validate = _validate_pass
 		
 		self.failUnlessRaises(RuntimeError, frm.execute, req)
+	
+	def test_required_element(self):
+		"""
+		Test required fields.
+		"""
+		form_data = [('test-form[title]',''), ('test-form[submit]','submit')]
+		req = self.get_request(form_data)
 		
+		frm = form.FormNode('test-form')
+		frm(enctype="multipart/form-data")
+		frm['title'](type='textfield', title='Title', required=True, description='This is the title field')
+		frm['submit'](type='submit')
+		
+		frm.execute(req)
+		
+		self.failUnless(frm.has_errors())
+		
+		errs = frm.get_errors()
+		self.failUnlessEqual(errs['title'][0], 'You must enter a value for this field.')
 

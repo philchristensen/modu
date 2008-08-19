@@ -91,7 +91,7 @@ class StringField(SearchFieldMixin, define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		frm = form.FormNode(self.name)
-		value = getattr(storable, self.get_column_name(), '')
+		value = getattr(storable, self.get_column_name(), self.get('default_value', ''))
 		if(style == 'listing' or self.get('read_only', False)):
 			if not(value):
 				value = '(none)'
@@ -113,7 +113,7 @@ class HiddenField(SearchFieldMixin, define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		frm = form.FormNode(self.name)
-		frm(value=getattr(storable, self.get_column_name(), ''))
+		frm(value=getattr(storable, self.get_column_name(),  self.get('default_value', '')))
 		if(style == 'listing' or self.get('read_only', False)):
 			frm(type='label')
 		else:
@@ -134,7 +134,7 @@ class TextAreaField(SearchFieldMixin, define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		frm = form.FormNode(self.name)
-		frm(value=getattr(storable, self.get_column_name(), ''))
+		frm(value=getattr(storable, self.get_column_name(), self.get('default_value', '')))
 		if(style == 'listing' or self.get('read_only', False)):
 			frm(type='label')
 		elif(style == 'search'):
@@ -155,7 +155,7 @@ class PasswordField(define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		entry_frm = form.FormNode(self.name)
-		entry_frm(value=getattr(storable, self.get_column_name(), ''))
+		entry_frm(value=getattr(storable, self.get_column_name(), self.get('default_value', '')))
 		
 		if(style == 'listing' or self.get('read_only', False)):
 			entry_frm(type='label')
