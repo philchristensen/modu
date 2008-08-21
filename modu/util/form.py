@@ -318,8 +318,9 @@ class FormNode(OrderedDict):
 				# form object
 				loader = self.attr('loader', None)
 				loader_func = 'theme_%s_loader' % self.attr('type', 'markup')
-				if(not loader and hasattr(self.theme, loader_func)):
-					loader = getattr(self.theme(req), loader_func, None)
+				thm = self.get_theme(req)
+				if(not loader and hasattr(thm, loader_func)):
+					loader = getattr(thm, loader_func, None)
 				if(callable(loader)):
 					loader(self, form_data)
 		elif(form_data):

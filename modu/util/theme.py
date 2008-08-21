@@ -315,7 +315,7 @@ class Theme(object):
 		try:
 			value = datetime.datetime(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, int(form_data['day'].value) + 1,
 										int(form_data['hour'].value), int(form_data['minute'].value))
-		except ValueError:
+		except ValueError, e:
 			max_day = 30
 			if(int(form_data['month'].value) == 2):
 				max_day = 28
