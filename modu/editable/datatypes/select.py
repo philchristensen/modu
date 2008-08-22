@@ -24,7 +24,7 @@ class SelectField(define.definition):
 		"""
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
-		value = getattr(storable, self.get_column_name())
+		value = getattr(storable, self.get_column_name(), None)
 		if not(storable.get_id()):
 			value = self.get('default_value', value)
 		
