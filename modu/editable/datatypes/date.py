@@ -91,9 +91,9 @@ class DateField(define.definition):
 		if(value is None):
 			frm['null'](checked=True)
 			attribs['disabled'] = None
-		
-		if(not storable.get_id() and self.get('default_now', False)):
-			value = datetime.datetime.now()
+			
+			if(self.get('default_now', False)):
+				value = datetime.datetime.now()
 		
 		frm['date'](type=self.get('style', 'datetime'), value=value, attributes=attribs, start_year=start_year, end_year=end_year)
 		

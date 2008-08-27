@@ -17,7 +17,7 @@
 	<div class="form-item#if element.has_errors() then ' form-error' else '' #"
 		id="form-item-#echo element.name #">
 		#if element.attr('label', '')
-		<label class="field-label">#echo element.attr('label') #</label>
+		<label class="field-label">#echo element.attr('label') ##if element.attr('required') then '<span class="required">*</span> ' else ''#</label>
 		#end if
 		#echo element.render($req, fieldset=True) #
 		#if element.attr('help', '')
