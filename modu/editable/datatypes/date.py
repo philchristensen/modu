@@ -87,12 +87,13 @@ class DateField(define.definition):
 		"""])
 		
 		attribs = {}
+		
 		if(value is None):
-			if(self.get('default_now', False)):
-				value = datetime.datetime.now()
-			else:
-				frm['null'](checked=True)
-				attribs['disabled'] = None
+			frm['null'](checked=True)
+			attribs['disabled'] = None
+		
+		if(not storable.get_id() and self.get('default_now', False)):
+			value = datetime.datetime.now()
 		
 		frm['date'](type=self.get('style', 'datetime'), value=value, attributes=attribs, start_year=start_year, end_year=end_year)
 		
