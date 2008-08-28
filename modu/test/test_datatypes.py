@@ -353,6 +353,11 @@ class DatatypesTestCase(unittest.TestCase):
 		reference_form['start_date']['date']['year'](type='select', weight=2, options=years, value=2)
 		reference_form['start_date']['date']['hour'](type='select', weight=3, options=hours, value=23)
 		reference_form['start_date']['date']['minute'](type='select', weight=4, options=minutes, value=40)
+		reference_form['start_date'](
+			suffix = tags.script(type="text/javascript")["""
+				enableDateField($('#form-item-start_date input'));
+			"""],
+		)
 		
 		reference_form['save'](type='submit', value='save', weight=1000)
 		reference_form['cancel'](type='submit', value='cancel', weight=1001)

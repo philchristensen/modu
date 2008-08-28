@@ -22,6 +22,60 @@ DAY = 86400
 MONTH = DAY * 31
 YEAR = DAY * 365
 
+class CurrentDateField(define.definition):
+	"""
+	Display a checkbox that allows updating a date field with the current date.
+	"""
+	def get_element(self, req, style, storable):
+		"""
+		@see: L{modu.editable.define.definition.get_element()}
+		"""
+		value = getattr(storable, self.get_column_name(), None)
+		if(value):
+			output = date.strftime(value, self.get('format_string', '%B %d, %Y at %I:%M%p'))
+		else:
+			output = ''
+		
+		if(style == 'search'):
+			frm = form.FormNode(self.name)
+			return frm
+		elif(style == 'listing' or (style == 'detail' and self.get('read_only', False))):
+			frm = form.FormNode(self.name)
+			frm(type='label', value=output)
+			return frm
+		
+		frm = form.FormNode(self.name)(
+			type	= 'checkbox',
+			checked	= bool(output),
+			suffix	= '&nbsp;&nbsp;' + tags.small()[output]
+		)
+		
+		#if(self.get('write_once', False) and bool(output)):
+		if(bool(output)):
+			frm(
+				attributes = dict(
+					disabled	= True,
+				),
+				suffix = tags.input(
+					type	= 'hidden',
+					name	= '%s-form[%s]' % (self.itemdef.name, self.name),
+					value	= 1,
+				) + frm.suffix
+			)
+		
+		return frm
+	
+	def update_storable(self, req, form, storable):
+		if(form[self.name].attr('checked', False)):
+			value = datetime.datetime.now()
+			save_format = self.get('save_format', 'timestamp')
+			if(save_format == 'timestamp'):
+				setattr(storable, self.get_column_name(), date.convert_to_timestamp(value))
+			else:
+				setattr(storable, self.get_column_name(), value)
+		
+		return True
+
 class DateField(define.definition):
 	"""
 	Allow editing of date data via a multiple select interface or javascript popup calendar.
