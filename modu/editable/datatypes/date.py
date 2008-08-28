@@ -112,7 +112,14 @@ class DateField(define.definition):
 		"""
 		@see: L{modu.editable.define.definition.update_storable()}
 		"""
+		save_format = self.get('save_format', 'timestamp')
+		
 		if(self.get('read_only')):
+			if(self.get('default_now', False) and not storable.get_id()):
+				if(save_format == 'timestamp'):
+					setattr(storable, self.get_column_name(), int(time.time()))
+				else:
+					setattr(storable, self.get_column_name(), datetime.datetime.now())
 			return True
 		
 		data = form[self.name]['date']
@@ -130,7 +137,6 @@ class DateField(define.definition):
 		else:
 			value = None
 		
-		save_format = self.get('save_format', 'timestamp')
 		if(save_format == 'timestamp'):
 			setattr(storable, self.get_column_name(), date.convert_to_timestamp(value))
 		else:
