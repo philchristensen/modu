@@ -212,6 +212,7 @@ class FormNode(OrderedDict):
 		for submit in self.find_submit_buttons():
 			# NOTE: This assumes the browser sends the submit button's name
 			# in the submit POST data. This may not always work.
+			# TODO: probably needs to be revised to deal with IE's .x and .y behavior
 			if(check_submission(req, submit)):
 				self.submit_button = submit
 				break
@@ -323,14 +324,14 @@ class FormNode(OrderedDict):
 					loader = getattr(thm, loader_func, None)
 				if(callable(loader)):
 					loader(self, form_data)
-		elif(form_data):
+		else:
 			# It's unfortunate to have to hard-code this, but....
 			if(self.attributes['type'] == 'checkbox'):
-				self.attributes['checked'] = True
+				self.attributes['checked'] = bool(form_data)
 			else:
 				if(hasattr(form_data, 'value')):
 					self.attributes['value'] = form_data.value
-				else:
+				elif(form_data):
 					self.attributes['value'] = form_data
 	
 	def _validate(self, req, form):
