@@ -326,7 +326,7 @@ class FormNode(OrderedDict):
 					loader(self, form_data)
 		else:
 			# It's unfortunate to have to hard-code this, but....
-			if(self.attributes['type'] == 'checkbox'):
+			if(self.attr('type', '') == 'checkbox'):
 				self.attributes['checked'] = bool(form_data)
 			else:
 				if(hasattr(form_data, 'value')):
