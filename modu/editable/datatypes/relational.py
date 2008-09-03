@@ -124,7 +124,7 @@ class ForeignAutocompleteField(define.definition):
 		
 		prefs = 'autoFill:1, selectFirst:1, matchSubset:0, selectOnly:1, formatItem:formatItem, extraParams:{t:%d}, minChars:%d' % (int(time.time()), self.get('min_chars', 3))
 		ac_javascript = '$("#%s").autocomplete("%s", '
-		ac_javascript += '{onItemSelect:select_foreign_item("%s"), %s});'
+		ac_javascript += '{onItemSelect:select_item("%s"), %s});'
 		ac_javascript = ac_javascript % (ac_id, ac_url, ac_cb_id, prefs)
 		ac_javascript = tags.script(type='text/javascript')[ac_javascript]
 		

@@ -8,6 +8,7 @@
 import copy, datetime
 
 from modu.util import tags, OrderedDict, date
+from modu import assets
 
 def formelement(func):
 	def _form_render(self, form_id, form):
@@ -230,6 +231,68 @@ class Theme(object):
 			options = ' '
 		
 		return tags.select(**attribs)[options]
+	
+	@formelement
+	def theme_select_autocomplete(self, form_id, element):
+		self.req.content.report('header', tags.script(type="text/javascript",
+			src=assets.get_jquery_path(self.req))[''])
+		self.req.content.report('header', tags.script(type="text/javascript",
+			src=self.req.get_path("/assets/jquery/jquery.autocomplete.js"))[''])
+		self.req.content.report('header', tags.script(type="text/javascript",
+			src=self.req.get_path("/assets/editable-autocomplete.js"))[''])
+		
+		self.req.content.report('header', tags.style(type="text/css")[
+			"""@import '%s';""" % self.req.get_path('/assets/jquery/jquery.autocomplete.css')])
+		
+		self.req.content.report('header', tags.script(type="text/javascript")[
+			"""
+			function formatItem(item, index, totalItems){
+				return item[0].replace('<', '&lt;').replace('>', '&gt;')
+			}
+			"""
+		])
+		ac_id = '%s-%s-autocomplete' % (form_id, element.name)
+		ac_cb_id = '%s-%s-ac-callback' % (form_id, element.name)
+		
+		options = element.attr('options', [])
+		optlist = repr([[v, k] for k, v in options.items()])
+		
+		prefs = dict(
+			autoFill	= 1,
+			selectFirst	= 1,
+			matchSubset	= 0,
+			selectOnly	= 1,
+			formatItem	= 'formatItem',
+		)
+		prefs = ','.join(['%s:%s' % (k, v) for k, v in prefs.items()])
+		
+		ac_javascript = tags.script(type='text/javascript')[
+			'$("#%s").autocompleteArray(%s, {onItemSelect:select_item("%s"), %s});' % (ac_id, optlist, ac_cb_id, prefs)
+		]
+		
+		value = element.attr('value')
+		if(value):
+			label = options.get(value, None)
+			if(label is None):
+				label = value
+			output = tags.input(type="text", name=element.get_element_name() + '[ac]', id=ac_id, value=label)
+			output += tags.input(type="hidden", name=element.get_element_name() + '[value]', id=ac_cb_id, value=value)
+		else:
+			output = tags.input(type="text", name=element.get_element_name() + '[ac]', id=ac_id)
+			output += tags.input(type="hidden", name=element.get_element_name() + '[value]', id=ac_cb_id)
+		output += ac_javascript
+		
+		return output
+	
+	def theme_select_autocomplete_loader(self, form, form_data):
+		value = form_data['value'].value
+		options = form.attr('options', {})
+		ac_label = form_data['ac'].value
+		
+		if(options.get(value, None) != ac_label):
+			value = ac_label
+		
+		form(value=value)
 	
 	@formelement
 	def theme_radiogroup(self, form_id, element):
