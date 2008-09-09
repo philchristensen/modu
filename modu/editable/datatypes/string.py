@@ -11,6 +11,7 @@ Datatypes for managing stringlike data.
 
 from zope.interface import implements
 
+from modu import assets
 from modu.editable import IDatatype, define
 from modu.util import form, tags
 from modu.persist import sql
@@ -70,11 +71,19 @@ class LabelValueField(SearchFieldMixin, define.definition):
 		if(style == 'search'):
 			frm(type='textfield', size=10) 
 		else:
+			req.content.report('header', tags.script(type="text/javascript",
+				src=assets.get_jquery_path(req))[''])
+			
 			value = getattr(storable, self.get_column_name(), '')
 			if not(value):
 				value = '(none)'
-			prefix = tags.label()[value]
-			frm(type='hidden', value=value, prefix=prefix)
+			prefix = tags.label(id="%s-label" % self.name)[value]
+			
+			frm(type='hidden', value=value, attributes=dict(id="%s-field" % self.name),
+				prefix=prefix, suffix=tags.script(type="text/javascript")["""
+					$('#%s-label').html($('#%s-field').val());
+				""" % (self.name, self.name)])
+		
 		return frm
 
 
