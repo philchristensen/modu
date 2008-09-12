@@ -216,7 +216,7 @@ class Theme(object):
 		
 		if(attribs['size'] == 1):
 			option_keys.insert(0, '')
-			option_data[''] = 'Select...'
+			option_data[''] = element.attr('null_text', 'Select...')
 			del attribs['size']
 		
 		def _create_option(k):
