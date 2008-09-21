@@ -35,7 +35,7 @@ class Site(object):
 		application.activate('/assets', static.FileResource, os.path.dirname(assets.__file__))
 		
 		import ${project_name}.itemdefs
-		application.activate('/admin', resource.AdminResource, default_listing='page', itemdef_module=${project_name}.itemdefs)
+		application.activate('/admin', resource.AdminResource, default_path='admin/listing/page', itemdef_module=${project_name}.itemdefs)
 		
 		application.activate('/fck', fck.FCKEditorResource)
 		application.activate('/', index.Resource)
