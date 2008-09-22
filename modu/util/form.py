@@ -266,12 +266,12 @@ class FormNode(OrderedDict):
 		else:
 			return item.errors.get(self.name)
 	
-	def render(self, req, fieldset=False):
+	def render(self, req, fieldset=False, current_theme=None):
 		"""
 		This method calls the appropriate theme functions against
 		this form and request, and returns HTML for display.
 		"""
-		thm = self.get_theme(req)
+		thm = self.get_theme(req, current=current_theme)
 		
 		if(fieldset):
 			default_type = 'fieldset'

@@ -26,6 +26,9 @@
 		$category
 		<div class="subnav-list">
 		#for itemdef in $itemdefs
+			#if itemdef.config.get('hidden', False)
+				#continue
+			#end if
 			#if 'resource' in itemdef.config
 			<a href="$req.get_path($req.prepath, 'custom', $itemdef.get_name())" class="#if $selected_itemdef.get_name() == $itemdef.get_name() then 'active' else ''#">&raquo; $itemdef.config.get('label', $itemdef.get_name())</a>
 			#else
