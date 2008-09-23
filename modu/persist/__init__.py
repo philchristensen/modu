@@ -493,17 +493,18 @@ class Store(object):
 		data = storable.get_data()
 		
 		use_locks = False
+		primary_key = factory.get_primary_key()
 		
 		if(storable.is_new()):
 			if(factory.uses_guids()):
-				data[factory.get_primary_key()] = self.fetch_id(storable)
+				data[primary_key] = self.fetch_id(storable)
 			else:
 				use_locks = True
 				self.pool.runOperation('LOCK TABLES `%s` WRITE' % table)
 			
 			query = sql.build_insert(table, data)
 		else:
-			query = sql.build_update(table, data, {'id':storable.get_id()})
+			query = sql.build_update(table, data, {primary_key:storable.get_id()})
 		
 		self.log(query)
 		
@@ -512,7 +513,7 @@ class Store(object):
 			
 			if not(factory.uses_guids()):
 				if not(storable.get_id()):
-					rows = self.pool.runQuery('SELECT MAX(%s) AS `id` FROM `%s`' % (factory.get_primary_key(), table))
+					rows = self.pool.runQuery('SELECT MAX(%s) AS `id` FROM `%s`' % (primary_key, table))
 					new_id = rows[0]['id']
 					storable.set_id(new_id)
 		finally:
@@ -559,7 +560,12 @@ class Store(object):
 		Internal function that is responsible for doing the
 		actual destruction.
 		"""
-		delete_query = sql.build_delete(storable.get_table(), {'id':storable.get_id()})
+		factory = storable.get_factory()
+		if(factory.uses_guids()):
+			primary_key = factory.get_primary_key()
+			delete_query = sql.build_delete(storable.get_table(), {primary_key:storable.get_id()})
+		else:
+			delete_query = sql.build_delete(storable.get_table(), storable.get_data())
 
 		self.pool.runOperation(delete_query)
 		storable.reset_id()
