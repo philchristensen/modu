@@ -314,7 +314,8 @@ class itemdef(OrderedDict):
 		
 		frm['save'](type='submit', value='save')
 		frm['cancel'](type='submit', value='cancel')
-		frm['delete'](type='submit', value='delete',
+		if not(self.config.get('no_delete', False)):
+			frm['delete'](type='submit', value='delete',
 						attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
 		def _validate(req, form):
@@ -561,6 +562,9 @@ class itemdef(OrderedDict):
 		@return: True if deleted
 		@rtype: bool
 		"""
+		if(self.config.get('no_delete', False)):
+			return False
+		
 		if('predelete_callback' in self.config):
 			result = self.config['predelete_callback'](req, form, storable)
 			if(result is False):
