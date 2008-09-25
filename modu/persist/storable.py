@@ -118,6 +118,11 @@ class IStorable(Interface):
 		Return the store this object came from.
 		"""
 	
+	def reload(self):
+		"""
+		Reload this object, discarding any unsaved changes.
+		"""
+	
 	def load_data(self, data):
 		"""
 		Load the provided data into this object in some way.
@@ -312,6 +317,15 @@ class Storable(object):
 		if not(factory.store):
 			raise RuntimeError, "This object's factory has not been registered with a Store."
 		return factory.store
+		
+	def reload(self):
+		"""
+		Reload this object from the database, discarding any unsaved changes.
+		"""
+		factory = self.get_factory()
+		[current] = factory.get_items(dict(id=self.get_id()))
+		self.load_data(current.get_data())
+		self.clean()
 		
 	def load_data(self, data):
 		"""
