@@ -276,7 +276,7 @@ def raise404(path=None):
 	if(path):
 		content += tags.strong()[path]
 	content += tags.hr()
-	content += get_process_info()
+	#content += get_process_info()
 	raise web.HTTPStatus('404 Not Found', [('Content-Type', 'text/html')], [content])
 
 def raise403(path=None):
