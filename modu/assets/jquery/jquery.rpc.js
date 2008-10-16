@@ -112,7 +112,7 @@ jQuery.rpc = function(url, dataType, onLoadCallback, version) {
 			// console.log(params);
 			var data;
 			if(dataType == 'json') {
-				data = {"version":version, "method":method, "params":params};
+				data = {"version":version, "method":method, "params":params}.toString();
 			} else {
 				data = xmlRpc(method, params);
 			}

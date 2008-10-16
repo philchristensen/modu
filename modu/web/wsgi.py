@@ -142,6 +142,7 @@ class WSGIResource(resource.Resource):
 	isLeaf = True
 	
 	def __init__(self, application, env=None):
+		resource.Resource.__init__(self)
 		self.application = application
 		self.env = env
 	
