@@ -10,14 +10,14 @@ JQUERY_UI_VERSION = '1.5b4'
 JQUERY_PACKED = True
 JQUERY_UI_PACKED = True
 
-def get_jquery_path(req, packed=True):
+def get_jquery_path(req, packed=JQUERY_PACKED):
 	if(packed):
 		packed = '.pack'
 	else:
 		packed = ''
 	return req.get_path('/assets/jquery/jquery-%s%s.js' % (JQUERY_VERSION, packed))
 
-def get_jquery_ui_path(req, full=False, packed=True):
+def get_jquery_ui_path(req, full=False, packed=JQUERY_UI_PACKED):
 	if(full):
 		core = 'jquery.ui-all-%s' % JQUERY_UI_VERSION
 	else:
@@ -30,7 +30,7 @@ def get_jquery_ui_path(req, full=False, packed=True):
 	
 	return url
 
-def get_jquery_ui_component_path(req, module, packed=True):
+def get_jquery_ui_component_path(req, module, packed=JQUERY_UI_PACKED):
 	if(packed and JQUERY_UI_VERSION != '1.0'):
 		url = req.get_path('/assets/jquery/jquery.ui-%s' % JQUERY_UI_VERSION, 'packed-javascript/%s.packed.js' % module)
 	else:

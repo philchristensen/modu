@@ -112,7 +112,7 @@ jQuery.rpc = function(url, dataType, onLoadCallback, version) {
 			// console.log(params);
 			var data;
 			if(dataType == 'json') {
-				data = {"version":version, "method":method, "params":params}.toString();
+				data = JSON.stringify({"version":version, "method":method, "params":params});
 			} else {
 				data = xmlRpc(method, params);
 			}
@@ -135,7 +135,7 @@ jQuery.rpc = function(url, dataType, onLoadCallback, version) {
 		};
 		_rpc("system.listMethods", 
 			function(json) {
-				// console.log(json);
+				console.log(json);
 				/* get the functions */
 				if(!json.result) {
 					return;
