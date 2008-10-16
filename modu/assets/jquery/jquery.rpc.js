@@ -124,10 +124,12 @@ jQuery.rpc = function(url, dataType, onLoadCallback, version) {
 				"success": function(inp) {
 					var json = inp;
 					if(dataType == "xml") {
-						json = parseXmlResponse(inp);
+						callback(parseXmlResponse(inp));
 					}
-					// console.log("json response:", json);
-					callback(json);
+					else{
+						setStatus(inp.toString());
+						callback(inp[0]);
+					}
 				},
 				"processData": false,
 				"contentType": rpc_contents[dataType]
@@ -135,14 +137,11 @@ jQuery.rpc = function(url, dataType, onLoadCallback, version) {
 		};
 		_rpc("system.listMethods", 
 			function(json) {
-				console.log(json);
+				//console.log(json);
 				/* get the functions */
-				if(!json.result) {
-					return;
-				}
 				var proc = null;
-				for(var i = 0; i<json.result.length; i++) {
-					proc = json.result[i];
+				for(var i = 0; i<json.length; i++) {
+					proc = json[i];
 					var obj = _self;
 					var objStack = proc.split(/\./);
 					for(var j = 0; j < (objStack.length - 1); j++){
