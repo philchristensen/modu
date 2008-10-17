@@ -127,7 +127,6 @@ jQuery.rpc = function(url, dataType, onLoadCallback, version) {
 						callback(parseXmlResponse(inp));
 					}
 					else{
-						setStatus(inp.toString());
 						callback(inp[0]);
 					}
 				},
