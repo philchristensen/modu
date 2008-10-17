@@ -272,6 +272,8 @@ def build_where(data=None, use_where=True, **kwargs):
 		query += ' AND '.join(criteria)
 	if('__order_by' in data):
 		query += ' ORDER BY %s' % data['__order_by']
+	if('__group_by' in data):
+		query += ' GROUP BY %s' % data['__group_by']
 	if('__limit' in data):
 		query += ' LIMIT %s' % data['__limit']
 	
