@@ -122,12 +122,18 @@ jQuery.rpc = function(url, dataType, onLoadCallback, version) {
 				"type": "POST",
 				"data": data,
 				"success": function(inp) {
-					var json = inp;
+					//console.log(inp);
 					if(dataType == "xml") {
 						callback(parseXmlResponse(inp));
 					}
 					else{
-						callback(inp[0]);
+						if(inp.fault){
+							if(console && console.log)
+								console.log(inp);
+						}
+						else{
+							callback(inp[0]);
+						}
 					}
 				},
 				"processData": false,
