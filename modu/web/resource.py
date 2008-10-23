@@ -359,10 +359,10 @@ class TemplateContent(object):
 		self.set_slot('req', req)
 		if('modu.content' in req):
 			self.set_slot('header_content', "\n".join([str(i) for i in req.content.get('header')]))
-		if('modu.user' in req):
-			self.set_slot('user', req['modu.user'])
-		else:
+		if(req.get('modu.user', None) is None):
 			self.set_slot('user', None)
+		else:
+			self.set_slot('user', req['modu.user'])
 	
 	def get_content_type(self, req):
 		"""
