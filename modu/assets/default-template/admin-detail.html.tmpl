@@ -2,6 +2,16 @@
 
 <h2>$getVar('title', 'record detail')</h2>
 
+<div class="nav-links">
+#if not $selected_itemdef.config.get('hidden', False)
+<a href="$req.get_path($req.prepath, 'listing', $selected_itemdef.get_table())">Return to Listing</a>
+#end if
+#if not $selected_itemdef.config.get('no_create', False)
+#if not $selected_itemdef.config.get('hidden', False) then '|' else ''#
+<a href="$req.get_path($req.prepath, 'detail', $selected_itemdef.get_table(), 'new')">Create New Record</a>
+#end if
+</div>
+
 #if $form
 ## This is very strange. For some reason if I use just $form in the form tag's
 ## echo statements, only repr(form) is output. If I omit the dollar sign
