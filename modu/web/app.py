@@ -22,7 +22,8 @@ Primary components of the modu webapp foundation.
 @type pools_lock: threading.BoundedSemaphore
 """
 
-import os, os.path, sys, stat, copy, mimetypes, traceback, threading
+import os, os.path, sys, stat, copy
+import mimetypes, traceback, threading, urllib
 
 from modu import persist, web
 from modu.util import url, tags, queue, form
@@ -484,7 +485,7 @@ class Request(dict):
 			return True
 		return False
 	
-	def get_path(self, *args, **options):
+	def get_path(self, *args, **query):
 		def _deslash(fragment):
 			if(isinstance(fragment, (list, tuple))):
 				return '/'.join(fragment)
@@ -510,6 +511,8 @@ class Request(dict):
 				prefix += ':' + self['SERVER_PORT']
 		
 		result = prefix + result
+		if(query):
+			result += '?' + urllib.urlencode(query)
 		
 		if('url_rewriter' in self):
 			result = self['url_rewriter'](self, result)
