@@ -39,7 +39,11 @@ class CheckboxField(define.definition):
 			frm(type='checkbox', value=self.get('checked_value', 1))
 			if(str(getattr(storable, self.get_column_name(), None)) == str(self.get('checked_value', 1))):
 				frm(checked=True)
-		
+			
+			default_value = self.get('default_value', None)
+			if(not storable.get_id() and default_value is not None):
+				frm(checked=bool(default_value))
+			
 			if(style == 'listing' or self.get('read_only', False)):
 				frm(disabled=True)
 		
