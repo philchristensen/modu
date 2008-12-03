@@ -296,23 +296,21 @@ class Theme(object):
 	
 	@formelement
 	def theme_radiogroup(self, form_id, element):
-		attribs = element.attr('attributes', {})
-		attribs['name'] = element.get_element_name()
-		attribs['type'] = 'radio'
-
 		comparator = element.attr('sort', cmp)
-		
 		options_clone = copy.copy(element.attr('options', []))
 		option_keys, option_data = self._mangle_option_data(options_clone, comparator)
 		
-		def _create_radio(value, default_value, **attribs):
+		def _create_radio(value, default_value):
+			attribs = {}
 			if(str(value) == str(default_value)):
 				attribs['checked'] = None
 			attribs['value'] = value
+			attribs['type'] = 'radio'
+			attribs['name'] = element.get_element_name()
 			return tags.input(**attribs)
 		
 		element = [str(tags.label()[[
-			_create_radio(key, element.attr('value', None), **attribs),
+			_create_radio(key, element.attr('value', None)),
 			' ', option_data[key]
 		]]) for key in option_keys]
 		
