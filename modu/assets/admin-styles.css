@@ -37,6 +37,10 @@ strong {
 	font-size: 12px;
 }
 
+.minor-help {
+	color: #888;
+}
+
 .form-error {
 	border: 1px solid #aa6666;
 	background-color: #ff9999;

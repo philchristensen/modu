@@ -47,10 +47,10 @@ class CurrentDateField(define.definition):
 		frm = form.FormNode(self.name)(
 			type	= 'checkbox',
 			checked	= bool(output),
-			suffix	= '&nbsp;&nbsp;' + tags.small()[output]
+			suffix	= '&nbsp;&nbsp;' + tags.small()[output],
+			text	= '&nbsp;&nbsp;' + tags.small(_class='minor-help')['check to set current date']
 		)
 		
-		#if(self.get('write_once', False) and bool(output)):
 		if(bool(output)):
 			frm(
 				attributes = dict(
