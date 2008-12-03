@@ -93,7 +93,7 @@ class StringField(SearchFieldMixin, define.definition):
 	"""
 	implements(IDatatype)
 	
-	inherited_attributes = ['size', 'maxlength']
+	inherited_attributes = ['size', 'maxlength', 'autocomplete']
 	
 	def get_element(self, req, style, storable):
 		"""
@@ -176,18 +176,18 @@ class PasswordField(define.definition):
 			return entry_frm
 		
 		if(self.get('obfuscate', True)):
-			entry_frm(type='password')
+			entry_frm(type='password', autocomplete='off')
 		else:
-			entry_frm(type='textfield')
+			entry_frm(type='textfield', autocomplete='off')
 		
 		if(self.get('verify', True)):
 			entry_frm.name += '-entry'
 			entry_frm.attributes['value'] = ''
 			verify_frm = form.FormNode('%s-verify' % self.name)
 			if(self.get('obfuscate', True)):
-				verify_frm(type='password')
+				verify_frm(type='password', autocomplete='off')
 			else:
-				verify_frm(type='textfield')
+				verify_frm(type='textfield', autocomplete='off')
 			
 			frm = form.FormNode(self.name)(type='fieldset', style='brief')
 			frm['entry'] = entry_frm
