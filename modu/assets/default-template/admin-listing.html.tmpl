@@ -28,13 +28,14 @@ $page_guide
 		<tr>
 		#for column in first_row.values()
 			#set name = column.attr('label', column.attr('name'))
-			<th>$name</th>
+			#set col_id = column.attr('name') + '-col'
+			<th id="$col_id">$name</th>
 		#end for
 		</tr>
 		#for row in $forms
 		<tr>
-		#for column in row
-			<td>#echo row[column].render($req) #</td>
+		#for column in row.values()
+			<td>#echo column.render($req) #</td>
 		#end for
 		</tr>
 		#end for

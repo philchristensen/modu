@@ -41,7 +41,10 @@ class CurrentDateField(define.definition):
 			return frm
 		elif(style == 'listing' or (style == 'detail' and self.get('read_only', False))):
 			frm = form.FormNode(self.name)
-			frm(type='label', value=output)
+			if(self.get('date_in_listing', True)):
+				frm(type='label', value=output)
+			else:
+				frm(type='checkbox', disabled=True, checked=bool(output))
 			return frm
 		
 		frm = form.FormNode(self.name)(
