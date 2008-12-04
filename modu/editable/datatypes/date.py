@@ -39,19 +39,26 @@ class CurrentDateField(define.definition):
 		if(style == 'search'):
 			frm = form.FormNode(self.name)
 			return frm
-		elif(style == 'listing' or (style == 'detail' and self.get('read_only', False))):
+		elif(style == 'listing'):
 			frm = form.FormNode(self.name)
 			if(self.get('date_in_listing', True)):
+				if(output == ''):
+					output = '(none)'
 				frm(type='label', value=output)
 			else:
 				frm(type='checkbox', disabled=True, checked=bool(output))
+			return frm
+		elif(style == 'detail' and self.get('read_only', False)):
+			if(output == ''):
+				output = '(none)'
+			frm = form.FormNode(self.name)
+			frm(type='label', value=output)
 			return frm
 		
 		frm = form.FormNode(self.name)(
 			type	= 'checkbox',
 			checked	= bool(output),
 			suffix	= '&nbsp;&nbsp;' + tags.small()[output],
-			text	= '&nbsp;&nbsp;' + tags.small(_class='minor-help')['check to set current date']
 		)
 		
 		if(bool(output)):
@@ -64,6 +71,10 @@ class CurrentDateField(define.definition):
 					name	= '%s-form[%s]' % (self.itemdef.name, self.name),
 					value	= 1,
 				) + frm.suffix
+			)
+		else:
+			frm(
+				text	= '&nbsp;&nbsp;' + tags.small(_class='minor-help')['check to set current date']
 			)
 		
 		return frm
