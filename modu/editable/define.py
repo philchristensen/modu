@@ -99,7 +99,9 @@ def get_itemdef_layout(req, itemdefs=None):
 		
 		acl = itemdef.config.get('acl', '')
 		if('acl' not in itemdef.config or req.user.is_allowed(acl)):
-			cat = itemdef.config.get('category', 'other')
+			cat = itemdef.config.get('category', None)
+			if(cat is None):
+				continue
 			layout.setdefault(cat, []).append(itemdef)
 			layout[cat].sort(itemdef_cmp)
 	return layout

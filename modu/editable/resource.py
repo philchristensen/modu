@@ -318,8 +318,12 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			forms = itemdef.get_listing(req, items)
 			thm = theme.Theme(req)
 			
+			if(len(search_form)):
+				self.set_slot('search_form', search_form.render(req))
+			else:
+				self.set_slot('search_form', '')
+			
 			self.set_slot('pager', pager)
-			self.set_slot('search_form', search_form.render(req))
 			self.set_slot('page_guide', thm.page_guide(pager, req.get_path(req.path)))
 			self.set_slot('forms', forms)
 			self.set_slot('theme', thm)

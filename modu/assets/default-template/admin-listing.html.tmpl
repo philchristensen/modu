@@ -12,10 +12,12 @@
 #end if
 </div>
 
-<div id="search">
-<h3>search</h3>
-$search_form
-</div>
+#if $search_form
+	<div id="search">
+	<h3>search</h3>
+	$search_form
+	</div>
+#end if
 
 $page_guide
 
