@@ -18,7 +18,12 @@ def createCGIEnvironment(request):
 	# See http://hoohoo.ncsa.uiuc.edu/cgi/env.html for CGI interface spec
 	# http://cgi-spec.golux.com/draft-coar-cgi-v11-03-clean.html for a better one
 	#remotehost = request.remoteAddr
-	serverName = request.getRequestHostname().split(':')[0]
+	parts = request.getRequestHostname().split(':')
+	serverName = parts[0]
+	if(len(parts) > 1):
+		requestHost = parts[1]
+	else:
+		requestHost = '80'
 	python_path = os.pathsep.join(sys.path)
 	
 	env = {} #dict(os.environ)
@@ -64,7 +69,7 @@ def createCGIEnvironment(request):
 		env["SCRIPT_NAME"] = ''
 	
 	env["SERVER_NAME"] = serverName
-	env["SERVER_PORT"] = str(request.getHost().port)
+	env["SERVER_PORT"] = requestHost #str(request.getHost().port)
 	
 	env["SERVER_PROTOCOL"] = request.clientproto
 	env["SERVER_SOFTWARE"] = server.version
