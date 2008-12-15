@@ -23,7 +23,7 @@ def createCGIEnvironment(request):
 	if(len(parts) > 1):
 		requestPort = parts[1]
 	else:
-		requestPort = str(request.getHost().port)
+		requestPort = '80' #str(request.getHost().port)
 	
 	env = {} #dict(os.environ)
 	# MUST provide:
