@@ -130,8 +130,8 @@ def configure_request(env, application):
 	
 	env['modu.app'] = application
 	
-	env['SCRIPT_NAME'] = application.base_path
 	
+	env['SCRIPT_NAME'] = application.base_path
 	# once the previous line is gone, this next
 	# block should be able to be moved elsewhere
 	if(env['REQUEST_URI'].find('?') < 0):
@@ -145,11 +145,11 @@ def configure_request(env, application):
 	else:
 		env['PATH_INFO'] = uri
 	
+	if not(env['PATH_INFO'].startswith('/')):
+		env['PATH_INFO'] = '/' + env['PATH_INFO']
+	
 	env['modu.approot'] = application.approot
 	env['modu.path'] = env['PATH_INFO']
-	
-	if not(env['PATH_INFO'].startswith('/')):
-		env['modu.path'] = env['PATH_INFO'] = '/' + env['PATH_INFO']
 	
 	approot = env['modu.approot']
 	webroot = os.path.join(approot, application.webroot)
@@ -227,10 +227,10 @@ def get_application(env):
 		
 		host_node = host_tree[host]
 		
-		if not(host_node.has_path(env['REQUEST_URI'])):
+		if not(host_node.has_path(env['SCRIPT_NAME'])):
 			_scan_sites(env)
 		
-		app = host_node.get_data_at(env['REQUEST_URI'])
+		app = host_node.get_data_at(env['SCRIPT_NAME'])
 	finally:
 		host_tree_lock.release()
 	

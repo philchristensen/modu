@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import urllib, os, sys, threading
+import urllib, os, threading
 
 from twisted.internet import defer, threads
 from twisted.web import resource, server, util
@@ -18,13 +18,12 @@ def createCGIEnvironment(request):
 	# See http://hoohoo.ncsa.uiuc.edu/cgi/env.html for CGI interface spec
 	# http://cgi-spec.golux.com/draft-coar-cgi-v11-03-clean.html for a better one
 	#remotehost = request.remoteAddr
-	parts = request.getRequestHostname().split(':')
+	parts = request.received_headers['host'].split(':')
 	serverName = parts[0]
 	if(len(parts) > 1):
 		requestPort = parts[1]
 	else:
-		requestPort = '80' #str(request.getHost().port)
-	python_path = os.pathsep.join(sys.path)
+		requestPort = str(request.getHost().port)
 	
 	env = {} #dict(os.environ)
 	# MUST provide:
@@ -36,10 +35,6 @@ def createCGIEnvironment(request):
 		env["CONTENT_TYPE"] = request.received_headers['content-type']
 	
 	env["GATEWAY_INTERFACE"] = "CGI/1.1"
-	
-	if request.postpath:
-		# Should we raise an exception if this contains "/" chars?
-		env["PATH_INFO"] = '/' + '/'.join(request.postpath)
 	
 	# MUST always be present, even if no query
 	qindex = request.uri.find('?')
@@ -63,10 +58,15 @@ def createCGIEnvironment(request):
 	
 	env["REQUEST_METHOD"] = request.method
 	# Should we raise an exception if this contains "/" chars?
+	env["SCRIPT_NAME"] = '/'
 	if request.prepath:
-		env["SCRIPT_NAME"] = '/' + '/'.join(request.prepath)
-	else:
-		env["SCRIPT_NAME"] = ''
+		env["SCRIPT_NAME"] += '/'.join(request.prepath)
+		# print 'sn: ' + env['SCRIPT_NAME']
+	
+	env["PATH_INFO"] = '/'
+	if request.postpath:
+		env["PATH_INFO"] += '/'.join(request.postpath)
+		# print 'pi: ' + env['PATH_INFO']
 	
 	env["SERVER_NAME"] = serverName
 	env["SERVER_PORT"] = requestPort
