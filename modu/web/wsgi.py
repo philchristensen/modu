@@ -21,9 +21,9 @@ def createCGIEnvironment(request):
 	parts = request.getRequestHostname().split(':')
 	serverName = parts[0]
 	if(len(parts) > 1):
-		requestHost = parts[1]
+		requestPort = parts[1]
 	else:
-		requestHost = '80'
+		requestPort = str(request.getHost().port)
 	python_path = os.pathsep.join(sys.path)
 	
 	env = {} #dict(os.environ)
@@ -69,7 +69,7 @@ def createCGIEnvironment(request):
 		env["SCRIPT_NAME"] = ''
 	
 	env["SERVER_NAME"] = serverName
-	env["SERVER_PORT"] = requestHost #str(request.getHost().port)
+	env["SERVER_PORT"] = requestPort
 	
 	env["SERVER_PROTOCOL"] = request.clientproto
 	env["SERVER_SOFTWARE"] = server.version
