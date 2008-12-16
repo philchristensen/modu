@@ -22,21 +22,30 @@
 	#silent categories.sort()
 	#for $category in $categories
 	#set itemdefs = $itemdef_layout[category]
-	<div class="nav-list">
-		$category
-		<div class="subnav-list">
-		#for itemdef in $itemdefs
-			#if itemdef.config.get('hidden', False)
-				#continue
-			#end if
-			#if 'resource' in itemdef.config
-			<a href="$req.get_path($req.prepath, 'custom', $itemdef.get_name())" class="#if $selected_itemdef.get_name() == $itemdef.get_name() then 'active' else ''#">&raquo; $itemdef.config.get('label', $itemdef.get_name())</a>
-			#else
-			<a href="$req.get_path($req.prepath, 'listing', $itemdef.get_name())" class="#if $selected_itemdef.get_name() == $itemdef.get_name() then 'active' else ''#">&raquo; $itemdef.config.get('label', $itemdef.get_name())</a>
-			#end if
-		#end for
+	#set is_visible = False
+	#for itemdef in $itemdefs
+		#if not itemdef.config.get('hidden', False)
+			#set is_visible = True
+			#break
+		#end if
+	#end for
+	#if is_visible
+		<div class="nav-list">
+			$category
+			<div class="subnav-list">
+			#for itemdef in $itemdefs
+				#if itemdef.config.get('hidden', False)
+					#continue
+				#end if
+				#if 'resource' in itemdef.config
+				<a href="$req.get_path($req.prepath, 'custom', $itemdef.get_name())" class="#if $selected_itemdef.get_name() == $itemdef.get_name() then 'active' else ''#">&raquo; $itemdef.config.get('label', $itemdef.get_name())</a>
+				#else
+				<a href="$req.get_path($req.prepath, 'listing', $itemdef.get_name())" class="#if $selected_itemdef.get_name() == $itemdef.get_name() then 'active' else ''#">&raquo; $itemdef.config.get('label', $itemdef.get_name())</a>
+				#end if
+			#end for
+			</div>
 		</div>
-	</div>
+	#end if
 	#end for
 </div>
 #end if
