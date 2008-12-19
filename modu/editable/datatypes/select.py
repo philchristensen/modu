@@ -25,7 +25,7 @@ class SelectField(define.definition):
 		@see: L{modu.editable.define.definition.get_element()}
 		"""
 		value = getattr(storable, self.get_column_name(), None)
-		if not(storable.get_id()):
+		if(not storable.get_id() or not self.get('implicit_save', True)):
 			value = self.get('default_value', value)
 		
 		if(style == 'listing' or self.get('read_only', False)):
