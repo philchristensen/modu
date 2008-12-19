@@ -24,7 +24,7 @@ class CheckboxField(define.definition):
 	only submit form data when checked.
 	"""
 	implements(IDatatype)
-	search_list = ['checked', 'unchecked', 'no search']
+	search_list = ['unchecked', 'checked', 'no search']
 	
 	def get_element(self, req, style, storable):
 		"""
@@ -53,9 +53,9 @@ class CheckboxField(define.definition):
 		if(value is not None):
 			value = value.value
 			if(value == '0'):
-				return self.get('checked_value', 1)
+				return sql.RAW('IFNULL(%%s, 0) <> %s' % self.get('checked_value', 1))
 			elif(value == '1'):
-				return self.get('checked_value', 0)
+				return sql.RAW('IFNULL(%%s, 0) = %s' % self.get('checked_value', 1))
 		# a trick
 		return sql.RAW('IF(%s, 1, 1)')
 	
