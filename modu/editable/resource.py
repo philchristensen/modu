@@ -13,7 +13,7 @@ only with itemdef organization and management. Any form- or validation-
 specific code should go in L{modu.editable.define}.
 """
 
-import os.path, copy, re, datetime
+import os.path, copy, re, datetime, cgi
 
 from modu import util, web
 from modu.web import resource, app, user
@@ -70,11 +70,6 @@ def configure_store(req, itemdef):
 		req.store.ensure_factory(table_name, itemdef.config['model_class'], force=True)
 	else:
 		req.store.ensure_factory(table_name)
-
-def populate_new_item(req, selected_item):
-	if('__init__' in req.data):
-		for k, v in req.data['__init__'].items():
-			setattr(selected_item, k, v.value)
 
 class CustomRequestWrapper(object):
 	"""
@@ -238,9 +233,24 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		@type itemdef: L{modu.editable.define.itemdef}
 		"""
 		table_name = itemdef.config.get('table', itemdef.name)
+		session_search_data = req.session.setdefault('search_form', {}).setdefault(itemdef.name, {})
+		
+		form_data = req.data.get('%s-search-form' % itemdef.name, {})
+		if(isinstance(form_data, dict) and form_data.get('clear_search', '')):
+			req.session.setdefault('search_form', {})[itemdef.name] = {}
+			app.redirect(req.get_path(req.prepath, 'listing', itemdef.name))
 		
 		# create a fake storable to make itemdef/form happy
 		search_storable = storable.Storable(table_name)
+		if('default_search' in itemdef.config):
+			for k, v in itemdef.config['default_search'].items():
+				k = itemdef[k].get_column_name()
+				setattr(search_storable, k, v)
+		if(session_search_data):
+			for k, v in session_search_data.items():
+				k = itemdef[k].get_column_name()
+				setattr(search_storable, k, v)
+		
 		# give it a factory so fields can use its store reference
 		search_storable.set_factory(req.store.get_factory(table_name))
 		# build the form tree
@@ -256,8 +266,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 				order_by += ' DESC'
 		
 		search_attribs = {'__order_by':order_by}
-		
-		limits = None
+		#search_attribs.update(itemdef.config.get('default_where', {}))
 		
 		# this function will call search_form.execute()
 		search_params = self.get_search_params(req, itemdef, search_form)
@@ -303,23 +312,53 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			self.prepare_export(req, itemdef, items)
 	
 	def get_search_params(self, req, itemdef, search_form):
+		"""
+		Get a dictionary of search parameter.
+		
+		Take into consideration previous searches saved in session.
+		
+		@param req: the current request
+		@type req: L{modu.web.app.Request}
+		
+		@param itemdef: the itemdef to use to generate the listing
+		@type itemdef: L{modu.editable.define.itemdef}
+		
+		@param search_form: the search form, in case any custom fields need it
+		@type search_form: L{modu.util.form.FormNode}
+		"""
 		# get any saved search data
 		session_search_data = req.session.setdefault('search_form', {}).setdefault(itemdef.name, {})
 		data = {}
 		
-		if(search_form.execute(req)):
-			search_data = req.data[search_form.name]
-			if('clear_search' in search_data):
-				req.session.setdefault('search_form', {})[itemdef.name] = {}
-				app.redirect(req.get_path(req.prepath, 'listing', table_name))
+		if(session_search_data):
+			search_data = {search_form.name:session_search_data}
+			search_form.load_data(req, search_data)
 			
-			for submit in search_form.find_submit_buttons():
-				search_data.pop(submit.name, None)
+			for key, value in session_search_data.items():
+				cgi_value = cgi.MiniFieldStorage(key, value)
+				result = itemdef[key].get_search_value(cgi_value, req, search_form)
+				if(result is not None):
+					if(isinstance(result, dict)):
+						for k, v in result.items():
+							data[k] = v
+					else:
+						key = itemdef[key].get_column_name()
+						data[key] = result
+			#print 'session: %s' % data
+		
+		if(not session_search_data or search_form.execute(req)):
+			data = {}
 			
-			for key, value in search_data.items():
-				result = itemdef[key].get_search_value(value, req, search_form)
-				session_search_data[key] = value
-				key = itemdef[key].get('column', key)
+			submit_buttons = search_form.find_submit_buttons()
+			
+			for key, field in search_form.items():
+				if(key not in itemdef):
+					continue
+				
+				result = itemdef[key].get_search_value(field, req, search_form)
+				session_search_data[key] = field.value
+				
+				key = itemdef[key].get_column_name()
 				if(result is not None):
 					if(isinstance(result, dict)):
 						for k, v in result.items():
@@ -327,20 +366,6 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 					else:
 						data[key] = result
 			#print 'post: %s' % data
-		elif(session_search_data):
-			search_data = {search_form.name:session_search_data}
-			search_form.load_data(req, search_data)
-			
-			for key, value in session_search_data.items():
-				result = itemdef[key].get_search_value(value, req, search_form)
-				key = itemdef[key].get('column', key)
-				if(result is not None):
-					if(isinstance(result, dict)):
-						for k, v in result.items():
-							data[k] = v
-					else:
-						data[key] = result
-			#print 'session: %s' % data
 		
 		return data
 	
@@ -453,7 +478,11 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 				else:
 					selected_item = storable.Storable(table_name)
 				
-				populate_new_item(req, selected_item)
+				# Populate the new item if necessary
+				if('__init__' in req.data):
+					for k, v in req.data['__init__'].items():
+						setattr(selected_item, k, v.value)
+				
 				# we can be sure the factory is there, because configure_store
 				# already took care of it during prepare_content
 				factory = req.store.get_factory(table_name)

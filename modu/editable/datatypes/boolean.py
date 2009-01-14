@@ -32,9 +32,8 @@ class CheckboxField(define.definition):
 		"""
 		frm = form.FormNode(self.name)
 		if(style == 'search'):
-			search_value = getattr(storable, self.get_column_name(), 2)
-			
-			frm(type='radiogroup', options=self.search_list, value=2)
+			search_value = getattr(storable, self.get_column_name(), '2')
+			frm(type='radiogroup', options=self.search_list, value=search_value)
 		else:
 			frm(type='checkbox', value=self.get('checked_value', 1))
 			if(str(getattr(storable, self.get_column_name(), None)) == str(self.get('checked_value', 1))):
@@ -80,10 +79,9 @@ class NonNullSearchField(define.definition):
 		if(style != 'search'):
 			return form.FormNode(self.name)(type='label', value='n/a - Search Use Only')
 		else:
-			search_value = getattr(storable, self.get_column_name(), 2)
-			
+			search_value = getattr(storable, self.get_column_name(), '2')
 			frm = form.FormNode(self.name)
-			frm(type='radiogroup', options=self.search_list, value=2)
+			frm(type='radiogroup', options=self.search_list, value=search_value)
 			return frm
 	
 	def get_search_value(self, value, req, frm):
