@@ -239,9 +239,6 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		"""
 		table_name = itemdef.config.get('table', itemdef.name)
 		
-		query_data = form.NestedFieldStorage({'QUERY_STRING':req.get('QUERY_STRING', ''),
-												'wsgi.input':req['wsgi.input']})
-		
 		# create a fake storable to make itemdef/form happy
 		search_storable = storable.Storable(table_name)
 		# give it a factory so fields can use its store reference
@@ -252,69 +249,29 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		# a search submission will take us back to page 1
 		search_form(action=req.get_path(req.path))
 		
-		# get any saved search data
-		session_search_data = req.session.setdefault('search_form', {}).setdefault(itemdef.name, {})
-		
 		order_by = itemdef.config.get('order_by', 'id DESC')
-		if('order' in query_data and re.match(r'^\w+$', query_data['order'].value)):
-			order_by = query_data['order'].value
-			if('desc' in query_data and query_data['desc'].value):
+		if('order' in req.data and re.match(r'^\w+$', req.data['order'].value)):
+			order_by = req.data['order'].value
+			if('desc' in req.data and req.data['desc'].value):
 				order_by += ' DESC'
-		ordering_dict = {'__order_by':order_by}
+		
+		search_attribs = {'__order_by':order_by}
 		
 		limits = None
 		
-		if(search_form.execute(req)):
-			search_data = req.data[search_form.name]
-			if('clear_search' in search_data):
-				req.session.setdefault('search_form', {})[itemdef.name] = {}
-				app.redirect(req.get_path(req.prepath, 'listing', table_name))
-			
-			for submit in search_form.find_submit_buttons():
-				search_data.pop(submit.name, None)
-			
-			data = {}
-			data.update(ordering_dict)
-			for key, value in search_data.items():
-				result = itemdef[key].get_search_value(value, req, search_form)
-				session_search_data[key] = value
-				key = itemdef[key].get('column', key)
-				if(result is not None):
-					if(isinstance(result, dict)):
-						for k, v in result.items():
-							data[k] = v
-					else:
-						data[key] = result
-			#print 'post: %s' % data
-		elif(session_search_data):
-			search_data = {search_form.name:session_search_data}
-			search_form.load_data(req, search_data)
-			
-			data = {}
-			data.update(ordering_dict)
-			for key, value in session_search_data.items():
-				result = itemdef[key].get_search_value(value, req, search_form)
-				key = itemdef[key].get('column', key)
-				if(result is not None):
-					if(isinstance(result, dict)):
-						for k, v in result.items():
-							data[k] = v
-					else:
-						data[key] = result
-			#print 'session: %s' % data
-		else:
-			#print 'default: %s' % ordering_dict
-			data = ordering_dict
+		# this function will call search_form.execute()
+		search_params = self.get_search_params(req, itemdef, search_form)
+		search_attribs.update(search_params)
 		
 		if(req.postpath[0] == 'listing'):
 			pager = page.Paginator()
-			if('page' in query_data):
-				pager.page = int(query_data['page'].value)
+			if('page' in req.data):
+				pager.page = int(req.data['page'].value)
 			else:
 				pager.page = 1
 			pager.per_page = itemdef.config.get('per_page', 25)
 			
-			items = pager.get_results(req.store, table_name, data)
+			items = pager.get_results(req.store, table_name, search_attribs)
 			forms = itemdef.get_listing(req, items)
 			thm = theme.Theme(req)
 			
@@ -345,6 +302,47 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			items = req.store.load(table_name, data)
 			self.prepare_export(req, itemdef, items)
 	
+	def get_search_params(self, req, itemdef, search_form):
+		# get any saved search data
+		session_search_data = req.session.setdefault('search_form', {}).setdefault(itemdef.name, {})
+		data = {}
+		
+		if(search_form.execute(req)):
+			search_data = req.data[search_form.name]
+			if('clear_search' in search_data):
+				req.session.setdefault('search_form', {})[itemdef.name] = {}
+				app.redirect(req.get_path(req.prepath, 'listing', table_name))
+			
+			for submit in search_form.find_submit_buttons():
+				search_data.pop(submit.name, None)
+			
+			for key, value in search_data.items():
+				result = itemdef[key].get_search_value(value, req, search_form)
+				session_search_data[key] = value
+				key = itemdef[key].get('column', key)
+				if(result is not None):
+					if(isinstance(result, dict)):
+						for k, v in result.items():
+							data[k] = v
+					else:
+						data[key] = result
+			#print 'post: %s' % data
+		elif(session_search_data):
+			search_data = {search_form.name:session_search_data}
+			search_form.load_data(req, search_data)
+			
+			for key, value in session_search_data.items():
+				result = itemdef[key].get_search_value(value, req, search_form)
+				key = itemdef[key].get('column', key)
+				if(result is not None):
+					if(isinstance(result, dict)):
+						for k, v in result.items():
+							data[k] = v
+					else:
+						data[key] = result
+			#print 'session: %s' % data
+		
+		return data
 	
 	def prepare_export(self, req, itemdef, items):
 		"""
