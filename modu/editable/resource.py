@@ -248,7 +248,8 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 				setattr(search_storable, k, v)
 		if(session_search_data):
 			for k, v in session_search_data.items():
-				k = itemdef[k].get_column_name()
+				if(k in itemdef):
+					k = itemdef[k].get_column_name()
 				setattr(search_storable, k, v)
 		
 		# give it a factory so fields can use its store reference
@@ -335,14 +336,18 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			search_form.load_data(req, search_data)
 			
 			for key, value in session_search_data.items():
-				cgi_value = cgi.MiniFieldStorage(key, value)
-				result = itemdef[key].get_search_value(cgi_value, req, search_form)
+				if(key in itemdef):
+					cgi_value = cgi.MiniFieldStorage(key, value)
+					result = itemdef[key].get_search_value(cgi_value, req, search_form)
+				else:
+					result = value
 				if(result is not None):
 					if(isinstance(result, dict)):
 						for k, v in result.items():
 							data[k] = v
 					else:
-						key = itemdef[key].get_column_name()
+						if(key in itemdef):
+							key = itemdef[key].get_column_name()
 						data[key] = result
 			#print 'session: %s' % data
 		
@@ -366,6 +371,10 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 					else:
 						data[key] = result
 			#print 'post: %s' % data
+		
+		if('default_where' in itemdef.config):
+			result = itemdef.config['default_where']
+			data.update(result)
 		
 		return data
 	
