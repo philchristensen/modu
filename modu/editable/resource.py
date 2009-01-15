@@ -361,7 +361,9 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 					continue
 				
 				result = itemdef[key].get_search_value(field, req, search_form)
-				session_search_data[key] = field.value
+				value = getattr(field, 'value', None)
+				if(value):
+					session_search_data[key] = value
 				
 				key = itemdef[key].get_column_name()
 				if(result is not None):
