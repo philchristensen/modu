@@ -351,7 +351,9 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 						data[key] = result
 			#print 'session: %s' % data
 		
-		if(not session_search_data or search_form.execute(req)):
+		form_submitted = search_form.execute(req)
+		
+		if(not session_search_data or form_submitted):
 			data = {}
 			
 			submit_buttons = search_form.find_submit_buttons()
@@ -362,6 +364,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 				
 				result = itemdef[key].get_search_value(field, req, search_form)
 				value = getattr(field, 'value', None)
+				
 				if(value):
 					session_search_data[key] = value
 				
