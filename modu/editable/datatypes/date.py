@@ -124,10 +124,9 @@ class DateField(define.definition):
 			frm(type='label', value=output)
 			return frm
 		
-		if(value is None):
-			current_year = datetime.datetime.now().year
-		else:
-			current_year = value.year
+		current_year = datetime.datetime.now().year
+		if(value is not None):
+			current_year = getattr(value, 'year', current_year)
 		
 		start_year = self.get('start_year', current_year - 2)
 		end_year = self.get('end_year', current_year + 5)
