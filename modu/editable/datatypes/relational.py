@@ -40,7 +40,7 @@ class ForeignLabelField(define.definition):
 		args = [getattr(storable, self.get_column_name(), None)]
 		
 		if(callable(where)):
-			where = where(storable)
+			where = where(req, storable)
 			args = []
 		if(isinstance(where, dict)):
 			where = sql.build_where(where)
@@ -80,7 +80,7 @@ class ForeignSelectField(define.definition):
 		order_by = self.get('order_by', None)
 		
 		if(callable(where)):
-			where = where(storable)
+			where = where(req, storable)
 		if(isinstance(where, dict)):
 			where = sql.build_where(where)
 		
@@ -212,7 +212,7 @@ class ForeignMultipleSelectField(define.definition):
 		where = self.get('fwhere', '')
 		
 		if(callable(where)):
-			where = where(storable)
+			where = where(req, storable)
 		if(isinstance(where, dict)):
 			where = sql.build_where(where)
 		
