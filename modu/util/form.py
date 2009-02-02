@@ -119,7 +119,7 @@ class FormNode(OrderedDict):
 		key = str(key)
 		if(key not in self):
 			# once it's been submitted, we don't auto-add fields anymore.
-			if(self.submitted):
+			if(self.is_submitted()):
 				raise KeyError(key)
 			self[key] = FormNode(key)
 
@@ -141,6 +141,12 @@ class FormNode(OrderedDict):
 		super(FormNode, self).__setitem__(key, child)
 		child.name = key
 		child.parent = self
+	
+	def is_submitted(self):
+		if(self.parent):
+			return self.parent.is_submitted()
+		else:
+			return self.submitted
 	
 	def attr(self, name, default=None):
 		"""
