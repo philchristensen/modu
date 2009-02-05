@@ -97,8 +97,7 @@ def get_itemdef_layout(req, itemdefs=None):
 	for name, itemdef in itemdefs.items():
 		itemdef = clone_itemdef(itemdef)
 		
-		acl = itemdef.config.get('acl', '')
-		if('acl' not in itemdef.config or req.user.is_allowed(acl)):
+		if(itemdef.allows(req.user, 'view')):
 			cat = itemdef.config.get('category', 'other')
 			layout.setdefault(cat, []).append(itemdef)
 			layout[cat].sort(itemdef_cmp)
@@ -276,9 +275,13 @@ class itemdef(OrderedDict):
 		@rtype: bool
 		"""
 		if(user is None):
-			# Should the default be off or on?
-			return True
-		return user.is_allowed(self.config.get('acl', []))
+			return False
+		
+		acl = self.config.get('acl', [])
+		if(isinstance(acl, dict)):
+			acl = acl.get(access, [])
+		
+		return user.is_allowed(acl)
 	
 	
 	def get_form(self, req, storable):
@@ -298,25 +301,31 @@ class itemdef(OrderedDict):
 		@rtype: L{modu.util.form.FormNode}
 		"""
 		frm = form.FormNode('%s-form' % storable.get_table())
-		if(self.allows(req.user)):
+		read_only = self.config.get('read_only', not self.allows(req.user, 'edit'))
+		
+		if(self.allows(req.user, 'view')): # if user can access detail view
 			for name, field in self.items():
 				if(name.startswith('_')):
 					continue
 				if(not field.get('detail', True)):
 					continue
-				if not(field.allows(req.user)):
+				
+				if not(field.allows(req.user, 'view')): # if user cannot access field
 					continue
+				if not(field.allows(req.user, 'edit')):
+					field['read_only'] = True
+				
+				if(not field.get('acl', []) and not self.allows(req.user, 'edit')):
+					field['read_only'] = True
 				
 				frm[name] = field.get_form_element(req, 'detail', storable)
 		
-		# if you don't want these, you may need to try something else
-		#if(not frm.has_submit_buttons()):
-		
-		frm['save'](type='submit', value='save')
-		frm['cancel'](type='submit', value='cancel')
-		if not(self.config.get('no_delete', False)):
-			frm['delete'](type='submit', value='delete',
-						attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
+		if not(read_only):
+			frm['save'](type='submit', value='save')
+			frm['cancel'](type='submit', value='cancel')
+			if not(self.config.get('no_delete', False)):
+				frm['delete'](type='submit', value='delete',
+							attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
 		def _validate(req, form):
 			return self.validate(req, form, storable)
@@ -347,11 +356,11 @@ class itemdef(OrderedDict):
 		@rtype: L{modu.util.form.FormNode}
 		"""
 		frm = form.FormNode('%s-search-form' % storable.get_table())
-		if(self.allows(req.user)):
+		if(self.allows(req.user, 'search')): # if user can access search form
 			for name, field in self.items():
 				if(name.startswith('_')):
 					continue
-				if not(field.allows(req.user)):
+				if not(field.allows(req.user, 'search')): # if user cannot use search field
 					continue
 				if not(field.get('search', False)):
 					continue
@@ -388,7 +397,7 @@ class itemdef(OrderedDict):
 		@rtype: L{modu.util.form.FormNode}
 		"""
 		forms = []
-		if not(self.allows(req.user)):
+		if not(self.allows(req.user, 'list')): # if user cannot see listing
 			return forms
 		
 		for index in range(len(storables)):
@@ -399,7 +408,7 @@ class itemdef(OrderedDict):
 					continue
 				if(not field.get('listing', False)):
 					continue
-				if not(field.allows(req.user)):
+				if not(field.allows(req.user, 'list')): # if user cannot see listing field
 					continue
 				
 				frm[name] = field.get_form_element(req, 'listing', storable)
@@ -648,8 +657,13 @@ class definition(dict):
 		@rtype: bool
 		"""
 		if(user is None):
-			return True
-		return user.is_allowed(self.get('acl', []))
+			return False
+		
+		acl = self.get('acl', [])
+		if(isinstance(acl, dict)):
+			acl = acl.get(access, [])
+		
+		return user.is_allowed(acl)
 	
 	
 	def get_column_name(self):
