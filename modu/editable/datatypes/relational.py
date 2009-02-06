@@ -206,7 +206,7 @@ class ForeignMultipleSelectField(define.definition):
 		"""
 		mlabel = self.get('flabel', '')
 		if(mlabel.find('.') == -1):
-			mlabel = 'm.%s' % mlabel
+			mlabel = 'm.%s' % q(mlabel)
 		mlabel = self.get('flabel_sql', mlabel)
 		
 		where = self.get('fwhere', '')
@@ -220,7 +220,7 @@ class ForeignMultipleSelectField(define.definition):
 						FROM %s m
 						LEFT JOIN %s n2m ON m.%s = n2m.%s AND n2m.%s = %%s
 						%s
-						ORDER BY label""" % (self['fvalue'], q(mlabel), self['ntof_f_id'],
+						ORDER BY label""" % (self['fvalue'], mlabel, self['ntof_f_id'],
 										  q(self['ftable']),
 										  q(self['ntof']), self.get('fvalue', 'id'),
 										  self['ntof_f_id'], self['ntof_n_id'],
@@ -230,7 +230,12 @@ class ForeignMultipleSelectField(define.definition):
 		results = store.pool.runQuery(ntom_query, storable.get_id())
 
 		if(style == 'listing' or self.get('read_only', False)):
-			label_value = ', '.join([item['label'] for item in results if item['selected']])
+			def _default_formatter(req_ignored, storable_ignored, result):
+				return ', '.join([item['label'] for item in result if item['selected']])
+			
+			formatter = self.get('formatter', _default_formatter)
+			label_value = formatter(req, style, storable, results)
+			
 			return form.FormNode(self.name)(type='label', value=label_value)
 		
 		values = [item['value'] for item in results if item['selected']]
