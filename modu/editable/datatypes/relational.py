@@ -230,7 +230,7 @@ class ForeignMultipleSelectField(define.definition):
 		results = store.pool.runQuery(ntom_query, storable.get_id())
 
 		if(style == 'listing' or self.get('read_only', False)):
-			def _default_formatter(req_ignored, storable_ignored, result):
+			def _default_formatter(req_ignored, style_ignored, storable_ignored, result):
 				return ', '.join([item['label'] for item in result if item['selected']])
 			
 			formatter = self.get('formatter', _default_formatter)
