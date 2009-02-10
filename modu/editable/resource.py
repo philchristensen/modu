@@ -140,6 +140,14 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			"@import '%s';" % req.get_path('assets', 'admin-styles.css')
 		])
 		
+		site_stylesheet = getattr(req.app, 'admin_site_stylesheet', None)
+		if(callable(site_stylesheet)):
+			site_stylesheet = site_stylesheet(req)
+		if(site_stylesheet):
+			req.content.report('header', tags.style(type="text/css")[
+			"@import '%s';" % site_stylesheet
+		])
+		
 		user = req['modu.user']
 		if(user and user.get_id()):
 			if(req.postpath and req.postpath[0] == 'logout'):
