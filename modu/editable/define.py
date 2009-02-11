@@ -517,7 +517,11 @@ class itemdef(OrderedDict):
 					return False
 		
 		try:
-			# save storable data
+			# save storable data, but not related ones, since fields
+			# themselves must take care of that
+			# NOTE: This could be configurable, but only for custom Storable
+			# models that keep in-memory versions of the related items,
+			# and return them from get_related_storables() 
 			req.store.save(storable, save_related_storables=False)
 		except Exception, e:
 			req.messages.report('error', "An exception occurred during primary save: %s" % e)

@@ -125,7 +125,10 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 		"""
 		if(debug):
 			print args, kwargs
-		adbapi.ConnectionPool.runOperation(self, *args, **kwargs)
+		return adbapi.ConnectionPool.runOperation(self, *args, **kwargs)
+	
+	def _runOperation(self, trans, *args, **kw):
+		return trans.execute(*args, **kw)
 	
 	def runQuery(self, *args, **kwargs):
 		"""
@@ -165,7 +168,7 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 		trans = adbapi.Transaction(self, conn)
 		try:
 			result = interaction(trans, *args, **kw)
-			if(result and isinstance(result[0], (list, tuple))):
+			if(result and isinstance(result, (list, tuple)) and isinstance(result[0], (list, tuple))):
 				result = [dict(zip([c[0] for c in trans._cursor.description], item)) for item in result]
 			trans.close()
 			conn.commit()

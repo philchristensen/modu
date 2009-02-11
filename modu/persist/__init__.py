@@ -463,7 +463,7 @@ class Store(object):
 			raise LookupError('There is no factory registered for the table `%s`' % table)
 		factory = self._factories[table]
 		
-		self._save(storable, factory)
+		result = self._save(storable, factory)
 		
 		child_list = storable.get_related_storables()
 		id_list = []
@@ -477,9 +477,11 @@ class Store(object):
 			if(child_id in id_list and factory.uses_guids()):
 				#raise AssertionError('Found circular storable reference during save')
 				continue
-			self._save(child, factory)
+			result = result and self._save(child, factory)
 			child_list.extend(child.get_related_storables())
 			id_list.append(child_id)
+		
+		return result
 	
 	def _save(self, storable, factory):
 		"""
@@ -487,7 +489,7 @@ class Store(object):
 		actual saving.
 		"""
 		if not(storable.is_dirty()):
-			return
+			return False
 		
 		table = storable.get_table()
 		data = storable.get_data()
@@ -523,6 +525,8 @@ class Store(object):
 		storable.clean()
 		storable.set_new(False)
 		storable.set_factory(factory)
+		
+		return True
 	
 	def destroy(self, storable, destroy_related_storables=False):
 		"""
