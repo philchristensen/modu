@@ -24,9 +24,7 @@ class Theme(object):
 		for child_id in element:
 			child = element[child_id]
 			theme = child.get_theme(self.req, current=self)
-			
 			theme_func = getattr(theme, 'theme_' + child.attr('type', 'fieldset'))
-			
 			content += theme_func(element.name, child)
 			content += "\n"
 		

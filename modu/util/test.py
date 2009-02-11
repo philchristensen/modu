@@ -12,7 +12,7 @@ except ImportError:
 
 import unittest, socket, urllib
 
-from modu.web import resource
+from modu.web import resource, user
 
 TEST_TABLES = """
 DROP TABLE IF EXISTS `page`;
@@ -139,3 +139,20 @@ def generate_test_wsgi_environment(post_data={}, multipart=True):
 	environ['wsgi.version'] = '(1, 0)'
 	
 	return environ
+
+class TestAdminUser(user.User):
+	def is_allowed(self, permission):
+		return True
+	
+	def has_role(self, role):
+		return False
+	
+	def get_data(self):
+		raise RuntimeError('It is not possible to save the test admin user object.')
+	
+	def get_id(self):
+		return 0
+	
+	def set_id(self):
+		raise RuntimeError('It is not possible to set the ID of the test admin user object.')
+

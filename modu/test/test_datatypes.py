@@ -58,7 +58,7 @@ class DatatypesTestCase(unittest.TestCase):
 		
 		req = app.configure_request(environ, application)
 		req['modu.pool'] = dbapi.acquire_db(application.db_url)
-		req['modu.user'] = None
+		req['modu.user'] = test.TestAdminUser()
 		queue.activate_content_queue(req)
 		persist.activate_store(req)
 		

@@ -49,6 +49,6 @@ CREATE TABLE IF NOT EXISTS `permission` (
   `id` bigint(20),
   `name` varchar(255),
   PRIMARY KEY (id),
-  UNIQUE KEY `perm_idx` (`role_id`, `name`)
+  UNIQUE KEY `perm_idx` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
 

@@ -151,8 +151,7 @@ def configure_request(env, application):
 	env['modu.approot'] = application.approot
 	env['modu.path'] = env['PATH_INFO']
 	
-	approot = env['modu.approot']
-	webroot = os.path.join(approot, application.webroot)
+	webroot = os.path.join(application.approot, application.webroot)
 	env['PATH_TRANSLATED'] = os.path.realpath(os.path.join(webroot, env['modu.path'][1:]))
 	
 	req = Request(env)
@@ -227,10 +226,10 @@ def get_application(env):
 		
 		host_node = host_tree[host]
 		
-		if not(host_node.has_path(env['SCRIPT_NAME'])):
+		if not(host_node.has_path(env['REQUEST_URI'])):
 			_scan_sites(env)
 		
-		app = host_node.get_data_at(env['SCRIPT_NAME'])
+		app = host_node.get_data_at(env['REQUEST_URI'])
 	finally:
 		host_tree_lock.release()
 	

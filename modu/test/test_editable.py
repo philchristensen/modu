@@ -55,7 +55,7 @@ class EditableTestCase(unittest.TestCase):
 		
 		req = app.configure_request(environ, application)
 		req['modu.pool'] = dbapi.acquire_db(application.db_url)
-		req['modu.user'] = None
+		req['modu.user'] = test.TestAdminUser()
 		persist.activate_store(req)
 		
 		return req

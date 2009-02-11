@@ -132,7 +132,6 @@ class User(storable.Storable):
 		
 		self._grant_tree = get_grant_tree(self.get_store())
 
-
 class AnonymousUser(User):
 	def is_allowed(self, permission):
 		return False
