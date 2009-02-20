@@ -348,6 +348,8 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		
 		directory_path = os.path.join(self.get_selected_root(req), folder_path)
 		for item in os.listdir(directory_path):
+			if(item.startswith('.')):
+				continue
 			full_path = os.path.join(directory_path, item)
 			finfo = os.stat(full_path)
 			if(stat.S_ISREG(finfo.st_mode)):
