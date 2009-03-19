@@ -353,8 +353,6 @@ class DbUserSession(BaseSession):
 	"""
 	The standard implementor of the BaseSession object.
 	"""
-	user_class = user.User
-	
 	def __init__(self, req, pool, sid=None, cookie_params=None, timeout=1800):
 		self._pool = pool
 		BaseSession.__init__(self, req, sid=sid, cookie_params=cookie_params, timeout=timeout)
@@ -405,10 +403,11 @@ class DbUserSession(BaseSession):
 		if(hasattr(self, '_user') and self._user):
 			return self._user
 		
+		user_class = getattr(self._req.app, 'user_class', user.User)
+		
 		if(self._user_id):
 			store = self._req.store
-			if not(store.has_factory('user')):
-				store.ensure_factory('user', self.user_class, force=True)
+			store.ensure_factory('user', model_class=user_class, force=True)
 			self._user = store.load_one('user', {'id':self._user_id})
 		elif(self._req.app.enable_anonymous_users):
 			self._user = user.AnonymousUser()

@@ -529,10 +529,9 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 				frm = new_frm
 			else:
 				# If we haven't submitted the form, errors should definitely be empty
-				for field, errs in frm.get_errors().items():
-					for err in errs:
-						err = tags.a(href="#form-item-%s" % field)[err]
-						req.messages.report('error', '%s: %s' % (field, err))
+				def error_formatter(req, field, err):
+					return tags.a(href="#form-item-%s" % field)[err]
+				frm.escalate_errors(req, formatter=error_formatter)
 			
 			template_variable_callback = itemdef.config.get('template_variable_callback')
 			if(callable(template_variable_callback)):

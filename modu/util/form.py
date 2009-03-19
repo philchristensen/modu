@@ -272,6 +272,16 @@ class FormNode(OrderedDict):
 		else:
 			return item.errors.get(self.name)
 	
+	def escalate_errors(self, req, formatter=None):
+		"""
+		Push all existing errors into the message queue of the given request.
+		"""
+		for field, errs in self.get_errors().items():
+			for err in errs:
+				if(callable(formatter)):
+					err = formatter(req, field, err)
+				req.messages.report('error', '%s: %s' % (field, err))
+	
 	def render(self, req, fieldset=False, current_theme=None):
 		"""
 		This method calls the appropriate theme functions against
