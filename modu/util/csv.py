@@ -150,7 +150,7 @@ def parse(stream, column_names=None, separator=",", qualifier='"'):
 			buff = buff[0:-1]
 		fields.append(buff)
 	if(column_names):
-		fields = dict(zip(column_names, fields))
+		fields = util.OrderedDict(zip(column_names, fields))
 	if(fields):
 		rows.append(fields)
 	fields = []
