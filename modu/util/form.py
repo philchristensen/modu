@@ -56,6 +56,12 @@ def NestedFieldStorage(req, *args, **kwargs):
 		return _NestedFieldStorage(req, *args, **kwargs)
 	return req['modu.data']
 	
+def parse_query_data(req):
+	req = {
+		'QUERY_STRING'	: req['QUERY_STRING'],
+		'wsgi.input'	: StringIO.StringIO(),
+	}
+	return _NestedFieldStorage(req)
 
 class FormNode(OrderedDict):
 	"""

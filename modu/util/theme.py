@@ -115,6 +115,9 @@ class Theme(object):
 	
 	@formelement
 	def theme_hidden(self, form_id, element):
+		# note that we still use formelement, even though it seems
+		# unintuitive. this allows us to make label-esque fields
+		# with a hidden form element
 		value = element.attr('value', element.attr('default_value', ''))
 		if(value is None):
 			value = ''

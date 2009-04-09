@@ -55,9 +55,13 @@ class CurrentDateField(define.definition):
 			frm(type='label', value=output)
 			return frm
 		
+		checked = bool(output)
+		if(storable.get_id() == 0 and self.get('default_checked', False)):
+			checked = True
+		
 		frm = form.FormNode(self.name)(
 			type	= 'checkbox',
-			checked	= bool(output),
+			checked	= checked,
 			suffix	= '&nbsp;&nbsp;' + tags.small()[output],
 		)
 		

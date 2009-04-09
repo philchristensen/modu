@@ -156,7 +156,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 					del req.session['auth_redirect']
 				app.redirect(req.get_path(req.prepath))
 			
-			itemdefs = define.get_itemdefs(itemdef_module=self.options.get('itemdef_module', None))
+			itemdefs = define.get_itemdefs(module_list=self.options.get('itemdef_module', None))
 			
 			# get_itemdef_layout adds some data and clones the itemdef
 			self.itemdef_layout = define.get_itemdef_layout(req, itemdefs)
@@ -501,8 +501,9 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 					selected_item = storable.Storable(table_name)
 				
 				# Populate the new item if necessary
-				if('__init__' in req.data):
-					for k, v in req.data['__init__'].items():
+				query_data = form.parse_query_data(req)
+				if('__init__' in query_data):
+					for k, v in query_data['__init__'].items():
 						setattr(selected_item, k, v.value)
 				
 				# we can be sure the factory is there, because configure_store
