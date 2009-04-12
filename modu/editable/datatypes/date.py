@@ -177,7 +177,15 @@ class DateField(define.definition):
 			""" % self.name],
 		)
 		
+		frm.validate = self.validate
+
 		return frm
+	
+	def validate(self, req, frm):
+		if(not frm[self.name]['date'].attr('value', '') and self.get('required', False)):
+			frm.set_error(self.name, 'You must enter a value for this field.')
+			return False
+		return True
 	
 	def update_storable(self, req, form, storable):
 		"""
