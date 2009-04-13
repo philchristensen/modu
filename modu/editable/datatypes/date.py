@@ -55,27 +55,20 @@ class CurrentDateField(define.definition):
 			frm(type='label', value=output)
 			return frm
 		
-		checked = bool(output)
+		checked = False
 		if(storable.get_id() == 0 and self.get('default_checked', False)):
 			checked = True
 		
 		frm = form.FormNode(self.name)(
 			type	= 'checkbox',
+			# this is only True if default_checked is true and it's a new item
 			checked	= checked,
 			suffix	= '&nbsp;&nbsp;' + tags.small()[output],
 		)
 		
 		if(bool(output)):
-			frm(
-				attributes = dict(
-					disabled	= True,
-				),
-				suffix = tags.input(
-					type	= 'hidden',
-					name	= '%s-form[%s]' % (self.itemdef.name, self.name),
-					value	= 1,
-				) + frm.suffix
-			)
+			if(self.get('one_time', True)):
+				frm(attributes=dict(disabled='disabled'))
 		else:
 			frm(
 				text	= '&nbsp;&nbsp;' + tags.small(_class='minor-help')['check to set current date']
@@ -84,6 +77,7 @@ class CurrentDateField(define.definition):
 		return frm
 	
 	def update_storable(self, req, form, storable):
+		print "form['%s'].attr('checked', False) = %r" % (self.name, form[self.name].attr('checked', False))
 		if(form[self.name].attr('checked', False)):
 			value = datetime.datetime.now()
 			save_format = self.get('save_format', 'timestamp')
