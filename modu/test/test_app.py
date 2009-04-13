@@ -29,6 +29,7 @@ class AppTestCase(unittest.TestCase):
 		The request generator for this TestCase.
 		"""
 		environ = test.generate_test_wsgi_environment(form_data)
+		
 		environ['REQUEST_URI'] = uri
 		environ['HTTP_HOST'] = '____basic-test-domain____:1234567'
 		environ['SERVER_NAME'] = '____basic-test-domain____'

@@ -6,9 +6,9 @@
 # See LICENSE for details
 
 JQUERY_VERSION = '1.3.2'
-JQUERY_UI_VERSION = '1.5b4'
+JQUERY_UI_VERSION = '1.7.1'
 JQUERY_PACKED = False
-JQUERY_UI_PACKED = True
+JQUERY_UI_PACKED = False
 
 def get_jquery_path(req, packed=JQUERY_PACKED):
 	if(packed):
