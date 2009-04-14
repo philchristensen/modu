@@ -77,7 +77,6 @@ class CurrentDateField(define.definition):
 		return frm
 	
 	def update_storable(self, req, form, storable):
-		print "form['%s'].attr('checked', False) = %r" % (self.name, form[self.name].attr('checked', False))
 		if(form[self.name].attr('checked', False)):
 			value = datetime.datetime.now()
 			save_format = self.get('save_format', 'timestamp')
