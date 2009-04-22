@@ -39,10 +39,16 @@ class AppTestCase(unittest.TestCase):
 		self.failIf(application is  None, "Didn't get an application object.")
 		
 		req = app.configure_request(environ, application)
-		#queue.activate_content_queue(req)
 		
 		return req
 	
+	def test_jit(self):
+		req = self.get_request()
+		
+		self.failUnless(req.get('modu.session', None) is None)
+		self.failUnless(req.get('modu.user', None) is None)
+		self.failUnless(req.get('modu.pool', None) is None)
+		self.failUnless(req.get('modu.store', None) is None)
 	
 	def test_load(self):
 		"""
