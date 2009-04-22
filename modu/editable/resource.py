@@ -176,7 +176,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			self.set_slot('itemdef_layout', self.itemdef_layout)
 			
 			if(len(req.postpath) > 1):
-				itemdef_name = req.postpath[1]
+				itemdef_name = '/'.join(req.postpath[1:])
 				# we just need to select the right itemdef
 				selected_itemdef = itemdefs.get(itemdef_name)
 				
