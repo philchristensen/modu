@@ -43,7 +43,7 @@ class AppTestCase(unittest.TestCase):
 		return req
 	
 	def test_jit(self):
-		req = self.get_request()
+		req = self.get_request('/')
 		
 		self.failUnless(req.get('modu.session', None) is None)
 		self.failUnless(req.get('modu.user', None) is None)
@@ -58,7 +58,10 @@ class AppTestCase(unittest.TestCase):
 		L{modu.sites.test_site} by creating a sample environ dict, passed
 		to L{modu.web.app.get_application()}.
 		"""
-		environ = test.generate_test_wsgi_environment()		
+		environ = test.generate_test_wsgi_environment()
+		environ['HTTP_HOST'] = 'not-a-valid-domain.com'
+		environ['REQUEST_URI'] = '/'
+		
 		application = app.get_application(environ)
 		self.failIf(application is not None, "Got an Application object when expecting None.")
 		
