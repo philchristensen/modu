@@ -17,26 +17,30 @@
 <table id="acl-table">
 	<tr>
 		<th></th>
-		#for rid, rname in $roles.items()
-		<td class="role-cell">$rname</td>
-		#end for
+		#if $roles
+			#for rid, rname in $roles.items()
+			<td class="role-cell">$rname</td>
+			#end for
+		#end if
 	</tr>
 	#set last_name = None
-	#for pid, pname in $permissions.items():
-		#if $pname != $last_name
-			#if $last_name
-		</tr>
+	#if $permissions
+		#for pid, pname in $permissions.items():
+			#if $pname != $last_name
+				#if $last_name
+			</tr>
+				#end if
+			#set last_name = $pname
+			<tr class="perm-row">
+				<td class="permission-cell">$pname</td>
 			#end if
-		#set last_name = $pname
-		<tr class="perm-row">
-			<td class="permission-cell">$pname</td>
-		#end if
-		#for rid, rname in $roles.items()
-			<td class="check-cell"><input type="checkbox" name="acl[$pid][$rid]" value="1"#if $pid in $acl_map and $rid in $acl_map[$pid] then ' checked' else ''#/></td>
+			#for rid, rname in $roles.items()
+				<td class="check-cell"><input type="checkbox" name="acl[$pid][$rid]" value="1"#if $pid in $acl_map and $rid in $acl_map[$pid] then ' checked' else ''#/></td>
+			#end for
 		#end for
-	#end for
-	#if $pname != $last_name
-	</tr>
+		#if $pname != $last_name
+		</tr>
+		#end if
 	#end if
 </table>
 <br/>
