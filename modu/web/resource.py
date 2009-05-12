@@ -386,8 +386,8 @@ class TemplateContent(object):
 		"""
 		@see: L{IContent.get_template_root()}
 		"""
-		if(hasattr(req, 'resource') and hasattr(req.resource, 'template_dir')):
-			template_root = req.resource.template_dir
+		if(hasattr(self, 'template_dir')):
+			template_root = self.template_dir
 		else:
 			template_root = getattr(req.app, 'template_dir', os.path.join(req.approot, 'template'))
 		return template_root

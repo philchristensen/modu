@@ -26,6 +26,11 @@ def get_grant_tree(store):
 			tree.setdefault(grant.role, []).append(grant.permission)
 	return tree
 
+def get_role_assignments(store):
+	"""
+	Return a list of users for each available role.
+	"""
+	return {}
 
 def validate_login(req, form):
 	"""

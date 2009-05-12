@@ -725,6 +725,9 @@ class ACLResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource):
 		self.set_slot('permissions', permissions)
 		self.set_slot('roles', roles)
 		self.set_slot('acl_map', acl_map)
+		
+		role_assignments = user.get_role_assignments(req.store)
+		self.set_slot('role_assignments', role_assignments)
 	
 	def get_template(self, req):
 		"""
