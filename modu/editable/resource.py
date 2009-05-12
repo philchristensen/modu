@@ -178,6 +178,8 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			if(len(req.postpath) > 1):
 				if(req.postpath[0] == 'custom'):
 					itemdef_name = '/'.join(req.postpath[1:])
+					if(itemdef_name not in itemdefs):
+					    itemdef_name = req.postpath[1]
 				else:
 					itemdef_name = req.postpath[1]
 				
