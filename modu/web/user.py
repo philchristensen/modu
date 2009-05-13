@@ -30,7 +30,32 @@ def get_role_assignments(store):
 	"""
 	Return a list of users for each available role.
 	"""
-	return {}
+	assignment_query = """SELECT r.id, r.name,
+								GROUP_CONCAT(concat(u.id, '|', u.username, '|', u.first, '|', u.last)) AS members
+							FROM role r
+								INNER JOIN (user_role ur
+									INNER JOIN user u ON ur.user_id = u.id)
+								ON ur.role_id = r.id
+							WHERE NOT(INSTR(u.username, 'stats'))
+							GROUP BY r.id"""
+	
+	store.pool.runOperation('SET @OLD_GROUP_CONCAT_MAX_LEN=@@GROUP_CONCAT_MAX_LEN;')
+	store.pool.runOperation('SET GROUP_CONCAT_MAX_LEN = 32768;')
+	results = store.pool.runQuery(assignment_query)
+	store.pool.runOperation('SET GROUP_CONCAT_MAX_LEN = @OLD_GROUP_CONCAT_MAX_LEN;')
+	
+	assignments = []
+	for row in results:
+		assignments.append(dict(
+			id		= row['id'],
+			name	= row['name'],
+			members	= [
+				dict(zip(('id', 'username', 'first', 'last'), member.split('|')))
+					for member in row['members'].split(',')
+			]
+		))
+	
+	return assignments
 
 def validate_login(req, form):
 	"""

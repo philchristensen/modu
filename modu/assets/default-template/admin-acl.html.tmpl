@@ -48,6 +48,16 @@
 </form>
 
 <h2>Role Assignments</h2>
-$role_assignments
-
+<ul>
+#for $role in $role_assignments
+	<li style="margin-bottom: 10px;">
+		<a href="$req.get_path($req.prepath, 'detail/role', $role['id'])">$role['name']</a>:
+		<div>
+		#for $member in $role['members']
+			$member['first'] $member['last'] (<a href="$req.get_path($req.prepath, 'detail/user', $member['id'])">$member['username']</a>),
+		#end for
+		</div>
+	</li>
+#end for
+</ul>
 #include 'admin-footer.html.tmpl'
