@@ -63,6 +63,20 @@ class FormTestCase(unittest.TestCase):
 		self.failUnlessEqual(result, expecting, "Element path was incorrect, got '%s' when expecting '%s'" % (result, expecting))
 	
 	
+	def test_attr(self):
+		"""
+		Make sure the different attribute accessor modes work.
+		"""
+		frm = form.FormNode('test-form')
+		frm['one'](
+			some_attrib = True,
+		)
+		frm['one']['two']['three']['four'](type='text')
+		self.failUnlessEqual(frm['one']['two']['three']['four'].attr('some_attrib', False, recurse=True), True)
+		self.failUnlessEqual(frm['one'].attr('some_attrib', False), True)
+		self.failUnlessEqual(frm['one']['two'].attr('some_attrib', False), False)
+	
+	
 	def test_fieldset(self):
 		"""
 		Test fieldsets.

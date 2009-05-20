@@ -154,13 +154,22 @@ class FormNode(OrderedDict):
 		else:
 			return self.submitted
 	
-	def attr(self, name, default=None):
+	def attr(self, name, default=None, recurse=False):
 		"""
 		Similar to dict.get(), for form attributes.
 		"""
-		if(name == 'name'):
-			return self.name
-		return self.attributes.get(name, default)
+		path = []
+		node = self
+		while(node is not None):
+			if(name == 'name'):
+				return node.name
+			
+			if(recurse and name not in node.attributes):
+				node = node.parent
+			else:
+				return node.attributes.get(name, default)
+		
+		return default
 	
 	def get_element_path(self):
 		"""

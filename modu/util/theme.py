@@ -80,7 +80,10 @@ class Theme(object):
 			else:
 				element_class = 'form-item'
 			
-			content = tags.div(_class=element_class, _id='form-item-%s' % element.name)[content]
+			item_id = 'form-item-%s' % element.name
+			if(element.attr('deep_form_ids', False, recurse=True)):
+				item_id = 'form-item-%s' % '-'.join(element.get_element_path())
+			content = tags.div(_class=element_class, _id=item_id)[content]
 		
 		return content
 	
