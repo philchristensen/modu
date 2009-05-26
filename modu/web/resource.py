@@ -212,7 +212,7 @@ class Resource(object):
 			raise ValueError('%r is not an implementation of IContent.' % content_provider)
 		self.content_provider = content_provider
 	
-	def get_content_provider(self):
+	def get_content_provider(self, req):
 		"""
 		@see: L{IResource.get_content_provider()}
 		"""
@@ -224,7 +224,7 @@ class Resource(object):
 		"""
 		@see: L{IResource.get_response()}
 		"""
-		cnt = self.get_content_provider()
+		cnt = self.get_content_provider(req)
 		if(IAccessControl.providedBy(cnt)):
 			cnt.check_access(req)
 		
