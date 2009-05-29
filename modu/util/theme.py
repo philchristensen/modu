@@ -318,7 +318,7 @@ class Theme(object):
 			' ', option_data[key]
 		]]) for key in option_keys]
 		
-		return ''.join(element)
+		return tags.div(_class="radio-group")[''.join(element)]
 	
 	
 	def _mangle_option_data(self, option_data, comparator):
