@@ -197,7 +197,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 						self.prepare_autocomplete(req, selected_itemdef)
 					elif(req.postpath[0] == 'custom'):
 						self.prepare_custom(req, selected_itemdef)
-					elif(req.postpath[0] in ('listing', 'export')):
+					elif(req.postpath[0] in ('listing', 'export') and not selected_itemdef.config.get('hidden', False)):
 						self.prepare_listing(req, selected_itemdef)
 					else:
 						app.raise404()
