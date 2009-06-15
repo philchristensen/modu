@@ -6,7 +6,7 @@
 #if not $selected_itemdef.config.get('hidden', False)
 <a href="$req.get_path($req.prepath, 'listing', $selected_itemdef.get_table())">Return to Listing</a>
 #end if
-#if not $selected_itemdef.config.get('no_create', False)
+#if (not $selected_itemdef.config.get('no_create', False)) and (not $selected_itemdef.config.get('restricted_create', False))
 #if not $selected_itemdef.config.get('hidden', False) then '|' else ''#
 <a href="$req.get_path($req.prepath, 'detail', $selected_itemdef.get_table(), 'new')">Create New Record</a>
 #end if
