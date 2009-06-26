@@ -144,6 +144,8 @@ class FormThemeTestCase(unittest.TestCase):
 			else:
 				expected += EXPECTED_RADIO % (key, '', radio_options[key])
 		
+		expected = '<div class="radio-group">%s</div>' % expected
+		
 		result = self.theme.theme_radiogroup('test-form', frm['radio'])
 		
 		self.failUnlessEqual(result, expected, "Radiogroup rendered as \n%s\n instead of \n%s" % (result, expected))
