@@ -343,8 +343,7 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		@param folders_only: If True, only list folders
 		@type req: bool
 		"""
-		folder_content = ''
-		file_content = ''
+		items = []
 		
 		directory_path = os.path.join(self.get_selected_root(req), folder_path)
 		for item in os.listdir(directory_path):
@@ -353,13 +352,17 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 			full_path = os.path.join(directory_path, item)
 			finfo = os.stat(full_path)
 			if(stat.S_ISREG(finfo.st_mode)):
-				file_content += tags.Tag('File')(name=item, size=(finfo.st_size // 1024))
+				items.append(tags.Tag('File')(name=item, size=(finfo.st_size // 1024)))
 			else:
-				folder_content += tags.Tag('Folder')(name=item)
+				items.append(tags.Tag('Folder')(name=item))
 		
-		content = tags.Tag('Folders')[folder_content]
-		if(not folders_only and file_content):
-			content += tags.Tag('Files')[file_content]
+		items.sort(lambda a, b: cmp(a.attributes['name'].lower(), b.attributes['name'].lower()))
+		
+		content = tags.Tag('Folders')[''.join([str(t) for t in items if t.tag == 'Folder'])]
+		if(not folders_only):
+			file_string = ''.join([str(t) for t in items if t.tag == 'File'])
+			if(file_string):
+				content += tags.Tag('Files')[file_string]
 		
 		return content
 	
