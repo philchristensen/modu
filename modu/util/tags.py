@@ -18,6 +18,27 @@ reserved2name = {
 	ord(u'<') : 'lt'
 }
 
+def filter_entities(item):
+	"""
+	Recurse through a standard data structure and replace all
+	ampersands and double-quotes HTML entities.
+	"""
+	if(isinstance(item, basestring)):
+		return item.replace('&', '&amp;').replace('"', "&quot;")
+	elif(isinstance(item, (list, tuple))):
+		if(isinstance(item, tuple)):
+			item = list(item)
+		for index in range(len(item)):
+			item[index] = filter_entities(item[index])
+		return item
+	elif(isinstance(item, dict)):
+		for key, value in item.items():
+			item[key] = filter_entities(item[key])
+		return item
+	else:
+		print item.get_data()
+		raise ValueError("Unsupported item type: %r" % item)
+
 def decode_htmlentities(string):
 	"""
 	Decode HTML entities into their Unicode equivalent.
