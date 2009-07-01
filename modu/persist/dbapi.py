@@ -9,7 +9,7 @@
 Provides synchronous access to the Twisted adbapi DB layer.
 """
 
-import threading
+import threading, collections
 
 from twisted.enterprise import adbapi
 
@@ -43,7 +43,7 @@ def acquire_db(db_url):
 	
 	return pool
 
-def connect(db_url=None, async=False, *args, **kwargs):
+def connect(db_urls=None, async=False, *args, **kwargs):
 	"""
 	Get a new connection pool for a particular db_url.
 	
@@ -60,22 +60,36 @@ def connect(db_url=None, async=False, *args, **kwargs):
 	@param *args: other positional arguments to pass to the DB-API driver.
 	@param **kwargs: other keyword arguments to pass to the DB-API driver.
 	"""
-	dsn = get_dsn(db_url)
+	if not(isinstance(db_urls, tuple)):
+		db_urls = [db_urls]
 	
-	dbapiName = dsn['dbapiName']
-	del dsn['dbapiName']
+	replicated_pool = None
+	for db_url in db_urls:
+		dsn = get_dsn(db_url)
+		
+		dbapiName = dsn['dbapiName']
+		del dsn['dbapiName']
+		
+		globs = {}
+		exec('from modu.persist import dbapi_%s as db_driver' % dbapiName, globs)
+		dargs, dkwargs = globs['db_driver'].process_dsn(dsn)
+		kwargs.update(dkwargs)
+		args = list(args)
+		args.extend(dargs)
+		
+		if(async):
+			pool = adbapi.ConnectionPool(dbapiName, *dargs, **dkwargs)
+		else:
+			pool = SynchronousConnectionPool(dbapiName, *dargs, **dkwargs)
+		
+		if(len(db_urls) == 1):
+			return pool
+		elif(replicated_pool):
+			replicated_pool.add_slave(pool)
+		else:
+			replicated_pool = ReplicatedConnectionPool(pool)
 	
-	globs = {}
-	exec('from modu.persist import dbapi_%s as db_driver' % dbapiName, globs)
-	dargs, dkwargs = globs['db_driver'].process_dsn(dsn)
-	kwargs.update(dkwargs)
-	args = list(args)
-	args.extend(dargs)
-	
-	if(async):
-		return adbapi.ConnectionPool(dbapiName, *dargs, **dkwargs)
-	else:
-		return SynchronousConnectionPool(dbapiName, *dargs, **dkwargs)
+	return replicated_pool
 
 def get_dsn(db_url):
 	"""
@@ -101,6 +115,90 @@ def get_dsn(db_url):
 	dsn['cp_max'] = 15
 	
 	return dsn
+
+class ReplicatedConnectionPool(object):
+	"""
+	A collection of database servers in a replicated environment.
+	
+	Queries are examined to see if there are SELECTs, with all
+	reads being sent to the slaves in round-robin mode, and all
+	writes are sent to the master.
+	
+	When write_only_master is True, the master server is not
+	used for reads. Otherwise it is included in the round-robin
+	of servers to read from.
+	
+	If there are no slaves, all queries are sent to the master.
+	"""
+	def __init__(self, master, write_only_master=False):
+		"""
+		Set up a replicated DB connection.
+		
+		Given an initial master server, initialize a deque to be
+		used to store slaves and select them via round-robin.
+		"""
+		self.master = master
+		self.slaves = collections.deque()
+		if not(write_only_master):
+			self.slaves.append(self.master)
+	
+	def add_slave(self, pool):
+		"""
+		Add a ConnectionPool as a slave.
+		"""
+		if(pool not in self.slaves):
+			self.slaves.append(pool)
+	
+	def runOperation(self, query, *args, **kwargs):
+		"""
+		Run an operation on the master.
+		
+		Note that even though 'operations' (e.g., inserts, deletes, updates)
+		should always be on the master, we still check the query, since
+		it could just be a programming error.
+		"""
+		pool = self.get_pool_for(query)
+		pool.runOperation(query, *args, **kwargs)
+	
+	def runQuery(self, query, *args, **kwargs):
+		"""
+		Run a query on a slave.
+		
+		Note that even though 'queries' (e.g., selects) should always be on 
+		a slave, we still check the query, since it could just be a programming error.
+		"""
+		pool = self.get_pool_for(query)
+		return pool.runQuery(query, *args, **kwargs)
+	
+	def runInteraction(self, interaction, *args, **kwargs):
+		"""
+		Run an interaction on the master.
+		"""
+		self.master.runInteraction(interaction, *args, **kwargs)
+	
+	def runWithConnection(self, func, *args, **kwargs):
+		"""
+		Run a function, providing the connection object for the master.
+		"""
+		self.master.runWithConnection(func, *args, **kwargs)
+	
+	def get_slave(self):
+		"""
+		Return the next slave in the round robin.
+		"""
+		if not(self.slaves):
+			return self.master
+		self.slaves.rotate(1)
+		return self.slaves[-1]
+	
+	def get_pool_for(self, query):
+		"""
+		Return a slave if this is a SELECT query, else return the master.
+		"""
+		if(query.startswith('SELECT')):
+			return self.get_slave()
+		else:
+			return self.master
 
 class SynchronousConnectionPool(adbapi.ConnectionPool):
 	"""
@@ -140,7 +238,7 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 	
 	def runInteraction(self, interaction, *args, **kw):
 		"""
-		Run a SQL statement through one of the connections in this pool.
+		Run a function, passing it a cursor from this pool.
 		
 		This version of the method does not spawn a thread, and so returns
 		the result directly, instead of a Deferred.
@@ -176,3 +274,17 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 		except:
 			conn.rollback()
 			raise
+	
+	def _runWithConnection(self, func, *args, **kw):
+		conn = self.connectionFactory(self)
+		try:
+			result = func(conn, *args, **kw)
+			conn.commit()
+			return result
+		except:
+			excType, excValue, excTraceback = sys.exc_info()
+			try:
+				conn.rollback()
+			except:
+				log.err(None, "Rollback failed")
+			raise excType, excValue, excTraceback
