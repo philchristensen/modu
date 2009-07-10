@@ -9,7 +9,7 @@
 Provides synchronous access to the Twisted adbapi DB layer.
 """
 
-import threading, collections
+import threading, random, sys
 
 from twisted.enterprise import adbapi
 
@@ -23,21 +23,22 @@ def activate_pool(req):
 	"""
 	JIT Request handler for enabling DB support.
 	"""
-	req['modu.pool'] = acquire_db(req.app.db_url)
+	req['modu.pool'] = acquire_db(req.app.db_url, getattr(req.app, 'persistent_db_connections', True))
 
-def acquire_db(db_url):
+def acquire_db(db_url, persistent=True):
 	"""
 	Create the shared connection pool for this process.
 	"""
 	global pools, pools_lock
 	pools_lock.acquire()
 	try:
-		if(db_url in pools):
+		if(persistent and db_url in pools):
 			pool = pools[db_url]
 		else:
 			from modu.persist import dbapi
 			pool = dbapi.connect(db_url)
-			pools[db_url] = pool
+			if(persistent):
+				pools[db_url] = pool
 	finally:
 		pools_lock.release()
 	
@@ -138,9 +139,10 @@ class ReplicatedConnectionPool(object):
 		used to store slaves and select them via round-robin.
 		"""
 		self.master = master
-		self.slaves = collections.deque()
+		self.slaves = []
 		if not(write_only_master):
 			self.slaves.append(self.master)
+		self.selected_slave = None
 	
 	def add_slave(self, pool):
 		"""
@@ -148,6 +150,14 @@ class ReplicatedConnectionPool(object):
 		"""
 		if(pool not in self.slaves):
 			self.slaves.append(pool)
+	
+	def close(self):
+		try:
+			for pool in self.slaves:
+				pool.close()
+			self.master.close()
+		except BaseError, e:
+			print >>sys.stderr, str(e)
 	
 	def runOperation(self, query, *args, **kwargs):
 		"""
@@ -157,8 +167,24 @@ class ReplicatedConnectionPool(object):
 		should always be on the master, we still check the query, since
 		it could just be a programming error.
 		"""
-		pool = self.get_pool_for(query)
-		pool.runOperation(query, *args, **kwargs)
+		# import pdb
+		# pdb.set_trace()
+		pool = self.getPoolFor(query)
+		while(pool):
+			try:
+				pool.runOperation(query, *args, **kwargs)
+				break
+			except (adbapi.ConnectionLost, pool.dbapi.OperationalError), e:
+				if(pool == self.master):
+					raise e
+				else:
+					print >>sys.stderr, "Expired slave %s during operation because of %s" % (pool.connkw['host'], str(e))
+					try:
+						self.slaves.remove(pool)
+						pool.close()
+					except:
+						pass
+					pool = self.getPoolFor(query)
 	
 	def runQuery(self, query, *args, **kwargs):
 		"""
@@ -167,8 +193,23 @@ class ReplicatedConnectionPool(object):
 		Note that even though 'queries' (e.g., selects) should always be on 
 		a slave, we still check the query, since it could just be a programming error.
 		"""
-		pool = self.get_pool_for(query)
-		return pool.runQuery(query, *args, **kwargs)
+		# import pdb
+		# pdb.set_trace()
+		pool = self.getPoolFor(query)
+		while(pool):
+			try:
+				return pool.runQuery(query, *args, **kwargs)
+			except (adbapi.ConnectionLost, pool.dbapi.OperationalError), e:
+				if(pool == self.master):
+					raise e
+				else:
+					print >>sys.stderr, "Expired slave %s during query because of %s" % (pool.connkw['host'], str(e))
+					try:
+						self.slaves.remove(pool)
+						pool.close()
+					except:
+						pass
+					pool = self.getPoolFor(query)
 	
 	def runInteraction(self, interaction, *args, **kwargs):
 		"""
@@ -182,23 +223,36 @@ class ReplicatedConnectionPool(object):
 		"""
 		self.master.runWithConnection(func, *args, **kwargs)
 	
-	def get_slave(self):
+	def getSlave(self):
 		"""
 		Return the next slave in the round robin.
 		"""
 		if not(self.slaves):
 			return self.master
-		self.slaves.rotate(1)
-		return self.slaves[-1]
+		# if selected slave is None, it won't be in slaves either
+		if(self.selected_slave not in self.slaves):
+			random.shuffle(self.slaves)
+			self.selected_slave = self.slaves[-1]
+			#print >>sys.stderr, "Selected slave is now: %s" % self.selected_slave.connkw['host']
+		return self.selected_slave
 	
-	def get_pool_for(self, query):
+	def getPoolFor(self, query):
 		"""
 		Return a slave if this is a SELECT query, else return the master.
 		"""
-		if(query.startswith('SELECT')):
-			return self.get_slave()
+		test_string = query.lower()
+		if(test_string.startswith('select')):
+			result = self.getSlave()
+		elif(test_string.startswith('create temporary table')):
+			result = self.getSlave()
+		elif(test_string.startswith('drop temporary table')):
+			result = self.getSlave()
 		else:
-			return self.master
+			# if(self.selected_slave and self.master != self.selected_slave):
+			# 	print >>sys.stderr, "Selected slave is now: %s" % self.selected_slave.connkw['host']
+			result = self.selected_slave = self.master
+		
+		return result
 
 class SynchronousConnectionPool(adbapi.ConnectionPool):
 	"""
