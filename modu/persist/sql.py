@@ -245,8 +245,12 @@ def build_where(data=None, use_where=True, **kwargs):
 			criteria.append('%s IN (%s)' % (key, ', '.join(['%s'] * len(value))))
 			values.extend(value)
 		elif(isinstance(value, NOT)):
-			criteria.append('%s <> %%s' % key)
-			values.append(value.value)
+			if(isinstance(value.value, list) or isinstance(value.value, tuple)):
+				criteria.append('%s NOT IN (%s)' % (key, ', '.join(['%s'] * len(value.value))))
+				values.extend(value.value)
+			else:
+				criteria.append('%s <> %%s' % key)
+				values.append(value.value)
 		elif(isinstance(value, GT)):
 			criteria.append('%s > %%s' % key)
 			values.append(value.value)

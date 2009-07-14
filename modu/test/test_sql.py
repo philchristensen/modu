@@ -106,6 +106,11 @@ class SQLTestCase(unittest.TestCase):
 		expecting = "SELECT * FROM `table` WHERE `col1` IN ('col1_data', 'col2_data')"
 		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 	
+	def test_build_select_not_in(self):
+		query = sql.build_select('table', {'col1':sql.NOT(['col1_data', 'col2_data'])});
+		expecting = "SELECT * FROM `table` WHERE `col1` NOT IN ('col1_data', 'col2_data')"
+		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
+	
 	def test_build_select_in_limit(self):
 		query = sql.build_select('table', {'col1':['col1_data', 'col2_data'], '__limit':5});
 		expecting = "SELECT * FROM `table` WHERE `col1` IN ('col1_data', 'col2_data') LIMIT 5"
