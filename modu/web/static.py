@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import stat, mimetypes, os.path
+import stat, mimetypes, os.path, urllib
 
 from zope.interface import implements
 
@@ -45,7 +45,7 @@ class FileResource(object):
 	def get_delegate(self, req):
 		self.content_type = None
 		self.size = None
-		self.true_path = os.path.join(self.root, '/'.join(req.postpath))
+		self.true_path = os.path.join(self.root, '/'.join([urllib.unquote(x) for x in req.postpath]))
 		
 		try:
 			self.content_type, self.size = get_file_essentials(req, self.true_path)
