@@ -452,7 +452,10 @@ class itemdef(OrderedDict):
 			app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
 		elif(frm.submit_button.value == form_data.get('delete', form.nil()).value):
 			if(self.delete(req, frm, storable)):
-				app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
+				if(self.config.get('hidden', False)):
+					app.redirect(req.get_path(req.prepath))
+				else:
+					app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
 			else:
 				return False
 		
