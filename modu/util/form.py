@@ -41,13 +41,13 @@ def activate_form_data(req):
 	"""
 	req['modu.data'] = _NestedFieldStorage(req)
 
-def nil():
+def nil(value=None):
 	"""
 	A convenience method for testing values in a NestedFieldStorage object.
 	
 	This allows a developer to use C{nfs['my-form'].get('title', form.nil()).value is None}
 	"""
-	return cgi.MiniFieldStorage('nil-field', None)
+	return cgi.MiniFieldStorage('nil-field', value)
 
 
 def NestedFieldStorage(req, *args, **kwargs):

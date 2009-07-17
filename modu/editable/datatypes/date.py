@@ -158,6 +158,7 @@ class DateField(define.definition):
 			
 			if(self.get('default_now', False)):
 				value = datetime.datetime.now()
+				frm['null'](checked=False)
 		
 		frm['date'](
 			type		= self.get('style', 'datetime'),
