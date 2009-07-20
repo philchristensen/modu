@@ -353,7 +353,8 @@ class Theme(object):
 		value = element.attr('value', None)
 		
 		if(value is None):
-			month, day, year, hour, minute = (months[0], 1, years[0], '00', '00')
+			year = datetime.datetime.now().year
+			month, day, hour, minute = (months[0], 1, '00', '00')
 		else:
 			month, day, year, hour, minute = date.strftime(value, '%B:%d:%Y:%H:%M').split(':')
 		
