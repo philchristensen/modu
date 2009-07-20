@@ -128,7 +128,7 @@ class DateField(define.definition):
 		start_year = self.get('start_year', current_year - 2)
 		end_year = self.get('end_year', current_year + 5)
 		
-		months, days, years = date.get_date_arrays(start_year, end_year)
+		months, days = date.get_date_arrays()
 		
 		frm = form.FormNode(self.name)
 		frm(type='fieldset', style='brief')
@@ -164,8 +164,6 @@ class DateField(define.definition):
 			type		= self.get('style', 'datetime'),
 			value		= value,
 			attributes	= attribs,
-			start_year	= start_year,
-			end_year	= end_year,
 			suffix		= tags.script(type="text/javascript")["""
 				enableDateField($('#form-item-%s input'));
 			""" % self.name],
@@ -201,12 +199,9 @@ class DateField(define.definition):
 			setattr(storable, self.get_column_name(), None)
 			return True
 			
-		start_year = data.start_year
-		end_year = data.end_year
-		
 		date_data = req.data[form.name][self.name].get('date', None)
 		if(date_data):
-			value = date.get_dateselect_value(date_data, self.get('style', 'datetime'), start_year, end_year)
+			value = date.get_dateselect_value(date_data, self.get('style', 'datetime'))
 		else:
 			value = None
 		

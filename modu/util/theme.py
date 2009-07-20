@@ -346,11 +346,7 @@ class Theme(object):
 		import time
 		attribs = element.attr('attributes', {})
 		
-		current_year = datetime.datetime.now().year
-		start_year = element.attr('start_year', current_year - 2)
-		end_year = element.attr('end_year', current_year + 5)
-		
-		months, days, years = date.get_date_arrays(start_year, end_year)
+		months, days = date.get_date_arrays()
 		hours, minutes = date.get_time_arrays()
 		
 		#value = date.convert_to_timestamp(element.attr('value', None))
@@ -361,30 +357,34 @@ class Theme(object):
 		else:
 			month, day, year, hour, minute = date.strftime(value, '%B:%d:%Y:%H:%M').split(':')
 		
-		arrays = (months, days, years, hours, minutes)
-		values = (month, int(day), int(year), hour, minute)
-		names = ('month', 'day', 'year', 'hour', 'minute')
+		arrays = (months, days, hours, minutes)
+		values = (month, int(day), hour, minute)
+		names = ('month', 'day', 'hour', 'minute')
 		
-		return self._generate_datetime_select(element, attribs, arrays, values, names)
-	
+		dateselect = self._generate_datetime_select(element, attribs, arrays[:2], values[:2], names[:2])
+		year_attribs = dict(
+		 	name = '%s[year]' % element.get_element_name(),
+		 	size = 5,
+			value = year,
+		)
+		yearfield = tags.input(type='text', **year_attribs)
+		timeselect = self._generate_datetime_select(element, attribs, arrays[2:], values[2:], names[2:])
+		
+		return ''.join([str(x) for x in (dateselect, yearfield, timeselect)])
 	
 	def theme_datetime_loader(self, form, form_data):
 		import time, datetime
 		
-		current_year = int(time.strftime('%Y', time.localtime()))
-		start_year = form.attr('start_year', current_year - 2)
-		end_year = form.attr('end_year', current_year + 5)
-		
-		months, days, years = date.get_date_arrays(start_year, end_year)
+		months, days = date.get_date_arrays()
 		
 		try:
-			value = datetime.datetime(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, int(form_data['day'].value) + 1,
+			value = datetime.datetime(int(form_data['year'].value), int(form_data['month'].value) + 1, int(form_data['day'].value) + 1,
 										int(form_data['hour'].value), int(form_data['minute'].value))
 		except ValueError, e:
 			max_day = 30
 			if(int(form_data['month'].value) == 2):
 				max_day = 28
-			value = datetime.datetime(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, max_day,
+			value = datetime.datetime(int(form_data['year'].value), int(form_data['month'].value) + 1, max_day,
 										int(form_data['hour'].value), int(form_data['minute'].value))
 		form(value=value)
 	
@@ -393,47 +393,40 @@ class Theme(object):
 		import time
 		attribs = element.attr('attributes', {})
 		
-		current_year = datetime.datetime.now().year
-		start_year = element.attr('start_year', current_year - 2)
-		end_year = element.attr('end_year', current_year + 5)
+		months, days = date.get_date_arrays()
 		
-		months, days, years = date.get_date_arrays(start_year, end_year)
-		
-		#value = date.convert_to_timestamp(element.attr('value', None))
 		value = element.attr('value', None)
 		
 		if(value is None):
-			month, day, year = (months[0], 1, years[0])
+			year = datetime.datetime.now().year
+			month, day = (months[0], 1)
 		else:
 			if(isinstance(value, (int, float))):
 				value = datetime.datetime.utcfromtimestamp(value)
 			
 			month, day, year = date.strftime(value, '%B:%d:%Y').split(':')
-			#month, day, year = time.strftime('%B:%d:%Y', time.localtime(value)).split(':')
 		
-		arrays = (months, days, years)
-		values = (month, int(day), int(year))
-		names = ('month', 'day', 'year')
+		arrays = (months, days)
+		values = (month, int(day))
+		names = ('month', 'day')
 		
-		return self._generate_datetime_select(element, attribs, arrays, values, names)
-	
+		monthday = self._generate_datetime_select(element, attribs, arrays, values, names)
+		
+		yearfield = '%s[year]' % element.get_element_name()
+		return str(monthday) + str(tags.input(type='text', size=5, value=year, name=yearfield))
 	
 	def theme_date_loader(self, form, form_data):
 		import time, datetime
 		
-		current_year = int(time.strftime('%Y', time.localtime()))
-		start_year = form.attr('start_year', current_year - 2)
-		end_year = form.attr('end_year', current_year + 5)
-		
-		months, days, years = date.get_date_arrays(start_year, end_year)
+		months, days = date.get_date_arrays()
 		
 		try:
-			value = datetime.date(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, int(form_data['day'].value) + 1)
+			value = datetime.date(int(form_data['year'].value), int(form_data['month'].value) + 1, int(form_data['day'].value) + 1)
 		except ValueError:
 			max_day = 30
 			if(int(form_data['month'].value) == 2):
 				max_day = 28
-			value = datetime.datetime(years[int(form_data['year'].value)], int(form_data['month'].value) + 1, max_day)
+			value = datetime.datetime(int(form_data['year'].value), int(form_data['month'].value) + 1, max_day)
 		form(value=value)
 	
 	@formelement

@@ -111,7 +111,7 @@ def format_seconds(seconds, colon_format=True):
 	return result
 
 
-def get_date_arrays(start_year, end_year):
+def get_date_arrays():
 	"""
 	Get a set of array for creating date select fields.
 	"""
@@ -120,9 +120,8 @@ def get_date_arrays(start_year, end_year):
 		st[1] = t
 		return st
 	months = [time.strftime('%B', _get_month_struct(t)) for t in range(1, 13)]
-	years = range(start_year, end_year + 1)
 	days = range(1, 32)
-	return months, days, years
+	return months, days
 
 
 def get_time_arrays():
@@ -143,13 +142,13 @@ def convert_to_timestamp(value):
 	else:
 		return value
 
-def get_dateselect_value(date_post_data, style, start_year, end_year):
+def get_dateselect_value(date_post_data, style):
 	"""
 	Take a standard date select posting and create a date, datetime, or time object.
 	"""
 	value = 0
 	
-	months, days, years = get_date_arrays(start_year, end_year)
+	months, days = get_date_arrays()
 	
 	def _safe_int(i):
 		if(i == ''):
@@ -159,14 +158,11 @@ def get_dateselect_value(date_post_data, style, start_year, end_year):
 	if(style in ('date', 'datetime')):
 		month = int(date_post_data['month'].value) + 1
 		day = days[_safe_int(date_post_data['day'].value)]
-		year = years[_safe_int(date_post_data['year'].value)]
-		#value += time.mktime(time.strptime('%s:%d:%d' % (month, day, year), '%B:%d:%Y'))
+		year = _safe_int(date_post_data['year'].value)
 	if(style in ('datetime', 'time')):
 		hours, minutes = get_time_arrays()
 		hour = hours[_safe_int(date_post_data['hour'].value)]
 		minute = minutes[_safe_int(date_post_data['minute'].value)]
-		#value += time.mktime(time.strptime('%s:1:1970:%s:%s' % (months[0], hour, minute), '%B:%d:%Y:%H:%M'))
-		#value -= time.timezone
 	
 	if(style == 'date'):
 		value = datetime.date(year, month, day)
