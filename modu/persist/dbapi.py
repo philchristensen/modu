@@ -62,7 +62,7 @@ def connect(db_urls=None, async=False, *args, **kwargs):
 	@param **kwargs: other keyword arguments to pass to the DB-API driver.
 	"""
 	if not(isinstance(db_urls, tuple)):
-		db_urls = [db_urls]
+		db_urls = (db_urls,)
 	
 	replicated_pool = None
 	for db_url in db_urls:
