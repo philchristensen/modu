@@ -43,6 +43,24 @@ def parse_query_string(req):
 	}
 	return NestedFieldStorage(req)
 
+def check_submission(req, submit_button): 
+	""" 
+	Return true if this button was used to submit the current post data. 
+	""" 
+	path = submit_button.get_element_path() 
+	d = req.data 
+	for segment in path: 
+		if(segment in d): 
+			d = d[segment] 
+		else: 
+			d = None 
+			break 
+	
+	if(d is None): 
+		return False 
+	
+	return True 
+
 class FormNode(OrderedDict):
 	"""
 	In an attempt to mimic the Drupal form-building process in a slightly more
