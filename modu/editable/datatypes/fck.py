@@ -284,8 +284,7 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		data = req.data
 		
 		if(req['REQUEST_METHOD'] == 'POST'):
-			get_data = form.NestedFieldStorage({'QUERY_STRING':req['QUERY_STRING'],
-												'wsgi.input':req['wsgi.input']})
+			get_data = form.parse_query_string(req)
 		else:
 			get_data = data
 		

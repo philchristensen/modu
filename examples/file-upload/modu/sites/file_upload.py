@@ -36,8 +36,6 @@ class RootResource(resource.CheetahTemplateResource):
 						self.set_slot('status', '0/1')
 				else:
 					self.set_slot('status', '0/1')
-		else:
-			forms = form.NestedFieldStorage(req)
 	
 	def get_content_type(self, req):
 		return 'text/html'

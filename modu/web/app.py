@@ -168,7 +168,7 @@ def configure_request(env, application):
 	if not(req.app.disable_message_queue):
 		req.set_jit('modu.messages', queue.activate_messages)
 	
-	req.set_jit('modu.data', form.activate_form_data)
+	req.set_jit('modu.data', form.activate_field_storage)
 	req.set_jit('modu.content', queue.activate_content_queue)
 	
 	return req

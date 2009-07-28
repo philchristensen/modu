@@ -507,7 +507,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 					selected_item = storable.Storable(table_name)
 				
 				# Populate the new item if necessary
-				query_data = form.parse_query_data(req)
+				query_data = form.parse_query_string(req)
 				if('__init__' in query_data):
 					for k, v in query_data['__init__'].items():
 						setattr(selected_item, k, v.value)

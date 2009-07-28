@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import re, cgi, rfc822, time, copy
+import re, cgi, rfc822, time
 
 try:
 	import cStringIO as StringIO
@@ -17,42 +17,18 @@ from modu.util import theme, OrderedDict
 NESTED_NAME = re.compile(r'([^\[]+)(\[([^\]]+)\])*')
 KEYED_FRAGMENT = re.compile(r'\[([^\]]+)\]*')
 
-def check_submission(req, submit_button):
-	"""
-	Return true if this button was used to submit the current post data.
-	"""
-	path = submit_button.get_element_path()
-	d = req.data
-	for segment in path:
-		if(segment in d):
-			d = d[segment]
-		else:
-			d = None
-			break
-	
-	if(d is None):
-		return False
-	
-	return True
-
-def activate_form_data(req):
+def activate_field_storage(req):
 	"""
 	Queue stylesheets or javascript for display by a content queue-aware template.
 	"""
-	req['modu.data'] = _NestedFieldStorage(req)
+	req['modu.data'] = NestedFieldStorage(req)
 
-def NestedFieldStorage(req, *args, **kwargs):
-	from modu.web import app
-	if not(isinstance(req, app.Request)):
-		return _NestedFieldStorage(req, *args, **kwargs)
-	return req['modu.data']
-	
-def parse_query_data(req):
+def parse_query_string(req):
 	req = {
 		'QUERY_STRING'	: req['QUERY_STRING'],
 		'wsgi.input'	: StringIO.StringIO(),
 	}
-	return _NestedFieldStorage(req)
+	return NestedFieldStorage(req)
 
 class FormNode(OrderedDict):
 	"""
@@ -119,7 +95,7 @@ class FormNode(OrderedDict):
 			if(self.is_submitted()):
 				raise KeyError(key)
 			self[key] = FormNode(key)
-
+		
 		return super(FormNode, self).__getitem__(key)
 	
 	def __nonzero__(self):
@@ -388,7 +364,7 @@ class FormNode(OrderedDict):
 		"""
 		raise NotImplementedError("FormNode('%s')::submit" % self.name)
 
-class _NestedFieldStorage(cgi.FieldStorage):
+class NestedFieldStorage(cgi.FieldStorage):
 	"""
 	NestedFieldStorage allows you to use a dict-like syntax for
 	naming your form elements. This allows related values to be
@@ -482,7 +458,7 @@ class _NestedFieldStorage(cgi.FieldStorage):
 							new = True
 						if(tree):
 							#print 'found a new namespace'
-							node[fragment] = DictField()
+							node[fragment] = DictFieldStorage()
 							node = node[fragment]
 						else:
 							#print 'adding %s to namespace %s as %s' % (value, node, fragment)
@@ -525,12 +501,12 @@ class _NestedFieldStorage(cgi.FieldStorage):
 		if not cgi.valid_boundary(ib):
 			raise ValueError, 'Invalid boundary in multipart form: %r' % (ib,)
 		self.list = []
-		part = _NestedFieldStorage(self.req, self, self.fp, {}, ib,
+		part = NestedFieldStorage(self.req, self, self.fp, {}, ib,
 					 environ, keep_blank_values, strict_parsing)
 		# Throw first part away
 		while not part.done:
 			headers = rfc822.Message(self.fp)
-			part = _NestedFieldStorage(self.req, self, self.fp, headers, ib,
+			part = NestedFieldStorage(self.req, self, self.fp, headers, ib,
 						 environ, keep_blank_values, strict_parsing)
 			
 			name, value, new = self.parse_field(part.name, part)
@@ -542,15 +518,15 @@ class _NestedFieldStorage(cgi.FieldStorage):
 	
 	def make_file(self, binary=None):
 		"""
-		Enables use of MagicFile for progressive file transfers.
+		Enables use of SessionFile for progressive file transfers.
 		"""
 		if(self.filename):
-			return MagicFile(self.req, self.filename, 'w+b')
+			return SessionFile(self.req, self.filename, 'w+b')
 		else:
 			import tempfile
 			return tempfile.TemporaryFile("w+b")
 
-class DictField(dict):
+class DictFieldStorage(dict):
 	"""
 	Used to provided nested POST data in C{NestedFieldStorage}.
 	
@@ -569,7 +545,7 @@ class DictField(dict):
 		return cgi.MiniFieldStorage(key, default)
 	
 
-class MagicFile(file):
+class SessionFile(file):
 	"""
 	This wrapper class will log all the bytes written to it into the user's
 	session object. This allows for progressive upload information to be
@@ -577,7 +553,7 @@ class MagicFile(file):
 	"""
 	def __init__(self, req, filename, mode='r', bufsize=-1):
 		"""
-		Create a new MagicFile.
+		Create a new SessionFile.
 		"""
 		import tempfile, md5, os.path
 		hashed_filename = os.path.join(tempfile.gettempdir(), md5.new(filename + time.ctime()).hexdigest())
@@ -608,7 +584,7 @@ class MagicFile(file):
 		session.touch()
 		session.save()
 		
-		super(MagicFile, self).write(data)
+		super(SessionFile, self).write(data)
 	
 	def seek(self, offset, whence=0):
 		"""
@@ -617,4 +593,4 @@ class MagicFile(file):
 		#self.req.log_error('file was sought')
 		session = self.req.session
 		session['modu.file'][self.client_filename]['complete'] = 1
-		super(MagicFile, self).seek(offset, whence)
+		super(SessionFile, self).seek(offset, whence)
