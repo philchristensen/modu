@@ -187,7 +187,7 @@ class ForeignAutocompleteField(define.definition):
 		form_name = '%s-form' % storable.get_table()
 		if(form_name in req.data):
 			form_data = req.data[form_name]
-			if not(form_data.get(self.name, {}).get('%s-autocomplete' % self.name, form.nil()).value):
+			if not(form_data.get(self.name, {}).get('%s-autocomplete' % self.name, None).value):
 				setattr(storable, self.get_column_name(), None)
 			elif(self.name in form_data and self.name in form_data[self.name]):
 				setattr(storable, self.get_column_name(), form_data[self.name][self.name].value)

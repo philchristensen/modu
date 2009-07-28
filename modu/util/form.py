@@ -41,15 +41,6 @@ def activate_form_data(req):
 	"""
 	req['modu.data'] = _NestedFieldStorage(req)
 
-def nil(value=None):
-	"""
-	A convenience method for testing values in a NestedFieldStorage object.
-	
-	This allows a developer to use C{nfs['my-form'].get('title', form.nil()).value is None}
-	"""
-	return cgi.MiniFieldStorage('nil-field', value)
-
-
 def NestedFieldStorage(req, *args, **kwargs):
 	from modu.web import app
 	if not(isinstance(req, app.Request)):
@@ -397,33 +388,6 @@ class FormNode(OrderedDict):
 		"""
 		raise NotImplementedError("FormNode('%s')::submit" % self.name)
 
-
-class FieldStorageDict(dict):
-	"""
-	Sometimes it's convenient to deal with field storage as if
-	it were a real dict.
-	"""
-	
-	def __init__(self, field_storage):
-		self.field_storage = field_storage
-	
-	def __getitem__(self, key):
-		if(key in self.field_storage):
-			return self.field_storage[key].value
-		return dict.__getitem__(self, key)
-	
-	def __contains__(self, key):
-		if(key in self.field_storage):
-			return True
-		return dict.__contains__(self, key)
-	
-	def __len__(self):
-		return len(self.field_storage) + dict.__len__(self)
-	
-	def keys(self):
-		return self.field_storage.keys() + dict.keys(self)
-
-
 class _NestedFieldStorage(cgi.FieldStorage):
 	"""
 	NestedFieldStorage allows you to use a dict-like syntax for
@@ -539,7 +503,6 @@ class _NestedFieldStorage(cgi.FieldStorage):
 			# No nested field names found, use the normal behavior
 			return (key, value, True)
 	
-	
 	def read_urlencoded(self):
 		"""Internal: read data in query string format."""
 		#print ('read_urlencoded()',)
@@ -554,7 +517,6 @@ class _NestedFieldStorage(cgi.FieldStorage):
 				self.list.append(value)
 		
 		self.skip_lines()
-	
 	
 	def read_multi(self, environ, keep_blank_values, strict_parsing):
 		"""Internal: read a part that is itself multipart."""
@@ -578,7 +540,6 @@ class _NestedFieldStorage(cgi.FieldStorage):
 		
 		self.skip_lines()
 	
-	
 	def make_file(self, binary=None):
 		"""
 		Enables use of MagicFile for progressive file transfers.
@@ -588,18 +549,25 @@ class _NestedFieldStorage(cgi.FieldStorage):
 		else:
 			import tempfile
 			return tempfile.TemporaryFile("w+b")
-	
-
 
 class DictField(dict):
 	"""
 	Used to provided nested POST data in C{NestedFieldStorage}.
+	
+	This is a trivial subclass of dict to allow the NestedFieldStorage to
+	set a `name` attribute on this item, and to return proper default values
+	from the get() method.
 	"""
-	def __init__(self, value=None):
-		dict.__init__(self)
-		if(value):
-			self.update(value)
-
+	__slots__ = ['name']
+    
+	def get(self, key, default=None):
+		"""
+		Implements dict-style .get() function.
+		"""
+		if(key in self):
+			return self[key]
+		return cgi.MiniFieldStorage(key, default)
+	
 
 class MagicFile(file):
 	"""

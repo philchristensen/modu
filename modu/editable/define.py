@@ -448,9 +448,9 @@ class itemdef(OrderedDict):
 		@rtype: bool
 		"""
 		form_data = req.data[frm.name]
-		if(frm.submit_button.value == form_data.get('cancel', form.nil()).value):
+		if(frm.submit_button.value == form_data.get('cancel', None).value):
 			app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
-		elif(frm.submit_button.value == form_data.get('delete', form.nil()).value):
+		elif(frm.submit_button.value == form_data.get('delete', None).value):
 			if(self.delete(req, frm, storable)):
 				if(self.config.get('hidden', False)):
 					app.redirect(req.get_path(req.prepath))
@@ -459,7 +459,7 @@ class itemdef(OrderedDict):
 			else:
 				return False
 		
-		if(frm.submit_button.value != form_data.get('save', form.nil()).value):
+		if(frm.submit_button.value != form_data.get('save', None).value):
 			validator = frm.submit_button.attr('validator', None)
 			if(callable(validator)):
 				return validator(req, frm, storable)
