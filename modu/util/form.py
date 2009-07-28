@@ -5,6 +5,10 @@
 #
 # See LICENSE for details
 
+"""
+Utilities for handling forms and request data.
+"""
+
 import re, cgi, rfc822, time
 
 try:
@@ -19,11 +23,20 @@ KEYED_FRAGMENT = re.compile(r'\[([^\]]+)\]*')
 
 def activate_field_storage(req):
 	"""
-	Queue stylesheets or javascript for display by a content queue-aware template.
+	Parse the POST data or GET query string and save in the Request.
+	
+	JIT function.
 	"""
 	req['modu.data'] = NestedFieldStorage(req)
 
 def parse_query_string(req):
+	"""
+	Parse **ONLY** the GET query string.
+	
+	Useful when a form has POSTed data to a URL containing a
+	query string. The default FieldStorage behavior is to
+	ignore GET data when a POST has occurred.
+	"""
 	req = {
 		'QUERY_STRING'	: req['QUERY_STRING'],
 		'wsgi.input'	: StringIO.StringIO(),
