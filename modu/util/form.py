@@ -54,6 +54,9 @@ class FormNode(OrderedDict):
 	"""
 	
 	def __init__(self, name):
+		"""
+		Create a form object with the provided name.
+		"""
 		super(FormNode, self).__init__()
 		
 		self.name = name
