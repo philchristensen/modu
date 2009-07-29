@@ -248,9 +248,9 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		"""
 		table_name = itemdef.config.get('table', itemdef.name)
 		session_search_data = req.session.setdefault('search_form', {}).setdefault(itemdef.name, {})
-		
+		#import pdb; pdb.set_trace()
 		form_data = req.data.get('%s-search-form' % itemdef.name, {})
-		if(isinstance(form_data, dict) and form_data.get('clear_search', '')):
+		if(isinstance(form_data, dict) and form_data.get('clear_search', None).value):
 			req.session.setdefault('search_form', {})[itemdef.name] = {}
 			app.redirect(req.get_path(req.prepath, 'listing', itemdef.name))
 		
