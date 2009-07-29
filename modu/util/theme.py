@@ -63,6 +63,9 @@ class Theme(object):
 		elif(prefix):
 			content += str(prefix)
 		
+		if(rendered_element is None):
+			import pdb; pdb.set_trace()
+		
 		content += rendered_element
 			
 		suffix = element.attr('suffix', False)
@@ -89,7 +92,7 @@ class Theme(object):
 	
 	@formelement
 	def theme_markup(self, form_id, element):
-		return element.attr('value', '')
+		return element.attr('value', '') or ''
 	
 	@formelement
 	def theme_fieldset(self, form_id, element):
