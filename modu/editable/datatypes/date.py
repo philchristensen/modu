@@ -198,9 +198,10 @@ class DateField(define.definition):
 		if(data.attr('null', 0)):
 			setattr(storable, self.get_column_name(), None)
 			return True
-			
+		
 		date_data = req.data[form.name][self.name].get('date', None)
-		if(date_data):
+		# if it's not a dict, it must be None, or broken
+		if(isinstance(date_data, dict)):
 			value = date.get_dateselect_value(date_data, self.get('style', 'datetime'))
 		else:
 			value = None
