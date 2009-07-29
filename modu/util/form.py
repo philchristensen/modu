@@ -338,9 +338,6 @@ class FormNode(OrderedDict):
 		"""
 		form_data = req.data.get_path(self.get_element_path())
 		
-		if(hasattr(form_data, 'value') and form_data.value == None):
-			return
-		
 		if(isinstance(form_data, dict)):
 			if(len(self)):
 				for name, child in self.items():
@@ -359,7 +356,7 @@ class FormNode(OrderedDict):
 		else:
 			# It's unfortunate to have to hard-code this, but....
 			if(self.attr('type', '') == 'checkbox'):
-				self.attributes['checked'] = bool(form_data)
+				self.attributes['checked'] = bool(form_data.value)
 			else:
 				if(hasattr(form_data, 'value')):
 					self.attributes['value'] = form_data.value
