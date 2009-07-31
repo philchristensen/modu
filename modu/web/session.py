@@ -43,7 +43,7 @@ def activate_session(req):
 	if(getattr(app, 'pre_login_callback', None)):
 		app.pre_login_callback(req)
 	
-	if('modu.user' not in req):
+	if not(req.get('modu.user', None)):
 		if(app.disable_session_users):
 			if(app.enable_anonymous_users):
 				req['modu.user'] = user.AnonymousUser()
