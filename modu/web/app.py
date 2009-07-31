@@ -59,6 +59,10 @@ def handler(env, start_response):
 			else:
 				raise404("No such application: %s" % env['REQUEST_URI'])
 			
+			if(getattr(application, 'force_sessions', False)):
+				# referencing the session will force JIT activation
+				req.session
+			
 			if(hasattr(application.site, 'configure_request')):
 				application.site.configure_request(req)
 			rsrc = req.get_resource()

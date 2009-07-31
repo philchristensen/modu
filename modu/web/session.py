@@ -39,15 +39,23 @@ def activate_session(req):
 	req['modu.session'] = app.session_class(req, req.pool, cookie_params=cookie_params, timeout=session_timeout)
 	if(app.debug_session):
 		req.log_error('session contains: ' + str(req.session))
-	if(app.disable_session_users):
-		if(app.enable_anonymous_users):
-			req['modu.user'] = user.AnonymousUser()
+	
+	if(getattr(app, 'pre_login_callback', None)):
+		app.pre_login_callback(req)
+	
+	if('modu.user' not in req):
+		if(app.disable_session_users):
+			if(app.enable_anonymous_users):
+				req['modu.user'] = user.AnonymousUser()
+			else:
+				req['modu.user'] = None
 		else:
-			req['modu.user'] = None
-	else:
-		req['modu.user'] = req.session.get_user()
-		if(req.user is None and app.enable_anonymous_users):
-			req['modu.user'] = user.AnonymousUser()
+			req['modu.user'] = req.session.get_user()
+			if(req.user is None and app.enable_anonymous_users):
+				req['modu.user'] = user.AnonymousUser()
+	
+	if(getattr(app, 'post_login_callback', None)):
+		app.post_login_callback(req)
 
 def _init_rnd():
 	""" initialize random number generators
