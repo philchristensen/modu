@@ -27,3 +27,7 @@ class HTTPStatus(Exception):
 	def get_content(self):
 		return '\n'.join(self.content)
 
+class MaintenanceMode(Exception):
+	"""
+	This error will be thrown when the server is in maintenance mode.
+	"""

@@ -59,6 +59,8 @@ def handler(env, start_response):
 			else:
 				raise404("No such application: %s" % env['REQUEST_URI'])
 			
+			check_maintenance_mode(req)
+			
 			if(getattr(application, 'force_sessions', False)):
 				# referencing the session will force JIT activation
 				req.session
@@ -101,6 +103,23 @@ def handler(env, start_response):
 		
 		start_response(http.status, headers)
 		return content
+	except web.MaintenanceMode, maintenance:
+		# note that we don't check for modu.app existing here
+		# as our check happens after we create it (otherwise,
+		# we assume an error would have occurred)
+		if(req.app.config.get('maintenance_content')):
+			content_provider = req.app.maintenance_content()
+			content_provider.prepare_content(req)
+			content = [content_provider.get_content(req)]
+			headers = [('Content-Type', content_provider.get_content_type(req))]
+		else:
+			content = ["<html><head><title>Maintenance Mode</title></head>"
+					"<body>Sorry, the server is currently undergoing maintenance, "
+					"please come back soon.</body></html>\n"]
+			headers = [('Content-Type', 'text/html')]
+		
+		start_response('503 Service Unavailable', headers)
+		return content
 	except:
 		reason = failure.Failure()
 		reason.printTraceback(env['wsgi.errors'])
@@ -121,6 +140,10 @@ def handler(env, start_response):
 	
 	start_response('200 OK', req.get_headers())
 	return content
+
+def check_maintenance_mode(req):
+	if(os.path.exists('/etc/modu-maintenance')):
+		raise web.MaintenanceMode()
 
 def configure_request(env, application):
 	"""
