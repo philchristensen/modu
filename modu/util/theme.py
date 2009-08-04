@@ -133,6 +133,10 @@ class Theme(object):
 		attribs['value'] = value
 		return tags.input(type='hidden', **attribs)
 	
+	def theme_value(self, form_id, element):
+		# a 'value' form type is used to store server-side content
+		return ''
+	
 	@formelement
 	def theme_textfield(self, form_id, element):
 		value = element.attr('value', element.attr('default_value', ''))
