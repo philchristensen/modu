@@ -530,9 +530,8 @@ class DefaultFactory(object):
 		as an object created by this factory.
 		"""
 		if(query not in self.cache):
-			item_records = self.get_item_records(query) or []
 			result = [self.create_item(record)
-						for record in item_records]
+						for record in self.get_item_records(query)]
 			if(result and self.use_cache):
 				self.cache[query] = result
 			else:
