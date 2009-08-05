@@ -439,6 +439,8 @@ class Store(object):
 		@see: L{IFactory.load_one()}
 		"""
 		results = self.load(table, data, **kwargs)
+		if(results is None):
+			return None
 		for result in list(results):
 			return result
 		return None
