@@ -156,7 +156,7 @@ class ReplicatedConnectionPool(object):
 			for pool in self.slaves:
 				pool.close()
 			self.master.close()
-		except BaseError, e:
+		except BaseException, e:
 			print >>sys.stderr, str(e)
 	
 	def runOperation(self, query, *args, **kwargs):
