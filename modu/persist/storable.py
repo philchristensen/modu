@@ -531,7 +531,7 @@ class DefaultFactory(object):
 		"""
 		if(query not in self.cache):
 			result = [self.create_item(record)
-						for record in self.get_item_records(query)]
+						for record in self.get_item_records(query) or []]
 			if(result and self.use_cache):
 				self.cache[query] = result
 			else:
