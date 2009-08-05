@@ -17,6 +17,7 @@ from modu.util import url
 
 debug = False
 pools = {}
+async_pools = {}
 pools_lock = threading.BoundedSemaphore()
 
 def activate_pool(req):
@@ -59,18 +60,24 @@ def connect(db_urls=None, async=False, *args, **kwargs):
 		args = list(args)
 		args.extend(dargs)
 		
-		global pools, pools_lock
+		global pools, async_pools, pools_lock
 		pools_lock.acquire()
 		try:
 			if(db_url in pools):
-				pool = pools[db_url]
+				if(async):
+					pool = async_pools[db_url]
+				else:
+					pool = pools[db_url]
 			else:
 				from modu.persist import dbapi
 				if(async):
 					pool = adbapi.ConnectionPool(dbapiName, *dargs, **dkwargs)
 				else:
 					pool = SynchronousConnectionPool(dbapiName, *dargs, **dkwargs)
-				pools[db_url] = pool
+				if(async):
+					async_pools[db_url] = pool
+				else:
+					pools[db_url] = pool
 		finally:
 			pools_lock.release()
 		
