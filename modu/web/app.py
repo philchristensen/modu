@@ -84,8 +84,6 @@ def handler(env, start_response):
 			# in this page load
 			if(req.get('modu.session', None) is not None):
 				req.session.save()
-			if(req.get('modu.pool', None) is not None and not getattr(req.app, 'persistent_db_connections', True)):
-				req.pool.close()
 	except web.HTTPStatus, http:
 		reason = failure.Failure()
 		

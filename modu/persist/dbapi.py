@@ -23,26 +23,7 @@ def activate_pool(req):
 	"""
 	JIT Request handler for enabling DB support.
 	"""
-	req['modu.pool'] = acquire_db(req.app.db_url, getattr(req.app, 'persistent_db_connections', True))
-
-def acquire_db(db_url, persistent=True):
-	"""
-	Create the shared connection pool for this process.
-	"""
-	global pools, pools_lock
-	pools_lock.acquire()
-	try:
-		if(persistent and db_url in pools):
-			pool = pools[db_url]
-		else:
-			from modu.persist import dbapi
-			pool = dbapi.connect(db_url)
-			if(persistent):
-				pools[db_url] = pool
-	finally:
-		pools_lock.release()
-	
-	return pool
+	req['modu.pool'] = connect(req.app.db_url)
 
 def connect(db_urls=None, async=False, *args, **kwargs):
 	"""
@@ -78,10 +59,20 @@ def connect(db_urls=None, async=False, *args, **kwargs):
 		args = list(args)
 		args.extend(dargs)
 		
-		if(async):
-			pool = adbapi.ConnectionPool(dbapiName, *dargs, **dkwargs)
-		else:
-			pool = SynchronousConnectionPool(dbapiName, *dargs, **dkwargs)
+		global pools, pools_lock
+		pools_lock.acquire()
+		try:
+			if(db_url in pools):
+				pool = pools[db_url]
+			else:
+				from modu.persist import dbapi
+				if(async):
+					pool = adbapi.ConnectionPool(dbapiName, *dargs, **dkwargs)
+				else:
+					pool = SynchronousConnectionPool(dbapiName, *dargs, **dkwargs)
+				pools[db_url] = pool
+		finally:
+			pools_lock.release()
 		
 		if(len(db_urls) == 1):
 			return pool
@@ -151,14 +142,6 @@ class ReplicatedConnectionPool(object):
 		if(pool not in self.slaves):
 			self.slaves.append(pool)
 	
-	def close(self):
-		try:
-			for pool in self.slaves:
-				pool.close()
-			self.master.close()
-		except BaseException, e:
-			print >>sys.stderr, str(e)
-	
 	def runOperation(self, query, *args, **kwargs):
 		"""
 		Run an operation on the master.
@@ -167,8 +150,6 @@ class ReplicatedConnectionPool(object):
 		should always be on the master, we still check the query, since
 		it could just be a programming error.
 		"""
-		# import pdb
-		# pdb.set_trace()
 		pool = self.getPoolFor(query)
 		while(pool):
 			try:
@@ -193,8 +174,6 @@ class ReplicatedConnectionPool(object):
 		Note that even though 'queries' (e.g., selects) should always be on 
 		a slave, we still check the query, since it could just be a programming error.
 		"""
-		# import pdb
-		# pdb.set_trace()
 		pool = self.getPoolFor(query)
 		while(pool):
 			try:
