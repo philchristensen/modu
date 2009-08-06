@@ -357,6 +357,8 @@ class FormNode(OrderedDict):
 			# It's unfortunate to have to hard-code this, but....
 			if(self.attr('type', '') == 'checkbox'):
 				self.attributes['checked'] = bool(form_data.value)
+			elif(self.attr('type', '') == 'submit'):
+				pass # don't update the 'value' of a submit button
 			else:
 				if(hasattr(form_data, 'value')):
 					self.attributes['value'] = form_data.value
