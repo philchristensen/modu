@@ -63,21 +63,20 @@ def connect(db_urls=None, async=False, *args, **kwargs):
 		global pools, async_pools, pools_lock
 		pools_lock.acquire()
 		try:
-			if(db_url in pools):
-				if(async):
-					pool = async_pools[db_url]
-				else:
-					pool = pools[db_url]
+			if(async):
+				selected_pools = async_pools
+			else:
+				selected_pools = pools
+			
+			if(db_url in selected_pools):
+				pool = selected_pools[db_url]
 			else:
 				from modu.persist import dbapi
 				if(async):
 					pool = adbapi.ConnectionPool(dbapiName, *dargs, **dkwargs)
 				else:
 					pool = SynchronousConnectionPool(dbapiName, *dargs, **dkwargs)
-				if(async):
-					async_pools[db_url] = pool
-				else:
-					pools[db_url] = pool
+				selected_pools[db_url] = pool
 		finally:
 			pools_lock.release()
 		
