@@ -140,6 +140,16 @@ def handler(env, start_response):
 	return content
 
 def check_maintenance_mode(req):
+	"""
+	Check whether maintenance mode is on or not.
+	
+	At this time, this merely checks for the existence of a 'modu-maintenance' file
+	in /etc. There are a significant limitations with this implementation:
+	
+	 -  This affects *all* applications running in this instance.
+	 -  It's not possible to fetch any kind of resource, since the
+	    maintenance page is returned for *all* URLs.
+	"""
 	if(os.path.exists('/etc/modu-maintenance')):
 		raise web.MaintenanceMode()
 
@@ -199,6 +209,16 @@ def configure_request(env, application):
 	return req
 
 def get_default_approot(site):
+	"""
+	Get the application root of the provided site configuration.
+	
+	Note that use of approot and webroot are increasingly discouraged,
+	since the current implementation makes significant assumptions
+	about how your application code is installed.
+	
+	The approot is assumed to be two directories up from where the
+	site configuration class file is found. 
+	"""
 	parts = site.__class__.__module__.split('.')
 	# I left off the part that forces absolute imports, so this will work in py 2.4
 	package = __import__('.'.join(parts[:-1]), globals(), locals(), parts[-1])
@@ -206,12 +226,22 @@ def get_default_approot(site):
 	return os.path.abspath(os.path.dirname(os.path.abspath(mod.__file__)) + '/../..')
 
 def get_normalized_hostname(env):
+	"""
+	Get the best hostname we can find in the provided environment.
+	
+	If the request came in on an alternate port, it will be
+	appended to the result.
+	"""
 	host = env.get('HTTP_HOST', env['SERVER_NAME'])
 	if(host.find(':') == -1):
 		host += ':' + env['SERVER_PORT']
 	return host
 
 def get_process_info():
+	"""
+	Debug info table that can be appended to error output.
+	Currently unused (a potential security risk, but good for debugging)
+	"""
 	import thread
 	return tags.table()[[
 		tags.tr()[[
@@ -487,7 +517,8 @@ class Request(dict):
 		"""
 		Return the Resource object this Request refers to.
 		
-		The
+		Until this method is called, the prepath and postpath member
+		variables are uninitialized.
 		"""
 		if(self.rsrc):
 			return self.rsrc
@@ -502,9 +533,15 @@ class Request(dict):
 		return self.rsrc
 	
 	def log_error(self, data):
+		"""
+		Log an error to the WSGI standard error log.
+		"""
 		self['wsgi.errors'].write(str(data) + '\n')
 	
 	def has_form_data(self):
+		"""
+		Returns True if the REQUEST_METHOD is POST, or there is a query string provided.
+		"""
 		if(self['REQUEST_METHOD'] == 'POST'):
 			return True
 		elif(self['QUERY_STRING']):
@@ -512,6 +549,9 @@ class Request(dict):
 		return False
 	
 	def get_path(self, *args, **query):
+		"""
+		Assemble an absolute URL for this application.
+		"""
 		def _deslash(fragment):
 			if(isinstance(fragment, (list, tuple))):
 				return '/'.join(fragment)
@@ -567,6 +607,9 @@ class Request(dict):
 		return self.response_headers
 	
 	def get_header(self, header):
+		"""
+		Get the value of a particular previously-set response header.
+		"""
 		result = []
 		for item in self.response_headers:
 			if(item[0].lower() == header.lower()):
