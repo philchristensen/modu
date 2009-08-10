@@ -150,6 +150,9 @@ class FormNode(OrderedDict):
 		child.parent = self
 	
 	def is_submitted(self):
+		"""
+		Check if execute() has ever been called for this form.
+		"""
 		if(self.parent):
 			return self.parent.is_submitted()
 		else:
@@ -174,7 +177,7 @@ class FormNode(OrderedDict):
 	
 	def get_element_path(self):
 		"""
-		Return list of names from parent to this item.
+		Return list of names from root node to this item.
 		"""
 		path = []
 		node = self
@@ -318,6 +321,12 @@ class FormNode(OrderedDict):
 		return getattr(thm, 'theme_' + element_type)(self.name, self)
 	
 	def get_theme(self, req, current=None):
+		"""
+		Get the appropriate theme to render this node.
+		
+		If self.theme is set, use it, otherwise use the provided current theme.
+		If there is no provided current theme, use the default theme.
+		"""
 		if(self.theme is None):
 			if(current is None):
 				thm = theme.Theme(req)
@@ -431,6 +440,9 @@ class NestedFieldStorage(cgi.FieldStorage):
 			return False
 	
 	def get_path(self, path, default=None):
+		"""
+		Extract the form field at the specified path.
+		"""
 		node = self
 		for item in path:
 			node = node.get(item, None)
