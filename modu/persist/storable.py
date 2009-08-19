@@ -513,7 +513,7 @@ class DefaultFactory(object):
 		"""
 		Load an item directly via its primary key.
 		"""
-		(result) = self.get_items({self.id_col:id})
+		[result] = self.get_items({self.id_col:id})
 		return result
 	
 	def get_items(self, data):
