@@ -24,15 +24,15 @@ class AppTestCase(unittest.TestCase):
 	"""
 	Test the WSGI application flow.
 	"""
-	def get_request(self, uri, form_data={}):
+	def get_request(self, uri, form_data={}, hostname='____basic-test-domain____'):
 		"""
 		The request generator for this TestCase.
 		"""
 		environ = test.generate_test_wsgi_environment(form_data)
 		
 		environ['REQUEST_URI'] = uri
-		environ['HTTP_HOST'] = '____basic-test-domain____:1234567'
-		environ['SERVER_NAME'] = '____basic-test-domain____'
+		environ['HTTP_HOST'] = '%s:1234567' % hostname
+		environ['SERVER_NAME'] = hostname
 		environ['HTTP_PORT'] = '1234567'
 		
 		application = app.get_application(environ)
@@ -42,6 +42,12 @@ class AppTestCase(unittest.TestCase):
 		
 		return req
 	
+	def test_mutate_application(self):
+		req = self.get_request('/')
+		req.app.make_immutable()
+		
+		self.failUnlessRaises(AttributeError, setattr, req.app, 'base_path', 'something else')
+	
 	def test_jit(self):
 		req = self.get_request('/')
 		
@@ -49,6 +55,12 @@ class AppTestCase(unittest.TestCase):
 		self.failUnless(req.get('modu.user', None) is None)
 		self.failUnless(req.get('modu.pool', None) is None)
 		self.failUnless(req.get('modu.store', None) is None)
+	
+	def test_jit_usage(self):
+		req = self.get_request('/app-test/test-resource', hostname='____store-test-domain____')
+		
+		self.failUnless(req.get('modu.store', None) is None)
+		self.failIf(req.store is None)
 	
 	def test_load(self):
 		"""

@@ -53,6 +53,7 @@ def handler(env, start_response):
 	try:
 		try:
 			application = get_application(env)
+			application.make_immutable()
 			
 			if(application):
 				req = configure_request(env, application)
@@ -629,6 +630,7 @@ class Application(object):
 	in the request object for each page request.
 	"""
 	def __init__(self, site):
+		self.__dict__['immutable'] = False
 		self.__dict__['config'] = {}
 		
 		self.base_domain = 'localhost'
@@ -650,8 +652,13 @@ class Application(object):
 		self.approot = get_default_approot(site)
 		
 		site.initialize(self)
+		
+	def make_immutable(self):
+		self.__dict__['immutable'] = True
 	
 	def __setattr__(self, key, value):
+		if(self.immutable):
+			raise AttributeError("Application objects are immutable once they've been initialized.")
 		self.config[key] = value
 	
 	def __getattr__(self, key):
