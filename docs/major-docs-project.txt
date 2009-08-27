@@ -199,7 +199,7 @@ These variables behave much the same way as regular request variables, but there
 
 Neither will using req.get() instantiate a JIT variable. Only using the `req['modu.session']` or `req.session` syntax will populate the variable on-demand.
 
-== Using Resources ==
+== Paths and URLs ==
 
 The primary system of organizing URLs in modu is based around a class called URLNode. URLNode provides a mechanism for creating a tree of nodes, where each level of nodes has its own name. A node may contain a value or not, and the entire tree may be queried with a particular slash-separated path (e.g., a URI).
 
@@ -258,7 +258,20 @@ The default implementation of modu paths can be limited in certain respects when
 
 where 1234 is the node ID. The easiest way to implement this is to register a Resource for /node, and allow it to handle all the URLs starting with /node. However, in complex applications this may not be suitable, either from a code organization standpoint or because of a even more complex URL structure.
 
+Another more powerful option is available through the use of ResourceDelegates. If you create a Resource that implements the IResourceDelegate interface, and supply a corresponding get_delegate() method, you can write code that examines the request, and then returns some Resource (this can be `self`, or any other Resource). Here's an example:
 
+    class Resource(resource.CheetahTemplateResource):
+        implements(resource.IResourceDelegate)
+        
+        def get_delegate(self, req):
+            if(req.postpath[1] == 'player'):
+                return player.Resource()
+            else:
+                return self
+
+In this case, the Resource represents an album detail page, at a URL like '/albums/1234'. However, I wanted to be able to popup a media player window through JavaScript, and the easiest way was just to append '/player' to the URL.
+
+There's one small catch with this method. This happens early in the resource lookup process, and you aren't limited to making delegate choices based soley on the URL scheme, so there's no way for modu to automatically update the pre- and postpath variables. In the example above, my prepath is still ['albums'] and my postpath is still ['1234', 'player'], but if that matters to you, you can adjust those variables before returning the delegate.
 
 === modu Paths ===
 
@@ -271,4 +284,6 @@ Once a Resource is found for a particular URI, the Request object has its path, 
 The goal when using modu paths is to allow the same codebase to be run over several domains (say, between production and staging, or development sites) without needing to replace config files or doing tricks with symlinks. To further this goal, users are encouraged to use Request::get_path() to generate URLs in their templates and resource code.
 
 get_path() takes an arbitrary number of path elements, concatenates them together -- removing duplicate slashes, etc -- and creates an absolute URL containing the hostname, port (if necessary), and base_path for the particular running site configuration. It's also able to deal with certain Apache proxying situations where the WSGI environment dictionary contains HTTP_X_FORWARDED_SERVER.
+
+== Resource API ==
 
