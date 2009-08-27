@@ -1,0 +1,274 @@
+== About WSGI ==
+
+modu is based around Python's WSGI protocol. WSGI was created ostensibly to provide a familiar but standardized way to create Python web applications. Although it is widely used, it is not without its flaws, in specification and often in implementation of the frameworks that implement it. Some of these issues are outlined at the following URLs:
+
+    * http://www.b-list.org/weblog/2009/aug/10/wsgi
+    * http://lucumr.pocoo.org/2009/7/30/nih-in-the-wsgi-world
+    * http://lucumr.pocoo.org/2009/8/5/pro-cons-about-werkzeug-webob-and-django
+
+However, it does provide a generally well-documented interface for dealing with web applications, and is generally well accepted by the community.
+
+There are a few caveats that should be understood when dealing with modu, and its particular implementation of WSGI. During the development of the modu codebase, great care was taken to follow the spec, but there are still likely some derivations and issues. The reality of implementing WSGI properly is that there are a number of small differences between different apps and host environments that must be accounted for.
+    
+    * The Request object that is passed around a modu web app is a
+      subclass of the Python dict object, which provides additional
+      functionality, but does not interfere with the usual WSGI
+      environment variables. Therefore it is possible to run other
+      WSGI applications through a shim Resource in modu, which then
+      passes the same Request object as the `environ` to the WSGI
+      application object.
+    
+    * modu has been tested (and is used extensively in production)
+      with the mod_wsgi plugin for Apache 2.2 and later. So far it
+      has only been used with the prefork MPM, but it should support
+      the threaded (worker) MPM as well.
+    
+    * The current built-in webserver is based on Twisted Web, but does
+      not yet use the existing Twisted Web WSGI support. The `modu-web`
+      twistd service implements its own WSGI environment with additional
+      features helpful when debugging modu applications.
+
+== The Site object ==
+Every modu application is configured by creating a Site class that can be discovered by modu at Request time. A very basic Site class might look something like this:
+
+    class Site(object):
+        classProvides(plugin.IPlugin, app.ISite)
+        
+        def initialize(self, application):
+            application.base_domain = 'localhost'
+            application.base_path = '/modu'
+            application.activate('/', index.Resource)
+
+The initialize() method is called the first time a URL for a particular site is loaded.
+
+== The Application object ==
+
+A newly instantiated Application object is passed to Site::initialize(), where we can set any static site configuration variable needed. A number of standard config variables exist, but projects can create new ones as desired.
+
+One an application object is created, it is immutable for the lifetime of the server process it's running under. When unit testing, Application::make_immutable() is often omitted as a convenience by those who know what they're doing.
+
+    base_domain = 'localhost'
+        The base domain is the domain that this application will be loaded for.
+
+    base_path = '/'
+        The base path is where the root modu resource is located.
+
+    db_url = 'MySQLdb://modu:modu@localhost/modu'
+        A specially constructed URL representing the database connection 
+        details.
+
+    session_class = session.DbUserSession
+        The default session class. Set to None to disable sessions.
+
+    session_cookie_params = {'Path':'/'}
+        The default paramaters for the created session cookie.
+
+    initialize_store = True
+        Should a store object be created by default?
+
+    webroot = 'webroot'
+        If a path is not found within the URL Tree (i.e., there is no
+        Resource at a given URL), the path is translated to the webroot,
+        which, if a relative path, is appended to the application's `approot`.
+
+    debug_session = False
+        If True, display debug information when a session is loaded or saved.
+
+    debug_store = False
+        If True, display queries when objects are loaded or saved.
+
+    enable_anonymous_users = True
+        If the current req.user is not a logged-in user, create an
+        AnonymousUser instance instead of using None
+
+    disable_session_users = False
+        If True, don't login users based on their session information.
+
+    disable_message_queue = False
+        If True, disable creation of the session-based message queue.
+
+    magic_mime_file = None
+        If defined, specify an additional location for the magic mime
+        file. For example, on Mac OS X with Apache 2, this should be
+        set to `/etc/apache2/mime.types`
+
+    tree
+        The URL tree that is populated by the Site class
+
+    site
+        The Site class used to create this Application
+
+== The Request object ==
+
+A single Request object is created as a representation of an HTTP request, and is passed around a modu application through the lifetime of a request. It contains a series of environment variables describing the current request, and also holds on to a number of modu-specific variables, as well as outgoing headers for the HTTP response.
+
+First and foremost, Request objects hold the key-value pairs supplied by the WSGI environment. These are basically similar to the variables defined by the CGI standard:
+
+    REQUEST_METHOD      CONTENT_LENGTH
+    SCRIPT_NAME         SERVER_NAME
+    PATH_INFO           SERVER_PORT
+    QUERY_STRING        SERVER_PROTOCOL
+    CONTENT_TYPE        HTTP_*
+
+The last item (HTTP_*) represents the standard HTTP headers such as HTTP_CONTENT_LENGTH and others.
+
+Also included are the WSGI-specific variables such as:
+
+    wsgi.version        wsgi.multithread
+    wsgi.url_scheme     wsgi.multiprocess
+    wsgi.input          wsgi.run_once
+    wsgi.errors
+
+More information on these variables can be found in the WSGI spec:
+
+    http://www.python.org/dev/peps/pep-0333
+
+Finally, a number of modu-specific variables are created:
+
+    modu.app
+        The current Application object, containing the configuration
+        variables for this site/application.
+    
+    modu.approot
+        The main modu application directory. This is dynamically
+        detected as being 2 directory levels above the discovered
+        modu site configuration file.
+    
+    modu.path
+        The URL path *after* the subpath where this application is
+        located; for example, if an application's base path is
+        /myapp, a request to /myapp/root would result in a modu.path
+        of '/root'.
+    
+    modu.pool
+        The default database connection, if available.
+    
+    modu.store
+        The default Store object, connected through `modu.pool`
+    
+    modu.session
+        The current session, if available.
+    
+    modu.user
+        The current logged-in user, if available. Can also be an
+        AnonymousUser object, or None.
+    
+    modu.messages
+        An interface to server user messages and errors, saves
+        temporary data in session.
+    
+    modu.data
+        Currently posted form data
+    
+    modu.content
+        An interface for storing HTML header content, allowing modu
+        code to add style sheets or javascript at any time.
+
+All of the modu.* variables can be accessed as attributes on the Request object (e.g., req.app, req.store. req.pool). 
+
+Additionally, the Request object provides the following attributes:
+
+    rsrc
+        The currently selected Resource object, if available
+    
+    prepath
+        A list of path elements representing consisting of the path TO the
+        current Resource within modu; if 'modu.path' is /one/two/three, and
+        the current Resource is activated at /one, prepath will be ['one']
+    
+    postpath
+        A list of path elements representing consisting of the path FROM the
+        current Resource within modu; if 'modu.path' is /one/two/three, and
+        the current Resource is activated at /one, prepath will be
+        ['two', 'three']
+
+    response_headers
+        A list of tuples representing the HTTP response headers to be returned.
+
+=== Error Logging ===
+
+When developing modu applications, users are encouraged to use the built-in, Twisted-based web server to run their applications. In this situation, any number of methods are available for logging to the console (or error log), but it's generally as simple as issuing a 'print' statement.
+
+If you want to log properly in any environment, you'll want to use Request::log_error() to make a proper WSGI log line. This method is a convenience function that performs a write (with line-endings) to the stream that's kept in the Request object as 'wsgi.errors' -- remember, modu Request objects support all the keys passed in the WSGI environment dictionary.
+
+=== JIT Variables ===
+
+The modu.* variables 'pool', 'store', 'session', 'user', and 'messages' are "Just In Time" variables, and are only populated when first requested.
+
+These variables behave much the same way as regular request variables, but there's one catch. Checking containment of a JIT variable (e.g., `'modu.session' in req`) will not instantiate that variable if it hasn't been used yet, but will still return True.
+
+Neither will using req.get() instantiate a JIT variable. Only using the `req['modu.session']` or `req.session` syntax will populate the variable on-demand.
+
+== Using Resources ==
+
+The primary system of organizing URLs in modu is based around a class called URLNode. URLNode provides a mechanism for creating a tree of nodes, where each level of nodes has its own name. A node may contain a value or not, and the entire tree may be queried with a particular slash-separated path (e.g., a URI).
+
+Let's look at a sample representation of a very basic URLNode tree. To begin with, we'll populate the tree with some objects at various paths:
+
+    tree = url.URLNode()
+    tree.register('/one', 1)
+    tree.register('/one/two', 2)
+    tree.register('/three', 3)
+    tree.register('/four', 4)
+    tree.register('/one/five/six', 6)
+
+This results in a tree where the nodes have been laid out as follows:
+
+    <root>
+    +-----/one
+    +---------/two
+    +---------/five
+    +--------------/six
+    +-----/three
+    +-----/four
+
+Requesting any of the paths specified as part of those calls to register() return obvious results, but what happens if we request '/', or '/one/five'?
+
+In this example, there was no object stored at '/', so attempting to parse a URI of simply '/' would return None (and in practice would generate a 404 status).
+
+For the second URI, '/one/five', the tree will be searched using a mock-depth-first algorithm. The deepest registered object that satisfies this path will be returned, so in this case, the number 1 would be returned.
+
+What happens to the rest of the path? In this case, the resulting tree analysis also establishes the pre- and postpath variables. The prepath variable becomes ['one'], while the postpath variable becomes ['five'].
+
+Fetching one last URI of '/one/five/six', however, returns the value 6 and sets prepath to ['one', 'five', 'six'], and postpath to the empty list.
+
+=== Host Trees ===
+
+As an implementation detail, modu uses the URLNode class to construct a second tree to organize the different modu sites/applications that might exist on a particular machine. Since the discovery process for finding site configs will load any site found in sys.path, a single server can host all of the simultaneously, provided they all use different domains or base paths.
+
+The host tree is basically a dictionary of URLNode trees. The keys are  hostnames with appended port numbers, while multiple apps on the same domain are stored under their base_path config attribute. The end result looks something like this pseudocode:
+
+    host_tree = {
+        'localhost:8888'    : URLNode(None)[
+                                /modu : <class ModuSite>,
+                                /trac : <class TracPassthroughSite>,
+                            ],
+        'example.com:80'    : URLNode(None)[
+                                /     : <class ExampleSite>,
+                            ],
+    }
+
+=== Handling Complex URL Schemes ===
+
+The default implementation of modu paths can be limited in certain respects when you have a pre-existing URL scheme that you must implement. For example, let's say you have a scheme that requires the following URLs:
+
+    /node/1234
+    /node/1234/edit
+    /node/1234/delete
+
+where 1234 is the node ID. The easiest way to implement this is to register a Resource for /node, and allow it to handle all the URLs starting with /node. However, in complex applications this may not be suitable, either from a code organization standpoint or because of a even more complex URL structure.
+
+
+
+=== modu Paths ===
+
+A modu application manages a URLNode tree of Resource objects. It provides an extremely simple mechanism for looking up those Resources based on the URL path used in the HTTP request.
+
+Every modu application is setup at some path from the root of the server. The particular path is specified in the site config using the `base_path` attribute. In the default scenario, the base_path is set to '/'.
+
+Once a Resource is found for a particular URI, the Request object has its path, prepath, and postpath attributes set for additional processing. This system is specifically aimed towards creating search-friendly 'clean' URLs; adding additional path elements to a linked URI is a great way to 'cleanly' supply GET arguments without using the query string syntax.
+
+The goal when using modu paths is to allow the same codebase to be run over several domains (say, between production and staging, or development sites) without needing to replace config files or doing tricks with symlinks. To further this goal, users are encouraged to use Request::get_path() to generate URLs in their templates and resource code.
+
+get_path() takes an arbitrary number of path elements, concatenates them together -- removing duplicate slashes, etc -- and creates an absolute URL containing the hostname, port (if necessary), and base_path for the particular running site configuration. It's also able to deal with certain Apache proxying situations where the WSGI environment dictionary contains HTTP_X_FORWARDED_SERVER.
+
