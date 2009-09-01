@@ -425,7 +425,6 @@ class DbUserSession(BaseSession):
 	def set_user(self, u):
 		self.touch()
 		self._user = u
-		self._req['modu.user'] = u
 		
 		if(self._user):
 			self._user_id = self._user.get_id()
@@ -434,4 +433,6 @@ class DbUserSession(BaseSession):
 		
 		if(u is None and self._req.app.enable_anonymous_users):
 			self._user = user.AnonymousUser()
+		
+		self._req['modu.user'] = self._user
 
