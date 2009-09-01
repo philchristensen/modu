@@ -302,13 +302,111 @@ get_path() takes an arbitrary number of path elements, concatenates them togethe
 
 == Resource API ==
 
-Once a resource has been found for the given request, 
+Once a resource has been found for the given request, the various methods that make up the content generation process are called in turn.
 
 IResourceDelegate::get_delegate()
+    First the resource is examined to see if it is a ResourceDelegate. If so, its get_delegate() method is called, and the remaining methods in the content generation flow are called on *that* Resource instead.
+
 IResource::get_response()
+    The top-level Resource method is get_response(), which is responsible for setting up the response and returning the content.
+
+Technically, a class needs only to implement get_response() to function properly as a Resource, but is then responsible for taking care of all bookkeeping and content generation.
+
+Most Resources are subclasses of modu.web.resource.Resource, and so the get_response() method is already defined. It calls the following methods:
+
 IResource::get_content_provider()
+    Resources are not required to implement IContent, but if they do not, they must return an instance of an IContent implementor from this method.
+
 IContent::prepare_content()
+    Once an IContent implementor is found, prepare_content() is called to setup whatever instance data is needed to render this content. If IContent is also an ITemplate implementor, this is where ITemplate::set_slot() is called to populate the template dictionary.
+
 IContent::get_content_type()
+    For most superclasses, get_content_type() is already defined, returning the string 'text/html'. This can be overridden as necessary; for example, returning 'text/html; charset=utf-8' will force UTF-8 encoding in the browser.
+
 IContent::get_content()
+    As a final step, return the content that was prepared in prepare_content(). The separation of these two functions allows template engines to render the template here, so the particular Resource implementation can override prepare_content() without clobbering the template compilation.
+
+Finally, there are a few functions that are called for templates. Currently modu only actively supports Cheetah templates, but this is the order used in that case. Ideally alternate template engines would follow a similar flow.
+
 ITemplate::get_template()
+    Return some kind of template. In the case of the CheetahTemplate implementation, this can be either a filename (relative to the template dir) or a string containing the template code.
+
+ITemplate::get_template_type()
+    Return a description of what the result of get_template() is supposed to be. Currently the two options used for Cheetah templates are 'filename' (the default), or 'str' (for inline templates).
+
 ITemplate::get_template_root()
+    Only relevant for 'filename' type templates, this function specifies the location of the template directory. The default behavior is to look in 'templates' in the application's `approot`, or to use the Resource's template_dir variable, if it exists. This method can be overridden if desired, however.
+
+=== WSGI Passthrough ===
+
+There's one special Resource implementation included with modu that may be useful to various applications, and that's the WSGIPassthroughResource. If you wish to install a WSGI app under a path on a modu web application, this resource will allow you to manipulate the request environment before sending it to the WSGI app.
+
+Here's an example of embedding the Trac project management app inside a modu Resource:
+
+    class Resource(resource.WSGIPassthroughResource):
+        def __init__(self):
+            from trac.web import main
+            # provide the WSGI app object as the first argument
+            super(Resource, self).__init__(main.dispatch_request)
+    
+        def prepare_content(self, req):
+            # Depending on the WSGI container we're in, PATH_INFO
+            # may or may not have a leading slash
+            path_info = req['PATH_INFO']
+            if(path_info.startswith('/trac')):
+                req['PATH_INFO'] = path_info[5:]
+            elif(path_info.startswith('trac')):
+                req['PATH_INFO'] = path_info[4:]
+        
+            req['SCRIPT_NAME'] = '/trac'
+        
+            # here we trick Trac into using modu authentication
+            req['REMOTE_USER'] = 'anonymous'
+            if(req.user.get_id() and req.user.is_allowed('access trac')):
+                req['REMOTE_USER'] = req.user.username
+        
+            from trac.web.api import HTTPForbidden
+            try:
+                super(Resource, self).prepare_content(req)
+            except HTTPForbidden, e:
+                # you should handle permission denied, etc. errors here.
+                pass
+
+== Templates ==
+
+modu has pretty much standardized on using the Cheetah template system for it's preferred templating engine, so much of the documentation in this section is going to be rather Cheetah-specific.
+
+=== Other Engines ===
+
+Technically, modu supports two alternate template engines in addition to Cheetah, but they have not been very thoroughly tested, and may lack features compared to the preferred Cheetah engine. These alternate template engines include CherryTemplate and ZPTPages, but it should be trivial to implement support for any template engine that can function with a namespace backed by a Python dictionary.
+
+=== Standard Variables ===
+
+The default TemplateContent superclass inserts a number of variables into the template dictionary as part of get_content(). Template engines that wish to use these variables must make sure to call the superclass get_content() from their own overridden version of the method.
+
+The variables include:
+    req
+        The current request object.
+    
+    header_content
+        During content generation, req.content.report('header', 'text') will accumulate a list of strings to be concatenated and inserted into this variable. It is currently used to allow code to insert STYLE, LINK, SCRIPT, or other tags into the HTML HEAD section. Since it uses the MessageQueue class to hold these items, duplicate calls to report() will be collapsed into a single entry. Unlike the usual req.messages queue, the content queue is not backed by the session, so data is not saved across requests.
+
+These variables are set *after* prepare_content() is called, so it's important not to use these names for your own variables, since they will be clobbered.
+
+=== Cheetah Revisions ===
+
+First of all, it's important to understand Cheetah's origins, and that we are only using a subset of Cheetah's features. Cheetah integrates tightly with the Python web development toolkit Webware, and has a number of features that make sense in that environment, but that aren't terribly useful in the modu environment. It may be that some of these things *are*, in fact, useful to modu developers, but at this time they are unused.
+
+Consequently, a few assumptions are made about how templates are used and organized in modu that may not be obvious to existing Cheetah users. The goal in this section is to outline some of these changes and development standards that have been adopted during use of Cheetah in the modu environment.
+
+ * String Templates vs. Files
+    As described in the Resource API section, templates can either be specified by returning a string template from get_template(), or by returning a filename (the interpretation of which is which is based on the result of get_template_type()).
+
+ * Compiled templates
+    When a template is new, it gets compiled to Python code, and that code gets saved in a file in the compiled_template_root directory. If the modified date of the template is newer than the compiled version, it is recompiled. One unfortunate implementation detail is that the compiled templates aren't loaded via the usual Python import mechanism, instead being read in and exec()ed. This will hopefully be addressed in the future.
+
+ * Thread-safety
+    Cheetah isn't entirely threadsafe, and we add some customizations that can potentially be an issue for threads, so the entire template compilation process is locked by semaphore. This could potentially have performance ramifications, but so far it seems to be relatively efficient.
+
+ * Include files
+    Include files are such a common template organization technique, some time was spent implementing these inside the modu environment. It's assumed that the location of the include files is the same as the calling template, but get_template_root() is still called for each. This allows particularly clever Resources (such as the AdminResource, which provides default templates for any that aren't overridden by the user) to alter the behavior of includes and template lookup in general.
