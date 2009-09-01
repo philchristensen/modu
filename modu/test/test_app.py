@@ -126,22 +126,6 @@ class AppTestCase(unittest.TestCase):
 		self.failUnlessEqual(rsrc.get_response(req), ['this/is/a/long/path'], "Did not find expected content")
 	
 	
-	def test_resource_access_control(self):
-		"""
-		Test resource protection by L{modu.web.resource.IAccessControl}
-		"""
-		req = self.get_request('/app-test/test-access')
-		
-		rsrc = req.get_resource()
-		self.failUnless(resource.IAccessControl.providedBy(rsrc), 'Resource did not implement IAccessControl.')
-		
-		self.failUnlessRaises(web.HTTPStatus, rsrc.check_access, req)
-		try:
-			rsrc = rsrc.check_access(req)
-		except web.HTTPStatus, http:
-			self.failUnlessEqual(http.status, '401 Unauthorized', "Got unexpected status '%s'" % http.status)
-	
-	
 	def test_handler(self):
 		"""
 		A functional test for the WSGI handler.

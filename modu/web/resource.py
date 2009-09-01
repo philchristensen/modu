@@ -168,20 +168,6 @@ class ITemplate(interface.Interface):
 		"""
 
 
-class IAccessControl(interface.Interface):
-	"""
-	An access controlled object can look at a request and determine if
-	the user is allowed access or not.
-	"""
-	def check_access(self, req):
-		"""
-		Is this request allowed access?
-		
-		@param req: the current request
-		@type req: L{modu.web.app.Request}
-		"""
-
-
 class Resource(object):
 	"""
 	An abstract HTTP resource.
@@ -225,8 +211,6 @@ class Resource(object):
 		@see: L{IResource.get_response()}
 		"""
 		cnt = self.get_content_provider(req)
-		if(IAccessControl.providedBy(cnt)):
-			cnt.check_access(req)
 		
 		cnt.prepare_content(req)
 		

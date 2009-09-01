@@ -62,20 +62,6 @@ class TestDelegateResource(resource.Resource):
 
 
 
-class TestAccessControlResource(resource.Resource):
-	"""
-	This resource will always return a 401 Unauthorized when
-	requested.
-	"""
-	implements(resource.IAccessControl)
-	
-	def check_access(self, req):
-		"""
-		@see: L{modu.web.app.resource.IAccessControl.check_access()}
-		"""
-		app.raise401(req.path)
-
-
 class BasicTestSite(object):
 	"""
 	This site activates only the most basic features of modu, running at /app-test.
@@ -93,7 +79,6 @@ class BasicTestSite(object):
 		application.initialize_store = False
 		application.activate('/test-resource', TestResource)
 		application.activate('/test-delegate', TestDelegateResource)
-		application.activate('/test-access', TestAccessControlResource)
 
 
 class BasicRootTestSite(object):
@@ -112,7 +97,6 @@ class BasicRootTestSite(object):
 		application.initialize_store = False
 		application.activate('/test-resource', TestResource)
 		application.activate('/test-delegate', TestDelegateResource)
-		application.activate('/test-access', TestAccessControlResource)
 
 
 class StoreTestSite(object):
@@ -130,6 +114,5 @@ class StoreTestSite(object):
 		application.session_class = None
 		application.activate('/test-resource', TestResource)
 		application.activate('/test-delegate', TestDelegateResource)
-		application.activate('/test-access', TestAccessControlResource)
 
 

@@ -75,8 +75,6 @@ def handler(env, start_response):
 			
 			if(resource.IResourceDelegate.providedBy(rsrc)):
 				rsrc = rsrc.get_delegate(req)
-			if(resource.IAccessControl.providedBy(rsrc)):
-				rsrc.check_access(req)
 			
 			req['modu.resource'] = rsrc
 			content = rsrc.get_response(req)

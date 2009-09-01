@@ -98,6 +98,21 @@ One an application object is created, it is immutable for the lifetime of the se
     site
         The Site class used to create this Application
 
+Apart from configuration variables, the application object also manages the URLNode tree of Resources that make up your site. A new resource is added by providing the path, a Resource class and any arguments to Application::activate(), usually from inside a Site class' initialize() method.
+
+    def initialize(self, application):
+        # ...other configuration code here
+        application.activate('/', index.Resource)
+        application.activate('/pages', page.Resource, 'example.com')
+        application.activate('/admin', resource.AdminResource,
+            default_path    = 'admin/listing/page', 
+            itemdef_module  = myproject.itemdefs
+        )
+
+In this example, a request for http://example.com/admin would instantiate the AdminResource class with the provided `default_path` and `itemdef_module` keyword arguments. We'll talk more about the admin resource later on.
+
+A nice side-effect of instantiating Resources at request time is that you can feel free to use member attributes to hold references to data during the content generation process. Since the object will be disposed of after the request is over, you're safe from influencing any other requests.
+
 == The Request object ==
 
 A single Request object is created as a representation of an HTTP request, and is passed around a modu application through the lifetime of a request. It contains a series of environment variables describing the current request, and also holds on to a number of modu-specific variables, as well as outgoing headers for the HTTP response.
@@ -287,3 +302,13 @@ get_path() takes an arbitrary number of path elements, concatenates them togethe
 
 == Resource API ==
 
+Once a resource has been found for the given request, 
+
+IResourceDelegate::get_delegate()
+IResource::get_response()
+IResource::get_content_provider()
+IContent::prepare_content()
+IContent::get_content_type()
+IContent::get_content()
+ITemplate::get_template()
+ITemplate::get_template_root()
