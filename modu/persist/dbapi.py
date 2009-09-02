@@ -9,7 +9,7 @@
 Provides synchronous access to the Twisted adbapi DB layer.
 """
 
-import threading, random, sys
+import threading, random, sys, time
 
 from twisted.enterprise import adbapi
 
@@ -73,7 +73,7 @@ def connect(db_urls=None, async=False, *args, **kwargs):
 			else:
 				from modu.persist import dbapi
 				if(async):
-					pool = adbapi.ConnectionPool(dbapiName, *dargs, **dkwargs)
+					pool = TimeoutConnectionPool(dbapiName, *dargs, **dkwargs)
 				else:
 					pool = SynchronousConnectionPool(dbapiName, *dargs, **dkwargs)
 				selected_pools[db_url] = pool
@@ -113,6 +113,35 @@ def get_dsn(db_url):
 	dsn['cp_max'] = 15
 	
 	return dsn
+	
+class TimeoutConnectionPool(adbapi.ConnectionPool):
+	"""
+	This ConnectionPool will automatically expire connections according to a timeout value.
+	"""
+	def __init__(self, *args, **kwargs):
+		self.timeout = kwargs.pop('timeout', 21600)
+		self.conn_lasttime = {}
+		adbapi.ConnectionPool.__init__(self, *args, **kwargs)
+	
+	def connect(self, *args, **kwargs):
+		# ask ConnectionPool for a connection
+		conn = adbapi.ConnectionPool.connect(self, *args, **kwargs)
+		
+		if(self.timeout > 3600):
+			tid = self.threadID()
+			lasttime = self.conn_lasttime.get(tid, 0)
+			now = time.time()
+			if not(lasttime):
+				self.conn_lasttime[tid] = lasttime = now
+			
+			if(now - lasttime >= self.timeout):
+				self.disconnect(conn)
+				conn = adbapi.ConnectionPool.connect(self, *args, **kwargs)
+			
+			self.conn_lasttime[tid] = now
+		
+		return conn
+
 
 class ReplicatedConnectionPool(object):
 	"""
@@ -239,7 +268,7 @@ class ReplicatedConnectionPool(object):
 		
 		return result
 
-class SynchronousConnectionPool(adbapi.ConnectionPool):
+class SynchronousConnectionPool(TimeoutConnectionPool):
 	"""
 	This trvial subclass disables thread creation within the ConnectionPool
 	object so that it may be used from within a syncronous application
@@ -251,7 +280,7 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 		This overridden constructor makes sure the Twisted reactor
 		doesn't get started in non-twisted.web-hosted environments.
 		"""
-		adbapi.ConnectionPool.__init__(self, dbapiName, *connargs, **connkw)
+		TimeoutConnectionPool.__init__(self, dbapiName, *connargs, **connkw)
 		from twisted.internet import reactor
 		if(self.startID):
 			reactor.removeSystemEventTrigger(self.startID)
@@ -262,7 +291,7 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 		"""
 		if(debug):
 			print args, kwargs
-		return adbapi.ConnectionPool.runOperation(self, *args, **kwargs)
+		return TimeoutConnectionPool.runOperation(self, *args, **kwargs)
 	
 	def _runOperation(self, trans, *args, **kw):
 		return trans.execute(*args, **kw)
@@ -273,7 +302,7 @@ class SynchronousConnectionPool(adbapi.ConnectionPool):
 		"""
 		if(debug):
 			print args, kwargs
-		return adbapi.ConnectionPool.runQuery(self, *args, **kwargs)
+		return TimeoutConnectionPool.runQuery(self, *args, **kwargs)
 	
 	def runInteraction(self, interaction, *args, **kw):
 		"""
