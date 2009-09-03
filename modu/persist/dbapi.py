@@ -294,11 +294,7 @@ class SynchronousConnectionPool(TimeoutConnectionPool):
 		return TimeoutConnectionPool.runOperation(self, *args, **kwargs)
 	
 	def _runOperation(self, trans, *args, **kw):
-		try:
-			return trans.execute(*args, **kw)
-		except self.dbapi.OperationalError, e:
-			print 'Query error on: "%s"' % args[0]
-			raise e
+		return trans.execute(*args, **kw)
 	
 	def runQuery(self, *args, **kwargs):
 		"""
