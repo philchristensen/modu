@@ -84,13 +84,29 @@ def render(template, template_type, template_data, **params):
 	finally:
 		cheetah_lock.release()
 	
-	return str(template_class(searchList=[template_data]))
+	result = template_class(searchList=[template_data])
+	try:
+		return str(result)
+	except UnicodeEncodeError, e:
+		result = unicode(result)
+		return result.encode('utf-8')
 
 
 # According to the docs, Template can take awhile to load,
 # so it's loaded on startup.
 try:
 	from Cheetah.Template import Template as CheetahTemplate
+	from Cheetah import DummyTransaction
+	
+	class NonUnicodeManglingDummyResponse(DummyTransaction.DummyResponse):
+		def getvalue(self, outputChunks=None):
+			chunks = outputChunks or self._outputChunks
+			for index in range(len(chunks)):
+				if(isinstance(chunks[index], str)):
+					chunks[index] = chunks[index].decode('utf-8')
+			return super(NonUnicodeManglingDummyResponse, self).getvalue(chunks)
+	
+	DummyTransaction.DummyResponse = NonUnicodeManglingDummyResponse
 except:
 	class CheetahTemplate(object):
 		"""
