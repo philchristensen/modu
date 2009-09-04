@@ -213,7 +213,7 @@ class ReplicatedConnectionPool(object):
 		while(pool):
 			try:
 				return pool.runQuery(query, *args, **kwargs)
-			except (adbapi.ConnectionLost, pool.dbapi.OperationalError), e:
+			except adbapi.ConnectionLost, e:
 				if(pool == self.master):
 					raise e
 				else:
