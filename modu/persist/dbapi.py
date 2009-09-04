@@ -190,7 +190,7 @@ class ReplicatedConnectionPool(object):
 			try:
 				pool.runOperation(query, *args, **kwargs)
 				break
-			except (adbapi.ConnectionLost, pool.dbapi.OperationalError), e:
+			except adbapi.ConnectionLost, e:
 				if(pool == self.master):
 					raise e
 				else:
