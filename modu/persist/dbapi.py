@@ -229,13 +229,13 @@ class ReplicatedConnectionPool(object):
 		"""
 		Run an interaction on the master.
 		"""
-		self.master.runInteraction(interaction, *args, **kwargs)
+		return self.master.runInteraction(interaction, *args, **kwargs)
 	
 	def runWithConnection(self, func, *args, **kwargs):
 		"""
 		Run a function, providing the connection object for the master.
 		"""
-		self.master.runWithConnection(func, *args, **kwargs)
+		return self.master.runWithConnection(func, *args, **kwargs)
 	
 	def getSlave(self):
 		"""
