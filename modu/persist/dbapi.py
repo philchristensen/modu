@@ -123,24 +123,24 @@ class TimeoutConnectionPool(adbapi.ConnectionPool):
 		self.conn_lasttime = {}
 		adbapi.ConnectionPool.__init__(self, *args, **kwargs)
 	
-	def connect(self, *args, **kwargs):
-		# ask ConnectionPool for a connection
-		conn = adbapi.ConnectionPool.connect(self, *args, **kwargs)
-		
-		if(self.timeout > 3600):
-			tid = self.threadID()
-			lasttime = self.conn_lasttime.get(tid, 0)
-			now = time.time()
-			if not(lasttime):
-				self.conn_lasttime[tid] = lasttime = now
-			
-			if(now - lasttime >= self.timeout):
-				self.disconnect(conn)
-				conn = adbapi.ConnectionPool.connect(self, *args, **kwargs)
-			
-			self.conn_lasttime[tid] = now
-		
-		return conn
+	# def connect(self, *args, **kwargs):
+	# 	# ask ConnectionPool for a connection
+	# 	conn = adbapi.ConnectionPool.connect(self, *args, **kwargs)
+	# 	
+	# 	if(self.timeout > 3600):
+	# 		tid = self.threadID()
+	# 		lasttime = self.conn_lasttime.get(tid, 0)
+	# 		now = time.time()
+	# 		if not(lasttime):
+	# 			self.conn_lasttime[tid] = lasttime = now
+	# 		
+	# 		if(now - lasttime >= self.timeout):
+	# 			self.disconnect(conn)
+	# 			conn = adbapi.ConnectionPool.connect(self, *args, **kwargs)
+	# 		
+	# 		self.conn_lasttime[tid] = now
+	# 	
+	# 	return conn
 
 
 class ReplicatedConnectionPool(object):
