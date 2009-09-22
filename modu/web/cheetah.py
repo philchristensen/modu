@@ -98,6 +98,11 @@ try:
 	from Cheetah.Template import Template as CheetahTemplate
 	from Cheetah import DummyTransaction
 	
+	# Version 2.2.0 of Cheetah added code that forces you
+	# to use only unicode strings in your template slots.
+	# Since we already deal with our own encoding and are
+	# sure to use utf-8 everywhere, we just convert at
+	# rendering time.
 	class NonUnicodeManglingDummyResponse(DummyTransaction.DummyResponse):
 		def getvalue(self, outputChunks=None):
 			chunks = outputChunks or self._outputChunks

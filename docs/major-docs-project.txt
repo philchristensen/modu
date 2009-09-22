@@ -410,3 +410,44 @@ Consequently, a few assumptions are made about how templates are used and organi
 
  * Include files
     Include files are such a common template organization technique, some time was spent implementing these inside the modu environment. It's assumed that the location of the include files is the same as the calling template, but get_template_root() is still called for each. This allows particularly clever Resources (such as the AdminResource, which provides default templates for any that aren't overridden by the user) to alter the behavior of includes and template lookup in general.
+
+ * Unicode support
+    Release 2.2.0 of the Cheetah template software modified the template generation code to use entirely unicode strings. It then forced all strings in the template dictionary to be unicode as well. Since a large amount of modu code exists that depends on the ability to embed regular strings into templates, a monkeypatch exists to override the default behavior. This patch assumes that all bytestrings are encoded using UTF-8, and then decodes them to unicode objects before output. Finally, the get_content() method on a CheetahTemplateContent instance will convert back to UTF-8 before returning it to the user. At some point this code must be revised so that other encodings can be used.
+
+== Forms ==
+
+The modu Form API is a form generation tool that allows for a clean separation of form handling, rendering, and subsequent processing. It borrows heavily from the Drupal Form API, although obviously adapted to be more 'Pythonic'.
+
+The premise of the design is based around building a form instance that describes the types of fields desired and their corresponding attributes. Validation and submission callback functions can be assigned to the form, and other methods are provided to load existing POST data into the form, or pass the form off to a theme object for rendering.
+
+The Form API becomes even more important when working with the modu admin tool (aka the Editable API), as it provides the foundation of the itemdef configuration system.
+
+=== NestedFieldStorage ===
+
+The first essential aspect of the modu form-handling code is the use of a new class called NestedFieldStorage. This is a custom subclass of the standard Python library's cgi.FieldStorage object, and primarily allows for better organization of form data by enabling a hash-syntax-derived naming convention borrowed from PHP. For example, take the following POST data:
+
+    field[123][name]    Phil
+    field[124][email]   phil@example.com
+    field[456][name]    Bill
+    field[456][email]   bill@example.com
+
+When submitted and parsed by the NestedFieldStorage class, the result is something like:
+
+    req.data = {
+        'field' = {
+            '123'       = {
+                'name'      = cgi.MinifieldStorage('field[123][name]', 'Phil'),
+                'email'     = cgi.MinifieldStorage('field[123]['email']', 'phil@example.com'),
+            },
+            '456'       = {
+                'name'      = cgi.MinifieldStorage('field[456][name]', 'Bill'),
+                'email'     = cgi.MinifieldStorage('field[456]['email']', 'bill@example.com'),
+            },
+        },
+    }
+    
+As indicated, this object is available through the 'modu.data' key in the Request dictionary, which is not populated until it is first requested.
+
+Additional differences between NFS and the cgi.FieldStorage class include better truth value testing (e.g., a more properly defined __nonzero__), addition of a .get() function to better reflect its dict-like nature, and get_path(), which allows you to fetch an inner form value with a given array of path items.
+
+=== Building Forms ===
