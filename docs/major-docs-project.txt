@@ -448,6 +448,102 @@ When submitted and parsed by the NestedFieldStorage class, the result is somethi
     
 As indicated, this object is available through the 'modu.data' key in the Request dictionary, which is not populated until it is first requested.
 
+One other major change to FieldStorage that NestedFieldStorage introduces is in the way it handles file uploads. The make_file() method of FieldStorage has been overridden to create SessionFile instances instead of tempfile.TemporaryFile. As the request is read, SessionFile updates session variables to include the progress of the uploaded file, to allow for client applications to show progress bars during upload.
+
 Additional differences between NFS and the cgi.FieldStorage class include better truth value testing (e.g., a more properly defined __nonzero__), addition of a .get() function to better reflect its dict-like nature, and get_path(), which allows you to fetch an inner form value with a given array of path items.
 
 === Building Forms ===
+
+Forms are built using nested instances of the FormNode class, which abstracts away rendering details to focus on field structure and processing. To increase readability of form definitions, a significant amount of syntactic sugar has been added to the process of creating forms. Here's an example of a basic address form:
+
+    address_form = form.FormNode('address-form')
+    address_form['name'](
+        type        = 'textfield',
+        label       = 'Name:',
+        required    = True,
+        size        = 30,
+        maxlength   = 255,
+    )
+    address_form['address'](
+        type        = 'textfield',
+        label       = 'Street Address:',
+        required    = True,
+        size        = 30,
+        maxlength   = 255,
+    )
+    address_form['city'](
+        type        = 'textfield',
+        label       = 'City:',
+        required    = True,
+        size        = 15,
+        maxlength   = 255,
+    )
+    address_form['state'](
+        type        = 'select',
+        label       = 'State:',
+        required    = True,
+        options     = {'NY':'New York', 'CT':'Connecticut', ... },
+    )
+
+At this point we have a nearly complete form object. One last thing we'll need to do is define validation and submission callback functions, and assign them to the form:
+
+    def _validate(req, frm):
+        # a sample validation is defined on the form already, but
+        # all it does is make sure 'required' fields have a value set.
+        # we'll reuse this before doing our own validation
+        if not(frm._validate(req, frm)):
+            return False
+        
+        if(frm['state'].value != 'NY'):
+            frm.set_error('state', "Sorry, New Yorkers only!")
+            return False
+        
+        return True
+    
+    address_form.validate = _validate
+
+By the time the validation function is called, the form object will have been loaded with the POST data submitted in it, which is how we are able to do validation on the 'state' field. Technically, we could have omitted this step if all we wanted was to check for required fields.
+
+The result of the validation function determines whether the form submission continues; if it returns False the submit function is not called. Here's a sample submit function:
+
+    def _submit(req, frm):
+        f = open('userlist', 'w')
+        f.write(frm['name'].value + "\n")
+        f.write(frm['address'].value + "\n")
+        f.write(frm['city'].value + "\n")
+        f.write(frm['state'].value + "\n")
+        f.close()
+        return True
+
+Submission functions can do pretty much anything, but you'll want to make sure to return a True value from submit. Whatever you return here will be returned by the execute() function (more on this in a moment), so it is possible to return some other value to be used by your form-dependent code.
+
+=== Using Forms ===
+
+Once a form is built, you are ready to 'execute' it, and finally render it. The usual process is something like:
+
+    def prepare_content(self, req):
+        # assume this function returns the form we built above.
+        address_form = self.get_address_form(req)
+        
+        # if the form failed validation or submission...
+        if not(address_form.execute(req)):
+            # ...place any errors in the global error queue
+            address_form.escalate_errors(req)
+        
+        # render this form as HTML and include it in the template
+        self.set_slot('address_form', address_form.render(req))
+
+Calling the execute() method will load any available POST data into the form, and then check to see if any existing submit buttons were pressed. If so, then validation is attempted, which, if successful leads to the submit function.
+
+When errors occur during validation, user code should call set_error() to indicate which form element has an error. Calling escalate_errors() later on will copy those errors into req.messages as 'error' types, to be displayed at the developer's convenience.
+
+Finally, regardless of the result of execute(), a rendered version of the form is created and included in the output (in this case, by adding it to the template). These examples are all (implicitly) using the default Theme class included with modu, but form elements may have their rendering customized by setting frm.theme at any element level.
+
+=== Themes ===
+
+The rendering of form objects is based around Theme classes. This is another borrowed concept from the Drupal CMS, although for now it is specific to forms, unlike in Drupal, where it can render a wide variety of data structures.
+
+Themes themselves are very simple, simply a class with a number of theme_* methods. When a form is rendered, the 'type' attribute is used to generate the theme method name, so a 'textarea' type form element will result in a call to theme_textarea().
+
+The form elements as rendered in the default theme class generally also have a number of common elements wrapped around them: a labeled DIV, applicable error info, the 'required' star, etc. These things are rendered by the theme_element() method. To enable this method to be reused in a suitably Pythonic way, form elements that want to be created with this "chrome" can use the @formelement decorator to automatically pass their output through the theme_element() function.
+
