@@ -33,7 +33,7 @@ class IResource(interface.Interface):
 	"""
 	This class defines something that reacts when a path is requested.
 	"""
-	def get_response(self, req):
+	def get_response(req):
 		"""
 		Do whatever this thing should do when a path is loaded.
 		
@@ -41,7 +41,7 @@ class IResource(interface.Interface):
 		@type req: L{modu.web.app.Request}
 		"""
 	
-	def get_content_provider(self, req):
+	def get_content_provider(req):
 		"""
 		Set the IContent implementor that will generate content for this resource.
 		
@@ -57,7 +57,7 @@ class IResourceDelegate(interface.Interface):
 	Classes that implement this object can emulate a Resource by
 	returning some arbitrary Resource object.
 	"""
-	def get_delegate(self, req):
+	def get_delegate(req):
 		"""
 		Return a this object's Resource delegate.
 		
@@ -69,7 +69,7 @@ class IContent(interface.Interface):
 	"""
 	This class represents a piece of content that has a MIME-type of some kind.
 	"""
-	def prepare_content(self, req):
+	def prepare_content(req):
 		"""
 		Run any neccessary code that prepares this content object for display.
 		This method is only called once.
@@ -78,7 +78,7 @@ class IContent(interface.Interface):
 		@type req: L{modu.web.app.Request}
 		"""
 	
-	def get_content(self, req):
+	def get_content(req):
 		"""
 		Return the content for this item. This method can be called multiple times,
 		but is always called **after** prepare_content()
@@ -87,7 +87,7 @@ class IContent(interface.Interface):
 		@type req: L{modu.web.app.Request}
 		"""
 	
-	def get_content_type(self, req):
+	def get_content_type(req):
 		"""
 		Return the mime type of this content.
 		
@@ -101,7 +101,7 @@ class ITemplate(interface.Interface):
 	A template implementor has slots and some opaque value that
 	represents the template itself.
 	"""
-	def set_slot(self, key, value):
+	def set_slot(key, value):
 		"""
 		Set a slot in the template to the provided key and value.
 		
@@ -111,7 +111,7 @@ class ITemplate(interface.Interface):
 		@param value: the value to set
 		"""
 	
-	def get_slot(self, key, default=None):
+	def get_slot(key, default=None):
 		"""
 		Return the value of the slot with the provided key.
 		If the item doesn't exist, and default isn't provided, throw an exception.
@@ -124,7 +124,7 @@ class ITemplate(interface.Interface):
 		@returns: some value
 		"""
 	
-	def get_slots(self):
+	def get_slots():
 		"""
 		Return a list of slots added to template.
 		
@@ -132,7 +132,7 @@ class ITemplate(interface.Interface):
 		@rtype: list(str)
 		"""
 	
-	def get_template(self, req):
+	def get_template(req):
 		"""
 		Get an opaque value representing the template. For most template engines
 		this is probably a filename, but for the default TemplateContent class, it's
@@ -144,7 +144,7 @@ class ITemplate(interface.Interface):
 		@returns: some value that makes sense to the template engine
 		"""
 	
-	def get_template_root(self, req, template=None):
+	def get_template_root(req, template=None):
 		"""
 		This function gives an opportunity for template resources to support an
 		arbitrary number of template distributions, to allow implementation of themes
@@ -157,7 +157,7 @@ class ITemplate(interface.Interface):
 		@rtype: str
 		"""
 	
-	def get_template_type(self):
+	def get_template_type():
 		"""
 		Template resources by default return a filename from get_template(). To
 		return the template as a string, this function must be overriden to

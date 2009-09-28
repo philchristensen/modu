@@ -30,7 +30,7 @@ class IDatatype(Interface):
 	Datatypes can also answer various questions about how that form should be handled.
 	"""
 	
-	def get_form_element(self, style, definition, storable):
+	def get_form_element(style, definition, storable):
 		"""
 		Take the given definition, and return a FormNode.
 		
@@ -49,7 +49,7 @@ class IDatatype(Interface):
 		@rtype: L{modu.util.form.FormNode}
 		"""
 	
-	def update_storable(self, req, definition, storable):
+	def update_storable(req, definition, storable):
 		"""
 		Can be implemented by IDatatypes that require complex handling of POST data.
 		
@@ -63,7 +63,7 @@ class IDatatype(Interface):
 		@type storable: L{modu.persist.storable.Storable} subclass
 		"""
 	
-	def is_postwrite_field(self):
+	def is_postwrite_field():
 		"""
 		Does this IDatatype write its data as part of the normal save process?
 		

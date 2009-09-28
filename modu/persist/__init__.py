@@ -40,7 +40,7 @@ class IStore(Interface):
 	A thing that can store things.
 	"""
 	
-	def register_factory(self, factory_id, factory):
+	def register_factory(factory_id, factory):
 		"""
 		Register an object to be the factory for this factory_id.
 		
@@ -54,7 +54,7 @@ class IStore(Interface):
 		"""
 	
 	
-	def has_factory(self, factory_id):
+	def has_factory(factory_id):
 		"""
 		Does this store already know how to handle the provided factory_id?
 		
@@ -65,7 +65,7 @@ class IStore(Interface):
 		"""
 	
 	
-	def get_factory(self, factory_id):
+	def get_factory(factory_id):
 		"""
 		Return the factory registered for the given factory_id.
 		
@@ -77,7 +77,7 @@ class IStore(Interface):
 		"""
 	
 	
-	def ensure_factory(self, factory_id, *args, **kwargs):
+	def ensure_factory(factory_id, *args, **kwargs):
 		"""
 		Register a DefaultFactory for the provided factory_id.
 		
@@ -94,7 +94,7 @@ class IStore(Interface):
 		"""
 	
 	
-	def fetch_id(self, storable):
+	def fetch_id(storable):
 		"""
 		Fetch an ID for this object, if possible.
 		
@@ -106,7 +106,7 @@ class IStore(Interface):
 		@raises LookupError: if no factory has been registered for this Storable's table
 		"""
 	
-	def iterate(self, factory_id, limit_start=0, limit_end=None):
+	def iterate(factory_id, limit_start=0, limit_end=None):
 		"""
 		Returns a generator that efficiently iterates through all records in a table.
 		
@@ -124,7 +124,7 @@ class IStore(Interface):
 		@returns: a generator for individual table rows
 		"""
 	
-	def load(self, factory_id, data=None, **kwargs):
+	def load(factory_id, data=None, **kwargs):
 		"""
 		Load an object using the specified data.
 		
@@ -145,7 +145,7 @@ class IStore(Interface):
 		"""
 	
 	
-	def load_one(self, factory_id, data=None, **kwargs):
+	def load_one(factory_id, data=None, **kwargs):
 		"""
 		Load one item from the store.
 		
@@ -164,7 +164,7 @@ class IStore(Interface):
 		"""
 	
 	
-	def save(self, storable, save_related_storables=True):
+	def save(storable, save_related_storables=True):
 		"""
 		Save the provided Storable.
 		
@@ -179,7 +179,7 @@ class IStore(Interface):
 		"""
 	
 	
-	def destroy(self, storable, destroy_related_storables=False):
+	def destroy(storable, destroy_related_storables=False):
 		"""
 		Destroy the provided Storable.
 		

@@ -71,7 +71,7 @@ def cachedmethod(timeout):
 	return _cached
 
 class IStorable(Interface):
-	def set_id(self, id):
+	def set_id(id):
 		"""
 		Set the ID/primary key of this item.
 		
@@ -80,67 +80,67 @@ class IStorable(Interface):
 		more then once between calls to C{reset_id()}
 		"""
 	
-	def get_id(self):
+	def get_id():
 		"""
 		Get the ID/primary key of this item, if available.
 		
 		Unsaved objects will return 0.
 		"""
 	
-	def touch(self):
+	def touch():
 		"""
 		Mark this object as 'dirty', i.e., requiring persistence.
 		"""
 	
-	def clean(self):
+	def clean():
 		"""
 		Clean this object, indicating it no longer needs to be saved.
 		"""
 	
-	def is_dirty(self):
+	def is_dirty():
 		"""
 		Return True if this object needs to be saved.
 		"""
 	
-	def set_factory(self, factory):
+	def set_factory(factory):
 		"""
 		This function will normally only be called by the factory that
 		created this item, e.g. storable.set_factory(self).
 		"""
 	
-	def get_factory(self):
+	def get_factory():
 		"""
 		Return the factory that created this object.
 		"""
 	
-	def get_store(self):
+	def get_store():
 		"""
 		Return the store this object came from.
 		"""
 	
-	def reload(self):
+	def reload():
 		"""
 		Reload this object, discarding any unsaved changes.
 		"""
 	
-	def load_data(self, data):
+	def load_data(data):
 		"""
 		Load the provided data into this object in some way.
 		"""
 	
-	def get_data(self):
+	def get_data():
 		"""
 		Return the data for this object's record as a dict,
 		column name keyed to column value.
 		"""
 	
-	def get_related_storables(self):
+	def get_related_storables():
 		"""
 		Return a list of items that should be saved along with
 		this object, or deleted along with it.
 		"""
 	
-	def reset_id(self):
+	def reset_id():
 		"""
 		Reset this object's id to 0, so it will be assigned a new
 		ID on save. Useful for cloning objects.
@@ -372,47 +372,47 @@ class Storable(object):
 		object.__setattr__(self, '_id', 0)
 
 class IFactory(interface.Interface):
-	def set_store(self, store):
+	def set_store(store):
 		"""
 		Associate a store with this factory.
 		"""
 	
-	def get_id(self):
+	def get_id():
 		"""
 		Generate an ID (if appropriate) for an object about to be saved.
 		"""
 	
-	def get_item(self, id):
+	def get_item(id):
 		"""
 		Load an object based on its ID.
 		"""
 	
-	def get_store(self, id):
+	def get_store(id):
 		"""
 		Get the store this factory is registered with, if possible.
 		"""
 	
-	def get_items(self, attribs):
+	def get_items(attribs):
 		"""
 		Return an iterable of items that match the provided attributes.
 		"""
 	
-	def get_items_by_query(self, query):
+	def get_items_by_query(query):
 		"""
 		Return an iterable of items that are returned by the provided query.
 		"""
 	
-	def create_item(self, record):
+	def create_item(record):
 		"""
 		Create an object for the provided record.
 		"""
 	
-	def create_item_query(self, attribs):
+	def create_item_query(attribs):
 		"""
 		Create a query with the provided attributes.
 		"""
 	
-	def get_item_records(self, query):
+	def get_item_records(query):
 		"""
 		Return an iterable of records returned by the provided query.
 		"""

@@ -429,7 +429,7 @@ class ISite(interface.Interface):
 	An ISitePlugin defines an application that responds to
 	a certain hostname and/or path.
 	"""
-	def initialize(self, app):
+	def initialize(app):
 		"""
 		Configure the application object for this site. This method is
 		only called once for the lifetime of the app object.
