@@ -323,6 +323,8 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		elif(req.postpath[0] == 'export'):
 			if(callable(itemdef.config.get('export_query_builder'))):
 				data = itemdef.config['export_query_builder'](req, itemdef, search_attribs)
+			else:
+				data = search_attribs
 			items = req.store.load(table_name, data)
 			self.prepare_export(req, itemdef, items)
 	
