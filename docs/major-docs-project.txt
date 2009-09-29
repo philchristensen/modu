@@ -539,11 +539,57 @@ When errors occur during validation, user code should call set_error() to indica
 
 Finally, regardless of the result of execute(), a rendered version of the form is created and included in the output (in this case, by adding it to the template). These examples are all (implicitly) using the default Theme class included with modu, but form elements may have their rendering customized by setting frm.theme at any element level.
 
+=== Form Errors ===
+
+Form errors are useful during validation. They allow code to indicate which form element contained a validation error, as well as include text describing the issue.
+
+
+
 === Themes ===
 
 The rendering of form objects is based around Theme classes. This is another borrowed concept from the Drupal CMS, although for now it is specific to forms, unlike in Drupal, where it can render a wide variety of data structures.
 
 Themes themselves are very simple, simply a class with a number of theme_* methods. When a form is rendered, the 'type' attribute is used to generate the theme method name, so a 'textarea' type form element will result in a call to theme_textarea().
 
+This means that almost everything about the rendering of a form is left to the theme to decide. Form objects can include any number of arbitrary attributes, but Themes will only act on the attributes they understand.
+
+Additionally, Themes are entirely responsible for handling the translation from a simple form object to a complex, possibly multi-value form element. This will be discussed further in Loading Form Data.
+
 The form elements as rendered in the default theme class generally also have a number of common elements wrapped around them: a labeled DIV, applicable error info, the 'required' star, etc. These things are rendered by the theme_element() method. To enable this method to be reused in a suitably Pythonic way, form elements that want to be created with this "chrome" can use the @formelement decorator to automatically pass their output through the theme_element() function.
 
+=== Loading Form Data ===
+
+When the execute() method is called on a form, one thing that always happens is that any available POST data is loaded into the form object, setting the 'value' attribute on each applicable element. It uses the nested structure of the POST data as parsed by NestedFieldStorage to find the element within the form.
+
+Note that this only works for element types that can correlate a single POST value with their data. For example:
+
+    form = FormNode('test-form')
+    form['time'](
+        type    = 'time',
+        value   = datetime.time.now(),
+    )
+
+will render a multi-select date field with the current date and time. However, the resulting POST data will be:
+
+    test-form[time][hour]       9
+    test-form[time][minute]     19
+
+There's a solution for this, which is to create a loader method in the Theme class.
+
+=== Theme Loaders ===
+
+To strict adherents of separation-of-concern, theme loaders may seem to violate the contract in some ways. Theme loaders are able to take a provided subset of POST data and use it to configure an element for display.
+
+For example, in the 'time' example above, the resulting POST data would only load into the form object automatically if the form had been rendered literally; e.g., consisting of two nested select FormNodes for hour and minute respectively.
+
+However, time fields are useful, so we don't want to always have to create those selects manually every time. Also, we don't want to lose the ability to change the actual display technique for all time fields by a change in the Theme. For example, we might want to use a javascript-enabled field that allows a user to move hands on a clock widget.
+
+We create a theme loader by appending '_loader' to the theme method name. In this case, our theme method was called 'theme_time', so we'll create a theme loader called 'theme_time_loader':
+
+    def theme_time_loader(self, frm, data):
+        import time
+        v = ((int(data['hour'].value) * 60) + int(data['minute'].value)) * 60
+        v += time.timezone
+        frm(value=v)
+
+The `data` variable is a subset of the full form data, only providing the variables under the 'test-form[time]' form path. More details could always be pulled from `self.req`, which is saved when the Theme is initially created.
