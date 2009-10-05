@@ -535,6 +535,8 @@ Once a form is built, you are ready to 'execute' it, and finally render it. The 
 
 Calling the execute() method will load any available POST data into the form, and then check to see if any existing submit buttons were pressed. If so, then validation is attempted, which, if successful leads to the submit function.
 
+Validation consists of calling the validate() function on the top-level form element. The default behavior is to check for required fields, as well as iterate through child elements calling their validate() methods (if available). If any of the validation methods return False, the entire form fails validation.
+
 When errors occur during validation, user code should call set_error() to indicate which form element has an error. Calling escalate_errors() later on will copy those errors into req.messages as 'error' types, to be displayed at the developer's convenience.
 
 Finally, regardless of the result of execute(), a rendered version of the form is created and included in the output (in this case, by adding it to the template). These examples are all (implicitly) using the default Theme class included with modu, but form elements may have their rendering customized by setting frm.theme at any element level.
@@ -543,7 +545,25 @@ Finally, regardless of the result of execute(), a rendered version of the form i
 
 Form errors are useful during validation. They allow code to indicate which form element contained a validation error, as well as include text describing the issue.
 
+For simplicity, errors must always be set on a top-level element. Calling set_error() with a field name and error message will add it to the form node's internal list of errors.
 
+Usually set_error() is used from within a validation function. For example, here's an implementation of the 'required field' validation process:
+
+	def _validate(self, req, form):
+		result = True
+		
+		# if this is a child element
+		if(self.parent or self.attributes.get('type', 'form') != 'form'):
+			if(not self.attr('value', '') and self.attr('required', False)):
+				form.set_error(self.name, 'You must enter a value for this field.')
+				result = False
+		
+		# validate all children, if available
+		for child in self:
+			child = self[child]
+			result = result and child.validate(req, form)
+		
+		return result
 
 === Themes ===
 
@@ -593,3 +613,116 @@ We create a theme loader by appending '_loader' to the theme method name. In thi
         frm(value=v)
 
 The `data` variable is a subset of the full form data, only providing the variables under the 'test-form[time]' form path. More details could always be pulled from `self.req`, which is saved when the Theme is initially created.
+
+== Storable API ==
+
+The Storable API is a lightweight database access layer that is used in the modu toolkit. Although it was designed with SQL-based relational databases in mind, the mapping process is sufficiently flexible to allow use with any sort of data store.
+
+Although it shares some features with some of the other myriad object-relational database mapping systems, there is very little "magic". Some conventions are encouraged, but few are required to use Storables, encouraging adaptation to existing schemas. For more complex data systems, custom Factory classes can be implemented to customize the manner in which new objects are instantiated.
+
+=== Compatibility Note ===
+At the time of this writing, modu's official database support is limited to MySQL. This document will unfortunately contain much MySQL-specific information, but in most cases attempts are made to use SQL standard syntax.
+
+PostgreSQL has been tested with some success (there are existing Storable implementations for a number of popular Postgres DB-API 2.0 drivers), but there's still a existing MySQLdb dependency in [source:/trunk/modu/persist/sql.py].
+
+=== IDs ===
+
+Storable was based around a belief in using database-unique identifiers (the term "GUID" will be used even though it's not entirely accurate). Original reasons for use of GUIDs included support of multiple-master replication, but also to avoid reliance on database-specific sequences. Also, there is a default assumption that 'id' will be the name of the identity column, but both this and the use of GUIDs can be overridden at the factory level.
+
+Note that at this time aggregate keys are not supported by DefaultFactory, but custom factory implementations should be able to fill the need until this capability can be integrated into the Storable API.
+
+=== Getting Started ===
+
+To begin, we'll define our schema. This will include a `guid` table, which for now will manage a single sequence.
+
+{{{
+#!sql
+CREATE TABLE `guid` (
+  `guid` bigint(20)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+
+CREATE TABLE `page` (
+  `id` bigint(20),
+  `url_code` varchar(255),
+  `title` varchar(255),
+  `data` LONGBLOB,
+  `active` tinyint(1),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY url_code_idx(`url_code`),
+  KEY active_idx(`active`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
+}}}
+
+Basic access to data like this is fairly straightforward. Here's a trivial example:
+
+{{{
+#!python
+from modu.persist import dbapi, Store
+
+db_url = 'MySQLdb://project:fh7fkW9s@localhost/project'
+db_pool = dbapi.connect(db_url)
+store = Store(db_pool)
+
+store.ensure_factory('page')
+page = store.load_one('page', url_code='home-page', active=1)
+
+print 'ID#:   %s' % page.get_id()
+print 'Title: %s' % page.title)
+print page.data
+}}}
+
+=== Factories and You ===
+
+The Storable API is an easily misunderstood framework. Because the default configuration of a freshly created Store object is geared only towards creating the simplest SQL queries, new users can read too far into the provided interface and assume that it's simply a code generation tool. The reality is that Storable provides a rich mechanism for loading database objects, but based around the idea that the developer knows best for a given project.
+
+To better understand the API, it's important to understand the function and role of Storable Factories, and how they relate to the process of loading new content. First, let's look at a snippet of code from the above example:
+
+{{{
+#!python
+store = Store(db_pool)
+store.ensure_factory('page')
+page = store.load_one('page', url_code='home-page', active=1)
+}}}
+
+The first line is straightforward, and is instantiating the ORM interface to the provided database. Until a factory is registered, the store has no ability to load anything from the database.
+
+The second line is really the important one, although much of its meaning is abstracted away. It is identical in function to the following code:
+
+{{{
+#!python
+from modu.persist import storable
+page_factory = storable.DefaultFactory('page', model_class=storable.Storable, id_col='id', guid_table='guid', use_cache=None)
+store.register_factory('page', page_factory)
+}}}
+
+The plain-English explanation is "when provided with the factory ID 'page', use the following Factory to create and update Storable objects that contain their primary key in a field called 'id', which pulls keys from the GUID table 'guid', and do not cache the results". The illustrated keyword arguments are defaults, so they could be safely omitted.
+
+Using those defaults, the DefaultFactory class will create generic Storable objects from the rows of your result set. You can override the class used for the resulting objects by passing it as the `model_class` keyword argument. The provided class must be a subclass of Storable, however.
+
+This brings us finally to the last important line:
+
+{{{
+#!python
+page = store.load_one('page', url_code='home-page', active=1)
+}}}
+
+This call to load_one() will fetch the Factory associated with the factory ID 'page'. The resulting query that the factory builds will simply take the provided keyword arguments (or an optional positional argument containing a dictionary of column-value pairs), and build the simple query:
+
+{{{
+#!sql
+SELECT * FROM `page` WHERE url_code = 'home-page' AND active = 1;
+}}}
+
+=== Custom Models ===
+
+Storable diverts from the usual ORM requirement of creating custom model declarations for any table you wish to use. If you're just looking to load a record from the database, there's no need to configure a custom model. However, for any significant project, you'll want to create classes that adhere to the IStorable interface.
+
+You must remember the following rules when creating a Storable model:
+
+ 1. All model classes must implement the IStorable interface. Most models can simply inherit from the base Storable class.
+ 2. The model constructor must not take any arguments, and it must call the superclass constructor with the table name being used.
+ 3. Any member variables that are not table column names should be prefixed with at least one underscore.
+
+You have some control over how the object is instantiated by the Factory by way of the load_data() method. load_data() will be called with a single result row from the database; the default behavior is to set each column name as an instance attribute on the model class. Likewise, when saving the object back to the database, all instance attributes that do not begin with an underscore are saved to their corresponding columns. Instantiation control can be achieved through customization of these instance methods, but often times a better solution is creation of a new Factory class.
+
+=== Pager ===
