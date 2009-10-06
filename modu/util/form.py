@@ -85,7 +85,7 @@ class FormNode(OrderedDict):
 		self.errors = {}
 		
 		self.submit = self._submit
-		self.validate = self._validate
+		self.validate = self.default_validate
 		self.theme = None
 		
 		self.submit_button = None
@@ -374,7 +374,7 @@ class FormNode(OrderedDict):
 				elif(form_data):
 					self.attributes['value'] = form_data
 	
-	def _validate(self, req, form):
+	def default_validate(self, req, form):
 		"""
 		This is the default validation function. If not overriden
 		by setting the validate attribute, this will call validate()
