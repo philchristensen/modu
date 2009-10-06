@@ -31,13 +31,16 @@ There are a few caveats that should be understood when dealing with modu, and it
 == The Site object ==
 Every modu application is configured by creating a Site class that can be discovered by modu at Request time. A very basic Site class might look something like this:
 
-    class Site(object):
-        classProvides(plugin.IPlugin, app.ISite)
-        
-        def initialize(self, application):
-            application.base_domain = 'localhost'
-            application.base_path = '/modu'
-            application.activate('/', index.Resource)
+{{{
+#!python
+class Site(object):
+    classProvides(plugin.IPlugin, app.ISite)
+    
+    def initialize(self, application):
+        application.base_domain = 'localhost'
+        application.base_path = '/modu'
+        application.activate('/', index.Resource)
+}}}
 
 The initialize() method is called the first time a URL for a particular site is loaded.
 
@@ -100,14 +103,17 @@ One an application object is created, it is immutable for the lifetime of the se
 
 Apart from configuration variables, the application object also manages the URLNode tree of Resources that make up your site. A new resource is added by providing the path, a Resource class and any arguments to Application::activate(), usually from inside a Site class' initialize() method.
 
-    def initialize(self, application):
-        # ...other configuration code here
-        application.activate('/', index.Resource)
-        application.activate('/pages', page.Resource, 'example.com')
-        application.activate('/admin', resource.AdminResource,
-            default_path    = 'admin/listing/page', 
-            itemdef_module  = myproject.itemdefs
-        )
+{{{
+#!python
+def initialize(self, application):
+    # ...other configuration code here
+    application.activate('/', index.Resource)
+    application.activate('/pages', page.Resource, 'example.com')
+    application.activate('/admin', resource.AdminResource,
+        default_path    = 'admin/listing/page', 
+        itemdef_module  = myproject.itemdefs
+    )
+}}}
 
 In this example, a request for http://example.com/admin would instantiate the AdminResource class with the provided `default_path` and `itemdef_module` keyword arguments. We'll talk more about the admin resource later on.
 
@@ -220,22 +226,27 @@ The primary system of organizing URLs in modu is based around a class called URL
 
 Let's look at a sample representation of a very basic URLNode tree. To begin with, we'll populate the tree with some objects at various paths:
 
-    tree = url.URLNode()
-    tree.register('/one', 1)
-    tree.register('/one/two', 2)
-    tree.register('/three', 3)
-    tree.register('/four', 4)
-    tree.register('/one/five/six', 6)
+{{{
+#!python
+tree = url.URLNode()
+tree.register('/one', 1)
+tree.register('/one/two', 2)
+tree.register('/three', 3)
+tree.register('/four', 4)
+tree.register('/one/five/six', 6)
+}}}
 
 This results in a tree where the nodes have been laid out as follows:
 
-    <root>
-    +-----/one
-    +---------/two
-    +---------/five
-    +--------------/six
-    +-----/three
-    +-----/four
+{{{
+<root>
++-----/one
++---------/two
++---------/five
++--------------/six
++-----/three
++-----/four
+}}}
 
 Requesting any of the paths specified as part of those calls to register() return obvious results, but what happens if we request '/', or '/one/five'?
 
@@ -253,15 +264,17 @@ As an implementation detail, modu uses the URLNode class to construct a second t
 
 The host tree is basically a dictionary of URLNode trees. The keys are  hostnames with appended port numbers, while multiple apps on the same domain are stored under their base_path config attribute. The end result looks something like this pseudocode:
 
-    host_tree = {
-        'localhost:8888'    : URLNode(None)[
-                                /modu : <class ModuSite>,
-                                /trac : <class TracPassthroughSite>,
-                            ],
-        'example.com:80'    : URLNode(None)[
-                                /     : <class ExampleSite>,
-                            ],
-    }
+{{{
+host_tree = {
+    'localhost:8888'    : URLNode(None)[
+                            /modu : <class ModuSite>,
+                            /trac : <class TracPassthroughSite>,
+                        ],
+    'example.com:80'    : URLNode(None)[
+                            /     : <class ExampleSite>,
+                        ],
+}
+}}}
 
 === Handling Complex URL Schemes ===
 
@@ -275,14 +288,17 @@ where 1234 is the node ID. The easiest way to implement this is to register a Re
 
 Another more powerful option is available through the use of ResourceDelegates. If you create a Resource that implements the IResourceDelegate interface, and supply a corresponding get_delegate() method, you can write code that examines the request, and then returns some Resource (this can be `self`, or any other Resource). Here's an example:
 
-    class Resource(resource.CheetahTemplateResource):
-        implements(resource.IResourceDelegate)
-        
-        def get_delegate(self, req):
-            if(req.postpath[1] == 'player'):
-                return player.Resource()
-            else:
-                return self
+{{{
+#!python
+class Resource(resource.CheetahTemplateResource):
+    implements(resource.IResourceDelegate)
+    
+    def get_delegate(self, req):
+        if(req.postpath[1] == 'player'):
+            return player.Resource()
+        else:
+            return self
+}}}
 
 In this case, the Resource represents an album detail page, at a URL like '/albums/1234'. However, I wanted to be able to popup a media player window through JavaScript, and the easiest way was just to append '/player' to the URL.
 
@@ -343,34 +359,37 @@ There's one special Resource implementation included with modu that may be usefu
 
 Here's an example of embedding the Trac project management app inside a modu Resource:
 
-    class Resource(resource.WSGIPassthroughResource):
-        def __init__(self):
-            from trac.web import main
-            # provide the WSGI app object as the first argument
-            super(Resource, self).__init__(main.dispatch_request)
+{{{
+#!python
+class Resource(resource.WSGIPassthroughResource):
+    def __init__(self):
+        from trac.web import main
+        # provide the WSGI app object as the first argument
+        super(Resource, self).__init__(main.dispatch_request)
+
+    def prepare_content(self, req):
+        # Depending on the WSGI container we're in, PATH_INFO
+        # may or may not have a leading slash
+        path_info = req['PATH_INFO']
+        if(path_info.startswith('/trac')):
+            req['PATH_INFO'] = path_info[5:]
+        elif(path_info.startswith('trac')):
+            req['PATH_INFO'] = path_info[4:]
     
-        def prepare_content(self, req):
-            # Depending on the WSGI container we're in, PATH_INFO
-            # may or may not have a leading slash
-            path_info = req['PATH_INFO']
-            if(path_info.startswith('/trac')):
-                req['PATH_INFO'] = path_info[5:]
-            elif(path_info.startswith('trac')):
-                req['PATH_INFO'] = path_info[4:]
-        
-            req['SCRIPT_NAME'] = '/trac'
-        
-            # here we trick Trac into using modu authentication
-            req['REMOTE_USER'] = 'anonymous'
-            if(req.user.get_id() and req.user.is_allowed('access trac')):
-                req['REMOTE_USER'] = req.user.username
-        
-            from trac.web.api import HTTPForbidden
-            try:
-                super(Resource, self).prepare_content(req)
-            except HTTPForbidden, e:
-                # you should handle permission denied, etc. errors here.
-                pass
+        req['SCRIPT_NAME'] = '/trac'
+    
+        # here we trick Trac into using modu authentication
+        req['REMOTE_USER'] = 'anonymous'
+        if(req.user.get_id() and req.user.is_allowed('access trac')):
+            req['REMOTE_USER'] = req.user.username
+    
+        from trac.web.api import HTTPForbidden
+        try:
+            super(Resource, self).prepare_content(req)
+        except HTTPForbidden, e:
+            # you should handle permission denied, etc. errors here.
+            pass
+}}}
 
 == Templates ==
 
@@ -433,19 +452,22 @@ The first essential aspect of the modu form-handling code is the use of a new cl
 
 When submitted and parsed by the NestedFieldStorage class, the result is something like:
 
-    req.data = {
-        'field' = {
-            '123'       = {
-                'name'      = cgi.MinifieldStorage('field[123][name]', 'Phil'),
-                'email'     = cgi.MinifieldStorage('field[123]['email']', 'phil@example.com'),
-            },
-            '456'       = {
-                'name'      = cgi.MinifieldStorage('field[456][name]', 'Bill'),
-                'email'     = cgi.MinifieldStorage('field[456]['email']', 'bill@example.com'),
-            },
+{{{
+#!python
+req.data = {
+    'field' = {
+        '123'       = {
+            'name'      = cgi.MinifieldStorage('field[123][name]', 'Phil'),
+            'email'     = cgi.MinifieldStorage('field[123]['email']', 'phil@example.com'),
         },
-    }
-    
+        '456'       = {
+            'name'      = cgi.MinifieldStorage('field[456][name]', 'Bill'),
+            'email'     = cgi.MinifieldStorage('field[456]['email']', 'bill@example.com'),
+        },
+    },
+}
+}}}
+
 As indicated, this object is available through the 'modu.data' key in the Request dictionary, which is not populated until it is first requested.
 
 One other major change to FieldStorage that NestedFieldStorage introduces is in the way it handles file uploads. The make_file() method of FieldStorage has been overridden to create SessionFile instances instead of tempfile.TemporaryFile. As the request is read, SessionFile updates session variables to include the progress of the uploaded file, to allow for client applications to show progress bars during upload.
@@ -456,64 +478,73 @@ Additional differences between NFS and the cgi.FieldStorage class include better
 
 Forms are built using nested instances of the FormNode class, which abstracts away rendering details to focus on field structure and processing. To increase readability of form definitions, a significant amount of syntactic sugar has been added to the process of creating forms. Here's an example of a basic address form:
 
-    address_form = form.FormNode('address-form')
-    address_form['name'](
-        type        = 'textfield',
-        label       = 'Name:',
-        required    = True,
-        size        = 30,
-        maxlength   = 255,
-    )
-    address_form['address'](
-        type        = 'textfield',
-        label       = 'Street Address:',
-        required    = True,
-        size        = 30,
-        maxlength   = 255,
-    )
-    address_form['city'](
-        type        = 'textfield',
-        label       = 'City:',
-        required    = True,
-        size        = 15,
-        maxlength   = 255,
-    )
-    address_form['state'](
-        type        = 'select',
-        label       = 'State:',
-        required    = True,
-        options     = {'NY':'New York', 'CT':'Connecticut', ... },
-    )
+{{{
+#!python
+address_form = form.FormNode('address-form')
+address_form['name'](
+    type        = 'textfield',
+    label       = 'Name:',
+    required    = True,
+    size        = 30,
+    maxlength   = 255,
+)
+address_form['address'](
+    type        = 'textfield',
+    label       = 'Street Address:',
+    required    = True,
+    size        = 30,
+    maxlength   = 255,
+)
+address_form['city'](
+    type        = 'textfield',
+    label       = 'City:',
+    required    = True,
+    size        = 15,
+    maxlength   = 255,
+)
+address_form['state'](
+    type        = 'select',
+    label       = 'State:',
+    required    = True,
+    options     = {'NY':'New York', 'CT':'Connecticut', ... },
+)
+}}}
 
 At this point we have a nearly complete form object. One last thing we'll need to do is define validation and submission callback functions, and assign them to the form:
 
-    def _validate(req, frm):
-        # a sample validation is defined on the form already, but
-        # all it does is make sure 'required' fields have a value set.
-        # we'll reuse this before doing our own validation
-        if not(frm._validate(req, frm)):
-            return False
-        
-        if(frm['state'].value != 'NY'):
-            frm.set_error('state', "Sorry, New Yorkers only!")
-            return False
-        
-        return True
+{{{
+#!python
+def _validate(req, frm):
+    # a sample validation is defined on the form already, but
+    # all it does is make sure 'required' fields have a value set.
+    # we'll reuse this before doing our own validation
+    if not(frm.default_validate(req, frm)):
+        return False
     
-    address_form.validate = _validate
+    if(frm['state'].value != 'NY'):
+        frm.set_error('state', "Sorry, New Yorkers only!")
+        return False
+    
+    return True
+
+address_form.validate = _validate
+}}}
 
 By the time the validation function is called, the form object will have been loaded with the POST data submitted in it, which is how we are able to do validation on the 'state' field. Technically, we could have omitted this step if all we wanted was to check for required fields.
 
 The result of the validation function determines whether the form submission continues; if it returns False the submit function is not called. Here's a sample submit function:
 
-    def _submit(req, frm):
-        f = open('userlist', 'w')
-        f.write(frm['name'].value + "\n")
-        f.write(frm['address'].value + "\n")
-        f.write(frm['city'].value + "\n")
-        f.write(frm['state'].value + "\n")
-        f.close()
-        return True
+{{{
+#!python
+def _submit(req, frm):
+    f = open('userlist', 'w')
+    f.write(frm['name'].value + "\n")
+    f.write(frm['address'].value + "\n")
+    f.write(frm['city'].value + "\n")
+    f.write(frm['state'].value + "\n")
+    f.close()
+    return True
+}}}
 
 Submission functions can do pretty much anything, but you'll want to make sure to return a True value from submit. Whatever you return here will be returned by the execute() function (more on this in a moment), so it is possible to return some other value to be used by your form-dependent code.
 
@@ -521,17 +552,20 @@ Submission functions can do pretty much anything, but you'll want to make sure t
 
 Once a form is built, you are ready to 'execute' it, and finally render it. The usual process is something like:
 
-    def prepare_content(self, req):
-        # assume this function returns the form we built above.
-        address_form = self.get_address_form(req)
-        
-        # if the form failed validation or submission...
-        if not(address_form.execute(req)):
-            # ...place any errors in the global error queue
-            address_form.escalate_errors(req)
-        
-        # render this form as HTML and include it in the template
-        self.set_slot('address_form', address_form.render(req))
+{{{
+#!python
+def prepare_content(self, req):
+    # assume this function returns the form we built above.
+    address_form = self.get_address_form(req)
+    
+    # if the form failed validation or submission...
+    if not(address_form.execute(req)):
+        # ...place any errors in the global error queue
+        address_form.escalate_errors(req)
+    
+    # render this form as HTML and include it in the template
+    self.set_slot('address_form', address_form.render(req))
+}}}
 
 Calling the execute() method will load any available POST data into the form, and then check to see if any existing submit buttons were pressed. If so, then validation is attempted, which, if successful leads to the submit function.
 
@@ -549,21 +583,24 @@ For simplicity, errors must always be set on a top-level element. Calling set_er
 
 Usually set_error() is used from within a validation function. For example, here's an implementation of the 'required field' validation process:
 
-	def _validate(self, req, form):
-		result = True
-		
-		# if this is a child element
-		if(self.parent or self.attributes.get('type', 'form') != 'form'):
-			if(not self.attr('value', '') and self.attr('required', False)):
-				form.set_error(self.name, 'You must enter a value for this field.')
-				result = False
-		
-		# validate all children, if available
-		for child in self:
-			child = self[child]
-			result = result and child.validate(req, form)
-		
-		return result
+{{{
+#!python
+def _validate(self, req, form):
+	result = True
+	
+	# if this is a child element
+	if(self.parent or self.attributes.get('type', 'form') != 'form'):
+		if(not self.attr('value', '') and self.attr('required', False)):
+			form.set_error(self.name, 'You must enter a value for this field.')
+			result = False
+	
+	# validate all children, if available
+	for child in self:
+		child = self[child]
+		result = result and child.validate(req, form)
+	
+	return result
+}}}
 
 === Themes ===
 
@@ -583,11 +620,14 @@ When the execute() method is called on a form, one thing that always happens is 
 
 Note that this only works for element types that can correlate a single POST value with their data. For example:
 
-    form = FormNode('test-form')
-    form['time'](
-        type    = 'time',
-        value   = datetime.time.now(),
-    )
+{{{
+#!python
+form = FormNode('test-form')
+form['time'](
+    type    = 'time',
+    value   = datetime.time.now(),
+)
+}}}
 
 will render a multi-select date field with the current date and time. However, the resulting POST data will be:
 
@@ -606,11 +646,14 @@ However, time fields are useful, so we don't want to always have to create those
 
 We create a theme loader by appending '_loader' to the theme method name. In this case, our theme method was called 'theme_time', so we'll create a theme loader called 'theme_time_loader':
 
-    def theme_time_loader(self, frm, data):
-        import time
-        v = ((int(data['hour'].value) * 60) + int(data['minute'].value)) * 60
-        v += time.timezone
-        frm(value=v)
+{{{
+#!python
+def theme_time_loader(self, frm, data):
+    import time
+    v = ((int(data['hour'].value) * 60) + int(data['minute'].value)) * 60
+    v += time.timezone
+    frm(value=v)
+}}}
 
 The `data` variable is a subset of the full form data, only providing the variables under the 'test-form[time]' form path. More details could always be pulled from `self.req`, which is saved when the Theme is initially created.
 
@@ -710,14 +753,113 @@ This call to load_one() will fetch the Factory associated with the factory ID 'p
 
 {{{
 #!sql
-SELECT * FROM `page` WHERE url_code = 'home-page' AND active = 1;
+SELECT * FROM `page` WHERE active = 1 AND url_code = 'home-page';
+}}}
+
+=== SQL Generation ===
+
+Use of the store to load objects is encouraged (as opposed to using straight queries) because the persistence layer will take care of all query generation, ensuring protection from SQL injection attacks, and generally keeping the code more succinct and readable. Attempts are only made to deal with the simplest (and most common) queries, and the assumption is that advanced developers will want to write their own, but there's a good deal of power still available without writing queries.
+
+modu uses an approach found in the MySQLdb driver (and probably others), which allows for customization of a list of types that can be interpolated into queries. The following examples illustrate the new interpolation options:
+
+==== List Types ===
+{{{
+#!python
+obj = store.load_one('table', id=(1,2,3,4))
+}}}
+
+{{{
+#!sql
+SELECT * FROM `table` WHERE id IN (1,2,3,4);
+}}}
+
+==== Inversion ===
+{{{
+#!python
+from modu.persist import sql
+obj = store.load_one('table', name=sql.NOT('phil'))
+}}}
+
+{{{
+#!sql
+SELECT * FROM `table` WHERE name <> 'phil';
+}}}
+
+{{{
+#!python
+from modu.persist import sql
+obj = store.load_one('table', id=sql.NOT((1,2,3,4)))
+}}}
+
+{{{
+#!sql
+SELECT * FROM `table` WHERE id NOT IN (1,2,3,4);
+}}}
+
+==== Comparison ===
+{{{
+#!python
+from modu.persist import sql
+obj = store.load_one('table', id=sql.GT(1))
+}}}
+
+{{{
+#!sql
+SELECT * FROM `table` WHERE id > 1;
+}}}
+
+{{{
+#!python
+from modu.persist import sql
+obj = store.load_one('table', id=sql.LT(1))
+}}}
+
+{{{
+#!sql
+SELECT * FROM `table` WHERE id < 1;
+}}}
+
+==== NULLs ===
+{{{
+#!python
+obj = store.load_one('table', name=None)
+}}}
+
+{{{
+#!sql
+SELECT * FROM `table` WHERE ISNULL(name);
+}}}
+
+==== RAW SQL ===
+{{{
+#!python
+from modu.persist import sql
+obj = store.load_one('table', date=sql.RAW('NOW()'))
+}}}
+
+{{{
+#!sql
+SELECT * FROM `table` WHERE date = NOW();
+}}}
+
+{{{
+#!python
+from modu.persist import sql
+obj = store.load_one('table', name=sql.RAW('INSTR(%s, "substring")'))
+}}}
+
+{{{
+#!sql
+SELECT * FROM `table` WHERE INSTR(name, "substring");
 }}}
 
 === Custom Models ===
 
 Storable diverts from the usual ORM requirement of creating custom model declarations for any table you wish to use. If you're just looking to load a record from the database, there's no need to configure a custom model. However, for any significant project, you'll want to create classes that adhere to the IStorable interface.
 
-You must remember the following rules when creating a Storable model:
+Unlike other ORMs, there's no requirement that you specify your schema inside the model class. Things by default work in a very database-centric fashion; if a column exists in the query, it will be available on an object loaded via that query.
+
+You must also remember the following rules when creating a Storable model:
 
  1. All model classes must implement the IStorable interface. Most models can simply inherit from the base Storable class.
  2. The model constructor must not take any arguments, and it must call the superclass constructor with the table name being used.
@@ -725,4 +867,13 @@ You must remember the following rules when creating a Storable model:
 
 You have some control over how the object is instantiated by the Factory by way of the load_data() method. load_data() will be called with a single result row from the database; the default behavior is to set each column name as an instance attribute on the model class. Likewise, when saving the object back to the database, all instance attributes that do not begin with an underscore are saved to their corresponding columns. Instantiation control can be achieved through customization of these instance methods, but often times a better solution is creation of a new Factory class.
 
-=== Pager ===
+=== Paginator ===
+
+The modu persistence layer comes with a utility class for dealing with paginating result sets. It's particularly useful when paging through a large number of simple queries, but also supports some advanced usage as well.
+
+Basic usage is as follows:
+
+{{{
+#!python
+
+}}}
