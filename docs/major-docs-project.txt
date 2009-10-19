@@ -875,5 +875,120 @@ Basic usage is as follows:
 
 {{{
 #!python
+from modu.persist import page, sql
+from modu.util import theme
+
+def prepare_content(self, req):
+    pager = page.Paginator()
+    
+    # which page to fetch
+    pager.page = int(req.data.get('page', '1'))
+    # the default per_page is 10
+    pager.per_page = 25
+    
+    # we still need to set up the factory
+    req.store.ensure_factory('page')
+    
+    # get_results() takes care of adding the limit, and
+    # getting the total (pre-limit) rowcount
+    results = pager.get_results(req.store, 'page', date=sql.LT(sql.RAW('NOW()')))
+    
+    self.set_slot('results', results)
+    
+    # the default theme class can render a pager control
+    base_path = req.get_path(req.path)
+    thm = theme.Theme(req)
+    page_guide = thm.page_guide(pager, base_path)
+    self.set_slot('page_guide', page_guide)
 
 }}}
+
+== Admin Tool ==
+
+modu comes with a configurable Resource implementation that provides an administrative interface for editing database data. Unlike the admin tools included with many other web frameworks, the modu admin requires a little more time up front for configuration, but in exchange provides a great deal of flexibility and customization.
+
+The fundamental building-block of the admin is called an item definition, or 'itemdef'. An itemdef is a Python class that, like FormNodes, is used as a pseudo-DSL, to allow for an expressive configuration syntax. Once an itemdef is created, it can be used to generate forms for its various view modes.
+
+The basic structure of the admin tool is split between 'list' and 'detail' modes. In list mode, users paginate through the rows of the table being managed, whereas detail view allows actual editing of the row in question (assuming you have the proper permissions).
+
+=== What is an Itemdef? ===
+
+An itemdef is a python object that can take a given Storable object and return a modu FormNode object with customized validation and submission functions already applied. The default submission process applies the modified data back to the Storable object and saves it to the database, while providing a number of optional callbacks, custom datatypes, and other conveniences that make building a custom admin tool a fairly straightforward process.
+
+The conventional way to create itemdefs is to place the definition for each one inside its own Python module file. Here's an minimal example for a single-column `customer` table:
+
+{{{
+#!python
+itemdef = define.itemdef(
+    __config    = dict(
+        name        = 'customer',
+        label       = 'Customers',
+    ),
+    
+    id          = string.LabelField(
+        label       = 'ID:',
+        listing     = True,
+        weight      = 1,
+    ),
+    
+    name        = string.StringField(
+        label       = 'Name',
+        listing     = True,
+        weight      = 2,
+    ),
+)
+}}}
+
+This is fully valid Python, but it's presented here as a sort of domain-specific language, much like the FormNode class. Note that the result of the itemdef constructor is bound to a variable; the name of the variable doesn't matter, but the itemdef must be bound to some variable name to be found by the discovery process.
+
+Also like FormNode, Request, and many other components of the modu APIs, it's a dict subclass. For the most part, it consists of a series of names mapped to the field type descriptors called 'definitions', or occasionally 'datatypes'.
+
+Since Itemdefs share a common ancestry with FormNode objects, this has lead to a similarity between certain features. For example, like FormNode, additional elements can be added afterwards:
+
+{{{
+#!python
+itemdef['city']     = string.StringField(
+    label   = 'City',
+    listing = True
+)
+
+itemdef['state']    = string.SelectField(
+    label   = 'State'
+    options = {'AK':'Arkansas', 'AL':'Alabama', ... }
+)
+}}}
+
+One thing that you should notice with as a difference between these two usage variations is that in the first example, we are required to provide 'weight' arguments to indicate the order of the fields. Since Python dictionaries don't preserve key order, and there's no way to override the type of object used to contain `**kwarg`-based arguments, this means a weight value must be provided.
+
+In the second example, no weight argument is necessary, but may be used if desired.
+
+=== Configuration ===
+
+The first step in enabling use of the admin tool is to activate it inside your modu site configuration. If you used mkmodu to create your project folder, the admin tool should already be enabled with a couple of basic itemdefs. Otherwise, you can add the admin Resource as follows:
+
+{{{
+#!python
+    import myproject.itemdefs
+    
+	application.activate('/admin', resource.AdminResource,
+	    default_path   = 'admin/listing/page', 
+	    itemdef_module = myproject.itemdefs,
+	)
+}}}
+
+The two keyword arguments specified here can be omitted, but are usually not. The first argument, 'default_path' specifies the modu path that should be automatically redirected to on login. If omitted, the use is simply taken to the first available itemdef; however, if they don't have access to that itemdef, an error will occur.
+
+For more complex authentication scenarios, 'default_path' can be a function that takes the request object and returns some path, like this:
+
+{{{
+#!python
+    def admin_path_callback(req):
+        if(req.user.has_role('administrator')):
+            return 'admin/listing/user'
+        else:
+            return 'admin/listing/page'
+}}}
+
+The `itemdef_module` keyword argument allows you to specify a python module/package to be scanned for itemdefs. This value can also be a sequence, allowing use of itemdefs from multiple packages.
+
+
