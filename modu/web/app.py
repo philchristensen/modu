@@ -53,9 +53,9 @@ def handler(env, start_response):
 	try:
 		try:
 			application = get_application(env)
-			application.make_immutable()
 			
 			if(application):
+				application.make_immutable()
 				req = configure_request(env, application)
 			else:
 				raise404("No such application: %s" % env['REQUEST_URI'])
