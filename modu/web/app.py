@@ -547,18 +547,17 @@ class Request(dict):
 			return True
 		return False
 	
-	def get_path(self, env=None, *args, **query):
+	def get_path(self, *args, **query):
 		"""
 		Assemble an absolute URL for this application.
 		"""
 		newenv = self.copy()
-		if(isinstance(env, dict)):
+		if(isinstance(query.get('env', None), dict)):
+			env = query.pop('env')
 			try:
 				newenv.update(env)
 			except ValueError:
 				raise ValueError(str(env))
-		elif(env is not None):
-			args = [env] + list(args)
 		env = newenv
 		
 		def _deslash(fragment):
