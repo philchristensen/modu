@@ -547,10 +547,20 @@ class Request(dict):
 			return True
 		return False
 	
-	def get_path(self, *args, **query):
+	def get_path(self, env=None, *args, **query):
 		"""
 		Assemble an absolute URL for this application.
 		"""
+		newenv = self.copy()
+		if(isinstance(env, dict)):
+			try:
+				newenv.update(env)
+			except ValueError:
+				raise ValueError(str(env))
+		elif(env is not None):
+			args = [env] + list(args)
+		env = newenv
+		
 		def _deslash(fragment):
 			if(isinstance(fragment, (list, tuple))):
 				return '/'.join(fragment)
@@ -562,25 +572,24 @@ class Request(dict):
 				return fragment
 		
 		args = [_deslash(a) for a in args]
-		result = os.path.join(self.app.base_path, *args)
+		result = os.path.join(env['modu.app'].base_path, *args)
 		
-		if(self.app.base_path == '/' and not args):
+		if(env['modu.app'].base_path == '/' and not args):
 			result = ''
 		
-		domain = self.get('HTTP_X_FORWARDED_SERVER', self.get('HTTP_HOST', self.app.base_domain))
+		domain = env.get('HTTP_X_FORWARDED_SERVER', env.get('HTTP_HOST', env['modu.app'].base_domain))
 		
-		prefix = '%s://%s' % (self['wsgi.url_scheme'], domain)
-		if('HTTP_X_FORWARDED_SERVER' not in self):
-			if('SERVER_PORT' in self and domain.find(':') == -1
-				and self['SERVER_PORT'] != '80' and self['SERVER_PORT'] != '443'):
-				prefix += ':' + self['SERVER_PORT']
+		prefix = '%s://%s' % (env['wsgi.url_scheme'], domain)
+		if('HTTP_X_FORWARDED_SERVER' not in env):
+			if(domain.find(':') == -1 and env.get('SERVER_PORT', '80') not in ('80','443')):
+				prefix += ':' + env['SERVER_PORT']
 		
 		result = prefix + result
 		if(query):
 			result += '?' + urllib.urlencode(query)
 		
-		if('url_rewriter' in self):
-			result = self['url_rewriter'](self, result)
+		if('url_rewriter' in env):
+			result = env['url_rewriter'](self, result)
 		
 		return result
 	
