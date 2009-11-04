@@ -10,26 +10,17 @@ However, it does provide a generally well-documented interface for dealing with 
 
 There are a few caveats that should be understood when dealing with modu, and its particular implementation of WSGI. During the development of the modu codebase, great care was taken to follow the spec, but there are still likely some derivations and issues. The reality of implementing WSGI properly is that there are a number of small differences between different apps and host environments that must be accounted for.
     
-    * The Request object that is passed around a modu web app is a
-      subclass of the Python dict object, which provides additional
-      functionality, but does not interfere with the usual WSGI
-      environment variables. Therefore it is possible to run other
-      WSGI applications through a shim Resource in modu, which then
-      passes the same Request object as the `environ` to the WSGI
-      application object.
+    * The `Request` object that is passed around a modu web app is a
+      subclass of the Python `dict` object, which provides additional functionality, but does not interfere with the usual WSGI environment variables. Therefore it is possible to run other WSGI applications through a shim `Resource` in modu, which then passes the same `Request` object as the `environ` to the WSGI application object.
     
     * modu has been tested (and is used extensively in production)
-      with the mod_wsgi plugin for Apache 2.2 and later. So far it
-      has only been used with the prefork MPM, but it should support
-      the threaded (worker) MPM as well.
+      with the mod_wsgi plugin for Apache 2.2 and later. So far it has only been used with the prefork MPM, but it should support the threaded (worker) MPM as well.
     
     * The current built-in webserver is based on Twisted Web, but does
-      not yet use the existing Twisted Web WSGI support. The `modu-web`
-      twistd service implements its own WSGI environment with additional
-      features helpful when debugging modu applications.
+      not yet use the existing Twisted Web WSGI support. The `modu-web` '''twistd''' service implements its own WSGI environment with additional features helpful when debugging modu applications.
 
 == The Site object ==
-Every modu application is configured by creating a Site class that can be discovered by modu at Request time. A very basic Site class might look something like this:
+Every modu application is configured by creating a `Site` class that can be discovered by modu at request time. A very basic `Site` class might look something like this:
 
 {{{
 #!python
@@ -42,66 +33,73 @@ class Site(object):
         application.activate('/', index.Resource)
 }}}
 
-The initialize() method is called the first time a URL for a particular site is loaded.
+The `initialize()` method is called the first time a URL for a particular site is loaded.
 
 == The Application object ==
 
-A newly instantiated Application object is passed to Site::initialize(), where we can set any static site configuration variable needed. A number of standard config variables exist, but projects can create new ones as desired.
+A newly instantiated `Application` object is passed to `Site::initialize()`, where we can set any static site configuration variable needed. A number of standard config variables exist, but projects can create new ones as desired.
 
-One an application object is created, it is immutable for the lifetime of the server process it's running under. When unit testing, Application::make_immutable() is often omitted as a convenience by those who know what they're doing.
+One an application object is created, it is immutable for the lifetime of the server process it's running under. When unit testing, `Application::make_immutable()` is often omitted as a convenience by those who know what they're doing.
 
-    base_domain = 'localhost'
+    '''base_domain'''::
+    Default: `'localhost'`::
         The base domain is the domain that this application will be loaded for.
 
-    base_path = '/'
+    '''base_path'''::
+    Default: `'/'`::
         The base path is where the root modu resource is located.
 
-    db_url = 'MySQLdb://modu:modu@localhost/modu'
-        A specially constructed URL representing the database connection 
-        details.
+    '''db_url'''::
+    Default: `'MySQLdb://modu:modu@localhost/modu'`::
+        A specially constructed URL representing the database connection details.
 
-    session_class = session.DbUserSession
+    '''session_class'''::
+    Default: `session.DbUserSession`::
         The default session class. Set to None to disable sessions.
 
-    session_cookie_params = {'Path':'/'}
+    '''session_cookie_params'''::
+    Default: `{'Path':'/'}`::
         The default paramaters for the created session cookie.
 
-    initialize_store = True
+    '''initialize_store'''::
+    Default: `True`::
         Should a store object be created by default?
 
-    webroot = 'webroot'
-        If a path is not found within the URL Tree (i.e., there is no
-        Resource at a given URL), the path is translated to the webroot,
-        which, if a relative path, is appended to the application's `approot`.
+    '''webroot'''::
+    Default: `'webroot'`::
+        If a path is not found within the URL Tree (i.e., there is no Resource at a given URL), the path is translated to the webroot, which, if a relative path, is appended to the application's `approot`.
 
-    debug_session = False
+    '''debug_session'''::
+    Default: `False`::
         If True, display debug information when a session is loaded or saved.
 
-    debug_store = False
+    '''debug_store'''::
+    Default: `False`::
         If True, display queries when objects are loaded or saved.
 
-    enable_anonymous_users = True
-        If the current req.user is not a logged-in user, create an
-        AnonymousUser instance instead of using None
+    '''enable_anonymous_users'''::
+    Default: `True`::
+        If the current req.user is not a logged-in user, create an AnonymousUser instance instead of using None
 
-    disable_session_users = False
+    '''disable_session_users'''::
+    Default: `False`::
         If True, don't login users based on their session information.
 
-    disable_message_queue = False
+    '''disable_message_queue'''::
+    Default: `False`::
         If True, disable creation of the session-based message queue.
 
-    magic_mime_file = None
-        If defined, specify an additional location for the magic mime
-        file. For example, on Mac OS X with Apache 2, this should be
-        set to `/etc/apache2/mime.types`
+    '''magic_mime_file'''::
+    Default: `None`::
+        If defined, specify an additional location for the magic mime file. For example, on Mac OS X with Apache 2, this should be set to `/etc/apache2/mime.types`
 
-    tree
+    '''tree'''::
         The URL tree that is populated by the Site class
 
-    site
+    '''site'''::
         The Site class used to create this Application
 
-Apart from configuration variables, the application object also manages the URLNode tree of Resources that make up your site. A new resource is added by providing the path, a Resource class and any arguments to Application::activate(), usually from inside a Site class' initialize() method.
+Apart from configuration variables, the application object also manages the `URLNode` tree of resources that make up your site. A new resource is added by providing the path, a `Resource` class and any arguments to `Application::activate()`, usually from inside a `Site::initialize()` method.
 
 {{{
 #!python
@@ -115,30 +113,30 @@ def initialize(self, application):
     )
 }}}
 
-In this example, a request for http://example.com/admin would instantiate the AdminResource class with the provided `default_path` and `itemdef_module` keyword arguments. We'll talk more about the admin resource later on.
+In this example, a request for http://example.com/admin would instantiate the `AdminResource` class with the provided `default_path` and `itemdef_module` keyword arguments. We'll talk more about the admin resource later on.
 
-A nice side-effect of instantiating Resources at request time is that you can feel free to use member attributes to hold references to data during the content generation process. Since the object will be disposed of after the request is over, you're safe from influencing any other requests.
+A nice side-effect of instantiating resources at request time is that you can feel free to use member attributes to hold references to data during the content generation process. Since the object will be disposed of after the request is over, you're safe from influencing any other requests.
 
 == The Request object ==
 
-A single Request object is created as a representation of an HTTP request, and is passed around a modu application through the lifetime of a request. It contains a series of environment variables describing the current request, and also holds on to a number of modu-specific variables, as well as outgoing headers for the HTTP response.
+A single `Request` object is created as a representation of an HTTP request, and is passed around a modu application through the lifetime of a request. It contains a series of environment variables describing the current request, and also holds on to a number of modu-specific variables, as well as outgoing headers for the HTTP response.
 
 First and foremost, Request objects hold the key-value pairs supplied by the WSGI environment. These are basically similar to the variables defined by the CGI standard:
 
-    REQUEST_METHOD      CONTENT_LENGTH
-    SCRIPT_NAME         SERVER_NAME
-    PATH_INFO           SERVER_PORT
-    QUERY_STRING        SERVER_PROTOCOL
-    CONTENT_TYPE        HTTP_*
+    || REQUEST_METHOD  ||  CONTENT_LENGTH  ||
+    || SCRIPT_NAME     ||  SERVER_NAME     ||
+    || PATH_INFO       ||  SERVER_PORT     ||
+    || QUERY_STRING    ||  SERVER_PROTOCOL ||
+    || CONTENT_TYPE    ||  HTTP_*          ||
 
 The last item (HTTP_*) represents the standard HTTP headers such as HTTP_CONTENT_LENGTH and others.
 
 Also included are the WSGI-specific variables such as:
 
-    wsgi.version        wsgi.multithread
-    wsgi.url_scheme     wsgi.multiprocess
-    wsgi.input          wsgi.run_once
-    wsgi.errors
+    || wsgi.version    ||  wsgi.multithread   ||
+    || wsgi.url_scheme ||  wsgi.multiprocess  ||
+    || wsgi.input      ||  wsgi.run_once      ||
+    || wsgi.errors     ||                     ||
 
 More information on these variables can be found in the WSGI spec:
 
@@ -146,85 +144,71 @@ More information on these variables can be found in the WSGI spec:
 
 Finally, a number of modu-specific variables are created:
 
-    modu.app
-        The current Application object, containing the configuration
-        variables for this site/application.
-    
-    modu.approot
-        The main modu application directory. This is dynamically
-        detected as being 2 directory levels above the discovered
-        modu site configuration file.
-    
-    modu.path
-        The URL path *after* the subpath where this application is
-        located; for example, if an application's base path is
-        /myapp, a request to /myapp/root would result in a modu.path
-        of '/root'.
-    
-    modu.pool
+    '''modu.app'''::
+        The current `Application` object, containing the configuration variables for this site/application.
+
+    '''modu.approot'''::
+        The main modu application directory. This is dynamically detected as being 2 directory levels above the discovered modu site configuration file.
+
+    '''modu.path'''::
+        The URL path *after* the subpath where this application is located; for example, if an application's base path is /myapp, a request to /myapp/root would result in a modu.path of '/root'.
+
+    '''modu.pool'''::
         The default database connection, if available.
-    
-    modu.store
-        The default Store object, connected through `modu.pool`
-    
-    modu.session
-        The current session, if available.
-    
-    modu.user
-        The current logged-in user, if available. Can also be an
-        AnonymousUser object, or None.
-    
-    modu.messages
-        An interface to server user messages and errors, saves
-        temporary data in session.
-    
-    modu.data
+
+    '''modu.store'''::
+        The default `Store` object, connected through '''modu.pool'''
+
+    '''modu.session'''::
+        The current `Session`, if available.
+
+    '''modu.user'''::
+        The current logged-in user, if available. Can also be an `AnonymousUser` object, or `None`.
+
+    '''modu.messages'''::
+        An interface to server user messages and errors, saves temporary data in session.
+
+    '''modu.data'''::
         Currently posted form data
-    
-    modu.content
-        An interface for storing HTML header content, allowing modu
-        code to add style sheets or javascript at any time.
 
-All of the modu.* variables can be accessed as attributes on the Request object (e.g., req.app, req.store. req.pool). 
+    '''modu.content'''::
+        An interface for storing HTML header content, allowing modu code to add style sheets or javascript at any time.
 
-Additionally, the Request object provides the following attributes:
+All of the modu.* variables can be accessed as attributes on the `Request` object (e.g., req.app, req.store. req.pool). 
 
-    rsrc
-        The currently selected Resource object, if available
-    
-    prepath
-        A list of path elements representing consisting of the path TO the
-        current Resource within modu; if 'modu.path' is /one/two/three, and
-        the current Resource is activated at /one, prepath will be ['one']
-    
-    postpath
-        A list of path elements representing consisting of the path FROM the
-        current Resource within modu; if 'modu.path' is /one/two/three, and
-        the current Resource is activated at /one, prepath will be
-        ['two', 'three']
+Additionally, the `Request` object provides the following attributes:
 
-    response_headers
+    '''rsrc'''::
+        The currently selected `Resource` object, if available
+
+    '''prepath'''::
+        A list of path elements representing consisting of the path TO the current `Resource` within modu; if 'modu.path' is /one/two/three, and the current `Resource` is activated at /one, prepath will be `['one']`
+
+    '''postpath'''::
+        A list of path elements representing consisting of the path FROM the current `Resource` within modu; if 'modu.path' is /one/two/three, and the current `Resource` is activated at /one, prepath will be `['two', 'three']`
+
+    '''response_headers'''::
         A list of tuples representing the HTTP response headers to be returned.
 
 === Error Logging ===
 
 When developing modu applications, users are encouraged to use the built-in, Twisted-based web server to run their applications. In this situation, any number of methods are available for logging to the console (or error log), but it's generally as simple as issuing a 'print' statement.
 
-If you want to log properly in any environment, you'll want to use Request::log_error() to make a proper WSGI log line. This method is a convenience function that performs a write (with line-endings) to the stream that's kept in the Request object as 'wsgi.errors' -- remember, modu Request objects support all the keys passed in the WSGI environment dictionary.
+If you want to log properly in any environment, you'll want to use `Request::log_error()` to make a proper WSGI log line. This method is a convenience function that performs a write (with line-endings) to the stream that's kept in the Request object as 'wsgi.errors' -- remember, modu `Request` objects support all the keys passed in the WSGI environment dictionary.
 
 === JIT Variables ===
 
 The modu.* variables 'pool', 'store', 'session', 'user', and 'messages' are "Just In Time" variables, and are only populated when first requested.
 
-These variables behave much the same way as regular request variables, but there's one catch. Checking containment of a JIT variable (e.g., `'modu.session' in req`) will not instantiate that variable if it hasn't been used yet, but will still return True.
+These variables behave much the same way as regular request variables, but there's one catch. Checking containment of a JIT variable (e.g., `'modu.session' in req`) will not instantiate that variable if it hasn't been used yet, but will still return `True`.
 
-Neither will using req.get() instantiate a JIT variable. Only using the `req['modu.session']` or `req.session` syntax will populate the variable on-demand.
+Neither will using `req.get()` instantiate a JIT variable. Only using the `req['modu.session']` or `req.session` syntax will populate the variable on-demand.
 
 == Paths and URLs ==
 
-The primary system of organizing URLs in modu is based around a class called URLNode. URLNode provides a mechanism for creating a tree of nodes, where each level of nodes has its own name. A node may contain a value or not, and the entire tree may be queried with a particular slash-separated path (e.g., a URI).
+The primary system of organizing URLs in modu is based around a class called `URLNode`. `URLNode` provides a mechanism for creating a tree of nodes, where each level of nodes has its own name. A node may contain a value or not, and the entire tree may be queried with a particular slash-separated path (e.g., a URI).
 
-Let's look at a sample representation of a very basic URLNode tree. To begin with, we'll populate the tree with some objects at various paths:
+Let's look at a sample representation of a very basic `URLNode` tree. To begin with, we'll populate the tree with some objects at various paths:
 
 {{{
 #!python
@@ -250,19 +234,19 @@ This results in a tree where the nodes have been laid out as follows:
 
 Requesting any of the paths specified as part of those calls to register() return obvious results, but what happens if we request '/', or '/one/five'?
 
-In this example, there was no object stored at '/', so attempting to parse a URI of simply '/' would return None (and in practice would generate a 404 status).
+In this example, there was no object stored at '/', so attempting to parse a URI of simply '/' would return `None` (and in practice would generate a 404 status).
 
 For the second URI, '/one/five', the tree will be searched using a mock-depth-first algorithm. The deepest registered object that satisfies this path will be returned, so in this case, the number 1 would be returned.
 
-What happens to the rest of the path? In this case, the resulting tree analysis also establishes the pre- and postpath variables. The prepath variable becomes ['one'], while the postpath variable becomes ['five'].
+What happens to the rest of the path? In this case, the resulting tree analysis also establishes the `pre-` and `postpath` variables. The `prepath` variable becomes `['one']`, while the `postpath` variable becomes `['five']`.
 
-Fetching one last URI of '/one/five/six', however, returns the value 6 and sets prepath to ['one', 'five', 'six'], and postpath to the empty list.
+Fetching one last URI of '/one/five/six', however, returns the value 6 and sets `prepath` to `['one', 'five', 'six']`, and `postpath` to the empty list.
 
 === Host Trees ===
 
-As an implementation detail, modu uses the URLNode class to construct a second tree to organize the different modu sites/applications that might exist on a particular machine. Since the discovery process for finding site configs will load any site found in sys.path, a single server can host all of the simultaneously, provided they all use different domains or base paths.
+As an implementation detail, modu uses the `URLNode` class to construct a second tree to organize the different modu sites/applications that might exist on a particular machine. Since the discovery process for finding site configs will load any site found in sys.path, a single server can host all of the simultaneously, provided they all use different domains or base paths.
 
-The host tree is basically a dictionary of URLNode trees. The keys are  hostnames with appended port numbers, while multiple apps on the same domain are stored under their base_path config attribute. The end result looks something like this pseudocode:
+The host tree is basically a dictionary of `URLNode` trees. The keys are  hostnames with appended port numbers, while multiple apps on the same domain are stored under their base_path config attribute. The end result looks something like this pseudocode:
 
 {{{
 host_tree = {
@@ -280,13 +264,13 @@ host_tree = {
 
 The default implementation of modu paths can be limited in certain respects when you have a pre-existing URL scheme that you must implement. For example, let's say you have a scheme that requires the following URLs:
 
-    /node/1234
-    /node/1234/edit
-    /node/1234/delete
+    * /node/1234
+    * /node/1234/edit
+    * /node/1234/delete
 
-where 1234 is the node ID. The easiest way to implement this is to register a Resource for /node, and allow it to handle all the URLs starting with /node. However, in complex applications this may not be suitable, either from a code organization standpoint or because of a even more complex URL structure.
+where 1234 is the node ID. The easiest way to implement this is to register a `Resource` for /node, and allow it to handle all the URLs starting with /node. However, in complex applications this may not be suitable, either from a code organization standpoint or because of a even more complex URL structure.
 
-Another more powerful option is available through the use of ResourceDelegates. If you create a Resource that implements the IResourceDelegate interface, and supply a corresponding get_delegate() method, you can write code that examines the request, and then returns some Resource (this can be `self`, or any other Resource). Here's an example:
+Another more powerful option is available through the use of Resource Delegates. If you create a `Resource` that implements the `IResourceDelegate` interface, and supply a corresponding `get_delegate()` method, you can write code that examines the request, and then returns some `Resource` (this can be `self`, or any other `Resource`). Here's an example:
 
 {{{
 #!python
@@ -300,62 +284,62 @@ class Resource(resource.CheetahTemplateResource):
             return self
 }}}
 
-In this case, the Resource represents an album detail page, at a URL like '/albums/1234'. However, I wanted to be able to popup a media player window through JavaScript, and the easiest way was just to append '/player' to the URL.
+In this case, the `Resource` represents an album detail page, at a URL like '/albums/1234'. However, I wanted to be able to popup a media player window through JavaScript, and the easiest way was just to append '/player' to the URL.
 
-There's one small catch with this method. This happens early in the resource lookup process, and you aren't limited to making delegate choices based soley on the URL scheme, so there's no way for modu to automatically update the pre- and postpath variables. In the example above, my prepath is still ['albums'] and my postpath is still ['1234', 'player'], but if that matters to you, you can adjust those variables before returning the delegate.
+There's one small catch with this method. This happens early in the resource lookup process, and you aren't limited to making delegate choices based solely on the URL scheme, so there's no way for modu to automatically update the `pre-` and `postpath` variables. In the example above, my `prepath` is still `['albums']` and my `postpath` is still `['1234', 'player']`, but if that matters to you, you can adjust those variables before returning the delegate.
 
 === modu Paths ===
 
-A modu application manages a URLNode tree of Resource objects. It provides an extremely simple mechanism for looking up those Resources based on the URL path used in the HTTP request.
+A modu application manages a `URLNode` tree of `Resource` objects. It provides an extremely simple mechanism for looking up those resources based on the URL path used in the HTTP request.
 
 Every modu application is setup at some path from the root of the server. The particular path is specified in the site config using the `base_path` attribute. In the default scenario, the base_path is set to '/'.
 
-Once a Resource is found for a particular URI, the Request object has its path, prepath, and postpath attributes set for additional processing. This system is specifically aimed towards creating search-friendly 'clean' URLs; adding additional path elements to a linked URI is a great way to 'cleanly' supply GET arguments without using the query string syntax.
+Once a `Resource` is found for a particular URI, the Request object has its path, prepath, and postpath attributes set for additional processing. This system is specifically aimed towards creating search-friendly 'clean' URLs; adding additional path elements to a linked URI is a great way to 'cleanly' supply GET arguments without using the query string syntax.
 
-The goal when using modu paths is to allow the same codebase to be run over several domains (say, between production and staging, or development sites) without needing to replace config files or doing tricks with symlinks. To further this goal, users are encouraged to use Request::get_path() to generate URLs in their templates and resource code.
+The goal when using modu paths is to allow the same codebase to be run over several domains (say, between production and staging, or development sites) without needing to replace config files or doing tricks with symlinks. To further this goal, users are encouraged to use `Request::get_path()` to generate URLs in their templates and resource code.
 
-get_path() takes an arbitrary number of path elements, concatenates them together -- removing duplicate slashes, etc -- and creates an absolute URL containing the hostname, port (if necessary), and base_path for the particular running site configuration. It's also able to deal with certain Apache proxying situations where the WSGI environment dictionary contains HTTP_X_FORWARDED_SERVER.
+`get_path()` takes an arbitrary number of path elements, concatenates them together -- removing duplicate slashes, etc -- and creates an absolute URL containing the hostname, port (if necessary), and `base_path` for the particular running site configuration. It's also able to deal with certain Apache proxying situations where the WSGI environment dictionary contains '''HTTP_X_FORWARDED_SERVER'''.
 
 == Resource API ==
 
 Once a resource has been found for the given request, the various methods that make up the content generation process are called in turn.
 
-IResourceDelegate::get_delegate()
-    First the resource is examined to see if it is a ResourceDelegate. If so, its get_delegate() method is called, and the remaining methods in the content generation flow are called on *that* Resource instead.
+    '''IResourceDelegate::get_delegate()'''::
+        First the resource is examined to see if it is a Resource Delegate. If so, its `get_delegate()` method is called, and the remaining methods in the content generation flow are called on *that* `Resource` instead.
 
-IResource::get_response()
-    The top-level Resource method is get_response(), which is responsible for setting up the response and returning the content.
+    '''IResource::get_response()'''::
+        The top-level `Resource` method is `get_response()`, which is responsible for setting up the response and returning the content.
 
-Technically, a class needs only to implement get_response() to function properly as a Resource, but is then responsible for taking care of all bookkeeping and content generation.
+Technically, a class needs only to implement `get_response()` to function properly as a `Resource`, but is then responsible for taking care of all bookkeeping and content generation.
 
-Most Resources are subclasses of modu.web.resource.Resource, and so the get_response() method is already defined. It calls the following methods:
+Most resources are subclasses of `modu.web.resource.Resource`, and so the `get_response()` method is already defined. It calls the following methods:
 
-IResource::get_content_provider()
-    Resources are not required to implement IContent, but if they do not, they must return an instance of an IContent implementor from this method.
+    '''IResource::get_content_provider()'''::
+        Resources are not required to implement `IContent`, but if they do not, they must return an instance of an `IContent` implementor from this method.
 
-IContent::prepare_content()
-    Once an IContent implementor is found, prepare_content() is called to setup whatever instance data is needed to render this content. If IContent is also an ITemplate implementor, this is where ITemplate::set_slot() is called to populate the template dictionary.
+    '''IContent::prepare_content()'''::
+        Once an `IContent` implementor is found, `prepare_content()` is called to setup whatever instance data is needed to render this content. If `IContent` is also an `ITemplate` implementor, this is where `ITemplate::set_slot()` is called to populate the template dictionary.
 
-IContent::get_content_type()
-    For most superclasses, get_content_type() is already defined, returning the string 'text/html'. This can be overridden as necessary; for example, returning 'text/html; charset=utf-8' will force UTF-8 encoding in the browser.
+    '''IContent::get_content_type()'''::
+        For most superclasses, `get_content_type()` is already defined, returning the string 'text/html'. This can be overridden as necessary; for example, returning 'text/html; charset=utf-8' will force UTF-8 encoding in the browser.
 
-IContent::get_content()
-    As a final step, return the content that was prepared in prepare_content(). The separation of these two functions allows template engines to render the template here, so the particular Resource implementation can override prepare_content() without clobbering the template compilation.
+    '''IContent::get_content()'''::
+        As a final step, return the content that was prepared in `prepare_content()`. The separation of these two functions allows template engines to render the template here, so the particular `Resource` implementation can override `prepare_content()` without clobbering the template compilation.
 
 Finally, there are a few functions that are called for templates. Currently modu only actively supports Cheetah templates, but this is the order used in that case. Ideally alternate template engines would follow a similar flow.
 
-ITemplate::get_template()
-    Return some kind of template. In the case of the CheetahTemplate implementation, this can be either a filename (relative to the template dir) or a string containing the template code.
+    '''ITemplate::get_template()'''::
+        Return some kind of template. In the case of the CheetahTemplate implementation, this can be either a filename (relative to the template dir) or a string containing the template code.
 
-ITemplate::get_template_type()
-    Return a description of what the result of get_template() is supposed to be. Currently the two options used for Cheetah templates are 'filename' (the default), or 'str' (for inline templates).
+    '''ITemplate::get_template_type()'''::
+        Return a description of what the result of `get_template()` is supposed to be. Currently the two options used for Cheetah templates are 'filename' (the default), or 'str' (for inline templates).
 
-ITemplate::get_template_root()
-    Only relevant for 'filename' type templates, this function specifies the location of the template directory. The default behavior is to look in 'templates' in the application's `approot`, or to use the Resource's template_dir variable, if it exists. This method can be overridden if desired, however.
+    '''ITemplate::get_template_root()'''::
+        Only relevant for 'filename' type templates, this function specifies the location of the template directory. The default behavior is to look in 'templates' in the application's `approot`, or to use the `Resource`'s `template_dir` variable, if it exists. This method can be overridden if desired, however.
 
 === WSGI Passthrough ===
 
-There's one special Resource implementation included with modu that may be useful to various applications, and that's the WSGIPassthroughResource. If you wish to install a WSGI app under a path on a modu web application, this resource will allow you to manipulate the request environment before sending it to the WSGI app.
+There's one special `Resource` implementation included with modu that may be useful to various applications, and that's the `WSGIPassthroughResource`. If you wish to install a WSGI app under a path on a modu web application, this resource will allow you to manipulate the request environment before sending it to the WSGI app.
 
 Here's an example of embedding the Trac project management app inside a modu Resource:
 
@@ -941,9 +925,9 @@ itemdef = define.itemdef(
 
 This is fully valid Python, but it's presented here as a sort of domain-specific language, much like the FormNode class. Note that the result of the itemdef constructor is bound to a variable; the name of the variable doesn't matter, but the itemdef must be bound to some variable name to be found by the discovery process.
 
-Also like FormNode, Request, and many other components of the modu APIs, it's a dict subclass. For the most part, it consists of a series of names mapped to the field type descriptors called 'definitions', or occasionally 'datatypes'.
+Also like FormNode, Request, and many other components of the modu APIs, it's a dict subclass. For the most part, it consists of a series of names mapped to the field type descriptors called 'definitions' or 'datatypes'.
 
-Since Itemdefs share a common ancestry with FormNode objects, this has lead to a similarity between certain features. For example, like FormNode, additional elements can be added afterwards:
+Since Itemdefs share a common ancestry with FormNode objects, this has lead to a similarity between certain features. For example, like FormNode, additional elements can be added after instantiation:
 
 {{{
 #!python
@@ -962,7 +946,7 @@ One thing that you should notice with as a difference between these two usage va
 
 In the second example, no weight argument is necessary, but may be used if desired.
 
-=== Configuration ===
+=== Initial Configuration ===
 
 The first step in enabling use of the admin tool is to activate it inside your modu site configuration. If you used mkmodu to create your project folder, the admin tool should already be enabled with a couple of basic itemdefs. Otherwise, you can add the admin Resource as follows:
 
@@ -991,4 +975,159 @@ For more complex authentication scenarios, 'default_path' can be a function that
 
 The `itemdef_module` keyword argument allows you to specify a python module/package to be scanned for itemdefs. This value can also be a sequence, allowing use of itemdefs from multiple packages.
 
+=== Itemdef Development ===
 
+Configuration options and variables can vary between different field types, but there are a number of standard configuration options that are applicable to every itemdef. They are specified by being included in the `__config` argument to the itemdef constructor, or by the `config` instance variable.
+
+ '''name'''::
+ '''Required'''::
+    A unique identifier for this itemdef, usually the table name
+
+ '''table'''::
+ Default: `<table-name>`::
+    If the identifier is not the table name, it must be set here
+
+ '''label'''::
+ Default: `<itemdef-name>`::
+    The display name of this itemdef
+
+ '''category'''::
+ Default: `'other'`::
+    The itemdef category
+
+ '''weight'''::
+ Default: `0`::
+    The position of this itemdef in relation to others in its category
+
+ '''acl'''::
+ Default: `''`::
+    The required user permission to use this itemdef. Can be provided as a single string permission required, or a list of required permissions.
+
+ '''prewrite_callback'''::
+ Default: `None`::
+    Called during validation. If it returns False, validation will fail.
+
+{{{
+#!python
+def prewrite_callback(req, form, storable):
+    return True
+}}}
+
+ '''postwrite_callback'''::
+ Default: `None`::
+    Called during submit, after writing the storable. If it returns False, an error will be raised (but the main record will have already been written).
+
+{{{
+#!python
+def postwrite_callback(req, form, storable):
+    return True
+}}}
+
+ '''predelete_callback'''::
+ Default: `None`::
+    Called during validation. If it returns False, deletion will fail.
+
+{{{
+#!python
+def predelete_callback(req, form, storable):
+    return True
+}}}
+
+ '''postdelete_callback'''::
+ Default: `None`::
+    Called during submit, after deleting the storable.
+
+{{{
+#!python
+def postdelete_callback(req, form, storable):
+    pass
+}}}
+
+ '''theme'''::
+ Default: `theme.Theme`::
+    Called during submit, after deleting the storable.
+
+ '''factory'''::
+ Default: `storable.DefaultFactory`::
+    Factory to use to build Storable objects.
+
+ '''model_class'''::
+ Default: `storable.Storable`::
+    Model class to use with DefaultFactory.
+
+ '''list_template'''::
+ Default: `'admin-listing.tmpl.html'`::
+    Overrides the default list template.
+
+ '''detail_template'''::
+ Default: `'admin-detail.tmpl.html'`::
+    Overrides the default detail template.
+
+ '''template_variable_callback'''::
+ Default: `None`::
+    A dict of name-value pairs returned from this function will be added to the template.
+
+{{{
+#!python
+def template_variable_callback(req, form, storable):
+    return {'myvariable':'myvalue'}
+}}}
+
+ '''title_column'''::
+ Default: `'title'`::
+    The name of a result column that should be used as the title.
+
+ '''no_create'''::
+ Default: `False`::
+    Disable creation for this itemdef.
+
+ '''per_page'''::
+ Default: `25`::
+    The number of results to show per listing page.
+
+ '''listing_title'''::
+ Default: `'Listing <Name> Records'`::
+    The title to be displayed on listing pages.
+
+ '''export_query_builder'''::
+ Default: `None`::
+    When using the export feature, this function will be called to generate the query.
+
+{{{
+#!python
+def export_query_builder(req, itemdef, attribs):
+	return sql.build_select(itemdef.name, attribs)
+}}}
+
+ '''export_type'''::
+ Default: `'csv'`::
+    Export type (may be 'csv' or 'tsv').
+
+ '''export_le'''::
+ Default: `'\n'`::
+    Line endings to use in exported CSV.
+
+ '''export_formatter'''::
+ Default: `None`::
+    When using the export feature, this function will be called to generate the query.
+
+{{{
+#!python
+def export_formatter(req, itemdef, item):
+	# Use m.u.OrderedDict to enforce column order
+	return dict()
+}}}
+
+ '''export_callback'''::
+ Default: `None`::
+    When using the export feature, this function will be called after the result rows have been fetched.
+
+{{{
+#!python
+def export_callback(req):
+	pass
+}}}
+
+ '''resource'''::
+ Default: `None`::
+    If `resource` is defined, this resource will provide the content for this itemdef while most other itemdef configuration variables (and any defined fields) will be ignored.
