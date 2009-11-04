@@ -554,10 +554,7 @@ class Request(dict):
 		newenv = self.copy()
 		if(isinstance(query.get('env', None), dict)):
 			env = query.pop('env')
-			try:
-				newenv.update(env)
-			except ValueError:
-				raise ValueError(str(env))
+			newenv.update(env)
 		env = newenv
 		
 		def _deslash(fragment):
