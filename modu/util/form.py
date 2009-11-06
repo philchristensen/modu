@@ -439,6 +439,12 @@ class NestedFieldStorage(cgi.FieldStorage):
 		else:
 			return False
 	
+	def copy(self):
+		"""
+		Emulate a dictionary copy() method.
+		"""
+		return dict([(key, self[key].value) for key in self.keys() if isinstance(self[key].value, str)])
+	
 	def get_path(self, path, default=None):
 		"""
 		Extract the form field at the specified path.

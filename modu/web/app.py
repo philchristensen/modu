@@ -452,13 +452,26 @@ class Request(dict):
 		User code should call C{app.configure_request()} in normal usage.
 		"""
 		dict.__init__(self)
+		self['modu.prepath'] = []
+		self['modu.postpath'] = []
+		
 		self.update(env)
 		self.rsrc = None
 		self.jit_handlers = {}
-		self.prepath = []
-		self.postpath = []
 		
 		self.response_headers = []
+	
+	def simplify(self):
+		result = self.copy()
+		
+		result['modu.prepath'] = '/'.join(result['modu.prepath'])
+		result['modu.postpath'] = '/'.join(result['modu.postpath'])
+		
+		for k, v in result.items():
+			if not(isinstance(v, basestring)):
+				del result[k]
+		
+		return result
 	
 	def __getattr__(self, key):
 		"""
@@ -522,7 +535,7 @@ class Request(dict):
 		if(self.rsrc):
 			return self.rsrc
 		
-		rsrc, self.prepath, self.postpath = self.app.tree.parse(self.path)
+		rsrc, self['modu.prepath'], self['modu.postpath'] = self.app.tree.parse(self.path)
 		
 		if not(rsrc):
 			raise404("No such resource: %s" % self['REQUEST_URI'])
