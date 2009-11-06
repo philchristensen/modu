@@ -51,6 +51,8 @@ def submit_error(error_report):
 	headers = { 'Content-Type': 'application/x-yaml', 
 				'Accept': 'text/xml, application/xml', }
 	r = urllib2.Request('http://hoptoadapp.com/notices', error_report, headers)
-	status = urllib2.urlopen(r)
-	return status
+	try:
+		urllib2.urlopen(r)
+	except urllib2.URLError:
+		pass
 
