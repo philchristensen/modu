@@ -16,6 +16,8 @@ from modu.editable import IDatatype, define
 from modu.util import form, tags
 from modu.persist import sql
 
+SEARCH_STYLES = ('fulltext', 'exact', 'substring')
+
 class SearchFieldMixin(object):
 	"""
 	A convenient Mixin for text-based searching.
@@ -28,9 +30,13 @@ class SearchFieldMixin(object):
 		if(value is ''):
 			return None
 		
-		if(self.get('fulltext_search')):
+		style = self.get('search_style', None)
+		if(style not in SEARCH_STYLES):
+			raise ValueError('Invalid search style: %r' % style)
+		
+		if(style == 'fulltext'):
 			return sql.RAW(sql.interp("MATCH(%%s) AGAINST (%s)", [value]))
-		elif(self.get('exact_match')):
+		elif(style == 'exact'):
 			return value
 		else:
 			return sql.RAW(sql.interp("INSTR(%%s, %s)", [value]))
