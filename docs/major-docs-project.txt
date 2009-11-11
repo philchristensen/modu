@@ -946,6 +946,8 @@ One thing that you should notice with as a difference between these two usage va
 
 In the second example, no weight argument is necessary, but may be used if desired.
 
+When the administrative interface needs to render a particular itemdef for the user, it calls the itemdef's get_form() method, which generates a standard modu FormNode instance. It is therefore possible to use itemdef-derived forms outside the administrative interface, although at this time that feature has not been particularly well-tested.
+
 === Initial Configuration ===
 
 The first step in enabling use of the admin tool is to activate it inside your modu site configuration. If you used mkmodu to create your project folder, the admin tool should already be enabled with a couple of basic itemdefs. Otherwise, you can add the admin Resource as follows:
@@ -960,7 +962,7 @@ The first step in enabling use of the admin tool is to activate it inside your m
 	)
 }}}
 
-The two keyword arguments specified here can be omitted, but are usually not. The first argument, 'default_path' specifies the modu path that should be automatically redirected to on login. If omitted, the use is simply taken to the first available itemdef; however, if they don't have access to that itemdef, an error will occur.
+The two keyword arguments specified here can be omitted, but are usually not. The first argument, 'default_path' specifies the modu path that should be automatically redirected to on login. If omitted, the user is simply taken to the first available itemdef; however, if the user doesn't have access to that itemdef, an error will occur.
 
 For more complex authentication scenarios, 'default_path' can be a function that takes the request object and returns some path, like this:
 
@@ -1131,3 +1133,63 @@ def export_callback(req):
  '''resource'''::
  Default: `None`::
     If `resource` is defined, this resource will provide the content for this itemdef while most other itemdef configuration variables (and any defined fields) will be ignored.
+
+=== Itemdef List View ===
+
+When the use first visits an itemdef through the administrative interface, they are presented with the listing view, which provides a paginated list of rows available in the related database table.
+
+Only fields that have their `listing` attribute set to `True` will be displayed here. Also, at this time there is no support for inline editing in list view; when a field is presented in the list, it should be rendered as read-only.
+
+Additionally, to actually view a record in detail view, at least one of the listed fields must also have its `link` attribute set to `True`. There are exceptions to this when dealing with custom field controls, but in most cases it is a required step to make a field link to its record's detail view.
+
+=== Itemdef Detail View ===
+
+The detail view is essentially the primary view of a given itemdef. Although various fields may be omitted due to the available permissions of a given user, generally the itemdef detail view provides a controlled way to allow an authorized user to make changes to a single database record (as well as any related records).
+
+'''NOTE:''' There seems to be a potential issue with the current implementation of detail views that can cause problems with certain users. It's a result of a not uncommon misunderstanding about what a web page is.
+
+When you open a detail view of a record, that page is a snapshot of the state of the database at the time that the form was rendered. Consequently, if another user (or the same user in a different window) changes the content of the record being viewed, and then the viewed record is changed, the initial changes will be lost.
+
+=== Searching for Records ===
+
+Most of the standard field types included with modu support some kind of searching capability, which is enabled by setting an itemdef field's `search` attribute to `True`. For example, here's a `name` field from an arbitrary itemdef:
+
+{{{
+#!python
+itemdef['name'] = string.StringField(
+    label           = 'Name',
+    search          = True,
+    search_style    = 'substring'
+)
+}}}
+
+This example will add a search field in the listing view of this itemdef. When the search is submitted, the list view will display only records with `name` fields that contain the exact substring provided. Note that in this case, the `search_style` parameter may be omitted, since `'substring'` is already the default.
+
+Other search styles include `'exact'` which returns only records with exact matches, and `'fulltext'`, which will use `MATCH(column) AGAINST ('pattern')` to enable leveraging MySQL's fulltext support.
+
+=== Validation/Submission Overrides ===
+
+As previously mentioned, when the administrative interface needs to render a particular itemdef for the user, it calls the itemdef's get_form() method, which generates a standard modu FormNode instance. This FormNode has already had its validation and submission functions defined to adhere to the configuration provided in the given itemdef.
+
+There's a number of steps executed during the validation and submission process. First, the validation steps:
+
+ 1. Was the cancel button was clicked?
+  * return to listing if `True`
+ 2. Was the delete button clicked?
+  1. Is deletion enabled?
+   * return to listing if `no_delete` is `True`
+  2. Call `predelete_callback`, if available
+   * abort deletion if it returns `False`
+  3. Is `delete_related_storables` on for this itemdef?
+   * delete related storables if `True`
+  4. Delete storable
+  5. Call `postdelete_callback`
+ 3. Was the button clicked a custom submit button?
+  1. Is there a `validator` callable set on the button?
+   * continue only if it returns `True`
+  2. Otherwise report error and fail validation
+ 4. Iterate through fields
+  1. Does field have `validator` callable?
+   * continue only if it returns `True`
+  2. Call standard FormNode validation function
+   * continue only if it returns `True`
