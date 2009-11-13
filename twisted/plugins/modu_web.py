@@ -15,9 +15,10 @@ from twisted.python import usage
 from twisted.plugin import IPlugin
 from twisted.application import internet, service
 from twisted.internet import reactor
-from twisted.web import server, resource
+from twisted.web import server, resource, wsgi
 
-from modu.web import wsgi, app
+from modu.web import app
+from modu.persist import dbapi
 
 import os
 
@@ -25,9 +26,9 @@ class Options(usage.Options):
 	"""
 	Implement usage parsing for the modu-web plugin.
 	"""
-	optParameters = [["port", "p", 8888, "Port to use for web server."],
-					 ['interface', 'i', None, 'Interface to listen on.'],
-					 ['logfile', 'l', '-', 'Path to access log.']
+	optParameters = [["port", "p", 8888, "Port to use for web server.", int],
+					 ['interface', 'i', '', 'Interface to listen on.'],
+					 ['logfile', 'l', None, 'Path to access log.']
 					]
 	
 	optFlags =		[["debug-db", "d", "Turn on dbapi debugging."]
@@ -46,22 +47,11 @@ class ModuServiceMaker(object):
 		"""
 		Instantiate the service.
 		"""
-		env = {'MODU_PATH': os.environ.get('MODU_PATH', '.')}
+		dbapi.debug = config['debug-db']
 		
-		if(config['debug-db']):
-			from modu.persist import dbapi
-			dbapi.debug = True
-		
-		if(config['logfile'] != '-'):
-			site = server.Site(wsgi.WSGIResource(app.handler, env=env), logPath=config['logfile'])
-		else:
-			site = server.Site(wsgi.WSGIResource(app.handler, env=env))
-		server.Site.requestFactory = wsgi.UnparsedRequest
-		
-		if(config['interface'] is not None):
-			web_service = internet.TCPServer(int(config['port']), site, interface=config['interface'])
-		else:
-			web_service = internet.TCPServer(int(config['port']), site)
+		wsgi_rsrc = wsgi.WSGIResource(reactor, reactor.getThreadPool(), app.handler)
+		site = server.Site(wsgi_rsrc, logPath=config['logfile'])
+		web_service = internet.TCPServer(config['port'], site, interface=config['interface'])
 		
 		return web_service
 

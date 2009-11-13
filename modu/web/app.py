@@ -273,6 +273,9 @@ def get_application(env):
 	
 	host = get_normalized_hostname(env)
 	
+	if('REQUEST_URI' not in env):
+		env['REQUEST_URI'] = os.path.join(env['SCRIPT_NAME'], env['PATH_INFO'])
+	
 	host_tree_lock.acquire()
 	try:
 		if not(host in host_tree):
@@ -389,21 +392,12 @@ def _scan_sites(env):
 	"""
 	global host_tree
 	
-	modu_path = env.get('MODU_PATH', None)
-	
-	if(modu_path):
-		for component in modu_path.split(':'):
-			component = os.path.abspath(component)
-			if(component not in sys.path):
-				sys.path.append(component)
-	
 	import modu.sites
 	reload(modu.sites)
 	
 	plugins = plugin.getPlugins(ISite, modu.sites)
 	
 	for site_plugin in plugins:
-		#env['wsgi.errors'].write(str(site_plugin) + "\n")
 		site = site_plugin()
 		app = Application(site)
 		
@@ -420,7 +414,6 @@ def _scan_sites(env):
 		if not(base_path):
 			base_path = '/'
 		
-		#env['wsgi.errors'].write('found site config for %s%s' % (domain, base_path))
 		host_node.register(base_path, app, clobber=True)
 
 
