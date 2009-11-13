@@ -274,7 +274,10 @@ def get_application(env):
 	host = get_normalized_hostname(env)
 	
 	if('REQUEST_URI' not in env):
-		env['REQUEST_URI'] = os.path.join(env['SCRIPT_NAME'], env['PATH_INFO'])
+		if(env['PATH_INFO']):
+			env['REQUEST_URI'] = os.path.join(env['SCRIPT_NAME'], env['PATH_INFO'])
+		else:
+			env['REQUEST_URI'] = env['SCRIPT_NAME']
 	
 	host_tree_lock.acquire()
 	try:
