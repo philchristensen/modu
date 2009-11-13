@@ -5,7 +5,7 @@
 #
 # See LICENSE for details
 
-import stat, mimetypes, os.path, urllib
+import stat, mimetypes, os.path, urllib, time
 
 from zope.interface import implements
 
@@ -24,8 +24,7 @@ def get_file_essentials(req, path):
 		content_type = mimetypes.guess_type(path, False)[0]
 		if(content_type is None):
 			content_type = 'application/octet-stream'
-		size = finfo.st_size
-		return (content_type, size)
+		return (content_type, finfo)
 	else:
 		return None
 
@@ -38,7 +37,11 @@ class FileResource(object):
 	
 	def get_response(self, req):
 		req.add_header('Content-Type', self.content_type)
-		req.add_header('Content-Length', self.size)
+		req.add_header('Content-Length', self.finfo.st_size)
+		
+		req.add_header('Last-Modified', time.strftime('%a, %d %b %Y %H:%M:%S GMT', time.gmtime(self.finfo.st_mtime)))
+		req.add_header('ETag', '%d/%d/%d' % (self.finfo.st_ino, self.finfo.st_mtime, self.finfo.st_size))
+
 		file_wrapper = req['wsgi.file_wrapper']
 		return file_wrapper(open(self.true_path))
 	
@@ -48,7 +51,8 @@ class FileResource(object):
 		self.true_path = os.path.join(self.root, '/'.join([urllib.unquote(x) for x in req.postpath]))
 		
 		try:
-			self.content_type, self.size = get_file_essentials(req, self.true_path)
+			self.content_type, finfo = get_file_essentials(req, self.true_path)
+			self.finfo = finfo
 		except IOError:
 			app.raise403('Cannot discern type: %s' % req['REQUEST_URI'])
 		except (TypeError, OSError):
