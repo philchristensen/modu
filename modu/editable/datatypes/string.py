@@ -30,7 +30,7 @@ class SearchFieldMixin(object):
 		if(value is ''):
 			return None
 		
-		style = self.get('search_style', None)
+		style = self.get('search_style', 'substring')
 		if(style not in SEARCH_STYLES):
 			raise ValueError('Invalid search style: %r' % style)
 		
