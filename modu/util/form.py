@@ -586,11 +586,11 @@ class DictFieldStorage(dict):
 	from the get() method.
 	"""
 	__slots__ = ['name', 'value']
-    
-    @property
-    def value(self):
-        return self
-    
+	
+	@property
+	def value(self):
+		return self
+		
 	def get(self, key, default=None):
 		"""
 		Implements dict-style .get() function.
