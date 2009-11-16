@@ -585,7 +585,11 @@ class DictFieldStorage(dict):
 	set a `name` attribute on this item, and to return proper default values
 	from the get() method.
 	"""
-	__slots__ = ['name']
+	__slots__ = ['name', 'value']
+    
+    @property
+    def value(self):
+        return self
     
 	def get(self, key, default=None):
 		"""
