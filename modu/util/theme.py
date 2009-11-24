@@ -63,9 +63,6 @@ class Theme(object):
 		elif(prefix):
 			content += str(prefix)
 		
-		if(rendered_element is None):
-			import pdb; pdb.set_trace()
-		
 		content += rendered_element
 			
 		suffix = element.attr('suffix', False)
@@ -78,7 +75,11 @@ class Theme(object):
 			if(hasattr(element, 'help')):
 				content += tags.div(_class='form-help')[element.help]
 			
-			if(element.get_errors()):
+			displays_errors = False
+			if(element.attr('type', 'fieldset') != 'fieldset' or element.attr('style', 'brief') == 'brief'):
+				displays_errors = True
+			
+			if(displays_errors and element.has_errors()):
 				element_class = 'form-item form-error'
 			else:
 				element_class = 'form-item'

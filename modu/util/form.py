@@ -82,7 +82,7 @@ class FormNode(OrderedDict):
 		self.attributes = {}
 		self.submitted = False
 		
-		self.errors = {}
+		self.errors = []
 		
 		self.submit = self._submit
 		self.validate = self.default_validate
@@ -252,44 +252,57 @@ class FormNode(OrderedDict):
 		
 		return False
 	
-	def set_error(self, name, error):
+	def set_error(self, path, error):
 		"""
 		Note an error with this form's child.
-		
-		This function may only be called on top-level forms.
 		"""
-		if(self.parent):
-			raise RuntimeError('Errors cannot be set directly on child form elements.')
-		self.errors.setdefault(name, []).append(error)
+		if(isinstance(path, (list, tuple))):
+			_path = list(path[1:])
+		else:
+			_path = [path]
+		
+		item = self
+		while(len(_path) >= 1):
+			seg = _path.pop(0)
+			if(seg not in item):
+				raise ValueError('Invalid element path %r' % path)
+			item = item[seg]
+		
+		item.errors.append(error)
 	
 	def has_errors(self):
 		"""
 		Return true if this form or any of its children have errors.
 		"""
-		errs = self.get_errors()
-		if(errs is None):
-			errs = []
-		return bool(len([item for item in errs if item]))
+		children = [self]
+		while(children):
+			element = children.pop(0)
+			if(element.errors):
+				return True
+			elif(len(element)):
+				children.extend(element.values())
+		return False
 	
 	def get_errors(self):
 		"""
-		Return errors on this element.
-		
-		If this is a top-level form, return all errors. Otherwise, only
-		return errors from this form.
+		Return errors on this element and its children.
 		"""
-		item = self
-		errors = {}
-		while(True):
-			if(item.parent):
-				item = item.parent
-			else:
-				break
 		
-		if(item == self):
-			return item.errors
-		else:
-			return item.errors.get(self.name)
+		errors = {}
+		children = [self]
+		while(children):
+			element = children.pop(0)
+			if(len(element)):
+				children.extend(element.values())
+			elif(element.errors):
+				node = errors
+				path = element.get_element_path()[1:]
+				for index in range(len(path)):
+					if(index < len(path) - 1):
+						node = node.setdefault(path[index], {})
+					else:
+						node = node.setdefault(path[index], []).extend(element.errors)
+		return errors
 	
 	def escalate_errors(self, req, formatter=None):
 		"""
@@ -388,14 +401,15 @@ class FormNode(OrderedDict):
 		"""
 		result = True
 		
-		if(self.parent or self.attributes.get('type', 'form') != 'form'):
-			if(not self.attr('value', '') and self.attr('required', False)):
-				form.set_error(self.name, 'You must enter a value for this field.')
+		children = self.values()
+		while(children):
+			child = children.pop()
+			if(not child.attr('value', '') and child.attr('required', False)):
+				path = child.get_element_path()
+				form.set_error(path, 'You must enter a value for this field.')
 				result = False
-		
-		for child in self:
-			child = self[child]
-			result = result and child.validate(req, form)
+			if(len(child)):
+				children.extend(child.values())
 		
 		return result
 	

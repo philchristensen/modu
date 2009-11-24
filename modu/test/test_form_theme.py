@@ -46,40 +46,40 @@ class FormThemeTestCase(unittest.TestCase):
 	"""
 	Test the HTML output from form theme functions.
 	"""
-	def setUp(self):
+	def get_form(self):
 		"""
-		Build a sample form with the default theme.
+		Build a sample form.
 		
 		@see: L{modu.util.form.FormNode}
 		"""
-		self.form = form.FormNode('node-form')
-		self.form(enctype='multipart/form-data')
-		self.form['title'](type='textfield',
+		frm = form.FormNode('node-form')
+		frm(enctype='multipart/form-data')
+		frm['title'](type='textfield',
 					 label='Title',
 					 weight=-20,
 					 size=30,
 					 help='Enter the title of this entry here.'
 					)
-		self.form['some_label'](type='label',
+		frm['some_label'](type='label',
 					value='this is a label',
 					weight=100
 					)
-		self.form['checkbox'](type='checkbox')
-		self.form['body'](type='textarea',
+		frm['checkbox'](type='checkbox')
+		frm['body'](type='textarea',
 					label='Body',
 					weight=0,
 					cols=30,
 					rows=10,
 					help='Enter the body text as HTML.'
 					)
-		self.form['category'](type='select',
+		frm['category'](type='select',
 					label='Category',
 					options={'drama':'Drama', 'sci-fi':'Science Fiction', 'bio':'Biography', 'horror':'Horror'},
 					value='bio',
 					weight=0,
 					help='Select the category.'
 					)
-		self.form['other_category'](type='select',
+		frm['other_category'](type='select',
 					label='Other Category',
 					options={'drama':'Drama', 'sci-fi':'Science Fiction', 'bio':'Biography', 'horror':'Horror'},
 					value=['bio', 'drama', 'sci-fi'],
@@ -87,39 +87,39 @@ class FormThemeTestCase(unittest.TestCase):
 					help='Select the other categories.',
 					multiple=True
 					)
-		self.form['advanced'](label='Advanced', style='full')
-		self.form['advanced']['text1'](type='textfield',
+		frm['advanced'](label='Advanced', style='full')
+		frm['advanced']['text1'](type='textfield',
 					label='Text 1',
 					weight=1,
 					size=30,
 					help='This is the text1 field.'
 					)
-		self.form['advanced']['text2'](type='textfield',
+		frm['advanced']['text2'](type='textfield',
 					label='Text 2',
 					weight=2,
 					size=30,
 					help='This is the text2 field.'
 					)
-		self.form['options'](label='Options', style='brief')
-		self.form['options']['text3'](type='textfield',
+		frm['options'](label='Options', style='brief')
+		frm['options']['text3'](type='textfield',
 					label='Text 3',
 					weight=1,
 					size=30,
 					help='This is the text3 field.',
 					)
-		self.form['options']['text4'](type='textfield',
+		frm['options']['text4'](type='textfield',
 					label='Text 4',
 					weight=2,
 					size=30,
 					help='This is the text4 field.'
 					)
 		
-		self.form['submit'](type='submit',
+		frm['submit'](type='submit',
 					value='submit',
 					weight=100,
 					)
 		
-		self.theme = theme.Theme({})
+		return frm
 	
 	def test_radiogroup(self):
 		"""
@@ -127,6 +127,7 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		radio_options = {'some-value':'some-label', 'some-other-value':'some-other-label'}
 		
+		thm = theme.Theme({})
 		frm = form.FormNode('test-form')
 		frm['radio'](
 			options = radio_options,
@@ -146,7 +147,7 @@ class FormThemeTestCase(unittest.TestCase):
 		
 		expected = '<div class="radio-group">%s</div>' % expected
 		
-		result = self.theme.theme_radiogroup('test-form', frm['radio'])
+		result = thm.theme_radiogroup('test-form', frm['radio'])
 		
 		self.failUnlessEqual(result, expected, "Radiogroup rendered as \n%s\n instead of \n%s" % (result, expected))
 	
@@ -154,7 +155,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test fieldset rendering.
 		"""
-		fieldset = self.form['advanced']
+		frm = self.get_form()
+		fieldset = frm['advanced']
 		fieldset_result = fieldset.render({})
 		
 		content = ''
@@ -170,7 +172,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test brief fieldset rendering.
 		"""
-		fieldset = self.form['options']
+		frm = self.get_form()
+		fieldset = frm['options']
 		fieldset_result = fieldset.render({})
 		
 		content = ''
@@ -185,7 +188,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test label rendering.
 		"""
-		some_label = self.form['some_label'](
+		frm = self.get_form()
+		some_label = frm['some_label'](
 			basic_element = True,
 		)
 		
@@ -197,7 +201,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test checkbox rendering.
 		"""
-		checkbox = self.form['checkbox'](
+		frm = self.get_form()
+		checkbox = frm['checkbox'](
 			text = 'Checkbox',
 			basic_element = True,
 		)
@@ -209,20 +214,22 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test selected checkbox rendering.
 		"""
-		checkbox = self.form['checkbox'](
+		frm = self.get_form()
+		checkbox = frm['checkbox'](
 			text = 'Selected Checkbox',
 			checked = True,
 			basic_element = True,
 		)
-		
-		checkbox_result = self.theme.theme_checkbox('node-form', checkbox)
+		thm = theme.Theme({})
+		checkbox_result = thm.theme_checkbox('node-form', checkbox)
 		self.failUnlessEqual(checkbox_result, EXPECTED_SELECTED_CHECKBOX, 'Basic "checkbox" field misrendered as \n`%s`, not \n`%s`' % (checkbox_result, EXPECTED_SELECTED_CHECKBOX));
 		
 	def test_title(self):
 		"""
 		Test textfield item rendering.
 		"""
-		title = self.form['title'](
+		frm = self.get_form()
+		title = frm['title'](
 			basic_element = True,
 		)
 		
@@ -233,7 +240,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test form item prefix and suffix rendering.
 		"""
-		title = self.form['title']
+		frm = self.get_form()
+		title = frm['title']
 		title(prefix='##PREFIX##', suffix='##SUFFIX##')
 		
 		titlefield_result = title.render({})
@@ -244,7 +252,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test textfield/form item rendering.
 		"""
-		title = self.form['title']
+		frm = self.get_form()
+		title = frm['title']
 		
 		titlefield_result = title.render({})
 		titlefield_check = EXPECTED_ELEMENT % ('title', (EXPECTED_LABEL % title.label) + EXPECTED_TITLE + (EXPECTED_HELP % title.help))
@@ -254,8 +263,13 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test form errors and related rendering.
 		"""
-		self.form.set_error('title', 'There is an error in the title field.')
-		title = self.form['title']
+		frm = self.get_form()
+		err = 'There is an error in the title field.'
+		frm.set_error('title', err)
+		
+		self.failUnlessEqual(frm['title'].errors[0], err)
+		
+		title = frm['title']
 		
 		titlefield_result = title.render({})
 		titlefield_check = EXPECTED_ERROR_ELEMENT % ('title', (EXPECTED_LABEL % title.label) + EXPECTED_TITLE + (EXPECTED_HELP % title.help))
@@ -265,7 +279,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test select rendering.
 		"""
-		category = self.form['category'](
+		frm = self.get_form()
+		category = frm['category'](
 			basic_element = True,
 		)
 		
@@ -276,7 +291,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test multiple select rendering.
 		"""
-		other_category = self.form['other_category'](
+		frm = self.get_form()
+		other_category = frm['other_category'](
 			basic_element = True,
 		)
 		
@@ -288,7 +304,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test textarea rendering.
 		"""
-		body = self.form['body'](
+		frm = self.get_form()
+		body = frm['body'](
 			basic_element = True,
 		)
 		
@@ -299,7 +316,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test textarea/form item rendering.
 		"""
-		body = self.form['body']
+		frm = self.get_form()
+		body = frm['body']
 		
 		bodyfield_result = body.render({})
 		bodyfield_check = EXPECTED_ELEMENT % ('body', (EXPECTED_LABEL % body.label) + EXPECTED_BODY + (EXPECTED_HELP % body.help))
@@ -309,7 +327,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test button rendering.
 		"""
-		submit = self.form['submit'](
+		frm = self.get_form()
+		submit = frm['submit'](
 			basic_element = True,
 		)
 		
@@ -320,7 +339,8 @@ class FormThemeTestCase(unittest.TestCase):
 		"""
 		Test button/form item rendering.
 		"""
-		submit = self.form['submit']
+		frm = self.get_form()
+		submit = frm['submit']
 		
 		submitfield_result = submit.render({})
 		submitfield_check = EXPECTED_ELEMENT % ('submit', EXPECTED_SUBMIT)
