@@ -43,6 +43,8 @@ def connect(db_urls=None, async=False, *args, **kwargs):
 	@param *args: other positional arguments to pass to the DB-API driver.
 	@param **kwargs: other keyword arguments to pass to the DB-API driver.
 	"""
+	if(isinstance(db_urls, list)):
+		raise ValueError('Replicated databases must be provided as a tuple, not a list')
 	if not(isinstance(db_urls, tuple)):
 		db_urls = (db_urls,)
 	
