@@ -383,7 +383,10 @@ class FormNode(OrderedDict):
 				pass # don't update the 'value' of a submit button
 			else:
 				if(hasattr(form_data, 'value')):
-					self.attributes['value'] = form_data.value
+					# a real request can never place None as a form value,
+					# so any Nones must be a default value
+					if(form_data.value is not None):
+						self.attributes['value'] = form_data.value
 				elif(form_data):
 					self.attributes['value'] = form_data
 	
