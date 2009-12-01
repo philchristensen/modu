@@ -704,6 +704,9 @@ class Application(object):
 		"""
 		return self.tree
 
-htmlReprTypes[Application] = htmlDict
+def _applicationDict(app):
+	return htmlDict(app.config)
+
+htmlReprTypes[Application] = _applicationDict
 htmlReprTypes[Request] = htmlDict
 
