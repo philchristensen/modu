@@ -668,6 +668,9 @@ class Application(object):
 	def make_immutable(self):
 		self.__dict__['immutable'] = True
 	
+	def __repr__(self):
+		return '<Application object %s>' % repr(self.config)
+	
 	def __setattr__(self, key, value):
 		if(self.immutable):
 			raise AttributeError("Application objects are immutable once they've been initialized.")
