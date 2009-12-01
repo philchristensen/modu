@@ -33,7 +33,7 @@ from modu.persist import dbapi
 from twisted import plugin
 from twisted.web import server
 from twisted.python import failure
-from twisted.web.util import formatFailure
+from twisted.web.util import formatFailure, htmlReprTypes, htmlDict
 from zope import interface
 
 host_tree = {}
@@ -703,3 +703,7 @@ class Application(object):
 		Return this site's URLNode tree
 		"""
 		return self.tree
+
+htmlReprTypes[Application] = htmlDict
+htmlReprTypes[Request] = htmlDict
+
