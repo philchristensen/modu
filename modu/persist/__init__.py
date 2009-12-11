@@ -413,12 +413,11 @@ class Store(object):
 			factory.store = self
 		
 		if(isinstance(data, basestring)):
-			query = data
+			result = factory.get_items_by_query(data)
 		else:
 			data.update(kwargs)
-			query = factory.create_item_query(data)
+			result = factory.get_items(data)
 		
-		result = factory.get_items_by_query(query)
 		try:
 			iter(result)
 		except TypeError:
