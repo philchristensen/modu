@@ -521,7 +521,9 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			else:
 				try:
 					selected_item = req.store.load_one(table_name, {'id':int(item_id)})
-				except TypeError:
+					if(selected_item is None):
+						app.raise404("Couldn't load %s record #%s" % (table_name, item_id))
+				except ValueError:
 					app.raise404('There is no detail view at the path: %s' % req['REQUEST_URI'])
 			
 			frm = itemdef.get_form(req, selected_item)
