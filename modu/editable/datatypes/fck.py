@@ -13,7 +13,7 @@ import os, os.path, time, stat, shutil, array
 
 from zope.interface import implements
 
-from modu import editable, assets
+from modu import editable, assets, web
 from modu.persist import sql
 from modu.editable import define
 from modu.editable import resource as admin_resource
@@ -193,31 +193,25 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		self.content_type = 'text/html'
 		self.content = None
 		self.template = None
-		try:
-			if(req.postpath and req.postpath[0] == 'fckconfig-custom.js'):
-				self.prepare_config_request(req)
-				return
-			
-			if(req.postpath):
-				root_key = req.postpath[0]
-			else:
-				root_key = '__default__'
-			
-			#self.upload_dir = os.path.join(req.approot, req.app.webroot)
-			#self.upload_url = req.get_path()
-			self.selected_root = self.allowed_roots[root_key]
-			
-			if not(req.user.is_allowed(self.selected_root['perms'])):
-				app.raise403()
-			
-			if(req.postpath and req.postpath[0] == 'upload'):
-				self.prepare_quick_upload(req)
-			else:
-				self.prepare_browser(req)
-		except:
-			import traceback
-			traceback.print_exc()
-	
+		
+		if(req.postpath and req.postpath[0] == 'fckconfig-custom.js'):
+			self.prepare_config_request(req)
+			return
+		
+		if(req.postpath):
+			root_key = req.postpath[0]
+		else:
+			root_key = '__default__'
+		
+		self.selected_root = self.allowed_roots[root_key]
+		
+		if not(req.user.is_allowed(self.selected_root['perms'])):
+			app.raise403()
+		
+		if(req.postpath and req.postpath[0] == 'upload'):
+			self.prepare_quick_upload(req)
+		else:
+			self.prepare_browser(req)
 	
 	def get_content_type(self, req):
 		"""
@@ -248,6 +242,8 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		"""
 		if(template is None):
 			template = self.get_template(req)
+			if(template is None):
+				app.raise500("No template or content available.")
 		
 		return admin_resource.select_template_root(req, template)
 	
@@ -266,7 +262,6 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		@type req: L{modu.web.app.Request}
 		"""
 		result, filename = self.handle_upload(req, self.get_selected_root(req))
-		#file_url = os.path.join(self.upload_url, filename)
 		file_url = self.selected_root['url_callback'](req, filename)
 		
 		self.content = [str(tags.script(type="text/javascript")[
@@ -297,7 +292,6 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		elif(folder_path.startswith('/')):
 			folder_path = folder_path[1:]
 		
-		#folder_url = os.path.join(self.upload_url, folder_path)
 		folder_url = self.selected_root['url_callback'](req, folder_path)
 		
 		content = tags.Tag('CurrentFolder')(path=folder_path, url=folder_url)
@@ -405,7 +399,6 @@ class FCKEditorResource(resource.CheetahTemplateResource):
 		@type folder_path: str
 		"""
 		result, filename = self.handle_upload(req, folder_path)
-		#file_url = os.path.join(self.upload_url, folder_path, filename)
 		file_url = self.selected_root['url_callback'](req, folder_path, filename)
 		
 		self.content_type = 'text/html'
