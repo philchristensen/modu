@@ -273,6 +273,9 @@ def get_application(env):
 	
 	host = get_normalized_hostname(env)
 	
+	if('MODU_PATH' in env):
+		sys.path.extend(env['MODU_PATH'].split(':'))
+	
 	if('REQUEST_URI' not in env):
 		if(env['PATH_INFO']):
 			env['REQUEST_URI'] = os.path.join(env['SCRIPT_NAME'], env['PATH_INFO'])
