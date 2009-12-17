@@ -390,11 +390,14 @@ class Theme(object):
 			value = datetime.datetime(int(form_data['year'].value), int(form_data['month'].value) + 1, int(form_data['day'].value) + 1,
 										int(form_data['hour'].value), int(form_data['minute'].value))
 		except ValueError, e:
-			max_day = 30
-			if(int(form_data['month'].value) == 2):
-				max_day = 28
-			value = datetime.datetime(int(form_data['year'].value), int(form_data['month'].value) + 1, max_day,
-										int(form_data['hour'].value), int(form_data['minute'].value))
+			try:
+				max_day = 30
+				if(int(form_data['month'].value) == 2):
+					max_day = 28
+				value = datetime.datetime(int(form_data['year'].value), int(form_data['month'].value) + 1, max_day,
+											int(form_data['hour'].value), int(form_data['minute'].value))
+			except ValueError, e:
+				value = datetime.datetime.now()
 		form(value=value)
 	
 	@formelement
@@ -436,9 +439,9 @@ class Theme(object):
 				max_day = 30
 				if(int(form_data['month'].value) == 2):
 					max_day = 28
-				value = datetime.datetime(int(form_data['year'].value), int(form_data['month'].value) + 1, max_day)
+				value = datetime.date(int(form_data['year'].value), int(form_data['month'].value) + 1, max_day)
 			except ValueError:
-				value = datetime.datetime.now()
+				value = datetime.date.today()
 		form(value=value)
 	
 	@formelement
