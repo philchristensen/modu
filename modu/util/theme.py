@@ -435,7 +435,10 @@ class Theme(object):
 			max_day = 30
 			if(int(form_data['month'].value) == 2):
 				max_day = 28
-			value = datetime.datetime(int(form_data['year'].value), int(form_data['month'].value) + 1, max_day)
+			try:
+				value = datetime.datetime(int(form_data['year'].value), int(form_data['month'].value) + 1, max_day)
+			except ValueError:
+				value = datetime.datetime.now()
 		form(value=value)
 	
 	@formelement
