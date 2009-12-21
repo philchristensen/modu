@@ -122,10 +122,18 @@ class ForeignAutocompleteField(define.definition):
 		ac_cb_id = '%s-%s-ac-callback' % (form_name, self.name)
 		ac_url = req.get_path(req.prepath, 'autocomplete', storable.get_table(), self.name)
 		
-		prefs = 'autoFill:1, selectFirst:1, matchSubset:0, selectOnly:1, formatItem:formatItem, extraParams:{t:%d}, minChars:%d' % (int(time.time()), self.get('min_chars', 3))
-		ac_javascript = '$("#%s").autocomplete("%s", '
-		ac_javascript += '{onItemSelect:select_item("%s"), %s});'
-		ac_javascript = ac_javascript % (ac_id, ac_url, ac_cb_id, prefs)
+		prefs = """
+					autoFill:1,
+					selectFirst:1,
+					matchSubset:0,
+					selectOnly:1,
+					formatItem:formatItem,
+					extraParams:{t:%d}, minChars:%d""" % (int(time.time()), self.get('min_chars', 3))
+		#ac_javascript = '$("#%s").autocomplete("%s", '
+		#ac_javascript += '{onItemSelect:select_item("%s"), %s});'
+		#ac_javascript = ac_javascript % (ac_id, ac_url, ac_cb_id, prefs)
+		ac_javascript = '$("#%s").autocomplete("%s", {%s});' % (ac_id, ac_url, prefs)
+		ac_javascript += '$("#%s").result(select_item_handler("%s"));' % (ac_id, ac_cb_id)
 		ac_javascript = tags.script(type='text/javascript')[ac_javascript]
 		
 		ac_field = form.FormNode('%s-autocomplete' % self.name)

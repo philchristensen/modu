@@ -4,6 +4,12 @@ function select_item(ac_cb_id){
 	};
 }
 
+function select_item_handler(ac_cb_id){
+	return function(data, value){
+		document.getElementById(ac_cb_id).value = value[1]
+	};
+}
+
 function add_foreign_item(form_name, field_name){
 	return function(li){
 		var value = li.extra[0];
