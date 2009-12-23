@@ -324,8 +324,8 @@ def interp(query, args=[], *vargs):
 	@returns: an interpolated SQL query
 	@rtype: str
 	"""
-	if(not args and not vargs):
-		return query
+	# if(not args and not vargs):
+	# 	return query
 	
 	#FIXME: an unfortunate MySQLdb dependency, for now
 	import MySQLdb
