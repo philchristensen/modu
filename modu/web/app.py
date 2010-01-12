@@ -547,7 +547,7 @@ class Request(dict):
 		"""
 		Log an error to the WSGI standard error log.
 		"""
-		self['wsgi.errors'].write(str(data) + '\n')
+		self['wsgi.errors'].write(str(data))
 	
 	def has_form_data(self):
 		"""

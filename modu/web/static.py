@@ -31,16 +31,18 @@ def get_file_essentials(req, path):
 class FileResource(object):
 	implements(resource.IResource, resource.IResourceDelegate)
 	
-	def __init__(self, root, alternate=None):
+	def __init__(self, root, alternate=None, log_missing_files=True):
 		self.alternate = alternate
 		self.root = root
+		self.log_missing_files = log_missing_files
 	
 	def get_response(self, req):
 		req.add_header('Content-Type', self.content_type)
 		req.add_header('Content-Length', self.finfo.st_size)
 		
-		req.add_header('Last-Modified', time.strftime('%a, %d %b %Y %H:%M:%S GMT', time.gmtime(self.finfo.st_mtime)))
-		req.add_header('ETag', '%d/%d/%d' % (self.finfo.st_ino, self.finfo.st_mtime, self.finfo.st_size))
+		if(req.app.config.get('static_file_caching', True)):
+			req.add_header('Last-Modified', time.strftime('%a, %d %b %Y %H:%M:%S GMT', time.gmtime(self.finfo.st_mtime)))
+			req.add_header('ETag', '%d/%d/%d' % (self.finfo.st_ino, self.finfo.st_mtime, self.finfo.st_size))
 
 		file_wrapper = req['wsgi.file_wrapper']
 		return file_wrapper(open(self.true_path))
@@ -64,6 +66,8 @@ class FileResource(object):
 	def _return_alternate(self, req):
 		if(self.alternate):
 			return self.alternate
+		if(self.log_missing_files):
+			req.log_error('File does not exist: %s' % self.true_path)
 		from modu.web import app
 		app.raise404(req['REQUEST_URI'])
 
