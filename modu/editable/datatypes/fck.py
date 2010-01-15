@@ -117,8 +117,7 @@ class FCKFileField(define.definition):
 		
 		filemgr_path = req.get_path('assets/fckeditor/editor/filemanager/browser/default/browser.html')
 		
-		req.content.report('header', tags.script(type="text/javascript",
-			src=assets.get_jquery_path(req))[''])
+		assets.activate_jquery(req)
 		
 		suffix = tags.input(type="button", value="Select...", id='%s-select-button' % self.name, onclick="getFile('%s')" % self.name)
 		

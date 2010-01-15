@@ -77,8 +77,7 @@ class LabelValueField(SearchFieldMixin, define.definition):
 		if(style == 'search'):
 			frm(type='textfield', size=10) 
 		else:
-			req.content.report('header', tags.script(type="text/javascript",
-				src=assets.get_jquery_path(req))[''])
+			assets.activate_jquery(req)
 			
 			value = getattr(storable, self.get_column_name(), '')
 			if not(value):

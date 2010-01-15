@@ -246,8 +246,7 @@ class Theme(object):
 	
 	@formelement
 	def theme_select_autocomplete(self, form_id, element):
-		self.req.content.report('header', tags.script(type="text/javascript",
-			src=assets.get_jquery_path(self.req))[''])
+		assets.activate_jquery(self.req)
 		self.req.content.report('header', tags.script(type="text/javascript",
 			src=self.req.get_path("/assets/jquery/jquery.autocomplete.js"))[''])
 		self.req.content.report('header', tags.script(type="text/javascript",

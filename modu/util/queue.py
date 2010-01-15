@@ -22,7 +22,7 @@ def activate_content_queue(req):
 	"""
 	Queue stylesheets or javascript for display by a content queue-aware template.
 	"""
-	req['modu.content'] = Queue(req, False, True)
+	req['modu.content'] = Queue(req, use_session=False, nodupes=True)
 
 class Queue(object):
 	"""
@@ -75,6 +75,7 @@ class Queue(object):
 		self.activate()
 		if(code in self.messages):
 			result = self.messages[code]
-			del self.messages[code]
+			if(self.use_session):
+				del self.messages[code]
 			return result
 		return []

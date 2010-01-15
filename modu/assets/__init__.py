@@ -5,35 +5,36 @@
 #
 # See LICENSE for details
 
-JQUERY_VERSION = '1.3.2'
-JQUERY_UI_VERSION = '1.7.1'
-JQUERY_PACKED = False
-JQUERY_UI_PACKED = False
+from modu.util import tags
 
-def get_jquery_path(req, packed=JQUERY_PACKED):
-	if(packed):
-		packed = '.pack'
-	else:
-		packed = ''
-	return req.get_path('/assets/jquery/jquery-%s%s.js' % (JQUERY_VERSION, packed))
+DEFAULT_JQUERY_VERSION = '1.4'
+DEFAULT_JQUERY_UI_VERSION = '1.7.1'
+DEFAULT_JQUERY_MIN = False
+DEFAULT_JQUERY_UI_MIN = True
 
-def get_jquery_ui_path(req, full=False, packed=JQUERY_UI_PACKED):
-	if(full):
-		core = 'jquery.ui-all-%s' % JQUERY_UI_VERSION
-	else:
-		core = 'ui.core'
-	
-	if(packed and JQUERY_UI_VERSION != '1.0'):
-		url = req.get_path('/assets/jquery/jquery.ui-%s' % JQUERY_UI_VERSION, 'packed-javascript', core + '.packed.js')
-	else:
-		url = req.get_path('/assets/jquery/jquery.ui-%s' % JQUERY_UI_VERSION, '%s.js' % core)
-	
-	return url
+def activate_google_jsapi(req):
+	req.content.report('header', tags.script(type="text/javascript", src="http://www.google.com/jsapi")[''])
 
-def get_jquery_ui_component_path(req, module, packed=JQUERY_UI_PACKED):
-	if(packed and JQUERY_UI_VERSION != '1.0'):
-		url = req.get_path('/assets/jquery/jquery.ui-%s' % JQUERY_UI_VERSION, 'packed-javascript/%s.packed.js' % module)
-	else:
-		url = req.get_path('/assets/jquery/jquery.ui-%s' % JQUERY_UI_VERSION, '%s.js' % module)
+def activate_jquery(req):
+	activate_google_jsapi(req)
 	
-	return url
+	version = req.app.config.get('jquery_version', DEFAULT_JQUERY_VERSION)
+	uncompressed = not req.app.config.get('jquery_compressed', DEFAULT_JQUERY_MIN)
+	
+	uncompressed = str(uncompressed).lower()
+	
+	req.content.report('header', tags.script(type="text/javascript")[
+		'google.load("jquery","%s",{uncompressed:%s});' % (version, uncompressed)
+	])
+
+def activate_jquery_ui(req):
+	activate_jquery(req)
+	
+	version = req.app.config.get('jquery_ui_version', DEFAULT_JQUERY_UI_VERSION)
+	uncompressed = not req.app.config.get('jquery_ui_compressed', DEFAULT_JQUERY_UI_MIN)
+	
+	uncompressed = str(uncompressed).lower()
+	
+	req.content.report('header', tags.script(type="text/javascript")[
+		'google.load("jqueryui", "%s", {uncompressed:%s});' % (version, uncompressed)
+	])

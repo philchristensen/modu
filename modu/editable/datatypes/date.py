@@ -136,8 +136,7 @@ class DateField(define.definition):
 		frm['null'](type='checkbox', text="no value", weight=-1, suffix=tags.br(), 
 			attributes=dict(onChange='enableDateField(this);'))
 		
-		req.content.report('header', tags.script(type="text/javascript",
-			src=assets.get_jquery_path(req))[''])
+		assets.activate_jquery(req)
 		req.content.report('header', tags.script(type='text/javascript')["""
 			function enableDateField(checkboxField){
 				var formItem = $(checkboxField).parent().parent();

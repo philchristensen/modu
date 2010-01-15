@@ -22,8 +22,7 @@ class ProgressBar(object):
 			"@import '%s';" % self.req.get_path('assets/progress-bar/style.css')
 		])
 	
-		self.req.content.report('header', tags.script(type="text/javascript",
-			src=assets.get_jquery_path(self.req))[''])
+		assets.activate_jquery(self.req)
 		
 		self.req.content.report('header', tags.script(type='text/javascript',
 			src=self.req.get_path('assets/progress-bar/support.js'))[''])

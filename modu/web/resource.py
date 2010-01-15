@@ -342,7 +342,10 @@ class TemplateContent(object):
 		self.set_slot('base_path', req.get_path())
 		self.set_slot('req', req)
 		if('modu.content' in req):
-			self.set_slot('header_content', "\n".join([str(i) for i in req.content.get('header')]))
+			def header_content():
+				return "\n".join([str(i) for i in req.content.get('header')])
+			
+			self.set_slot('header_content', header_content)
 		if(req.get('modu.user', None) is None):
 			self.set_slot('user', None)
 		else:
