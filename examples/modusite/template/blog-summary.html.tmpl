@@ -9,9 +9,11 @@ $blog.title
 </h3>
 #if $blog.teaser
 	$blog.teaser
+	#if $blog.body
 	<span class="extended">
 		<a href="$req.get_path('blog', $blog.get_id())">Continue reading "$blog.title"</a>
 	</span>
+	#end if
 #else
 	$blog.body
 #end if
