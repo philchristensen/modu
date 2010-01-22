@@ -57,6 +57,13 @@ def get_role_assignments(store):
 	
 	return assignments
 
+def authenticate_user(req, username, password):
+	user_class = getattr(req.app, 'user_class', User)
+	req.store.ensure_factory('user', user_class)
+	encrypt_sql = sql.interp('%%s = ENCRYPT(%s, SUBSTRING(crypt, 1, 2))', [password])
+	u = req.store.load_one('user', username=username, crypt=sql.RAW(encrypt_sql))
+	return u
+
 def validate_login(req, form):
 	"""
 	Validation callback for login form.
@@ -91,10 +98,8 @@ def submit_login(req, form):
 	@param form: the form being validated
 	@type form: L{modu.util.form.FormNode}
 	"""
-	req.store.ensure_factory('user', User)
 	form_data = req.data[form.name]
-	encrypt_sql = sql.interp('%%s = ENCRYPT(%s, SUBSTRING(crypt, 1, 2))', [form_data['password'].value])
-	u = req.store.load_one('user', username=form_data['username'].value, crypt=sql.RAW(encrypt_sql))
+	u = authenticate_user(req, form_data['username'].value, form_data['password'].value)
 	if(u):
 		req.session.set_user(u)
 		return True

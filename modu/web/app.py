@@ -355,17 +355,18 @@ def raise403(path=None):
 		content += tags.strong()[path]
 	raise web.HTTPStatus('403 Forbidden', [('Content-Type', 'text/html')], [content])
 
-def raise401(path=None):
+def raise401(message=None):
 	"""
 	You have not supplied the appropriate credentials.
 	
 	Will cause the client browser to display HTTP username/password dialog.
 	"""
+	if(message is None):
+		message = 'You have not supplied the appropriate credentials.'
+	
 	content = tags.h1()['Unauthorized']
 	content += tags.hr()
-	content += tags.p()['You have not supplied the appropriate credentials.']
-	if(path):
-		content += tags.strong()[path]
+	content += tags.p()[message]
 	raise web.HTTPStatus('401 Unauthorized', [('Content-Type', 'text/html')], [content])
 
 def raise400(path=None):
