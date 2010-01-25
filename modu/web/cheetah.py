@@ -12,6 +12,7 @@ Cheetah Template support code.
 import os, os.path, re, threading, stat
 
 cheetah_lock = threading.BoundedSemaphore()
+cheetah_template_cache = {}
 
 def render(template, template_type, template_data, **params):
 	options = {}
@@ -39,7 +40,7 @@ def render(template, template_type, template_data, **params):
 	else:
 		module_path = None
 	
-	# because we have to manage moduTemplateDirectoryCallback on the class instance
+	# because we have to manage cheetah_template_cache, and moduTemplateDirectoryCallback on the class instance
 	cheetah_lock.acquire()
 	try:
 		def _template_cb(parent_template, template):
@@ -59,25 +60,33 @@ def render(template, template_type, template_data, **params):
 			needs_recompile = True
 		
 		moduleGlobals = {'CHEETAH_dynamicallyAssignedBaseClass_CheetahModuTemplate':CheetahModuTemplate}
-	
-		# if I can't read the template class, i'll try to create one
-		if(module_path and os.access(module_path, os.F_OK) and not needs_recompile):
-			#load module and instantiate template
-			execfile(module_path, moduleGlobals)
-			template_class = moduleGlobals[module_name]
-		# if I know I will be able to save a template class
-		elif(module_path and needs_recompile and (os.access(module_path, os.W_OK) or not os.access(module_path, os.F_OK))):
-			pysrc = CheetahModuTemplate.compile(returnAClass=False,
-											moduleName=module_name,
-											className=module_name,
-											baseclass=CheetahModuTemplate,
-											moduleGlobals=moduleGlobals, **options)
-			module_file = open(module_path, 'w')
-			module_file.write(pysrc)
-			module_file.close()
-	
-			exec pysrc in moduleGlobals
-			template_class = moduleGlobals[module_name]
+		
+		# if I can read the template class, and it hasn't been modified
+		if(module_path):
+			module_readable = os.access(module_path, os.F_OK)
+			
+			if(needs_recompile):
+				pysrc = CheetahModuTemplate.compile(returnAClass=False,
+												moduleName=module_name,
+												className=module_name,
+												baseclass=CheetahModuTemplate,
+												moduleGlobals=moduleGlobals, **options)
+				module_file = open(module_path, 'w')
+				module_file.write(pysrc)
+				module_file.close()
+				
+				exec pysrc in moduleGlobals
+				template_class = moduleGlobals[module_name]
+			else:
+				if(module_path in cheetah_template_cache):
+					template_class = cheetah_template_cache[module_path]
+				else:
+					#load module and instantiate template
+					execfile(module_path, moduleGlobals)
+					template_class = moduleGlobals[module_name]
+			
+			cheetah_template_cache[module_path] = template_class
+		# I know I won't be able to write the template class, or this is a string-based template.
 		else:
 			template_class = CheetahModuTemplate.compile(baseclass=CheetahModuTemplate,
 														moduleGlobals=moduleGlobals, **options)
