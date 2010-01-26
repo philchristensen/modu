@@ -806,3 +806,4 @@ class definition(dict):
 		"""
 		return False
 
+app.util.htmlReprTypes[itemdef] = app.dictFormatMaker('itemdef')

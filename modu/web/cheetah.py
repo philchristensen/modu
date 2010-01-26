@@ -112,6 +112,8 @@ try:
 	# Since we already deal with our own encoding and are
 	# sure to use utf-8 everywhere, we just convert at
 	# rendering time.
+	
+	# this appears to be unneccesary as of at least version 2.4.1
 	class NonUnicodeManglingDummyResponse(DummyTransaction.DummyResponse):
 		def getvalue(self, outputChunks=None):
 			chunks = outputChunks or self._outputChunks

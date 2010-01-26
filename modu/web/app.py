@@ -25,15 +25,19 @@ Primary components of the modu webapp foundation.
 import os, os.path, sys, stat, copy
 import mimetypes, traceback, threading, urllib
 
+try:
+	import cStringIO as StringIO
+except:
+	import StringIO
+
 from modu import persist, web
-from modu.util import url, tags, queue, form
+from modu.util import url, tags, queue, form, OrderedDict
 from modu.web import session, user, resource, static
 from modu.persist import dbapi
 
 from twisted import plugin
-from twisted.web import server
+from twisted.web import server, util
 from twisted.python import failure
-from twisted.web.util import formatFailure, htmlReprTypes, htmlDict
 from zope import interface
 
 host_tree = {}
@@ -129,7 +133,7 @@ def handler(env, start_response):
 		else:
 			content = ["<html><head><title>web.Server Traceback (most recent call last)</title></head>"
 				"<body><b>web.Server Traceback (most recent call last):</b>\n\n"
-				"%s\n\n</body></html>\n" % formatFailure(reason)]
+				"%s\n\n</body></html>\n" % util.formatFailure(reason)]
 			headers = [('Content-Type', 'text/html')]
 		
 		start_response('500 Internal Server Error', headers)
@@ -708,9 +712,66 @@ class Application(object):
 		"""
 		return self.tree
 
-def _applicationDict(app):
-	return htmlDict(app.config)
+def dictFormatMaker(name):
+	def _htmlDict(d):
+		io = StringIO.StringIO()
+		w = io.write
+		w('<div class="dict %s"><span class="heading">%s instance @ %s</span>' % (name.lower(), name, hex(id(d))))
+		w('<table class="dict">')
+		keys = d.keys()
+		if not(isinstance(d, OrderedDict)):
+			keys.sort()
+		for k in keys:
+			if k == '__builtins__':
+				v = 'builtin dictionary'
+			else:
+				v = d[k]
+			w('<tr><td class="dictKey">%s</td><td class="dictValue">%s</td></tr>' % (util.htmlrepr(k), util.htmlrepr(v)))
+		w('</table></div>')
+		return io.getvalue()
+	return _htmlDict
 
-htmlReprTypes[Application] = _applicationDict
-htmlReprTypes[Request] = htmlDict
+def htmlFormNode(d):
+	io = StringIO.StringIO()
+	w = io.write
+	w('<div class="dict formnode"><span class="heading">FormNode instance @ %s</span>' % hex(id(d)))
+	w('<table class="dict">')
+	keys = d.keys()
+	if not(isinstance(d, OrderedDict)):
+		keys.sort()
+	for k in keys:
+		w('<tr><td class="dictKey">%s</td><td class="dictValue">%s</td></tr>' % (util.htmlrepr(k), htmlFormNode(d[k])))
+	attribsrepr = dictFormatMaker('attributes dictionary')
+	w('<tr><td class="attribs" colspan="2">%s</td></tr>' % (attribsrepr(d.attributes)))
+	w('</table>')
+	w('</div>')
+	return io.getvalue()
+
+class DummyOldStyleClass:
+	pass
+
+def _oldStyleClassRepr(x):
+	return util.htmlReprTypes.get(x.__class__, util.htmlUnknown)(x)
+
+util.htmlReprTypes[type(DummyOldStyleClass())] = _oldStyleClassRepr
+
+def _applicationDict(app):
+	return dictFormatMaker('Application')(app.config)
+
+util.htmlReprTypes[OrderedDict] = dictFormatMaker('OrderedDict')
+util.htmlReprTypes[Application] = _applicationDict
+util.htmlReprTypes[Request] = dictFormatMaker('Request')
+
+util.htmlReprTypes[session.DbUserSession] = dictFormatMaker('Session')
+
+def _fieldStorageDict(d):
+	return dictFormatMaker('NestedFieldStorage')(d.copy())
+
+def _miniFieldStorageValue(v):
+	return util.htmlrepr(v.value)
+
+util.htmlReprTypes[form.FormNode] = htmlFormNode
+util.htmlReprTypes[form.NestedFieldStorage] = _fieldStorageDict
+util.htmlReprTypes[form.DictFieldStorage] = dictFormatMaker('DictFieldStorage')
+util.htmlReprTypes[form.cgi.MiniFieldStorage] = _miniFieldStorageValue
 

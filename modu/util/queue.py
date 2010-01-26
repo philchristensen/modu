@@ -68,6 +68,13 @@ class Queue(object):
 		self.activate()
 		return len(self.messages.get(code, []))
 	
+	def clear(self, code=None):
+		if(code is None):
+			del self.messages
+			self.activate()
+		else:
+			del self.messages[code]
+	
 	def get(self, code):
 		"""
 		Get all the items in an internal mini-queue.
@@ -76,6 +83,6 @@ class Queue(object):
 		if(code in self.messages):
 			result = self.messages[code]
 			if(self.use_session):
-				del self.messages[code]
+				self.clear(code)
 			return result
 		return []

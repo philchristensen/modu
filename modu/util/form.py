@@ -460,7 +460,7 @@ class NestedFieldStorage(cgi.FieldStorage):
 		"""
 		Emulate a dictionary copy() method.
 		"""
-		return dict([(key, self[key].value) for key in self.keys() if isinstance(self[key].value, str)])
+		return dict([(key, getattr(self.get(key), 'value', self.get(key))) for key in self.keys()])
 	
 	def get_path(self, path, default=None):
 		"""
