@@ -69,6 +69,8 @@ class Queue(object):
 		return len(self.messages.get(code, []))
 	
 	def clear(self, code=None):
+		if not(hasattr(self, 'messages')):
+			return
 		if(code is None):
 			del self.messages
 			self.activate()
