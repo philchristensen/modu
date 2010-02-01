@@ -5,6 +5,8 @@
 #
 # See LICENSE for details
 
+import crypt
+
 from modu.persist import storable, sql
 from modu.util import form
 
@@ -60,9 +62,12 @@ def get_role_assignments(store):
 def authenticate_user(req, username, password):
 	user_class = getattr(req.app, 'user_class', User)
 	req.store.ensure_factory('user', user_class)
-	encrypt_sql = sql.interp('%%s = ENCRYPT(%s, SUBSTRING(crypt, 1, 2))', [password])
-	u = req.store.load_one('user', username=username, crypt=sql.RAW(encrypt_sql))
-	return u
+	
+	u = req.store.load_one('user', username=username)
+	if(u.crypt == crypt.crypt(password, u.crypt[:2])):
+		return u
+	
+	return None
 
 def validate_login(req, form):
 	"""

@@ -71,7 +71,8 @@ if(__name__ == '__main__'):
 			stub = stub.replace('project', config['shortname'])
 		created_dir = os.path.join(destroot, stub)
 		
-		os.mkdir(created_dir)
+		if not(os.path.isdir(created_dir)):
+			os.mkdir(created_dir)
 		
 		for filename in filenames:
 			if(filename.startswith('.')):

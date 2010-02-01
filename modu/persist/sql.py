@@ -336,11 +336,14 @@ def interp(query, args=[], *vargs):
 	args.extend(vargs)
 	
 	def UnicodeConverter(s, d):
-		return converters.string_literal(s.encode('utf8', 'replace'))
-
+		return converters.string_literal(s.encode('utf8'))
+	
 	def DateTime2literal(d, c):
 		return converters.string_literal(date.strftime(d, "%Y-%m-%d %H:%M:%S"),c)
-
+	
+	def Raw2Literal(o, d):
+		return o.value
+	
 	conv_dict = converters.conversions.copy()
 	# This is only used in build_replace/insert()
 	conv_dict[RAW] = Raw2Literal
@@ -348,14 +351,6 @@ def interp(query, args=[], *vargs):
 	conv_dict[types.UnicodeType] = UnicodeConverter
 	
 	return query % MySQLdb.escape_sequence(args, conv_dict)
-
-
-def Raw2Literal(o, d):
-	"""
-	Provides conversion support for RAW
-	"""
-	return o.value
-
 
 class RAW:
 	"""
