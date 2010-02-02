@@ -14,7 +14,7 @@ from modu.util import form
 # bleed over into other stores or applications
 def get_grant_tree(store):
 	store.ensure_factory('__grant')
-	grant_query = """SELECT CONCAT(r.id, '-', p.id) AS id, r.name AS role, p.name AS permission
+	grant_query = """SELECT r.name AS role, p.name AS permission
 					FROM role r
 						INNER JOIN (role_permission rp
 							INNER JOIN permission p ON (rp.permission_id = p.id))
@@ -33,31 +33,26 @@ def get_role_assignments(store):
 	Return a list of users for each available role.
 	"""
 	assignment_query = """SELECT r.id, r.name,
-								GROUP_CONCAT(concat(u.id, '|', u.username, '|', u.first, '|', u.last)) AS members
+								u.id as user_id, u.username, u.first, u.last
 							FROM role r
 								INNER JOIN (user_role ur
 									INNER JOIN user u ON ur.user_id = u.id)
 								ON ur.role_id = r.id
-							WHERE NOT(INSTR(u.username, 'stats'))
-							GROUP BY r.id"""
+							WHERE NOT(INSTR(u.username, 'stats'))"""
 	
-	store.pool.runOperation('SET @OLD_GROUP_CONCAT_MAX_LEN=@@GROUP_CONCAT_MAX_LEN;')
-	store.pool.runOperation('SET GROUP_CONCAT_MAX_LEN = 32768;')
 	results = store.pool.runQuery(assignment_query)
-	store.pool.runOperation('SET GROUP_CONCAT_MAX_LEN = @OLD_GROUP_CONCAT_MAX_LEN;')
 	
-	assignments = []
+	assignments = {}
 	for row in results:
-		assignments.append(dict(
-			id		= row['id'],
-			name	= row['name'],
-			members	= [
-				dict(zip(('id', 'username', 'first', 'last'), member.split('|')))
-					for member in row['members'].split(',')
-			]
+		assignment = assignments.setdefault(row['id'], dict(id=row['id'], name=row['name']))
+		assignment.setdefault('members', []).append(dict(
+			id			= row['user_id'],
+			username	= row['username'],
+			first		= row['first'],
+			last		= row['last'],
 		))
 	
-	return assignments
+	return assignments.values()
 
 def authenticate_user(req, username, password):
 	user_class = getattr(req.app, 'user_class', User)
