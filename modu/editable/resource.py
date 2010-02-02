@@ -288,7 +288,7 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 		search_attribs.update(search_params)
 		
 		if(req.postpath[0] == 'listing'):
-			pager = page.Paginator()
+			pager = page.Paginator(calc_found=req.app.config.get('admin_calc_found_rows', True))
 			if('page' in req.data):
 				pager.page = int(req.data['page'].value)
 			else:

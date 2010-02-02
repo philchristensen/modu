@@ -26,7 +26,7 @@ def activate_store(req):
 	Examine the req object and its internal modu.app object,
 	and create or fetch a store instance to be used by this request.
 	"""
-	store = Store(req.pool)
+	store = Store(req.pool, req)
 	if(req.app.debug_store):
 		debug_file = req['wsgi.errors']
 	else:
@@ -210,7 +210,7 @@ class Store(object):
 	"""
 	implements(IStore)
 	
-	def __init__(self, pool):
+	def __init__(self, pool, req=None):
 		"""
 		Create a Store for a given DB connection object.
 		
@@ -221,16 +221,14 @@ class Store(object):
 		LOCK the table, execute the INSERT, read the MAX(id) for that table, and
 		finally UNLOCK the table.
 		
-		@param connection: the connection object to use for this store
-		@type connection: a DB-API 2.0 compliant connection (MySQLdb only, for now)
-		
-		@param name: the name of the Store instance to be created
-		@type name: str
+		@param pool: the connection pool to use for this store
+		@type pool: L{twisted.enterprice.adbapi.ConnectionPool}
 		
 		@raises RuntimeError: if a Store instance by that name already exists
 		"""
 		self.pool = pool
 		self.debug_file = None
+		self.req = req
 		
 		self._factories = {}
 	
@@ -330,7 +328,8 @@ class Store(object):
 			if not(self.has_factory(table)):
 				raise LookupError('There is no factory registered for the table `%s`' % table)
 			factory = self.get_factory(table)
-			new_id = factory.get_id()
+			use_locks = (not bool(self.req)) or self.req.app.config.get('use_db_locks', True)
+			new_id = factory.get_id(use_locks=use_locks)
 			storable.set_id(new_id, set_old=False)
 			return new_id
 		return id
@@ -495,15 +494,19 @@ class Store(object):
 		table = storable.get_table()
 		data = storable.get_data()
 		
+		locks_allowed = (not bool(self.req)) or self.req.app.config.get('use_db_locks', True)
+		
 		use_locks = False
 		primary_key = factory.get_primary_key()
 		
 		if(storable.is_new()):
 			if(factory.uses_guids()):
 				data[primary_key] = self.fetch_id(storable)
-			else:
+			elif(locks_allowed):
 				use_locks = True
 				self.pool.runOperation('LOCK TABLES `%s` WRITE' % table)
+			else:
+				raise RuntimeError("Broken program logic is trying to lock an unlockable database.")
 			
 			query = sql.build_insert(table, data)
 		else:

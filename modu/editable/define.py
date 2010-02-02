@@ -34,7 +34,7 @@ import copy
 from zope.interface import implements
 
 from twisted import plugin
-from twisted.python import util
+from twisted.python import util, failure
 
 from modu import editable
 from modu.util import form, tags, theme, OrderedDict
@@ -532,6 +532,8 @@ class itemdef(OrderedDict):
 			req.store.save(storable, save_related_storables=False)
 		except Exception, e:
 			req.messages.report('error', "An exception occurred during primary save: %s" % e)
+			reason = failure.Failure()
+			reason.printTraceback(req['wsgi.errors'])
 			return False
 		
 		postwrite_succeeded = True
@@ -545,6 +547,8 @@ class itemdef(OrderedDict):
 				req.store.save(storable)
 			except Exception, e:
 				req.messages.report('error', "An exception occurred during postwrite: %s" % e)
+				reason = failure.Failure()
+				reason.printTraceback(req['wsgi.errors'])
 				postwrite_succeeded = False
 		
 		# call postwrite_callback

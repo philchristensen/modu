@@ -36,7 +36,7 @@ from modu.web import session, user, resource, static
 from modu.persist import dbapi
 
 from twisted import plugin
-from twisted.web import server, util
+from twisted.web import server, util, html
 from twisted.python import failure
 from zope import interface
 
@@ -747,6 +747,21 @@ def htmlFormNode(d):
 	w('</div>')
 	return io.getvalue()
 
+def htmlTuple(l):
+	io = StringIO.StringIO()
+	w = io.write
+	w('<div class="list tuple"><span class="heading">Tuple instance @ %s</span>' % hex(id(l)))
+	for i in l:
+		w('<div class="listItem">%s</div>' % util.htmlrepr(i))
+	w('</div>')
+	return io.getvalue()
+
+def htmlString(s):
+	s = html.escape(s)
+	s = s.replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
+	s = s.replace('\n', '<br/>')
+	return '<tt>%s</tt>' % s
+
 class DummyOldStyleClass:
 	pass
 
@@ -774,4 +789,5 @@ util.htmlReprTypes[form.FormNode] = htmlFormNode
 util.htmlReprTypes[form.NestedFieldStorage] = _fieldStorageDict
 util.htmlReprTypes[form.DictFieldStorage] = dictFormatMaker('DictFieldStorage')
 util.htmlReprTypes[form.cgi.MiniFieldStorage] = _miniFieldStorageValue
-
+util.htmlReprTypes[str] = htmlString
+util.htmlReprTypes[tuple] = htmlTuple

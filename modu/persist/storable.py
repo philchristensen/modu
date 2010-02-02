@@ -440,7 +440,7 @@ class DefaultFactory(object):
 			self.use_cache = self.default_cache_setting
 		self.cache = {}
 	
-	def get_id(self, increment=1):
+	def get_id(self, increment=1, use_locks=True):
 		"""
 		Get a new GUID. If you pass the optional increment parameter, the next
 		GUID returned by this function will be that much higher, allowing multi-
@@ -450,18 +450,21 @@ class DefaultFactory(object):
 		"""
 		if not(self.uses_guids()):
 			return None
-
-		self.store.pool.runOperation('LOCK TABLES `%s` WRITE' % self.guid_table)
+		
+		if(use_locks):
+			self.store.pool.runOperation('LOCK TABLES `%s` WRITE' % self.guid_table)
+		
 		result = self.store.pool.runQuery('SELECT `guid` FROM `%s`' % self.guid_table)
 	
 		if(result is None or len(result) == 0):
 			guid = 1
-			self.store.pool.runOperation('INSERT INTO `%s` VALUES (%%s)' % self.guid_table, [guid + increment])
+			self.store.pool.runOperation(sql.interp('INSERT INTO `%s` VALUES (%%s)' % self.guid_table, guid + increment))
 		else:
 			guid = result[0]['guid']
-			self.store.pool.runOperation('UPDATE `%s` SET `guid` = %%s' % self.guid_table, [guid + increment])
-	
-		result = self.store.pool.runOperation('UNLOCK TABLES')
+			self.store.pool.runOperation(sql.interp('UPDATE `%s` SET `guid` = %%s' % self.guid_table, guid + increment))
+		
+		if(use_locks):
+			result = self.store.pool.runOperation('UNLOCK TABLES')
 
 		return guid
 	

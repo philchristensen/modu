@@ -403,10 +403,10 @@ class DbUserSession(BaseSession):
 			self._pool.runOperation(update_query)
 	
 	def do_delete(self):
-		self._pool.runOperation("DELETE FROM session WHERE id = %s", [self.id()])
+		self._pool.runOperation(sql.interp("DELETE FROM session WHERE id = %s", self.id()))
 	
 	def do_cleanup(self, *args):
-		self._pool.runOperation("DELETE FROM session WHERE timeout < (%s - accessed)", [int(time.time())])
+		self._pool.runOperation(sql.interp("DELETE FROM session WHERE timeout < (%s - accessed)", int(time.time())))
 	
 	def get_user(self):
 		if(hasattr(self, '_user') and self._user):

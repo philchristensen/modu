@@ -15,11 +15,11 @@ from modu.util import form
 def get_grant_tree(store):
 	store.ensure_factory('__grant')
 	grant_query = """SELECT r.name AS role, p.name AS permission
-					FROM role r
-						INNER JOIN (role_permission rp
-							INNER JOIN permission p ON (rp.permission_id = p.id))
-						ON (rp.role_id = r.id)
-					ORDER BY r.name"""
+					    FROM role r
+					        INNER JOIN role_permission rp ON rp.role_id = r.id
+					        INNER JOIN permission p ON rp.permission_id = p.id
+					    ORDER BY r.name, p.name
+					"""
 	
 	grants = store.load('__grant', grant_query)
 	tree = {}
@@ -35,9 +35,8 @@ def get_role_assignments(store):
 	assignment_query = """SELECT r.id, r.name,
 								u.id as user_id, u.username, u.first, u.last
 							FROM role r
-								INNER JOIN (user_role ur
-									INNER JOIN user u ON ur.user_id = u.id)
-								ON ur.role_id = r.id
+								INNER JOIN user_role ur ON ur.role_id = r.id
+								INNER JOIN user u ON ur.user_id = u.id
 							WHERE NOT(INSTR(u.username, 'stats'))"""
 	
 	results = store.pool.runQuery(assignment_query)
