@@ -310,8 +310,8 @@ def escape_item(item, conv):
 
 def quoted_string_literal(s, d):
 	# okay, so, according to the SQL standard, this should be all you need to do to escape
-	# any kind of string. mysql_real_escape_string
-	return "'%s'" % s.replace("'", "''")
+	# any kind of string.
+	return "'%s'" % (s.replace("'", "''"),)
 
 def mysql_string_literal(s, d):
 	from MySQLdb import converters

@@ -397,9 +397,10 @@ class DbUserSession(BaseSession):
 			self._pool.runOperation(insert_query)
 		else:
 			attribs['id'] = self.id()
-			replace_query = sql.build_replace('session', attribs)
-			self.debug(replace_query)
-			self._pool.runOperation(replace_query)
+			#replace_query = sql.build_replace('session', attribs)
+			update_query = sql.build_update('session', attribs, {'id':self.id()})
+			self.debug(update_query)
+			self._pool.runOperation(update_query)
 	
 	def do_delete(self):
 		self._pool.runOperation("DELETE FROM session WHERE id = %s", [self.id()])
