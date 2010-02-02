@@ -311,7 +311,10 @@ def escape_item(item, conv):
 def quoted_string_literal(s, d):
 	# okay, so, according to the SQL standard, this should be all you need to do to escape
 	# any kind of string.
-	return "'%s'" % (s.replace("'", "''"),)
+	try:
+		return "'%s'" % (s.replace("'", "''"),)
+	except TypeError, e:
+		raise NotImplementedError("Cannot quote %r objects: %r" % (type(s), s))
 
 def mysql_string_literal(s, d):
 	from MySQLdb import converters
@@ -402,6 +405,7 @@ conversions = {
     str: lambda o,d: string_literal(o, d), # default
     unicode: lambda s,d: string_literal(s.encode()),
     bool: lambda s,d: str(int(s)),
+    datetime.date: lambda d,c: string_literal(d.strftime("%Y-%m-%d"), c),
     datetime.datetime: lambda d,c: string_literal(d.strftime("%Y-%m-%d %H:%M:%S"), c),
     datetime.timedelta: lambda v,c: string_literal('%d %d:%d:%d' % (v.days, int(v.seconds / 3600) % 24, int(v.seconds / 60) % 60, int(v.seconds) % 60)),
 	RAW: lambda o,d: o.value,
