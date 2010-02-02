@@ -33,7 +33,13 @@ def fix_mysqldb(connection):
 	"""
 	This function takes a MySQLdb connection object and replaces
 	character_set_name() if the version of MySQLdb < 1.2.2.
+	
+	It also enables NO_BACKSLASH_ESCAPES per session.
 	"""
+	cur = connection.cursor()
+	cur.execute("SET SESSION sql_mode='NO_BACKSLASH_ESCAPES'")
+	cur.close()
+	
 	from distutils.version import LooseVersion
 	import MySQLdb
 	if(LooseVersion(MySQLdb.__version__) < LooseVersion('1.2.2')):

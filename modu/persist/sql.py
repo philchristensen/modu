@@ -9,7 +9,7 @@
 SQL building facilities.
 """
 
-import types, datetime
+import types, datetime, array
 
 from modu.util import date
 
@@ -52,7 +52,6 @@ def build_insert(table, data=None, **kwargs):
 			query += ', '
 	
 	return interp(query, values)
-
 
 def build_replace(table, data=None, **kwargs):
 	"""
@@ -100,7 +99,6 @@ def build_set(data=None, **kwargs):
 	set_clause = 'SET %s' % (', '.join(['`%s` = %%s'] * len(data)) % tuple(keys))
 	return interp(set_clause, values)
 
-
 def build_update(table, data, constraints):
 	"""
 	Given a table name, a dictionary, and a set of constraints, construct an UPDATE
@@ -124,7 +122,6 @@ def build_update(table, data, constraints):
 	table = escape_dot_syntax(table)
 	query_stub = 'UPDATE %s ' % table
 	return query_stub + build_set(data) + ' ' + build_where(constraints)
-
 
 def build_select(table, data=None, **kwargs):
 	"""
@@ -171,7 +168,6 @@ def build_select(table, data=None, **kwargs):
 	
 	return query + build_where(data)
 
-
 def build_delete(table, constraints=None, **kwargs):
 	"""
 	Given a table name, and a set of constraints, construct a DELETE query.
@@ -195,7 +191,6 @@ def build_delete(table, constraints=None, **kwargs):
 	constraints.update(kwargs)
 	query_stub = 'DELETE FROM %s ' % table
 	return query_stub + build_where(constraints)
-
 
 def build_where(data=None, use_where=True, **kwargs):
 	"""
@@ -283,7 +278,6 @@ def build_where(data=None, use_where=True, **kwargs):
 	
 	return interp(query, values)
 
-
 def escape_dot_syntax(key):
 	"""
 	Take a table name and check for dot syntax. Escape
@@ -300,7 +294,6 @@ def escape_dot_syntax(key):
 			key = key.replace('.', '.`') + '`'
 	return key
 
-
 def make_list(items):
 	"""
 	Convert a list of things to a string suitable for use with IN.
@@ -308,6 +301,21 @@ def make_list(items):
 	Uses interp to escape values.
 	"""
 	return interp(','.join(['%s'] * len(items)), items)
+
+def escape_sequence(seq, conv):
+	return [escape_item(item, conv) for item in seq]
+
+def escape_item(item, conv):
+	return conv.get(type(item), conv[str])(item, conv)
+
+def quoted_string_literal(s, d):
+	# okay, so, according to the SQL standard, this should be all you need to do to escape
+	# any kind of string. mysql_real_escape_string
+	return "'%s'" % s.replace("'", "''")
+
+def mysql_string_literal(s, d):
+	from MySQLdb import converters
+	return converters.string_literal(s, d)
 
 def interp(query, args=[], *vargs):
 	"""
@@ -324,35 +332,15 @@ def interp(query, args=[], *vargs):
 	@returns: an interpolated SQL query
 	@rtype: str
 	"""
-	# if(not args and not vargs):
-	# 	return query
-	
-	#FIXME: an unfortunate MySQLdb dependency, for now
-	import MySQLdb
-	from MySQLdb import converters
-	
 	if not(isinstance(args, (tuple, list))):
 		args = [args]
 	args.extend(vargs)
 	
-	def UnicodeConverter(s, d):
-		return converters.string_literal(s.encode('utf8'))
+	parameters = escape_sequence(args, conversions)
 	
-	def DateTime2literal(d, c):
-		return converters.string_literal(date.strftime(d, "%Y-%m-%d %H:%M:%S"),c)
-	
-	def Raw2Literal(o, d):
-		return o.value
-	
-	conv_dict = converters.conversions.copy()
-	# This is only used in build_replace/insert()
-	conv_dict[RAW] = Raw2Literal
-	conv_dict[datetime.datetime] = DateTime2literal
-	conv_dict[types.UnicodeType] = UnicodeConverter
-	
-	return query % MySQLdb.escape_sequence(args, conv_dict)
+	return query % tuple(parameters)
 
-class RAW:
+class RAW(object):
 	"""
 	Allows RAW SQL to be embedded in constructed queries.
 	
@@ -404,3 +392,17 @@ class LT(RAW):
 	@ivar value: The value to be less-than
 	"""
 
+string_literal = quoted_string_literal
+
+conversions = {
+    int: lambda s,d: str(s),
+    long: lambda s,d: str(s),
+    float: lambda o,d: '%.15g' % o,
+    types.NoneType: lambda s,d: 'NULL',
+    str: lambda o,d: string_literal(o, d), # default
+    unicode: lambda s,d: string_literal(s.encode()),
+    bool: lambda s,d: str(int(s)),
+    datetime.datetime: lambda d,c: string_literal(d.strftime("%Y-%m-%d %H:%M:%S"), c),
+    datetime.timedelta: lambda v,c: string_literal('%d %d:%d:%d' % (v.days, int(v.seconds / 3600) % 24, int(v.seconds / 60) % 60, int(v.seconds) % 60)),
+	RAW: lambda o, d: o.value
+}
