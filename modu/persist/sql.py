@@ -9,7 +9,7 @@
 SQL building facilities.
 """
 
-import types, datetime, array
+import types, datetime, array, decimal
 
 from modu.util import date
 
@@ -404,5 +404,6 @@ conversions = {
     bool: lambda s,d: str(int(s)),
     datetime.datetime: lambda d,c: string_literal(d.strftime("%Y-%m-%d %H:%M:%S"), c),
     datetime.timedelta: lambda v,c: string_literal('%d %d:%d:%d' % (v.days, int(v.seconds / 3600) % 24, int(v.seconds / 60) % 60, int(v.seconds) % 60)),
-	RAW: lambda o, d: o.value
+	RAW: lambda o,d: o.value,
+	decimal.Decimal: lambda s,d: str(s),
 }
