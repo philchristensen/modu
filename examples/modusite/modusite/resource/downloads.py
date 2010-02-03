@@ -15,7 +15,7 @@ from modu.web import resource, app
 
 from modusite.model import page, project
 
-class DownloadsResource(resource.CheetahTemplateResource):
+class Resource(resource.CheetahTemplateResource):
 	def prepare_content(self, req):
 		"""
 		@see: L{modu.web.resource.IContent.prepare_content()}
@@ -43,8 +43,10 @@ class DownloadsResource(resource.CheetahTemplateResource):
 		"""
 		@see: L{modu.web.resource.ITemplate.get_template()}
 		"""
+		#return 'downloads.html.tmpl'
 		return self.content
-	
+
 	def get_template_type(self):
+		#return 'downloads.html.tmpl'
 		return 'str'
 

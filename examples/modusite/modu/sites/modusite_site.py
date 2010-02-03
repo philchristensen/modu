@@ -40,7 +40,7 @@ class Site(object):
 		application.activate('/admin', resource.AdminResource, itemdef_module=itemdefs, default_path='admin/listing/page')
 		application.activate('/fck', fck.FCKEditorResource)
 		application.activate('/', index.Resource)
-		application.activate('/downloads', downloads.DownloadsResource)
+		application.activate('/downloads', downloads.Resource)
 		application.activate('/blog', blog.Resource)
 		application.activate('/faq', faq.Resource)
 		
