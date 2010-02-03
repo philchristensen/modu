@@ -10,6 +10,7 @@ Cheetah Template support code.
 """
 
 import os, os.path, re, threading, stat
+import pkg_resources as pkg
 
 cheetah_lock = threading.BoundedSemaphore()
 cheetah_template_cache = {}
@@ -18,10 +19,13 @@ def render(template, template_type, template_data, **params):
 	options = {}
 	if(template_type == 'filename'):
 		template_root = params['template_root']
-		template_path = os.path.join(template_root, template)
-		module_name = re.sub(r'\W+', '_', template)
-		
-		options['file'] = open(template_path)
+		if(isinstance(template_root, tuple)):
+			options['file'] = pkg.resource_stream(template_root[0], os.path.join(template_root[1], template))
+		else:
+			template_path = os.path.join(template_root, template)
+			module_name = re.sub(r'\W+', '_', template)
+			
+			options['file'] = open(template_path)
 	elif(template_type == 'str'):
 		template_root = None
 		template_path = None
@@ -34,7 +38,7 @@ def render(template, template_type, template_data, **params):
 	else:
 		raise RuntimeError('unknown template type: %s' % template_type)
 	
-	if(template_root):
+	if(isinstance(template_root, str)):
 		module_root = params.get('compiled_template_root', template_root)
 		module_path = os.path.join(module_root, module_name + '.py')
 	else:
@@ -157,7 +161,11 @@ class CheetahModuTemplate(CheetahTemplate):
 		Return the proper template directory, if set by the user.
 		"""
 		if(hasattr(self, 'moduTemplateDirectoryCallback')):
-			templatePath = os.path.join(self.moduTemplateDirectoryCallback(path), path)
-			return normpath(abspath(templatePath))
+			templateDirectory = self.moduTemplateDirectoryCallback(path)
+			if(isinstance(templateDirectory, tuple)):
+				return pkg.resource_stream(templateDirectory[0], os.path.join(templateDirectory[1], path))
+			else:
+				templatePath = os.path.join(templateDirectory, path)
+				return normpath(abspath(templatePath))
 		return super(CheetahModuTemplate, self).serverSidePath(path, normpath, abspath)
 

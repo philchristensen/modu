@@ -7,11 +7,12 @@
 
 import os.path
 
+import pkg_resources as pkg
+
 from zope.interface import classProvides
 
 from twisted import plugin
 
-from modu import assets
 from modu.web import app, static
 from modu.editable import resource
 from modu.editable.datatypes import fck
@@ -21,17 +22,15 @@ from sandbox.resource import index, zpt, cherry, form
 class Site(object):
 	classProvides(plugin.IPlugin, app.ISite)
 	
-	def configure_request(self, req):
-		compiled_template_root = os.path.join(req.approot, 'var')
-		if(os.path.exists(compiled_template_root)):
-			req.app.config['compiled_template_root'] = compiled_template_root
-	
 	def initialize(self, application):
 		application.base_domain = 'localhost'
 		
+		application.compiled_template_root = '/tmp/modu/sandbox'
+		if not(os.path.exists(application.compiled_template_root)):
+			os.makedirs(application.compiled_template_root)
+
 		application.db_url = 'MySQLdb://sandbox:sandbox@localhost/sandbox'
-		
-		application.activate('/assets', static.FileResource, os.path.dirname(assets.__file__))
+		application.activate('/assets', static.FileResource, pkg.resource_filename('modu.assets', ''))
 		
 		application.activate('/admin', resource.AdminResource, default_listing='page')
 		application.activate('/fck', fck.FCKEditorResource)

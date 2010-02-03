@@ -23,7 +23,7 @@ from modusite.resource import index, modutrac, blog, faq, downloads
 
 class Site(object):
 	classProvides(plugin.IPlugin, app.ISite)
-	hostname = '127.0.0.1'
+	hostname = 'localhost'
 	
 	def configure_request(self, req):
 		req['trac.env_path'] = pkg.resource_filename('modusite', 'trac')
@@ -32,6 +32,7 @@ class Site(object):
 		application.base_domain = self.hostname
 		application.db_url = 'MySQLdb://modusite:yibHikmet3@localhost/modusite'
 		application.session_cookie_params = {'Path':'/'}
+		application.template_dir = 'modusite', 'template'
 		
 		application.activate('/assets', static.FileResource, pkg.resource_filename('modu.assets', ''))
 		
@@ -45,7 +46,7 @@ class Site(object):
 		
 		os.environ['PYTHON_EGG_CACHE'] = '/var/cache/eggs'
 		
-		application.compiled_template_root = '/tmp/modusite'
+		application.compiled_template_root = '/tmp/modu/modusite'
 		if not(os.path.exists(application.compiled_template_root)):
 			os.makedirs(application.compiled_template_root)
 		

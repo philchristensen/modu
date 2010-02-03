@@ -3,12 +3,12 @@
 #echo '#\n# $' + 'Id$\n#\n'
 
 import os.path
+import pkg_resources as pkg
 
 from zope.interface import classProvides
 
 from twisted import plugin
 
-from modu import assets
 from modu.web import app, static
 from modu.editable import resource
 from modu.editable.datatypes import fck
@@ -21,13 +21,14 @@ class Site(object):
 	def initialize(self, application):
 		application.base_domain = 'localhost'
 		application.db_url = 'MySQLdb://$project_name@localhost/$project_name'
+		application.template_dir = '$project_name', 'template'
 		
 		import $project_name
-		compiled_template_root = os.path.abspath(os.path.join(os.path.dirname(${project_name}.__file__), '../var'))
-		if(os.path.exists(compiled_template_root)):
-			application.compiled_template_root = compiled_template_root
+		application.compiled_template_root = '/tmp/modu/$project_name'
+		if not(os.path.exists(application.compiled_template_root)):
+			os.makedirs(application.compiled_template_root)
 		
-		application.activate('/assets', static.FileResource, os.path.dirname(assets.__file__))
+		application.activate('/assets', static.FileResource, pkg.resource_filename('modu.assets', ''))
 		
 		import ${project_name}.itemdefs
 		application.activate('/admin', resource.AdminResource, default_path='admin/listing/page', itemdef_module=${project_name}.itemdefs)

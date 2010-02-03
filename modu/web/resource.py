@@ -376,7 +376,7 @@ class TemplateContent(object):
 		if(hasattr(self, 'template_dir')):
 			template_root = self.template_dir
 		else:
-			template_root = getattr(req.app, 'template_dir', os.path.join(req.approot, 'template'))
+			template_root = getattr(req.app, 'template_dir')
 		return template_root
 	
 	def get_template_type(self):

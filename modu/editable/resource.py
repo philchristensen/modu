@@ -13,9 +13,11 @@ only with itemdef organization and management. Any form- or validation-
 specific code should go in L{modu.editable.define}.
 """
 
-import os.path, copy, re, datetime, cgi
+import os.path, copy, re, datetime, cgi, warnings
 
-from modu import util, web
+import pkg_resources as pkg
+
+from modu import util, web, assets
 from modu.web import resource, app, user
 from modu.editable import define
 from modu.util import form, theme, tags, csv
@@ -37,17 +39,21 @@ def select_template_root(req, template):
 	@return: path to template directory
 	@rtype: str
 	"""
-	import modu
-	
 	if(hasattr(req.resource, 'template_dir')):
 		template_root = req.resource.template_dir
 	else:
-		template_root = getattr(req.app, 'template_dir', os.path.join(req.approot, 'template'))
+		template_root = req.app.template_dir
 	
-	if(os.access(os.path.join(template_root, template), os.F_OK)):
-		return template_root
+	if(isinstance(template_root, tuple)):
+		modulename, path = template_root
+		if(pkg.resource_exists(modulename, os.path.join(path, template))):
+			return template_root
+	else:
+		template_path = os.path.join(template_root, template)
+		if(os.access(template_path, os.F_OK)):
+			return template_root
 	
-	return os.path.join(os.path.dirname(modu.__file__), 'assets', 'default-template')
+	return 'modu.assets', 'default-template'
 
 
 def configure_store(req, itemdef):
