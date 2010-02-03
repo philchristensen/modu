@@ -5,6 +5,7 @@
 #
 
 import os, os.path
+import pkg_resources as pkg
 
 from zope.interface import classProvides
 
@@ -22,21 +23,17 @@ from modusite.resource import index, modutrac, blog, faq, downloads
 
 class Site(object):
 	classProvides(plugin.IPlugin, app.ISite)
-	hostname = 'localhost'
+	hostname = '127.0.0.1'
 	
 	def configure_request(self, req):
-		compiled_template_root = os.path.join(req.approot, 'var')
-		if(os.path.exists(compiled_template_root)):
-			req.app.config['compiled_template_root'] = compiled_template_root
-		
-		req['trac.env_path'] = os.path.abspath(os.path.join(os.path.dirname(modusite.__file__), '../trac'))
+		req['trac.env_path'] = pkg.resource_filename('modusite', 'trac')
 	
 	def initialize(self, application):
 		application.base_domain = self.hostname
 		application.db_url = 'MySQLdb://modusite:yibHikmet3@localhost/modusite'
 		application.session_cookie_params = {'Path':'/'}
 		
-		application.activate('/assets', static.FileResource, os.path.dirname(assets.__file__))
+		application.activate('/assets', static.FileResource, pkg.resource_filename('modu.assets', ''))
 		
 		import modusite.editable.itemdefs as itemdefs
 		application.activate('/admin', resource.AdminResource, itemdef_module=itemdefs, default_path='admin/listing/page')
@@ -48,14 +45,17 @@ class Site(object):
 		
 		os.environ['PYTHON_EGG_CACHE'] = '/var/cache/eggs'
 		
-		apidocs_path = os.path.abspath(os.path.join(os.path.dirname(modu.__file__), '../apidocs'))
+		application.compiled_template_root = '/tmp/modusite'
+		if not(os.path.exists(application.compiled_template_root)):
+			os.makedirs(application.compiled_template_root)
+		
+		apidocs_path = pkg.resource_filename('modu', 'apidocs')
 		application.activate('/apidocs', static.FileResource, apidocs_path)
 		
-		import trac
-		trac_htdocs_path = os.path.join(os.path.dirname(trac.__file__), 'htdocs')
+		trac_htdocs_path = pkg.resource_filename('trac', 'htdocs')
 		application.activate('/trac/chrome/common', static.FileResource, trac_htdocs_path)
 		
-		site_htdocs_path = os.path.abspath(os.path.join(os.path.dirname(modusite.__file__), '../trac/htdocs'))
+		site_htdocs_path = pkg.resource_filename('modusite', 'trac/htdocs')
 		application.activate('/trac/chrome/site', static.FileResource, site_htdocs_path)
 		
 		application.activate('/trac', modutrac.Resource)
