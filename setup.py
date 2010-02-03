@@ -14,15 +14,16 @@ setup(
 	name			= "modu",
 	version 		= "1.0",
 	packages		= find_packages('src'),
-	package_dir		= {'':'src'}
+	package_dir		= {'':'src'},
 	scripts 		= ['bin/mkmodu.py'],
 	
 	install_requires 		= ['twisted'],
 	include_package_data 	= True,
 	
-	package_data	= dict(
-		twisted			= ['plugins/modu_web.py'],
-	),
+	package_data	= {
+		''			: ['ChangeLog', 'ez_setup.py', 'INSTALL', 'LICENSE', 'README'],
+		'twisted'	: ['plugins/modu_web.py'],
+	},
 	
 	# metadata for upload to PyPI
 	author = "Phil Christensen",
