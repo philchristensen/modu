@@ -17,9 +17,8 @@ Python search path, either globally, or by a web container-specific
 directive.
 """
 
-import modu
-
 import os, os.path, sys, time
+import pkg_resources as pkg
 
 from twisted.python import usage
 
@@ -51,7 +50,6 @@ if(__name__ == '__main__'):
 		print e.args[0]
 		sys.exit(1)
 	
-	skelroot = os.path.join(os.path.dirname(modu.__file__), 'skel')
 	destroot = os.path.abspath(os.path.normpath(config['shortname']))
 	
 	config['shortname'] = os.path.basename(destroot)
@@ -61,44 +59,53 @@ if(__name__ == '__main__'):
 	if not config['author']:
 		config['author'] = config['shortname']
 	
-	for dirpath, dirnames, filenames in os.walk(skelroot):
-		stub = dirpath[len(skelroot) + 1:]
-		if(stub.startswith('.')):
-			continue
-		if(stub.find('.svn') != -1):
-			continue
-		if(stub.startswith('project')):
-			stub = stub.replace('project', config['shortname'])
-		created_dir = os.path.join(destroot, stub)
-		
-		if not(os.path.isdir(created_dir)):
-			os.mkdir(created_dir)
-		
-		for filename in filenames:
-			if(filename.startswith('.')):
-				continue
-			elif(filename.find('.svn') != -1):
-				continue
-			elif(filename.endswith('.tmpl')):
-				template_path = os.path.join(dirpath, filename)
-				template_class = Template.compile(file=open(template_path))
+	def copy_skel(path, dest):
+		#import pdb
+		for filename in pkg.resource_listdir('modu', path):
+			resource_path = os.path.join(path, filename)
+			
+			if(pkg.resource_isdir('modu', resource_path)):
+				directory = filename
+				if(directory.startswith('.')):
+					continue
+				if(directory.startswith('project')):
+					directory = directory.replace('project', config['shortname'])
 				
-				variables = dict(
-					project_name = config['shortname'],
-					project_description = config.get('longname', config['shortname']),
-					copyright_holder = config.get('author', config['shortname']),
-					year = time.strftime('%Y')
-				)
+				new_dest = os.path.join(dest, directory)
 				
-				output = str(template_class(searchList=[variables]))
-				new_filename = filename[:-5]
-				if(new_filename.startswith('project')):
-					new_filename = new_filename.replace('project', config['shortname'])
-				newfile = os.path.join(created_dir, new_filename)
-				
-				nf = open(newfile, 'w')
-				nf.write(output)
-				nf.close()
+				if not(os.path.isdir(new_dest)):
+					os.makedirs(new_dest)
+				#pdb.set_trace()
+				copy_skel(resource_path, new_dest)
 			else:
-				# copy the file
-				pass
+				if(filename.startswith('.')):
+					continue
+				
+				with pkg.resource_stream('modu', resource_path) as file_stream:
+					if(filename.endswith('.tmpl')):
+						template_class = Template.compile(file=file_stream)
+						
+						variables = dict(
+							project_name = config['shortname'],
+							project_description = config.get('longname', config['shortname']),
+							copyright_holder = config.get('author', config['shortname']),
+							year = time.strftime('%Y')
+						)
+						
+						output = str(template_class(searchList=[variables]))
+						new_filename = filename[:-5]
+						if(new_filename.startswith('project')):
+							new_filename = new_filename.replace('project', config['shortname'])
+						new_path = os.path.join(dest, new_filename)
+						
+						#pdb.set_trace()
+						with open(new_path, 'w') as new_file:
+							new_file.write(output)
+					else:
+						# copy the file
+						output_filename = os.path.join(dest, filename)
+						#pdb.set_trace()
+						with open(output_filename, 'w') as output_file:
+							shutil.copyfileobj(file_stream, output_file)
+	
+	copy_skel('skel', destroot)

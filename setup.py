@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 # modu
 # Copyright (C) 2007-2008 Phil Christensen
 #
@@ -7,37 +5,28 @@
 #
 # See LICENSE for details
 
-import os, os.path
+from setuptools import setup, find_packages
 
-from distutils.core import setup
+setup(
+	name			= "modu",
+	version 		= "1.0",
+	packages		= find_packages(),
+	scripts 		= ['bin/mkmodu.py'],
+	
+	install_requires 		= ['twisted'],
+	include_package_data 	= True,
+	
+	package_data	= dict(
+		twisted			= ['plugins/modu_web.py'],
+	),
+	
+	# metadata for upload to PyPI
+	author = "Phil Christensen",
+	author_email = "phil@bubblehouse.org",
+	description = "pragmatic web framework",
+	license = "BSD",
+	keywords = "modu wsgi www http web framework",
+	url = "http://modu.bubblehouse.org",
 
-modu_path = os.path.join(os.path.dirname(__file__), 'modu')
-assets_path = os.path.join(modu_path, 'assets')
-skel_path = os.path.join(modu_path, 'skel')
-
-def load_paths(path):
-	paths = []
-	for dirpath, dirnames, filenames in os.walk(path):
-		if(dirpath.find('.svn') != -1):
-			continue
-		if('fckeditor' in dirnames):
-			dirnames.remove('fckeditor')
-			paths.append(os.path.join(dirpath[len(modu_path) + 1:], 'fckeditor/README.FCKEditor'))
-		for f in filenames:
-			if(f.startswith('.')):
-				continue
-			paths.append(os.path.join(dirpath[len(modu_path) + 1:], f))
-	return paths
-
-dist = setup(name="modu",
-			 version="0.9",
-			 description="pragmatic web framework",
-			 author="Phil Christensen",
-		 	 author_email="phil@bubblehouse.org",
-			 url="http://modu.bubblehouse.org",
-			 packages=['modu', 'modu.editable', 'modu.editable.datatypes', 
-						'modu.itemdefs', 'modu.persist', 'modu.sites', 
-						'modu.test', 'modu.util', 'modu.web', 'twisted.plugins'],
-			scripts=['bin/mkmodu.py'],
-			package_data={'modu': load_paths(assets_path) + load_paths(skel_path)},
-			)
+	# could also include long_description, download_url, classifiers, etc.
+)
