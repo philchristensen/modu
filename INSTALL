@@ -11,14 +11,14 @@ Requirements
 
 Core
 ----
-Python 2.4 or greater
+Python 2.5 or greater
 	http://www.python.org
 
 Zope Interface
 	http://www.zope.org/Products/ZopeInterface
 
-Twisted 2.5
-	http://twistedmatrix.com/trac
+Twisted 9.0
+	http://www.twistedmatrix.com
 	svn co svn://svn.twistedmatrix.com/svn/Twisted/trunk Twisted
 
 
