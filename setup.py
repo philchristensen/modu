@@ -13,16 +13,16 @@ import sys, os, pprint, traceback
 
 from setuptools import setup, find_packages
 
+os.environ['COPY_EXTENDED_ATTRIBUTES_DISABLE'] = 'true'
+os.environ['COPYFILE_DISABLE'] = 'true'
+
 def autosetup():
-	pluginPackages = []
-
-	for (dirpath, dirnames, filenames) in os.walk(os.curdir):
-		dirnames[:] = [p for p in dirnames if not p.startswith('.')]
-		pkgName = dirpath[2:].replace('/', '.')
-		if 'plugins' in dirnames:
-			# The current directory is for the Twisted plugin system
-			pluginPackages.append(pkgName)
-
+	pluginPackages = ['twisted.plugins', 'modu.sites']
+	
+	dist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src')
+	sys.path.insert(0, dist_dir)
+	regeneratePluginCache(pluginPackages)
+	
 	dist = setup(
 		name			= "modu",
 		version			= "1.0",
@@ -30,21 +30,17 @@ def autosetup():
 		package_dir		= {'':'src'},
 		test_suite		= "modu.test",
 		scripts			= ['bin/mkmodu.py'],
-	
+		
 		zip_safe		= True,
-	
-		install_requires = ['Twisted>=9.0.0'],
-		extras_require = {
-			'mysql'		: ["MySQL-python>=1.2.3c1"],
-			'cheetah'	: ["Cheetah>=2.4.1"],
-		},
-	
+		
+		install_requires = ["Twisted>=9.0.0", "MySQL-python>=1.2.3c1", "Cheetah>=2.4.1"],
+		
 		include_package_data = True,
 		package_data = {
 			''			: ['ChangeLog', 'ez_setup.py', 'INSTALL', 'LICENSE', 'README'],
-			'twisted'	: ['plugins/modu_web.py', 'plugins/dropin.cache'],
+			'twisted'	: ['plugins/modu_web.py'],
 		},
-	
+		
 		# metadata for upload to PyPI
 		author			= "Phil Christensen",
 		author_email	= "phil@bubblehouse.org",
@@ -63,8 +59,6 @@ def autosetup():
 							""".replace('\t', '')
 	)
 	
-	regeneratePluginCache(dist, pluginPackages)
-	
 	return dist
 
 def pluginModules(moduleNames):
@@ -80,19 +74,14 @@ def pluginModules(moduleNames):
 		except:
 			traceback.print_exc()
 
-def _regeneratePluginCache(pluginPackages):
-	print 'Regenerating cache with path: ',
-	pprint.pprint(sys.path)
+def regeneratePluginCache(pluginPackages):
 	from twisted import plugin
-	for pluginModule in pluginModules([
-		p + ".plugins" for p in pluginPackages]):
-		# Not just *some* zigs, mind you - *every* zig:
-		print 'Full plugin list for %r: ' % (pluginModule.__name__)
-		pprint.pprint(list(plugin.getPlugins(plugin.IPlugin, pluginModule)))
+	
+	print 'Regenerating cache with path: %r' % (sys.path,)
+	for pluginModule in pluginModules(pluginPackages):
+		plugins = list(plugin.getPlugins(plugin.IPlugin, pluginModule))
+		
+		print 'Full plugin list for %r: %r' % (pluginModule.__name__, plugins)
 
-def regeneratePluginCache(dist, pluginPackages):
-	if 'install' in dist.commands:
-		sys.path.insert(0, os.path.abspath(dist.command_obj['install'].install_lib))
-		_regeneratePluginCache(pluginPackages)
-
-__dist__ = autosetup()
+if(__name__ == '__main__'):
+	__dist__ = autosetup()

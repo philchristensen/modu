@@ -6,36 +6,70 @@
 #
 # See LICENSE for details
 
-
 Requirements
 =============
+Python 2.5					http://www.python.org
+Twisted >= 9.0				http://www.twistedmatrix.com
+MySQL Server >= 5.0			http://dev.mysql.com/downloads/mysql/5.0.html
+MySQLdb >= 1.2.3c1			http://sourceforge.net/projects/mysql-python
+Cheetah Template >= 2.4.1	http://www.cheetahtemplate.org
 
-Core
-----
-Python 2.5 or greater
-	http://www.python.org
+Experimental support exists for the PostgreSQL and SQLite databases, as well as
+the CherryTemplate and ZPTPages template engines.
 
-Zope Interface
-	http://www.zope.org/Products/ZopeInterface
-
-Twisted 9.0
-	http://www.twistedmatrix.com
+Optional:
+Apache >= 2.2				http://httpd.apache.org
+mod_wsgi >= 3.1				http://code.google.com/p/modwsgi
 
 
-Database Connectivity
----------------------
-MySQL >= 5.0
-	http://dev.mysql.com/downloads/mysql/5.0.html
-	
-	MySQLdb
-		http://sourceforge.net/projects/mysql-python
+Installation
+=============
+The most recent stable version of modu can be installed via easy_install:
 
-Experimental support exists for PostgreSQL and SQLite.
+	# easy_install modu
 
-Template Engines
-----------------
-Cheetah Template
-	http://www.cheetahtemplate.org
+This will automatically download ZopeInterfaces, Twisted, MySQLdb, and Cheetah
+packages, if necessary.
 
-Experimental support exists for CherryTemplate and ZPTPages.
+Nightly releases are available from the modu website, packaged as source
+tarballs. To use, download and uncompress the tarball, and execute:
 
+	# python setup.py install
+
+or if you prefer using eggs:
+
+	# python setup.py bdist_egg
+	# easy_install dist/modu-X.X_svn_rYYYY-pyZ.Z.egg
+
+Conversely, you may wish to run directly from SVN trunk:
+
+	# svn co http://svn.bubblehouse.org/modu/trunk modu-svn
+	# cd modu-svn
+	# sudo python setup.py develop
+
+
+Getting Started
+================
+If you want to get up and running right away and start looking at a sample
+modu project, you can create a stub project with mkmodu:
+
+	$ mkmodu.py mynewproject
+
+Extensive (and continually updated) documentation is available on the modu
+website, and specific questions may be asked on the modu developer mailing
+list. To sign up, visit:
+
+	http://mail.bubblehouse.org/pipermail/modu-dev
+
+
+Running Tests
+==============
+modu is distributed with a number of unit and functional tests that are run
+as part of a (currently private) buildbot. To run them on your own machine,
+you'll need to configure a MySQL database running on localhost. Once configured,
+create the modu test database with the following commands:
+
+	mysql> CREATE DATABASE modu;
+	mysql> GRANT ALL ON modu.* to modu@localhost identified by 'modu';
+
+The test scripts will automatically create any table or row data they require.

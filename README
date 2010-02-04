@@ -6,3 +6,19 @@
 #
 # See LICENSE for details
 
+modu is a high-level toolkit for building database-driven web applications in
+Python. It provides all the common components needed to build custom web
+applications in Python, including form generation, object-relational database
+mapping support, pluggable template systems, database-resident session and
+user support, and more.
+
+modu encourages a number of conventions intended to keep large-scale web
+projects organized and maintainable, while providing a number of optional
+services that can be used or ignored by the programmer. It supports
+Twisted.Web for deployment of small to medium-sized sites, and Apache 2.2 with
+mod_wsgi for high-performance environments, but can be adapted to any
+WSGI-compatible container.
+
+modu encourages a lightweight Model-View-Controller approach; if you're an MVC
+purist, you'll find your needs met, and if you aren't, you'll find more than
+enough rope to hang yourself by.
