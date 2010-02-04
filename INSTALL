@@ -20,42 +20,22 @@ Zope Interface
 
 Twisted 9.0
 	http://www.twistedmatrix.com
-	svn co svn://svn.twistedmatrix.com/svn/Twisted/trunk Twisted
 
 
 Database Connectivity
 ---------------------
-MySQL 5.0
+MySQL >= 5.0
 	http://dev.mysql.com/downloads/mysql/5.0.html
 	
 	MySQLdb
 		http://sourceforge.net/projects/mysql-python
 
--OR-
-
-PostgreSQL 8.2
-	http://www.postgresql.org
-
-	pgdb
-		http://www.pygresql.org/pgdb.html
-
-	-OR-
-
-	psycopg2
-		http://www.initd.org/tracker/psycopg/wiki/PsycopgTwo
-
+Experimental support exists for PostgreSQL and SQLite.
 
 Template Engines
 ----------------
 Cheetah Template
 	http://www.cheetahtemplate.org
 
--AND/OR-
+Experimental support exists for CherryTemplate and ZPTPages.
 
-CherryTemplate
-	http://cherrytemplate.python-hosting.com
-
--AND/OR-
-
-Zope Page Templates
-	http://zpt.sourceforge.net
