@@ -1,80 +1,66 @@
 #include 'header.html.tmpl'
 
-<h3>Source Downloads</h3>
-
 #if $projects
 	#for $project in $projects:
-		<h4>$project.name</h4>
+		<h3>$project.name</h3>
 		
-		#set releases = $project.get_releases()
-		#set release = $releases.pop(0)
-		
-		<p>$project.name is released under the <a href="$release.license_url">$release.license_name</a>.
-		For installation instructions, see <a href="/trac/wiki/Installation">Installation</a> or the
-		included INSTALL file.</p>
-
-		<h3>Latest Stable Release $release.version_string</h3>
-		<p>$release.version_string is a new stable maintenance release. It contains a number of bug fixes
-		and minor enhancements. See the <a class="source" href="/trac/browser/tags/modu-$release.version_string/ChangeLog">ChangeLog</a>
-		for details.</p>
-
-		<div style="background: #f0f0f0; width: 40%; padding: .5em 3em" class="wikipage">
-			<h4>Tar package</h4>
-			<ul>
-				<li><strong>HTTP</strong>:
-					<a href="$release.get_tarball_url($req)">$release.get_tarball_name()</a>
-				</li>
-			</ul>
-			<p><sub><tt>md5sum: $release.get_tarball_checksum()</tt></sub></p>
-		</div>
-		
-		<small>
-		Previous Stable Releases: 
-		#for $release in $releases:
-			<a href="$release.get_tarball_url($req)">$release.version_string</a>
-		#end for
-		</small>
-		
-		#set nightly = $project.get_nightly()
-		
-		<h3>Nightly Snapshot Release $nightly.version_string</h3>
-		<p>$nightly.version_string is a the current nightly build of the development trunk. It is likely to
-		contain various bugs and other issues, and you are advised to use it at your own risk.
-		
-		See the <a class="source" href="/trac/browser/trunk/ChangeLog">ChangeLog</a> for details.</p>
-		
-		<div style="background: #f0f0f0; width: 40%; padding: .5em 3em" class="wikipage">
-			<h4>Tar package</h4>
-			<ul>
-				<li><strong>HTTP</strong>:
-					<a href="$nightly.get_tarball_url($req)">$nightly.get_tarball_name()</a>
-				</li>
-			</ul>
-			<p><sub><tt>md5sum: $nightly.get_tarball_checksum()</tt></sub></p>
-		</div>
-
-
-
-		<dt>$project.name</dt>
 		#set releases = $project.get_releases()
 		#if $releases
-			#for $release in $releases
-				<dd>$release.version_string</dd>
+			#set release = $releases.pop(0)
+			
+			<p>$project.name is released under the <a href="$release.license_url">$release.license_name</a>.
+			For installation instructions, see <a href="/trac/wiki/Installation">Installation</a> or the
+			included INSTALL file.</p>
+			
+			<h4>Latest Stable Release $release.version_string</h4>
+			<p>$release.version_string is a new stable maintenance release. It contains a number of bug fixes
+			and minor enhancements. See the <a class="source" href="/trac/browser/tags/modu-$release.version_string/ChangeLog">ChangeLog</a>
+			for details.</p>
+			
+			<div style="background: #f0f0f0; width: 40%; padding: .5em 3em" class="wikipage">
+				<h4>Tar package</h4>
+				<ul>
+					<li><strong>HTTP</strong>:
+						<a href="$release.get_tarball_url($req)">$release.get_tarball_name()</a>
+					</li>
+				</ul>
+				<p><sub><tt>md5sum: $release.get_tarball_checksum()</tt></sub></p>
+			</div>
+			
+			<small>
+			Previous Stable Releases: 
+			#for $release in $releases:
+				<a href="$release.get_tarball_url($req)">$release.version_string</a>
 			#end for
+			</small>
+			
+			#set nightly = $project.get_nightly()
+			
+			<h4>Nightly Snapshot Release $nightly.version_string</h4>
+			<p>$nightly.version_string is a the current nightly build of the development trunk. It is likely to
+			contain various bugs and other issues, and you are advised to use it at your own risk.
+			
+			See the <a class="source" href="/trac/browser/trunk/ChangeLog">ChangeLog</a> for details.</p>
+			
+			<div style="background: #f0f0f0; width: 40%; padding: .5em 3em" class="wikipage">
+				<h4>Tar package</h4>
+				<ul>
+					<li><strong>HTTP</strong>:
+						<a href="$nightly.get_tarball_url($req)">$nightly.get_tarball_name()</a>
+					</li>
+				</ul>
+				<p><sub><tt>md5sum: $nightly.get_tarball_checksum()</tt></sub></p>
+			</div>
 		#else
-			<dd>
 			<p>There have not yet been any formal releases of $project.name.</p>
-			<p>To download a zipfile of the latest SVN HEAD, <a href="$req.get_path($project.head_tarball_path)">click here</a>.</p>
-			</dd>
 		#end if
-		<dd>
-			<p>To check out the most recent version of the modu toolkit, use the following SVN incantation:</p>
-			<pre>svn co http://svn.bubblehouse.org/$project.name/trunk $project.name</pre>
-		</dd>
+		<h4>SVN Development Trunk</h4>
+		<p>To check out a directory of the source code from SVN HEAD, use the following incantation:</p>
+		<pre>svn co http://svn.bubblehouse.org/$project.name/trunk $project.name</pre>
 	#end for
 	</dl>
 #else
-	<p>There have not yet been any formal releases yet.</p>
+	<p>There have not yet been any formal releases.</p>
 #end if
 
 #include 'footer.html.tmpl'

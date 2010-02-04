@@ -44,10 +44,10 @@ class Resource(resource.CheetahTemplateResource):
 		"""
 		@see: L{modu.web.resource.ITemplate.get_template()}
 		"""
-		#return 'downloads.html.tmpl'
-		return self.content
+		return 'downloads.html.tmpl'
+		#return self.content
 
 	def get_template_type(self):
-		#return 'downloads.html.tmpl'
-		return 'str'
+		return 'filename'
+		#return 'str'
 

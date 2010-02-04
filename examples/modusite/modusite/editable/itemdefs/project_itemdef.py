@@ -35,11 +35,6 @@ __itemdef__ = define.itemdef(
 		search			= True
 	),
 	
-	head_tarball_path   = string.StringField(
-		label			= 'SVN head tarball:',
-		weight			= 2,
-	),
-	
 	teaser				= string.TextAreaField(
 		label			= 'teaser:',
 		weight			= 4,

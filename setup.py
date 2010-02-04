@@ -9,7 +9,7 @@
 import ez_setup
 ez_setup.use_setuptools()
 
-import sys, os, pprint, traceback
+import sys, os
 
 from setuptools import setup, find_packages
 
@@ -70,8 +70,10 @@ def pluginModules(moduleNames):
 			pass
 		except ValueError, ve:
 			if ve.args[0] != 'Empty module name':
+				import traceback
 				traceback.print_exc()
 		except:
+			import traceback
 			traceback.print_exc()
 
 def regeneratePluginCache(pluginPackages):

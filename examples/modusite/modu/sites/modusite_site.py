@@ -51,9 +51,6 @@ class Site(object):
 		if not(os.path.exists(application.compiled_template_root)):
 			os.makedirs(application.compiled_template_root)
 		
-		apidocs_path = pkg.resource_filename('modu', 'apidocs')
-		application.activate('/apidocs', static.FileResource, apidocs_path)
-		
 		trac_htdocs_path = pkg.resource_filename('trac', 'htdocs')
 		application.activate('/trac/chrome/common', static.FileResource, trac_htdocs_path)
 		

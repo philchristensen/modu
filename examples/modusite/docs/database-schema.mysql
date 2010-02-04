@@ -98,9 +98,14 @@ CREATE TABLE `faq` (
 CREATE TABLE `project` (
   `id` bigint(20),
   `name` varchar(255),
+  `shortname` varchar(255),
   `teaser` TEXT,
   `body` LONGBLOB,
   `active` tinyint(1),
+  `license_name` varchar(255),
+  `license_url` varchar(255),
+  `installation_url` varchar(255),
+  `changelog_url` varchar(255),
   PRIMARY KEY (`id`),
   KEY active_idx(`active`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
@@ -108,11 +113,17 @@ CREATE TABLE `project` (
 CREATE TABLE `release` (
   `id` bigint(20),
   `project_id` bigint(20),
-  `version_id` int(11),
+  `version_weight` int(11),
   `version_string` varchar(255),
   `description` TEXT,
   `filename` varchar(255),
   `active` tinyint(1),
+  `license_name` varchar(255),
+  `license_url` varchar(255),
+  `installation_url` varchar(255),
+  `changelog_url` varchar(255),
+  `tarball_url` varchar(255),
+  `tarball_checksum` varchar(255),
   PRIMARY KEY (`id`),
   KEY active_idx(`active`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET utf8;
