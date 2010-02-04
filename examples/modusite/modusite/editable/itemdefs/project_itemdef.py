@@ -35,15 +35,35 @@ __itemdef__ = define.itemdef(
 		search			= True
 	),
 	
-	teaser				= string.TextAreaField(
-		label			= 'teaser:',
-		weight			= 4,
-		height			= 150,
+	license_name		= string.StringField(
+		label			= 'license name:',
+		weight			= 2,
+		listing			= True,
 	),
 	
-	body				= string.TextAreaField(
-		label			= 'page body:',
-		weight			= 5
+	license_url			= string.StringField(
+		label			= 'license url:',
+		weight			= 3,
+	),
+	
+	installation_url	= string.StringField(
+		label			= 'installation url:',
+		weight			= 4,
+	),
+	
+	changelog_url		= string.StringField(
+		label			= 'changelog url:',
+		weight			= 5,
+	),
+	
+	tarball_url			= string.StringField(
+		label			= 'tarball url:',
+		weight			= 6,
+	),
+	
+	tarball_checksum	= string.StringField(
+		label			= 'tarball checksum:',
+		weight			= 7,
 	),
 	
 	active				= boolean.CheckboxField(

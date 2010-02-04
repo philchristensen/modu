@@ -16,12 +16,23 @@ import pkg_resources as pkg
 cheetah_lock = threading.BoundedSemaphore()
 cheetah_template_cache = {}
 
+class TemplateStream(file):
+	def __init__(self, f):
+		file.__getattribute__(self, '__dict__')['f'] = f
+	
+	def __getattribute__(self, name):
+		return getattr(file.__getattribute__(self, 'f'), name)
+	
+	def __setattr__(self, name, value):
+		return setattr(file.__getattribute__(self, 'f'), name, value)
+
 def render(template, template_type, template_data, **params):
 	options = {}
 	if(template_type == 'filename'):
 		template_root = params['template_root']
 		if(isinstance(template_root, tuple)):
-			options['file'] = pkg.resource_stream(template_root[0], os.path.join(template_root[1], template))
+			rsrc_file = pkg.resource_stream(template_root[0], os.path.join(template_root[1], template))
+			options['file'] = TemplateStream(rsrc_file)
 		else:
 			template_path = os.path.join(template_root, template)
 			module_name = re.sub(r'\W+', '_', template)
