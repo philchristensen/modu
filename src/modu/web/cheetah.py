@@ -16,16 +16,6 @@ import pkg_resources as pkg
 cheetah_lock = threading.BoundedSemaphore()
 cheetah_template_cache = {}
 
-class TemplateStream(file):
-	def __init__(self, f):
-		file.__getattribute__(self, '__dict__')['f'] = f
-	
-	def __getattribute__(self, name):
-		return getattr(file.__getattribute__(self, 'f'), name)
-	
-	def __setattr__(self, name, value):
-		return setattr(file.__getattribute__(self, 'f'), name, value)
-
 def render(template, template_type, template_data, **params):
 	options = {}
 	if(template_type == 'filename'):
@@ -121,24 +111,6 @@ def render(template, template_type, template_data, **params):
 # so it's loaded on startup.
 try:
 	from Cheetah.Template import Template as CheetahTemplate
-	from Cheetah import DummyTransaction
-	
-	# Version 2.2.0 of Cheetah added code that forces you
-	# to use only unicode strings in your template slots.
-	# Since we already deal with our own encoding and are
-	# sure to use utf-8 everywhere, we just convert at
-	# rendering time.
-	
-	# this appears to be unneccesary as of at least version 2.4.1
-	class NonUnicodeManglingDummyResponse(DummyTransaction.DummyResponse):
-		def getvalue(self, outputChunks=None):
-			chunks = outputChunks or self._outputChunks
-			for index in range(len(chunks)):
-				if(isinstance(chunks[index], str)):
-					chunks[index] = chunks[index].decode('utf-8')
-			return super(NonUnicodeManglingDummyResponse, self).getvalue(chunks)
-	
-	DummyTransaction.DummyResponse = NonUnicodeManglingDummyResponse
 except:
 	class CheetahTemplate(object):
 		"""
@@ -160,6 +132,16 @@ except:
 			"""
 			raise RuntimeError("Cannot find the Cheetah Template modules.")
 
+class TemplateStream(file):
+	def __init__(self, f):
+		file.__getattribute__(self, '__dict__')['f'] = f
+	
+	def __getattribute__(self, name):
+		return getattr(file.__getattribute__(self, 'f'), name)
+	
+	def __setattr__(self, name, value):
+		return setattr(file.__getattribute__(self, 'f'), name, value)
+
 class CheetahModuTemplate(CheetahTemplate):
 	"""
 	An adapter class to provide Cheetah Template #include support in modu.
@@ -175,7 +157,8 @@ class CheetahModuTemplate(CheetahTemplate):
 		if(hasattr(self, 'moduTemplateDirectoryCallback')):
 			templateDirectory = self.moduTemplateDirectoryCallback(path)
 			if(isinstance(templateDirectory, tuple)):
-				return pkg.resource_stream(templateDirectory[0], os.path.join(templateDirectory[1], path))
+				rsrc_file = pkg.resource_stream(templateDirectory[0], os.path.join(templateDirectory[1], path))
+				return TemplateStream(rsrc_file)
 			else:
 				templatePath = os.path.join(templateDirectory, path)
 				return normpath(abspath(templatePath))
