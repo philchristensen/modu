@@ -1,5 +1,6 @@
 # modusite
-# Copyright (C) 2007 Phil Christensen
+# Copyright (c) 2006-2010 Phil Christensen
+# http://modu.bubblehouse.org
 #
 # $Id$
 #
