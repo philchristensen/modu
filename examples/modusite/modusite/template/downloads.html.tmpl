@@ -17,8 +17,16 @@
 			and minor enhancements. See the <a class="source" href="/trac/browser/tags/modu-$release.version_string/ChangeLog">ChangeLog</a>
 			for details.</p>
 			
-			<div style="background: #f0f0f0; width: 40%; padding: .5em 3em" class="wikipage">
+			<div class="release-box">
 				<h4>Tar package</h4>
+				<ul>
+					<li><strong>HTTP</strong>:
+						<a href="$release.tarball_url#egg=$project.shortname-$release.version_string">$release.filename</a>
+					</li>
+				</ul>
+				<p><sub><tt>md5sum: $release.tarball_checksum</tt></sub></p>
+				<br/>
+				<h4>PyPI</h4>
 				<ul>
 					<li><strong>HTTP</strong>:
 						<a href="$release.tarball_url#egg=$project.shortname-$release.version_string">$release.filename</a>
@@ -44,7 +52,7 @@
 			
 				See the <a class="source" href="/trac/browser/trunk/ChangeLog">ChangeLog</a> for details.</p>
 			
-				<div style="background: #f0f0f0; width: 40%; padding: .5em 3em" class="wikipage">
+				<div class="release-box">
 					<h4>Tar package</h4>
 					<ul>
 						<li><strong>HTTP</strong>:

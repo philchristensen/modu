@@ -12,27 +12,12 @@ from modu.editable import define
 from modu.editable.datatypes import string, boolean, fck
 from modu.editable.datatypes import select, relational, date
 
-def get_checksum(filepath, md5_path='md5sum'):
-	handle = os.popen(md5_path + ' "' + filepath.replace(r';', r'\;') + '"')
-	filehash = handle.read()
-	handle.close()
-	
-	if(filehash.find('=') == -1):
-		filehash = [output.strip() for output in filehash.split(' ')][0]
-	else:
-		filehash = [output.strip() for output in filehash.split('=')][1]
-	
-	return filehash
+from modusite.model import release
 
 def release_prewrite_callback(req, frm, storable):
 	filename = getattr(storable, 'filename', '')
 	if(filename.endswith('.tar.gz')):
-		full_path = os.path.join(req.app.release_path, filename)
-		md5_path = req.app.config.get('md5_path', 'md5sum')
-		if not(getattr(storable, 'tarball_url', None)):
-			storable.tarball_url = req.get_path('releases', filename)
-			storable.tarball_checksum = get_checksum(full_path, md5_path=md5_path)
-	
+		storable.load_tarball_info(req, filename)
 	return True
 
 __itemdef__ = define.itemdef(
@@ -41,6 +26,7 @@ __itemdef__ = define.itemdef(
 		label				= 'releases',
 		acl					= 'access admin',
 		category			= 'site content',
+		model_class			= release.Release,
 		prewrite_callback	= release_prewrite_callback,
 		weight				= 4,
 	),

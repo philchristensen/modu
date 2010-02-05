@@ -22,6 +22,8 @@ from modu.editable.datatypes import fck
 import modusite
 from modusite.resource import index, modutrac, blog, faq, downloads
 
+db_url = 'MySQLdb://modusite:yibHikmet3@localhost/modusite'
+
 class Site(object):
 	classProvides(plugin.IPlugin, app.ISite)
 	hostname = 'localhost'
@@ -33,7 +35,7 @@ class Site(object):
 	
 	def initialize(self, application):
 		application.base_domain = self.hostname
-		application.db_url = 'MySQLdb://modusite:yibHikmet3@localhost/modusite'
+		application.db_url = db_url
 		application.session_cookie_params = {'Path':'/'}
 		application.template_dir = 'modusite', 'template'
 		application.release_path = self.release_path
