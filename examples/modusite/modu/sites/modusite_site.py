@@ -64,6 +64,10 @@ class megatron_local(Site):
 	classProvides(plugin.IPlugin, app.ISite)
 	hostname = 'megatron.local'
 
+class thrawn_local(Site):
+	classProvides(plugin.IPlugin, app.ISite)
+	hostname = 'thrawn.local'
+
 class optimus_local(Site):
 	classProvides(plugin.IPlugin, app.ISite)
 	hostname = 'optimus.local'
