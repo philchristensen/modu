@@ -70,6 +70,13 @@ __itemdef__ = define.itemdef(
 		weight			= 4,
 	),
 	
+	release_date		= date.DateField(
+		label			= 'release date:'
+		listing			= True,
+		weight			= 4.5,
+		default_now		= True,
+	),
+	
 	tarball_url			= string.StringField(
 		label			= 'tarball url:',
 		weight			= 5,
