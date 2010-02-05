@@ -75,6 +75,7 @@ __itemdef__ = define.itemdef(
 		listing			= True,
 		weight			= 4.5,
 		default_now		= True,
+		save_format		= 'datetime',
 	),
 	
 	tarball_url			= string.StringField(
