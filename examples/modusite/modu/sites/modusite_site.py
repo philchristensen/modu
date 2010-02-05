@@ -25,6 +25,8 @@ from modusite.resource import index, modutrac, blog, faq, downloads
 class Site(object):
 	classProvides(plugin.IPlugin, app.ISite)
 	hostname = 'localhost'
+	release_path = '/Users/phil/Workspace/modu/dist'
+	md5_path = '/sbin/md5'
 	
 	def configure_request(self, req):
 		req['trac.env_path'] = pkg.resource_filename('modusite', 'trac')
@@ -34,12 +36,19 @@ class Site(object):
 		application.db_url = 'MySQLdb://modusite:yibHikmet3@localhost/modusite'
 		application.session_cookie_params = {'Path':'/'}
 		application.template_dir = 'modusite', 'template'
+		application.release_path = self.release_path
+		application.md5_path = self.md5_path
 		
 		application.activate('/assets', static.FileResource, pkg.resource_filename('modu.assets', ''))
 		
 		import modusite.editable.itemdefs as itemdefs
 		application.activate('/admin', resource.AdminResource, itemdef_module=itemdefs, default_path='admin/listing/page')
-		application.activate('/fck', fck.FCKEditorResource)
+		application.activate('/fck', fck.FCKEditorResource, allowed_roots=dict(
+			releases = dict(
+				root 			= application.release_path,
+				url_callback	= lambda req, *path: '/'.join(path)
+			),
+		))
 		application.activate('/', index.Resource)
 		application.activate('/downloads', downloads.Resource)
 		application.activate('/blog', blog.Resource)
@@ -75,3 +84,5 @@ class optimus_local(Site):
 class modu_bubblehouse_org(Site):
 	classProvides(plugin.IPlugin, app.ISite)
 	hostname = 'modu.bubblehouse.org'
+	release_path = '/home/phil/WebServer/modu.bubblehouse.org/software'
+	md5_path = '/usr/bin/md5sum'

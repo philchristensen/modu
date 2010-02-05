@@ -5,24 +5,50 @@
 # $Id$
 #
 
+import os, os.path
+
 from modu import util
 from modu.editable import define
 from modu.editable.datatypes import string, boolean, fck
 from modu.editable.datatypes import select, relational, date
 
+def get_checksum(filepath, md5_path='md5sum'):
+	handle = os.popen(md5_path + ' "' + filepath.replace(r';', r'\;') + '"')
+	filehash = handle.read()
+	handle.close()
+	
+	if(filehash.find('=') == -1):
+		filehash = [output.strip() for output in filehash.split(' ')][0]
+	else:
+		filehash = [output.strip() for output in filehash.split('=')][1]
+	
+	return filehash
+
+def release_prewrite_callback(req, frm, storable):
+	filename = getattr(storable, 'filename', '')
+	if(filename.endswith('.tar.gz')):
+		full_path = os.path.join(req.app.release_path, filename)
+		md5_path = req.app.config.get('md5_path', 'md5sum')
+		if not(getattr(storable, 'tarball_url', None)):
+			storable.tarball_url = req.get_path('releases', filename)
+			storable.tarball_checksum = get_checksum(full_path, md5_path=md5_path)
+	
+	return True
+
 __itemdef__ = define.itemdef(
-	__config			= dict(
-		name			= 'release',
-		label			= 'releases',
-		acl				= 'access admin',
-		category		= 'site content',
-		weight			= 4
+	__config				= dict(
+		name				= 'release',
+		label				= 'releases',
+		acl					= 'access admin',
+		category			= 'site content',
+		prewrite_callback	= release_prewrite_callback,
+		weight				= 4,
 	),
 	
 	id					= string.LabelField(
 		label			= 'id:',
 		weight			= -10,
-		listing			= True
+		listing			= True,
 	),
 	
 	project_id			= relational.ForeignSelectField(
@@ -31,39 +57,78 @@ __itemdef__ = define.itemdef(
 		fvalue			= 'id',
 		flabel			= 'name',
 		weight			= 1,
-		listing			= True
+		listing			= True,
 	),
 	
-	version_id			= string.StringField(
-		label			= 'version id:',
+	version_weight		= string.StringField(
+		label			= 'version weight:',
 		size			= 5,
-		weight			= 3,
+		weight			= 2,
 		listing			= True,
-		help			= 'This functions like a version "weight", and is how version numbers are compared.'
+		help			= 'The release version will be sorted by this string.',
 	),
 	
 	version_string		= string.StringField(
 		label			= 'version string:',
 		size			= 10,
-		weight			= 4,
+		weight			= 3,
 		listing			= True,
-		help			= 'This is the version info that is actually displayed'
+		help			= 'This is the version info that is actually displayed',
 	),
 	
-	filename			= string.StringField(
+	filename			= fck.FCKFileField(
 		label			= 'filename:',
-		size			= 60,
-		maxlength 		= 255,
-		weight			= 4.5
+		fck_root		= '/fck/releases',
+		listing			= True,
+		link			= True,
+		weight			= 4,
+	),
+	
+	tarball_url			= string.StringField(
+		label			= 'tarball url:',
+		weight			= 5,
+	),
+	
+	tarball_checksum	= string.StringField(
+		label			= 'tarball checksum:',
+		weight			= 6,
 	),
 	
 	description			= string.TextAreaField(
 		label			= 'page body:',
-		weight			= 5
+		weight			= 7,
+	),
+	
+	nightly				= boolean.CheckboxField(
+		label			= 'nightly:',
+		weight			= 7.5,
+		default_checked	= False,
 	),
 	
 	active				= boolean.CheckboxField(
 		label			= 'active:',
-		weight			= 8
-	)
+		weight			= 8,
+		default_checked	= True,
+	),
+	
+	license_name		= string.StringField(
+		label			= 'license name:',
+		weight			= 9,
+		listing			= True,
+	),
+	
+	license_url			= string.StringField(
+		label			= 'license url:',
+		weight			= 10,
+	),
+	
+	installation_url	= string.StringField(
+		label			= 'installation url:',
+		weight			= 11,
+	),
+	
+	changelog_url		= string.StringField(
+		label			= 'changelog url:',
+		weight			= 12,
+	),
 )

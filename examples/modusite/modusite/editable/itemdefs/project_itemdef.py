@@ -10,6 +10,8 @@ from modu.editable import define
 from modu.editable.datatypes import string, boolean, fck
 from modu.editable.datatypes import select, relational, date
 
+from modusite.editable import project
+
 __itemdef__ = define.itemdef(
 	__config			= dict(
 		name			= 'project',
@@ -35,6 +37,20 @@ __itemdef__ = define.itemdef(
 		search			= True
 	),
 	
+	shortname			= string.StringField(
+		label			= 'shortname:',
+		size			= 60,
+		maxlength 		= 255,
+		weight			= 1.5,
+		listing			= True,
+	),
+	
+	releases			= project.ReleaseListField(
+		label			= 'releases:',
+		weight			= 1.75,
+		listing			= True,
+	),
+	
 	license_name		= string.StringField(
 		label			= 'license name:',
 		weight			= 2,
@@ -56,18 +72,9 @@ __itemdef__ = define.itemdef(
 		weight			= 5,
 	),
 	
-	tarball_url			= string.StringField(
-		label			= 'tarball url:',
-		weight			= 6,
-	),
-	
-	tarball_checksum	= string.StringField(
-		label			= 'tarball checksum:',
-		weight			= 7,
-	),
-	
 	active				= boolean.CheckboxField(
 		label			= 'active:',
-		weight			= 8
+		weight			= 8,
+		listing			= True,
 	)
 )

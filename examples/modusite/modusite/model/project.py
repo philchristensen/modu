@@ -5,21 +5,19 @@
 # $Id$
 #
 
-from modu.persist import storable
-
+from modu.persist import storable, sql
 from modusite.model import release
 
 class Project(storable.Storable):
 	def __init__(self):
 		super(Project, self).__init__('project')
 	
-	def load_data(self, data):
-		# Automatically convert binary data to string.
-		if(hasattr(data['body'], 'tostring')):
-			data['body'] = data['body'].tostring()
-		super(Project, self).load_data(data)
-	
 	def get_releases(self):
 		store = self.get_store()
 		store.ensure_factory('release', release.Release)
-		return store.load('release', project_id=self.get_id())
+		return store.load('release', project_id=self.get_id(), nightly=sql.RAW('IFNULL(%s, 0) = 0'), active=1)
+	
+	def get_nightly(self):
+		store = self.get_store()
+		store.ensure_factory('release', release.Release)
+		return store.load_one('release', project_id=self.get_id(), nightly=1, active=1)
