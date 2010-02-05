@@ -6,7 +6,7 @@
 #
 # See LICENSE for details
 
-import os, os.path, shutil, re
+import os, os.path, shutil, re, datetime
 
 from modu.persist import Store, dbapi, sql
 from modu.web import app
@@ -80,6 +80,7 @@ def create(hostname, source, destination, nightly=False):
 	r.project_id = p.get_id()
 	r.active = 1
 	r.nightly = int(nightly)
+	r.release_date = datetime.datetime.now()
 	
 	r.license_name = p.license_name
 	r.license_url = p.license_url
