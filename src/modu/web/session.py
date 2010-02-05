@@ -389,18 +389,18 @@ class DbUserSession(BaseSession):
 		if(self.is_clean()):
 			del attribs['data']
 			update_query = sql.build_update('session', attribs, {'id':self.id()})
-			self.debug(update_query)
+			self.debug(repr(update_query))
 			self._pool.runOperation(update_query)
 		elif(self.is_new()):
 			attribs['id'] = self.id()
 			insert_query = sql.build_insert('session', attribs)
-			self.debug(insert_query)
+			self.debug(repr(insert_query))
 			self._pool.runOperation(insert_query)
 		else:
 			attribs['id'] = self.id()
 			#replace_query = sql.build_replace('session', attribs)
 			update_query = sql.build_update('session', attribs, {'id':self.id()})
-			self.debug(update_query)
+			self.debug(repr(update_query))
 			self._pool.runOperation(update_query)
 	
 	def do_delete(self):
