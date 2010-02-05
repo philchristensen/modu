@@ -71,7 +71,7 @@ __itemdef__ = define.itemdef(
 	),
 	
 	release_date		= date.DateField(
-		label			= 'release date:'
+		label			= 'release date:',
 		listing			= True,
 		weight			= 4.5,
 		default_now		= True,
