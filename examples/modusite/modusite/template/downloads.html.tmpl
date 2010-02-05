@@ -13,8 +13,8 @@
 			included <a class="source" href="/trac/browser/tags/modu-$release.version_string/INSTALL">INSTALL</a> file.</p>
 			
 			<h4>Latest Stable Release $release.version_string</h4>
-			<p>$release.version_string is a new stable maintenance release. It contains a number of bug fixes
-			and minor enhancements. See the <a class="source" href="/trac/browser/tags/modu-$release.version_string/ChangeLog">ChangeLog</a>
+			<p>$release.version_string is a new stable maintenance release, released on $release.release_date.strftime('%B %d, %Y at %I:%M%p'). It contains a
+			number of bug fixes and minor enhancements. See the <a class="source" href="/trac/browser/tags/modu-$release.version_string/ChangeLog">ChangeLog</a>
 			for details.</p>
 			
 			<div class="release-box">
@@ -26,13 +26,13 @@
 				</ul>
 				<p><sub><tt>md5sum: $release.tarball_checksum</tt></sub></p>
 				<br/>
-				<h4>PyPI</h4>
+				<h4>Binary Distribution</h4>
 				<ul>
-					<li><strong>HTTP</strong>:
-						<a href="$release.tarball_url#egg=$project.shortname-$release.version_string">$release.filename</a>
+					<li>
+						Automatically install and compile modu and related dependencies:
+						<pre># easy_install $project.name</pre>
 					</li>
 				</ul>
-				<p><sub><tt>md5sum: $release.tarball_checksum</tt></sub></p>
 			</div>
 			
 			#if $releases
@@ -47,8 +47,8 @@
 			#set nightly = $project.get_nightly()
 			#if $nightly
 				<h4>Nightly Snapshot Release $nightly.version_string</h4>
-				<p>$nightly.version_string is a the current nightly build of the development trunk. It is likely to
-				contain various bugs and other issues, and you are advised to use it at your own risk.
+				<p>$nightly.version_string is a the current nightly build of the development trunk, built on $nightly.release_date.strftime('%B %d, %Y at %I:%M%p').
+				It is likely to contain various bugs and other issues, and you are advised to use it at your own risk.
 			
 				See the <a class="source" href="/trac/browser/trunk/ChangeLog">ChangeLog</a> for details.</p>
 			
