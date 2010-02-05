@@ -15,9 +15,19 @@ class Project(storable.Storable):
 	def get_releases(self):
 		store = self.get_store()
 		store.ensure_factory('release', release.Release)
-		return store.load('release', project_id=self.get_id(), nightly=sql.RAW('IFNULL(%s, 0) = 0'), active=1)
+		return store.load('release', dict(
+			project_id	= self.get_id(),
+			nightly		= sql.RAW('IFNULL(%s, 0) = 0'),
+			active		= 1,
+			__order_by	= "version_weight DESC",
+		))
 	
 	def get_nightly(self):
 		store = self.get_store()
 		store.ensure_factory('release', release.Release)
-		return store.load_one('release', project_id=self.get_id(), nightly=1, active=1)
+		return store.load_one('release', dict(
+			project_id	= self.get_id(),
+			nightly		= 1,
+			active		= 1,
+			__order_by	= "version_weight DESC",
+		))

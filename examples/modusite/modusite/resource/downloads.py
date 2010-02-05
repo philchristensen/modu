@@ -22,17 +22,12 @@ class Resource(resource.CheetahTemplateResource):
 		@see: L{modu.web.resource.IContent.prepare_content()}
 		"""
 		req.store.ensure_factory('page', page.Page, force=True)
-		p = req.store.load_one('page', {'active':1, 'url_code':'downloads'})
 		
-		if(p is None):
-			app.raise404(page_code)
-		#/trac/changeset/HEAD/trunk?old_path=%2F&format=zip
 		req.store.ensure_factory('project', project.Project, force=True)
 		projects = req.store.load('project')
 		
-		self.set_slot('title', p.title)
+		self.set_slot('title', 'modu: downloads')
 		self.set_slot('projects', projects)
-		self.content = p.data
 	
 	def get_content_type(self, req):
 		"""
