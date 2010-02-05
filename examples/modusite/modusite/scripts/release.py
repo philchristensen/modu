@@ -38,7 +38,7 @@ def get_release_request(hostname):
 	
 	return req
 
-def create(source, destination, nightly=False):
+def create(hostname, source, destination, nightly=False):
 	os.chdir(source)
 	os.system('svn update')
 	
@@ -89,7 +89,7 @@ def create(source, destination, nightly=False):
 	r.version_string = release_version
 	r.version_weight = re.sub(r'[-_.]', '', release_version)
 
-	req = get_release_request('thrawn.local')
+	req = get_release_request(hostname)
 	r.load_tarball_info(req, filename)
 	
 	store.save(r)

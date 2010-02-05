@@ -29,10 +29,11 @@ class Options(usage.Options):
 		["nightly", "n", "Generate a nightly tarball."],
 	]
 	
-	def parseArgs(self, source_dir, release_dir):
+	def parseArgs(self, hostname, source_dir, release_dir):
 		"""
 		Store the required arguments.
 		"""
+		self['hostname'] = hostname
 		self['source-dir'] = os.path.abspath(source_dir)
 		self['release-dir'] = os.path.abspath(release_dir)
 
@@ -47,6 +48,6 @@ if(__name__ == '__main__'):
 		sys.exit(1)
 	
 	try:
-		release.create(config['source-dir'], config['release-dir'], nightly=config['nightly'])
+		release.create(config['hostname'], config['source-dir'], config['release-dir'], nightly=config['nightly'])
 	except Exception, e:
 		print >>sys.stderr, '%s: %s' % (e.__class__.__name__, e)
