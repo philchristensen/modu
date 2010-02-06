@@ -79,11 +79,8 @@ def pluginModules(moduleNames):
 def regeneratePluginCache(pluginPackages):
 	from twisted import plugin
 	
-	print 'Regenerating cache with path: %r' % (sys.path,)
 	for pluginModule in pluginModules(pluginPackages):
 		plugins = list(plugin.getPlugins(plugin.IPlugin, pluginModule))
-		
-		print 'Full plugin list for %r: %r' % (pluginModule.__name__, plugins)
 
 if(__name__ == '__main__'):
 	__dist__ = autosetup()

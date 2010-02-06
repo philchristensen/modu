@@ -32,6 +32,13 @@
 						<pre># easy_install $project.name</pre>
 					</li>
 				</ul>
+				<h4>SVN Tag</h4> 
+				<ul>
+					<li>
+						To check out a snapshot of the source code from SVN HEAD, use the following incantation:</p> 
+						<pre>svn co http://svn.bubblehouse.org/modu/tags/modu-1.0.0</pre>
+					</li>
+				</ul>
 			</div>
 			
 			#if $releases
@@ -69,7 +76,6 @@
 		<p>To check out a directory of the source code from SVN HEAD, use the following incantation:</p>
 		<pre>svn co http://svn.bubblehouse.org/$project.name/trunk $project.shortname</pre>
 	#end for
-	</dl>
 #else
 	<p>There have not yet been any formal releases.</p>
 #end if
