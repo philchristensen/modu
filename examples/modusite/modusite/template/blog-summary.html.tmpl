@@ -11,7 +11,7 @@ $blog.title
 	$blog.teaser
 	#if $blog.body
 	<span class="extended">
-		<a href="$req.get_path('blog', $blog.get_id())">Continue reading "$blog.title"</a>
+		<a href="$req.get_path('blog', $blog.url_code)">Continue reading "$blog.title"</a>
 	</span>
 	#end if
 #else
@@ -19,7 +19,7 @@ $blog.title
 #end if
 <br />
 <div class="posted">
-	Posted by $blog.get_author_name() on $blog.published_date.strftime('%B %d, %Y') at <a href="$req.get_path('blog', $blog.get_id())">$blog.published_date.strftime('%I:%M %p')</a>
+	Posted by $blog.get_author_name() on $blog.published_date.strftime('%B %d, %Y') at <a href="$req.get_path('blog', $blog.url_code)">$blog.published_date.strftime('%I:%M %p')</a>
 </div>
 </div>
 #end for

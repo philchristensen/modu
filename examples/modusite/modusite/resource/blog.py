@@ -25,6 +25,8 @@ class Resource(resource.CheetahTemplateResource):
 			b = req.store.load_one('blog', active=1, url_code=req.postpath[0])
 		else:
 			b = req.store.load_one('blog', active=1, id=blog_id)
+			if(b):
+				app.redirect(req.get_path('blog', b.url_code), permanent=True)
 		
 		if(b is None):
 			app.raise404(req.postpath[0])
