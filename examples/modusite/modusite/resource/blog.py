@@ -22,7 +22,7 @@ class Resource(resource.CheetahTemplateResource):
 		try:
 			blog_id = int(req.postpath[0])
 		except ValueError:
-			b = req.store.load_one('blog', active=1, req.postpath[0])
+			b = req.store.load_one('blog', active=1, url_code=req.postpath[0])
 		else:
 			b = req.store.load_one('blog', active=1, id=blog_id)
 		
