@@ -6,7 +6,7 @@
 #
 
 from modu import util
-from modu.editable import define
+from modu.editable import define, util
 from modu.editable.datatypes import string, boolean, fck
 from modu.editable.datatypes import select, relational, date
 
@@ -23,7 +23,8 @@ __itemdef__ = define.itemdef(
 		label			= 'blog entries',
 		acl				= 'access admin',
 		category		= 'site content',
-		prewrite_callback = update_published_by,
+		prewrite_callback = [update_published_by,
+							util.get_url_code_callback('title', 'url_code')],
 		weight			= 1
 	),
 	
@@ -41,6 +42,13 @@ __itemdef__ = define.itemdef(
 		listing			= True,
 		link			= True,
 		search			= True
+	),
+	
+	url_code			= string.StringField(
+		label			= 'url code:',
+		size			= 60,
+		maxlength 		= 255,
+		weight			= 1.5,
 	),
 	
 	category_code		= string.StringField(

@@ -79,6 +79,7 @@ def pluginModules(moduleNames):
 def regeneratePluginCache(pluginPackages):
 	from twisted import plugin
 	
+	print 'Regenerating cache with path: %r'
 	for pluginModule in pluginModules(pluginPackages):
 		plugins = list(plugin.getPlugins(plugin.IPlugin, pluginModule))
 
