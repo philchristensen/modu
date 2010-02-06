@@ -17,16 +17,17 @@ class Resource(resource.CheetahTemplateResource):
 		if not(req.postpath):
 			app.redirect(req.get_path('/'))
 		
+		req.store.ensure_factory('blog', blog.Blog)
+		
 		try:
 			blog_id = int(req.postpath[0])
 		except ValueError:
-			app.redirect(req.get_path('/'))
-		
-		req.store.ensure_factory('blog', blog.Blog, force=True)
-		b = req.store.load_one('blog', {'active':1, 'id':blog_id})
+			b = req.store.load_one('blog', active=1, req.postpath[0])
+		else:
+			b = req.store.load_one('blog', active=1, id=blog_id)
 		
 		if(b is None):
-			app.raise404(blog_id)
+			app.raise404(req.postpath[0])
 		
 		self.set_slot('title', b.title)
 		self.set_slot('blog', b)
