@@ -43,7 +43,7 @@ def autosetup():
 		test_suite		= "modu.test",
 		scripts			= ['bin/mkmodu.py'],
 		
-		zip_safe		= True,
+		zip_safe		= False,
 		
 		install_requires = ["Twisted>=9.0.0", "MySQL-python>=1.2.3c1", "Cheetah>=2.4.1"],
 		
@@ -60,7 +60,7 @@ def autosetup():
 		license			= "MIT",
 		keywords		= "modu wsgi www http web framework",
 		url				= "http://modu.bubblehouse.org",
-		download_url	= "http://modu.bubblehouse.org/downloads",
+		download_url	= "http://modu.bubblehouse.org/blog/modu-version-1-0-released",
 		# could also include long_description, download_url, classifiers, etc.
 		long_description = """modu is a high-level toolkit for building database-driven 
 								web applications in Python. It provides all the common 

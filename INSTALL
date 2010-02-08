@@ -28,17 +28,8 @@ The most recent stable version of modu can be installed via easy_install:
 
 	# easy_install modu
 
-
 This will automatically download ZopeInterfaces, Twisted, MySQLdb, and Cheetah
 packages, if necessary.
-
-[ Note that because of a packaging complication between Twisted and setupotools,
-Twisted must be available for modu to be properly installed. This allows
-the modu installer to generate the plugin cache files used by the Twisted
-plugin API. If you experience an error during installation, the solution is to
-explicitly install Twisted first (via easy_install, or a source tarball's
-setup.py), and then re-try installing modu. ]
-
 
 Nightly releases are available from the modu website, packaged as source
 tarballs. To use, download and uncompress the tarball, and execute:
