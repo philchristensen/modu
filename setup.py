@@ -9,9 +9,21 @@
 import ez_setup
 ez_setup.use_setuptools()
 
-import sys, os
+import sys, os, os.path
+
+try:
+	from twisted import plugin
+	from twisted.python.reflect import namedAny
+except ImportError, e:
+	print >>sys.stderr, "setup.py requires Twisted to create a proper modu installation. Please install it before continuing."
+	sys.exit(1)
 
 from setuptools import setup, find_packages
+from setuptools.command import easy_install
+import pkg_resources as pkgrsrc
+
+from distutils import log
+log.set_threshold(log.INFO)
 
 os.environ['COPY_EXTENDED_ATTRIBUTES_DISABLE'] = 'true'
 os.environ['COPYFILE_DISABLE'] = 'true'
@@ -62,7 +74,6 @@ def autosetup():
 	return dist
 
 def pluginModules(moduleNames):
-	from twisted.python.reflect import namedAny
 	for moduleName in moduleNames:
 		try:
 			yield namedAny(moduleName)
@@ -77,11 +88,15 @@ def pluginModules(moduleNames):
 			traceback.print_exc()
 
 def regeneratePluginCache(pluginPackages):
-	from twisted import plugin
-	
-	print 'Regenerating cache with path: %r'
+	print 'Regenerating plugin cache...'
 	for pluginModule in pluginModules(pluginPackages):
-		plugins = list(plugin.getPlugins(plugin.IPlugin, pluginModule))
+		plugin_gen = plugin.getPlugins(plugin.IPlugin, pluginModule)
+		try:
+			plugin_gen.next()
+		except StopIteration, e:
+			pass
+		except TypeError, e:
+			print 'TypeError: %s' % e
 
 if(__name__ == '__main__'):
 	__dist__ = autosetup()
