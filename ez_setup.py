@@ -15,6 +15,7 @@ This file can also be run as a script to install or upgrade setuptools.
 """
 import sys
 DEFAULT_VERSION = "0.6c11"
+MINIMUM_VERSION = "0.6c9"
 DEFAULT_URL     = "http://pypi.python.org/packages/%s/s/setuptools/" % sys.version[:3]
 
 md5_data = {
@@ -79,7 +80,7 @@ def _validate_md5(egg_name, data):
 
 def use_setuptools(
     version=DEFAULT_VERSION, download_base=DEFAULT_URL, to_dir=os.curdir,
-    download_delay=15
+    download_delay=15, min_version=MINIMUM_VERSION
 ):
     """Automatically find/download setuptools and make it available on sys.path
 
@@ -102,7 +103,10 @@ def use_setuptools(
     except ImportError:
         return do_download()       
     try:
-        pkg_resources.require("setuptools>="+version); return
+        if not min_version:
+            min_version = version
+        pkg_resources.require("setuptools>="+min_version)
+        return
     except pkg_resources.VersionConflict, e:
         if was_imported:
             print >>sys.stderr, (

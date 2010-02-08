@@ -95,8 +95,8 @@ class UserTestCase(unittest.TestCase):
 		p.name = 'view item'
 		self.store.save(p)
 		
-		self.store.pool.runOperation("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", [u.get_id(), r.get_id()])
-		self.store.pool.runOperation("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", [r.get_id(), p.get_id()])
+		self.store.pool.runOperation(sql.interp("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", u.get_id(), r.get_id()))
+		self.store.pool.runOperation(sql.interp("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", r.get_id(), p.get_id()))
 		
 		self.failUnless(u.is_allowed('view item'), 'User cannot "view item"')
 	
@@ -112,19 +112,19 @@ class UserTestCase(unittest.TestCase):
 		r.name = 'Authenticated User'
 		self.store.save(r)
 		
-		self.store.pool.runOperation("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", [u.get_id(), r.get_id()])
+		self.store.pool.runOperation(sql.interp("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", u.get_id(), r.get_id()))
 
 		p = user.Permission()
 		p.name = 'view item'
 		self.store.save(p)
 		
-		self.store.pool.runOperation("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", [r.get_id(), p.get_id()])
+		self.store.pool.runOperation(sql.interp("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", r.get_id(), p.get_id()))
 		
 		p = user.Permission()
 		p.name = 'edit item'
 		self.store.save(p)
 		
-		self.store.pool.runOperation("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", [r.get_id(), p.get_id()])
+		self.store.pool.runOperation(sql.interp("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", r.get_id(), p.get_id()))
 		
 		self.failUnless(u.is_allowed('view item'), 'User cannot "view item"')
 		self.failUnless(u.is_allowed('edit item'), 'User cannot "edit item"')
@@ -147,20 +147,20 @@ class UserTestCase(unittest.TestCase):
 		admin_role.name = 'Admin User'
 		self.store.save(admin_role)
 		
-		self.store.pool.runOperation("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", [u.get_id(), auth_role.get_id()])
-		self.store.pool.runOperation("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", [u.get_id(), admin_role.get_id()])
+		self.store.pool.runOperation(sql.interp("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", u.get_id(), auth_role.get_id()))
+		self.store.pool.runOperation(sql.interp("INSERT INTO user_role (user_id, role_id) VALUES (%s, %s)", u.get_id(), admin_role.get_id()))
 		
 		p = user.Permission()
 		p.name = 'view item'
 		self.store.save(p)
 		
-		self.store.pool.runOperation("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", [auth_role.get_id(), p.get_id()])
+		self.store.pool.runOperation(sql.interp("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", auth_role.get_id(), p.get_id()))
 		
 		p = user.Permission()
 		p.name = 'edit item'
 		self.store.save(p)
 		
-		self.store.pool.runOperation("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", [admin_role.get_id(), p.get_id()])
+		self.store.pool.runOperation(sql.interp("INSERT INTO role_permission (role_id, permission_id) VALUES (%s, %s)", admin_role.get_id(), p.get_id()))
 		
 		self.failUnless(u.is_allowed('view item'), 'User cannot "view item"')
 		self.failUnless(u.is_allowed('edit item'), 'User cannot "edit item"')

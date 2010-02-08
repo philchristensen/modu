@@ -10,7 +10,7 @@ import time, sys, copy
 
 from modu.util import test
 from modu import persist
-from modu.persist import storable, dbapi
+from modu.persist import storable, dbapi, sql
 
 from twisted.trial import unittest
 
@@ -154,7 +154,7 @@ class StorableTestCase(unittest.TestCase):
 		u = self.store.load_one('page', {'id':s.get_id()});
 		self.failUnlessEqual(u.title, 'a whole new title', "Didn't get cached object when expected (1).")
 		
-		self.store.pool.runOperation("UPDATE page SET title = 'Old School' WHERE id = %s", [s.get_id()])
+		self.store.pool.runOperation(sql.interp("UPDATE page SET title = 'Old School' WHERE id = %s", s.get_id()))
 		
 		v = self.store.load_one('page', {'id':s.get_id()});
 		self.failIfEqual(v.title, 'Old School', "Didn't get cached object when expected (2).")

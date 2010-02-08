@@ -154,7 +154,7 @@ class ForeignAutocompleteField(define.definition):
 			
 			field_value = getattr(storable, self.get_column_name())
 			if(field_value is not None):
-				results = store.pool.runQuery(query, field_value)
+				results = store.pool.runQuery(sql.interp(query, field_value))
 				if(results):
 					ac_field(value=results[0][label])
 				else:
@@ -224,18 +224,18 @@ class ForeignMultipleSelectField(define.definition):
 		if(isinstance(where, dict)):
 			where = sql.build_where(where)
 		
-		ntom_query = """SELECT m.%s AS value, %s AS label, IF(n2m.%s, 1, 0) AS selected
+		ntom_query = """SELECT m.%s AS value, %s AS label, COALESCE(n2m.%s, n2m.%s = 1, 0) AS selected
 						FROM %s m
 						LEFT JOIN %s n2m ON m.%s = n2m.%s AND n2m.%s = %%s
 						%s
-						ORDER BY label""" % (self['fvalue'], mlabel, self['ntof_f_id'],
+						ORDER BY label""" % (self['fvalue'], mlabel, self['ntof_f_id'], self['ntof_f_id'],
 										  q(self['ftable']),
 										  q(self['ntof']), self.get('fvalue', 'id'),
 										  self['ntof_f_id'], self['ntof_n_id'],
 										  where)
 		
 		store = storable.get_store()
-		results = store.pool.runQuery(ntom_query, storable.get_id())
+		results = store.pool.runQuery(sql.interp(ntom_query, storable.get_id()))
 
 		if(style == 'listing' or self.get('read_only', False)):
 			def _default_formatter(req_ignored, style_ignored, storable_ignored, result):
@@ -329,7 +329,7 @@ class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 								where, limit)
 		
 		store = storable.get_store()
-		results = store.pool.runQuery(ntom_query, storable.get_id())
+		results = store.pool.runQuery(sql.interp(ntom_query, storable.get_id()))
 		
 		if(style == 'listing' or self.get('read_only', False)):
 			label_value = ', '.join([result['label'] for result in results])

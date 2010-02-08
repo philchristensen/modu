@@ -59,7 +59,7 @@ def authenticate_user(req, username, password):
 	req.store.ensure_factory('user', user_class)
 	
 	u = req.store.load_one('user', username=username)
-	if(u.crypt == crypt.crypt(password, u.crypt[:2])):
+	if(u and u.crypt == crypt.crypt(password, u.crypt[:2])):
 		return u
 	
 	return None
