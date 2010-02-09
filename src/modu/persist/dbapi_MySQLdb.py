@@ -37,9 +37,9 @@ def fix_mysqldb(connection):
 	
 	It also enables NO_BACKSLASH_ESCAPES per session.
 	"""
-	cur = connection.cursor()
-	cur.execute("SET SESSION sql_mode='NO_BACKSLASH_ESCAPES'")
-	cur.close()
+	# cur = connection.cursor()
+	# cur.execute("SET SESSION sql_mode='NO_BACKSLASH_ESCAPES'")
+	# cur.close()
 	
 	from distutils.version import LooseVersion
 	import MySQLdb
