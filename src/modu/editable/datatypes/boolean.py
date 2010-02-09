@@ -53,11 +53,11 @@ class CheckboxField(define.definition):
 		if(value is not None):
 			value = value.value
 			if(value == '0'):
-				return sql.RAW('IFNULL(%%s, 0) <> %s' % self.get('checked_value', 1))
+				return sql.RAW('COALESCE(%%s, 0) <> %s' % self.get('checked_value', 1))
 			elif(value == '1'):
-				return sql.RAW('IFNULL(%%s, 0) = %s' % self.get('checked_value', 1))
-		# a trick
-		return sql.RAW('COALESCE(%s, 1, 1)')
+				return sql.RAW('COALESCE(%%s, 0) = %s' % self.get('checked_value', 1))
+		# a trick - return a statement that is always true
+		return sql.RAW('COALESCE(`%s` = %%s, 1) = 1' % self.get_column_name())
 	
 	def update_storable(self, req, form, storable):
 		"""
