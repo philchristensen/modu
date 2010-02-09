@@ -408,6 +408,9 @@ class CheetahTemplateContent(TemplateContent):
 		if(compiled_template_root):
 			kwargs['compiled_template_root'] = compiled_template_root
 		
+		if(req.app.config.get('cheetah_useStackFrames')):
+			kwargs['useStackFrames'] = req.app.useStackFrames
+		
 		def _template_callback(template):
 			return self.get_template_root(req, template)
 		

@@ -72,6 +72,9 @@ def render(template, template_type, template_data, **params):
 			module_readable = os.access(module_path, os.F_OK)
 			
 			if(needs_recompile):
+				if('useStackFrames' in params):
+					options['compilerSettings']=dict(useStackFrames=False)
+				
 				pysrc = CheetahModuTemplate.compile(returnAClass=False,
 												moduleName=module_name,
 												className=module_name,
