@@ -38,7 +38,7 @@ def create_yaml_submission(req, failure):
 			key			= req.session.id(),
 			data		= req.session.copy(),
 		),
-		error_message	= str(failure.value),
+		error_message	= "%s: %s" % (failure.type.__name__, str(failure.value)),
 		error_class		= failure.type.__name__,
 		backtrace		= backtrace,
 		request			= dict(
