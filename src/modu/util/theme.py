@@ -434,13 +434,13 @@ class Theme(object):
 		
 		try:
 			value = datetime.date(int(form_data['year'].value), int(form_data['month'].value) + 1, int(form_data['day'].value) + 1)
-		except ValueError:
+		except ValueError, KeyError:
 			try:
 				max_day = 30
 				if(int(form_data['month'].value) == 2):
 					max_day = 28
 				value = datetime.date(int(form_data['year'].value), int(form_data['month'].value) + 1, max_day)
-			except ValueError:
+			except ValueError, KeyError:
 				value = datetime.date.today()
 		form(value=value)
 	
