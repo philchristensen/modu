@@ -406,8 +406,8 @@ conversions = {
     str: lambda o,d: string_literal(o, d), # default
     unicode: lambda s,d: string_literal(s.encode()),
     bool: lambda s,d: str(int(s)),
-    datetime.date: lambda d,c: string_literal(d.strftime("%Y-%m-%d"), c),
-    datetime.datetime: lambda d,c: string_literal(d.strftime("%Y-%m-%d %H:%M:%S"), c),
+    datetime.date: lambda d,c: string_literal(date.strftime(d, "%Y-%m-%d"), c),
+    datetime.datetime: lambda d,c: string_literal(date.strftime(d, "%Y-%m-%d %H:%M:%S"), c),
     datetime.timedelta: lambda v,c: string_literal('%d %d:%d:%d' % (v.days, int(v.seconds / 3600) % 24, int(v.seconds / 60) % 60, int(v.seconds) % 60)),
 	RAW: lambda o,d: o.value,
 	decimal.Decimal: lambda s,d: str(s),
