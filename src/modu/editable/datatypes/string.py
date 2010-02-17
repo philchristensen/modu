@@ -83,12 +83,27 @@ class LabelValueField(SearchFieldMixin, define.definition):
 			value = getattr(storable, self.get_column_name(), '')
 			if not(value):
 				value = '(none)'
-			prefix = tags.label(id="%s-label" % self.name)[value]
 			
-			frm(type='hidden', value=value, attributes=dict(id="%s-field" % self.name),
-				prefix=prefix, suffix=tags.script(type="text/javascript")["""
-					$('#%s-label').html($('#%s-field').val());
-				""" % (self.name, self.name)])
+			if(style == 'listing'):
+				frm(
+					type		= 'label',
+					value		= value,
+				)
+			else:
+				prefix = tags.label(id="%s-label" % self.name)[value]
+				
+				frm(
+					type		= 'hidden',
+					value		= value,
+					attributes	= dict(
+									id	= "%s-field" % self.name
+					),
+					prefix		= prefix,
+					suffix		= tags.script(type="text/javascript")["""
+									$('#%s-label').html($('#%s-field').val());
+								""" % (self.name, self.name)
+					]
+				)
 		
 		return frm
 
