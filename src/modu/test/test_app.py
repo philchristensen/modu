@@ -127,33 +127,15 @@ class AppTestCase(unittest.TestCase):
 		self.failUnlessEqual(rsrc.get_response(req), ['this/is/a/long/path'], "Did not find expected content")
 	
 	
-	def test_handler(self):
+	def test_handler_200(self):
 		"""
 		A functional test for the WSGI handler.
 		"""
-		def start_response(status, headers):
-			d.callback([status,headers])
-		
 		environ = test.generate_test_wsgi_environment()
 		
 		def check200(result):
 			status, headers = result
 			self.failUnlessEqual(status, '200 OK', "App handler returned unexpected status, '%s'" % status)
-		
-		def check404(result):
-			status, headers = result
-			self.failUnlessEqual(status, '404 Not Found', "App handler returned unexpected status, '%s'" % status)
-		
-		def check500(result):
-			status, headers = result
-			self.failUnlessEqual(status, '500 Internal Server Error', "App handler returned unexpected status, '%s'" % status)
-		
-		# Shouldn'f find anything because server in environ is
-		# still set to 'localhost'
-		d = defer.Deferred()
-		environ['REQUEST_URI'] = '/app-test/test-resource'
-		app.handler(environ, start_response)
-		d.addCallback(check404)
 		
 		# Set up the proper host info
 		environ['HTTP_HOST'] = '____basic-test-domain____:1234567'
@@ -163,18 +145,54 @@ class AppTestCase(unittest.TestCase):
 		
 		# Test for valid path
 		d = defer.Deferred()
-		app.handler(environ, start_response)
+		app.handler(environ, lambda s,h: d.callback((s,h)))
 		d.addCallback(check200)
+		
+		return d
+	
+	def test_handler_404(self):
+		"""
+		A functional test for the WSGI handler.
+		"""
+		environ = test.generate_test_wsgi_environment()
+		
+		def check404(result):
+			status, headers = result
+			self.failUnlessEqual(status, '404 Not Found', "App handler returned unexpected status, '%s'" % status)
+		
+		# Set up the proper host info
+		environ['HTTP_HOST'] = '____basic-test-domain____:1234567'
+		environ['SERVER_NAME'] = '____basic-test-domain____'
+		environ['HTTP_PORT'] = '1234567'
+		environ['REQUEST_URI'] = '/app-test/test-resource/this/is/a/long/path?query=some+query'
 		
 		# Test for invalid path
 		d = defer.Deferred()
 		environ['REQUEST_URI'] = '/app-test'
-		app.handler(environ, start_response)
+		content = app.handler(environ, lambda s,h: d.callback((s,h)))
 		d.addCallback(check404)
+		
+		return d
+	
+	def test_handler_500(self):
+		"""
+		A functional test for the WSGI handler.
+		"""
+		environ = test.generate_test_wsgi_environment()
+		
+		def check500(result):
+			status, headers = result
+			self.failUnlessEqual(status, '500 Internal Server Error', "App handler returned unexpected status, '%s'" % status)
+		
+		# Set up the proper host info
+		environ['HTTP_HOST'] = '____basic-test-domain____:1234567'
+		environ['SERVER_NAME'] = '____basic-test-domain____'
+		environ['HTTP_PORT'] = '1234567'
+		environ['REQUEST_URI'] = '/app-test/test-resource/this/is/a/long/path?query=some+query'
 		
 		# Test for exceptions
 		d = defer.Deferred()
 		environ['REQUEST_URI'] = '/app-test/test-resource/exception'
-		app.handler(environ, start_response)
+		app.handler(environ, lambda s,h: d.callback((s,h)))
 		d.addCallback(check500)
 

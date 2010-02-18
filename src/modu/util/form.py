@@ -188,6 +188,12 @@ class FormNode(OrderedDict):
 		path.reverse()
 		return path
 	
+	def get_root_node(self):
+		node = self
+		while(node.parent is not None):
+			node = node.parent
+		return node
+	
 	def get_element_name(self):
 		"""
 		Get this element's HTML form name.
@@ -253,17 +259,21 @@ class FormNode(OrderedDict):
 		
 		return False
 	
-	def set_error(self, path, error):
+	def set_error(self, path, error=None):
 		"""
 		Note an error with this form's child.
 		"""
+		if(error is None):
+			error = path
+			path = []
+		
 		if(isinstance(path, (list, tuple))):
-			_path = list(path[1:])
+			_path = list(path)
 		else:
 			_path = [path]
 		
 		item = self
-		while(len(_path) >= 1):
+		while(_path):
 			seg = _path.pop(0)
 			if(seg not in item):
 				raise ValueError('Invalid element path %r' % path)
@@ -297,23 +307,35 @@ class FormNode(OrderedDict):
 				children.extend(element.values())
 			elif(element.errors):
 				node = errors
-				path = element.get_element_path()[1:]
-				for index in range(len(path)):
-					if(index < len(path) - 1):
-						node = node.setdefault(path[index], {})
-					else:
-						node = node.setdefault(path[index], []).extend(element.errors)
+				path = element.get_element_path()[len(self.get_element_path()):]
+				if(path):
+					for index in range(len(path)):
+						if(index < len(path) - 1):
+							node = node.setdefault(path[index], {})
+						else:
+							node = node.setdefault(path[index], []).extend(element.errors)
+				else:
+					return element.errors
+		
+		if(len(errors) == 1 and self.parent and self.name in errors):
+			return errors[self.name]
+		
 		return errors
 	
 	def escalate_errors(self, req, formatter=None):
 		"""
 		Push all existing errors into the message queue of the given request.
 		"""
-		for field, errs in self.get_errors().items():
-			for err in errs:
-				if(callable(formatter)):
-					err = formatter(req, field, err)
-				req.messages.report('error', '%s: %s' % (field, err))
+		def _escalate(errors, prefix=''):
+			for field, errs in errors.items():
+				if(isinstance(errs, dict)):
+					_escalate(errs, prefix + field + ': ')
+				else:
+					for err in errs:
+						if(callable(formatter)):
+							err = formatter(req, field, err)
+						req.messages.report('error', '%s%s: %s' % (prefix, field, err))
+		_escalate(self.get_errors())
 	
 	def render(self, req, fieldset=False, current_theme=None):
 		"""
@@ -409,7 +431,7 @@ class FormNode(OrderedDict):
 		while(children):
 			child = children.pop()
 			if(not child.attr('value', '') and child.attr('required', False)):
-				path = child.get_element_path()
+				path = child.get_element_path()[1:]
 				form.set_error(path, 'You must enter a value for this field.')
 				result = False
 			if(len(child)):

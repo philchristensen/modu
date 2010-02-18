@@ -123,6 +123,56 @@ class FormTestCase(unittest.TestCase):
 		
 		self.failUnlessRaises(RuntimeError, frm.execute, req)
 	
+	def test_errors(self):
+		"""
+		Test form errors.
+		"""
+		form_data = [('test-form[title]','Sample Title'), ('test-form[submit]','submit')]
+		req = self.get_request(form_data)
+		
+		frm = form.FormNode('test-form')
+		frm(enctype="multipart/form-data")
+		frm['title'](type='textfield', title='Title', required=True, description='This is the title field')
+		frm['submit'](type='submit')
+		
+		def _validate_error(req, form):
+			form.set_error('title', "test error")
+			form['title'].set_error("test error 2")
+			self.failIf('test error' not in form.get_errors()['title'])
+			self.failIf('test error 2' not in form['title'].get_errors())
+			return False
+		
+		frm.validate = _validate_error
+		
+		if(frm.execute(req)):
+			self.fail("Form validation did not fail.")
+	
+	def test_nested_errors(self):
+		"""
+		Test nested form errors.
+		"""
+		form_data = [('test-form[group][title]','Sample Title'), ('test-form[group][submit]','submit')]
+		req = self.get_request(form_data)
+		
+		frm = form.FormNode('test-form')
+		frm(enctype="multipart/form-data")
+		frm['group']['title'](type='textfield', title='Title', required=True, description='This is the title field')
+		frm['group']['submit'](type='submit')
+		
+		def _validate_error(req, form):
+			form.set_error(['group', 'title'], "test error")
+			form['group']['title'].set_error("test error 2")
+			self.failIf('test error' not in form.get_errors()['group']['title'])
+			self.failIf('test error 2' not in form['group']['title'].get_errors())
+			self.failIf('test error' not in form['group'].get_errors()['title'])
+			self.failIf('test error 2' not in form['group'].get_errors()['title'])
+			return False
+		
+		frm.validate = _validate_error
+		
+		if(frm.execute(req)):
+			self.fail("Form validation did not fail.")
+	
 	def test_required_element(self):
 		"""
 		Test required fields.
