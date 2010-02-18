@@ -76,11 +76,7 @@ class Theme(object):
 			if(hasattr(element, 'help')):
 				content += tags.div(_class='form-help')[element.help]
 			
-			displays_errors = False
-			if(element.attr('type', 'fieldset') != 'fieldset' or element.attr('style', 'brief') == 'brief'):
-				displays_errors = True
-			
-			if(displays_errors and element.has_errors()):
+			if(element.has_errors(recurse=False)):
 				element_class = 'form-item form-error'
 			else:
 				element_class = 'form-item'

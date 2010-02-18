@@ -281,7 +281,7 @@ class FormNode(OrderedDict):
 		
 		item.errors.append(error)
 	
-	def has_errors(self):
+	def has_errors(self, recurse=True):
 		"""
 		Return true if this form or any of its children have errors.
 		"""
@@ -290,7 +290,7 @@ class FormNode(OrderedDict):
 			element = children.pop(0)
 			if(element.errors):
 				return True
-			elif(len(element)):
+			elif(len(element) and recurse):
 				children.extend(element.values())
 		return False
 	
