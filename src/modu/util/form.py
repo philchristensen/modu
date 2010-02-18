@@ -333,8 +333,9 @@ class FormNode(OrderedDict):
 				else:
 					for err in errs:
 						if(callable(formatter)):
-							err = formatter(req, field, err)
-						req.messages.report('error', '%s%s: %s' % (prefix, field, err))
+							formatter(req, prefix+field, err)
+						else:
+							req.messages.report('error', '%s%s: %s' % (prefix, field, err))
 		_escalate(self.get_errors())
 	
 	def render(self, req, fieldset=False, current_theme=None):
