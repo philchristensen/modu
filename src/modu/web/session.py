@@ -95,7 +95,7 @@ def _get_generator():
 		rnd_iter = iter(rnd_gens)
 		return rnd_iter.next()
 
-def new_sid(req):
+def new_sid(req={}):
 	# Make a number based on current time, pid, remote ip
 	# and two random ints, then hash with md5. This should
 	# be fairly unique and very difficult to guess.
@@ -113,7 +113,7 @@ def new_sid(req):
 	g = _get_generator()
 	rnd1 = g.randint(0, 999999999)
 	rnd2 = g.randint(0, 999999999)
-	ip = req['REMOTE_ADDR']
+	ip = req.get('REMOTE_ADDR', '127.0.0.1')
 	
 	try:
 		import hashlib
