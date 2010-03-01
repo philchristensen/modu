@@ -431,7 +431,12 @@ class CheetahTemplateContent(TemplateContent):
 		@see: L{ITemplate.get_template()}
 		"""
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
-
+	
+	def get_template_type(self):
+		"""
+		@see: L{ITemplate.get_template_type()}
+		"""
+		return 'filename'
 
 class ZPTemplateContent(TemplateContent):
 	"""
@@ -501,20 +506,43 @@ class CherryTemplateContent(TemplateContent):
 		"""
 		raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
 
-
 class CheetahTemplateResource(Resource, CheetahTemplateContent):
 	"""
 	A convenience class so further subclasses don't need to think about multiple inheritance ;-).
 	"""
-	pass
+	def __init__(self, template=None, template_type='filename'):
+		self.__template = template
+		self.__template_type = template_type
 
+	def prepare_content(self, req):
+		"""
+		@see: L{IContent.prepare_content()}
+		"""
+		if(self.__template):
+			return
+		else:
+			raise NotImplementedError('%s::prepare_content()' % self.__class__.__name__)
+	
+	def get_template(self, req):
+		"""
+		@see: L{ITemplate.get_template()}
+		"""
+		if(self.__template):
+			return self.__template
+		else:
+			raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
+	
+	def get_template_type(self):
+		"""
+		@see: L{ITemplate.get_template_type()}
+		"""
+		return self.__template_type
 
 class ZPTemplateResource(Resource, ZPTemplateContent):
 	"""
 	A convenience class so further subclasses don't need to think about multiple inheritance ;-).
 	"""
 	pass
-
 
 class CherryTemplateResource(Resource, CherryTemplateContent):
 	"""
