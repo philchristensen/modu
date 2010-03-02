@@ -449,11 +449,17 @@ class itemdef(OrderedDict):
 		@rtype: bool
 		"""
 		form_data = req.data[frm.name]
+		referer = frm.get('referer', None).value
 		if(frm.submit_button.value == form_data.get('cancel', None).value):
-			app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
+			if(referer):
+				app.redirect(referer)
+			else:
+				app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
 		elif(frm.submit_button.value == form_data.get('delete', None).value):
 			if(self.delete(req, frm, storable)):
-				if(self.config.get('hidden', False)):
+				if(referer):
+					app.redirect(referer)
+				elif(self.config.get('hidden', False)):
 					app.redirect(req.get_path(req.prepath))
 				else:
 					app.redirect(req.get_path(req.prepath, 'listing', storable.get_table()))
@@ -561,11 +567,12 @@ class itemdef(OrderedDict):
 				if not(callback(req, form, storable)):
 					postwrite_succeeded = False
 		
-		if(req.postpath and req.postpath[-1] == 'new'):
-			app.redirect(req.get_path(req.prepath, 'detail', storable.get_table(), storable.get_id()))
-		
 		if(postwrite_succeeded):
-			req.messages.report('message', 'Your changes have been saved.')
+			req.messages.report('message', 'Your changes to %s record #%s have been saved.' % (storable.get_id(), storable.get_table()))
+			
+			referer = form.get('referer', None).value
+			if(referer):
+				app.redirect(referer)
 		else:
 			req.messages.report('error', 'There was an error in the postwrite process, but primary record data was saved.')
 		
@@ -603,6 +610,9 @@ class itemdef(OrderedDict):
 			self.config['postdelete_callback'](req, form, storable)
 		
 		req.messages.report('message', "Record #%d in %s was deleted." % (deleted_id, deleted_table))
+		
+		referer = form.get('referer', None).value
+		app.redirect(referer)
 		
 		return True
 

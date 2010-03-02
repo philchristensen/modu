@@ -537,6 +537,11 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			if('theme' in itemdef.config):
 				frm.theme = itemdef.config['theme']
 			
+			frm['referer'](
+				type 	= 'hidden',
+				value	= req.get('HTTP_REFERER', ''),
+			)
+			
 			if(frm.execute(req)):
 				# we regenerate the form because some fields don't know their
 				# value until after the form is saved (e.g., postwrite fields)
