@@ -449,7 +449,7 @@ class itemdef(OrderedDict):
 		@rtype: bool
 		"""
 		form_data = req.data[frm.name]
-		referer = frm.get('referer', None).value
+		referer = frm['referer'].value
 		if(frm.submit_button.value == form_data.get('cancel', None).value):
 			if(referer):
 				app.redirect(referer)
@@ -570,7 +570,7 @@ class itemdef(OrderedDict):
 		if(postwrite_succeeded):
 			req.messages.report('message', 'Your changes to %s record #%s have been saved.' % (storable.get_id(), storable.get_table()))
 			
-			referer = form.get('referer', None).value
+			referer = form['referer'].value
 			if(referer):
 				app.redirect(referer)
 		else:
@@ -611,7 +611,7 @@ class itemdef(OrderedDict):
 		
 		req.messages.report('message', "Record #%d in %s was deleted." % (deleted_id, deleted_table))
 		
-		referer = form.get('referer', None).value
+		referer = form['referer'].value
 		app.redirect(referer)
 		
 		return True
