@@ -527,7 +527,7 @@ class CheetahTemplateResource(Resource, CheetahTemplateContent):
 		"""
 		@see: L{ITemplate.get_template()}
 		"""
-		if(self.__template):
+		if(getattr(self, '__template', None)):
 			return self.__template
 		else:
 			raise NotImplementedError('%s::get_template()' % self.__class__.__name__)
@@ -536,7 +536,7 @@ class CheetahTemplateResource(Resource, CheetahTemplateContent):
 		"""
 		@see: L{ITemplate.get_template_type()}
 		"""
-		return self.__template_type
+		return getattr(self, '__template_type', 'filename')
 
 class ZPTemplateResource(Resource, ZPTemplateContent):
 	"""
