@@ -17,6 +17,8 @@ from twisted.enterprise import adbapi
 from modu.util import url
 
 debug = False
+debug_stream = sys.stderr
+
 pools = {}
 async_pools = {}
 pools_lock = threading.BoundedSemaphore()
@@ -293,7 +295,7 @@ class SynchronousConnectionPool(TimeoutConnectionPool):
 		Trivial override to provide debugging support.
 		"""
 		if(debug):
-			print args, kwargs
+			print >>debug_stream, args, kwargs
 		return TimeoutConnectionPool.runOperation(self, *args, **kwargs)
 	
 	def _runOperation(self, trans, *args, **kw):
@@ -304,7 +306,7 @@ class SynchronousConnectionPool(TimeoutConnectionPool):
 		Trivial override to provide debugging support.
 		"""
 		if(debug):
-			print args, kwargs
+			print >>debug_stream, args, kwargs
 		return TimeoutConnectionPool.runQuery(self, *args, **kwargs)
 	
 	def runInteraction(self, interaction, *args, **kw):

@@ -18,6 +18,9 @@ except ImportError, e:
 from modu import util
 
 def generate_csv(rows, le='\n'):
+	return list(generate_csv_gen(rows, le))
+
+def generate_csv_gen(rows, le='\n'):
 	"""
 	Generate comma-separated value output from a list of dicts.
 	
@@ -25,7 +28,6 @@ def generate_csv(rows, le='\n'):
 	are assumed to be identical for all rows.
 	"""
 	header_string = None
-	content_string = ''
 	
 	for row in rows:
 		headers = []
@@ -49,15 +51,14 @@ def generate_csv(rows, le='\n'):
 		
 		if(header_string is None):
 			header_string = ','.join(headers) + le;
+			yield header_string
 		
-		content_string += ','.join(fields) + le;
-	
-	if(header_string is None):
-		header_string = ''
-	
-	return header_string + content_string
+		yield ','.join(fields) + le;
 
 def generate_tsv(rows, le='\n'):
+	return list(generate_tsv_gen(rows, le))
+
+def generate_tsv_gen(rows, le='\n'):
 	"""
 	Generate tab-separated value output from a list of dicts.
 	
@@ -65,7 +66,6 @@ def generate_tsv(rows, le='\n'):
 	are assumed to be identical for all rows.
 	"""
 	header_string = None
-	content_string = ''
 	
 	for row in rows:
 		headers = []
@@ -81,12 +81,8 @@ def generate_tsv(rows, le='\n'):
 		
 		if(header_string is None):
 			header_string = '\t'.join(headers) + le;
-		content_string += '\t'.join(fields) + le;
-	
-	if(header_string is None):
-		header_string = ''
-	
-	return header_string + content_string
+			yield header_string
+		yield '\t'.join(fields) + le;
 
 def parse_line(line, column_names=None, separator=",", qualifier='"'):
 	io = StringIO.StringIO(line)
