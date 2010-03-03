@@ -414,7 +414,7 @@ class FormNode(OrderedDict):
 				elif(form_data):
 					self.attributes['value'] = form_data
 	
-	def default_validate(self, req, form):
+	def default_validate(self, req, form=None):
 		"""
 		This is the default validation function. If not overriden
 		by setting the validate attribute, this will call validate()
@@ -426,6 +426,9 @@ class FormNode(OrderedDict):
 		supplied, it still gets a reference to the form instance
 		it was called for.
 		"""
+		if(form is None):
+			form = self
+		
 		result = True
 		
 		children = self.values()
