@@ -404,7 +404,7 @@ conversions = {
     float: lambda o,d: '%.15g' % o,
     types.NoneType: lambda s,d: 'NULL',
     str: lambda o,d: string_literal(o, d), # default
-    unicode: lambda s,d: string_literal(s.encode()),
+    unicode: lambda s,d: string_literal(s.encode(), d),
     bool: lambda s,d: str(int(s)),
     datetime.date: lambda d,c: string_literal(date.strftime(d, "%Y-%m-%d"), c),
     datetime.datetime: lambda d,c: string_literal(date.strftime(d, "%Y-%m-%d %H:%M:%S"), c),
