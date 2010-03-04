@@ -57,7 +57,7 @@ class CheckboxField(define.definition):
 			elif(value == '1'):
 				return sql.RAW('COALESCE(%%s, 0) = %s' % self.get('checked_value', 1))
 		# a trick - return a statement that is always true
-		return sql.RAW('COALESCE(`%s` = %%s, 1) = 1' % self.get_column_name())
+		return sql.RAW('COALESCE(%s = %%s, 1) = 1' % sql.escape_dot_syntax(self.get_column_name()))
 	
 	def update_storable(self, req, form, storable):
 		"""
