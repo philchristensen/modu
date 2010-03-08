@@ -133,6 +133,14 @@ class FormNode(OrderedDict):
 		
 		return super(FormNode, self).__getitem__(key)
 	
+	def get(self, key, default=None):
+		"""
+		Implements dict-style .get() function.
+		"""
+		if(key in self):
+			return self[key]
+		return FormNode(key)(type='value', value=default)
+	
 	def __nonzero__(self):
 		"""
 		All forms are nonzero.
