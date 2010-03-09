@@ -351,7 +351,14 @@ class ForeignMultipleAutocompleteField(ForeignMultipleSelectField):
 					multiple=None, suffix=hidden_options + '<br/>', attributes={'id':select_id})
 		
 		prefs = 'autoFill:1, selectFirst:1, matchSubset:0, selectOnly:1, extraParams:{t:%d}, minChars:%d' % (int(time.time()), self.get('min_chars', 3))
-		ac_js = '$("#%s").autocomplete("%s", {onItemSelect:add_foreign_item("%s", "%s"), %s});' % (ac_id, ac_url, form_name, self.name, prefs)
+		# ac_js = '$(document).ready(function(){$("#%s").autocomplete("%s", {onItemSelect:add_foreign_item("%s", "%s"), %s});});' % (ac_id, ac_url, form_name, self.name, prefs)
+		ac_js = """
+			$(document).ready(function(){
+				$("#%s").autocomplete("%s", {%s});
+				$("#%s").result(add_foreign_item("%s", "%s"));
+			});
+		""" % (ac_id, ac_url, prefs, ac_id, form_name, self.name)
+		
 		ac_controls = tags.script(type='text/javascript')[ac_js]
 		
 		ac_field = form.FormNode('%s-autocomplete' % self.name)

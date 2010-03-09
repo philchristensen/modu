@@ -512,7 +512,7 @@ class itemdef(OrderedDict):
 		
 		postwrite_fields = {}
 		for name, definition in self.iteritems():
-			if not(definition.get('implicit_save', True)):
+			if not definition.get('implicit_save', True) or definition.get('read_only', False):
 				continue
 			elif(definition.is_postwrite_field()):
 				postwrite_fields[name] = definition
