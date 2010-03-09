@@ -507,8 +507,8 @@ class AdminResource(AdminTemplateResourceMixin, resource.CheetahTemplateResource
 			table_name = itemdef.config.get('table', itemdef.name)
 			
 			if(item_id == 'new'):
-				if(itemdef.config.get('no_create')):
-					app.raise403('Sorry, record creation is turned off for this itemdef.')
+				if not(itemdef.creatable(req)):
+					app.raise403("You are not allowed to delete `%s` records." % storable.get_table())
 				
 				if('model_class' in itemdef.config):
 					selected_item = itemdef.config['model_class']()

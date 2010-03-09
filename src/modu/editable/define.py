@@ -328,7 +328,8 @@ class itemdef(OrderedDict):
 		if not(read_only):
 			frm['save'](type='submit', value='save')
 			frm['cancel'](type='submit', value='cancel')
-			if not(self.config.get('no_delete', False)):
+			
+			if(self.deletable(req)):
 				frm['delete'](type='submit', value='delete',
 							attributes={'onClick':"return confirm('Are you sure you want to delete this record?');"})
 		
@@ -489,6 +490,11 @@ class itemdef(OrderedDict):
 		
 		return True
 	
+	def creatable(self, req):
+		allow_create = True
+		if('create_acl' in self.config):
+			allow_create = req.user.is_allowed(self.config['create_acl'])
+		return allow_create and not self.config.get('no_create', False)
 	
 	def submit(self, req, form, storable):
 		"""
@@ -584,6 +590,12 @@ class itemdef(OrderedDict):
 		
 		return postwrite_succeeded
 	
+	def deletable(self, req):
+		allow_delete = True
+		if('delete_acl' in self.config):
+			allow_delete = req.user.is_allowed(self.config['delete_acl'])
+		return allow_delete and not self.config.get('no_delete', False)
+	
 	def delete(self, req, form, storable):
 		"""
 		The delete function for forms generated from this itemdef.
@@ -600,7 +612,8 @@ class itemdef(OrderedDict):
 		@return: True if deleted
 		@rtype: bool
 		"""
-		if(self.config.get('no_delete', False)):
+		if not(self.deletable(req)):
+			req.messages.report('error', "You are not allowed to delete `%s` records." % storable.get_table())
 			return False
 		
 		if('predelete_callback' in self.config):
