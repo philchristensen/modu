@@ -23,7 +23,7 @@ class HTTPStatus(Exception):
 		else:
 			self.content = content
 		
-		Exception.__init__(self, status)
+		Exception.__init__(self, ''.join(content))
 	
 	def get_content(self):
 		return '\n'.join(self.content)

@@ -266,9 +266,11 @@ class ForeignMultipleSelectField(define.definition):
 		
 		if(self.name in form_data):
 			values = form_data[self.name].value
+			if(isinstance(values, dict)):
+				values = values[self.name + '-autocomplete']
 			if not(isinstance(values, list)):
 				values = [values]
-			data = [{self['ntof_n_id']:item_id, self['ntof_f_id']:val} for val in values]
+			data = [{self['ntof_n_id']:item_id, self['ntof_f_id']:getattr(val, 'value', val)} for val in values]
 			insert_query = sql.build_insert(self['ntof'], data)
 			store.pool.runOperation(insert_query)
 		elif(self.get('required', False)):
