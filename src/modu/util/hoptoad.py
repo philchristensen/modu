@@ -91,7 +91,7 @@ def create_xml_submission(req, failure):
 	
 	query = {}
 	if(req['QUERY_STRING']):
-		query = req.data
+		query = req.data.copy()
 	
 	notice.setAttribute('version', '2.0.0')
 	notice.appendChild(create('api-key', req.app.hoptoad_api_key))
