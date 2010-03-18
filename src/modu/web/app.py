@@ -34,7 +34,7 @@ except:
 from modu import persist, web
 from modu.util import url, tags, queue, form, OrderedDict
 from modu.web import session, user, resource, static
-from modu.persist import dbapi
+from modu.persist import dbapi, storable
 
 from twisted import plugin
 from twisted.web import server, util, html
@@ -780,6 +780,9 @@ util.htmlReprTypes[Request] = dictFormatMaker('Request')
 
 util.htmlReprTypes[session.DbUserSession] = dictFormatMaker('Session')
 
+def _StorableDict(s):
+	return dictFormatMaker(s.__class__.__name__ + '(Storable)')(s.get_data())
+
 def _fieldStorageDict(d):
 	return dictFormatMaker('NestedFieldStorage')(d.copy())
 
@@ -788,6 +791,7 @@ def _miniFieldStorageValue(v):
 
 util.htmlReprTypes[form.FormNode] = htmlFormNode
 util.htmlReprTypes[form.NestedFieldStorage] = _fieldStorageDict
+util.htmlReprTypes[storable.Storable] = _StorableDict
 util.htmlReprTypes[form.DictFieldStorage] = dictFormatMaker('DictFieldStorage')
 util.htmlReprTypes[form.cgi.MiniFieldStorage] = _miniFieldStorageValue
 util.htmlReprTypes[str] = htmlString
