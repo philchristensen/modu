@@ -480,6 +480,7 @@ class NestedFieldStorage(cgi.FieldStorage):
 		cgi.FieldStorage.__init__(self, fp, headers, outerboundary,
 									environ, keep_blank_values, strict_parsing)
 	
+	# STUPID CGI.PY FIXES
 	def __nonzero__(self):
 		"""
 		Fixes a bug in cgi.py
@@ -490,6 +491,27 @@ class NestedFieldStorage(cgi.FieldStorage):
 			return True
 		else:
 			return False
+	
+	def __contains__(self, key):
+		if self.list is None:
+			return False
+		return cgi.FieldStorage.__contains__(self, key)
+	
+	def __getitem__(self, key):
+		if self.list is None:
+			raise KeyError(key)
+		return cgi.FieldStorage.__getitem__(self, key)
+	
+	def has_key(self, key):
+		if self.list is None:
+			return False
+		return cgi.FieldStorage.has_key(self, key)
+	
+	def keys(self, key):
+		if self.list is None:
+			return []
+		return cgi.FieldStorage.keys(self, key)
+	# END STUPID CGI.PY FIXES
 	
 	def copy(self):
 		"""
