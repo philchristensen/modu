@@ -507,10 +507,10 @@ class NestedFieldStorage(cgi.FieldStorage):
 			return False
 		return cgi.FieldStorage.has_key(self, key)
 	
-	def keys(self, key):
+	def keys(self):
 		if self.list is None:
 			return []
-		return cgi.FieldStorage.keys(self, key)
+		return cgi.FieldStorage.keys(self)
 	# END STUPID CGI.PY FIXES
 	
 	def copy(self):
