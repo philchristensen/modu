@@ -146,6 +146,6 @@ def submit_xml_error(req, error_report):
 	try:
 		urllib2.urlopen(r)
 	except urllib2.URLError, e:
-		req.log_error("Couldn't report traceback due to error: %s" % s)
+		req.log_error("Couldn't report traceback due to error: %s" % e)
 
 
