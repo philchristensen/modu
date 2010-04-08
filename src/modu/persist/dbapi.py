@@ -23,6 +23,12 @@ pools = {}
 async_pools = {}
 pools_lock = threading.BoundedSemaphore()
 
+def sql_debug(query, args, kwargs):
+	if(debug is True):
+		print >>debug_stream, (query, args, kwargs)
+	elif(debug and not query.lower().startswith('select')):
+		print >>debug_stream, (query, args, kwargs)
+
 def activate_pool(req):
 	"""
 	JIT Request handler for enabling DB support.
@@ -290,24 +296,22 @@ class SynchronousConnectionPool(TimeoutConnectionPool):
 		if(self.startID):
 			reactor.removeSystemEventTrigger(self.startID)
 	
-	def runOperation(self, *args, **kwargs):
+	def runOperation(self, query, *args, **kwargs):
 		"""
 		Trivial override to provide debugging support.
 		"""
-		if(debug):
-			print >>debug_stream, args, kwargs
-		return TimeoutConnectionPool.runOperation(self, *args, **kwargs)
+		sql_debug(query, args, kwargs)
+		return TimeoutConnectionPool.runOperation(self, query, *args, **kwargs)
 	
 	def _runOperation(self, trans, *args, **kw):
 		return trans.execute(*args, **kw)
 	
-	def runQuery(self, *args, **kwargs):
+	def runQuery(self, query, *args, **kwargs):
 		"""
 		Trivial override to provide debugging support.
 		"""
-		if(debug):
-			print >>debug_stream, args, kwargs
-		return TimeoutConnectionPool.runQuery(self, *args, **kwargs)
+		sql_debug(query, args, kwargs)
+		return TimeoutConnectionPool.runQuery(self, query, *args, **kwargs)
 	
 	def runInteraction(self, interaction, *args, **kw):
 		"""

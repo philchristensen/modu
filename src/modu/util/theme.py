@@ -167,6 +167,10 @@ class Theme(object):
 		if(value is None):
 			value = ''
 		
+		value = value.replace('&', '&amp;');
+		value = value.replace('<', '&lt;');
+		value = value.replace('>', '&gt;');
+		
 		attribs = element.attr('attributes', {})
 		attribs['name'] = element.get_element_name()
 		attribs['cols'] = element.attr('cols', 40)

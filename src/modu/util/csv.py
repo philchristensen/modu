@@ -90,7 +90,9 @@ def parse_line(line, column_names=None, separator=",", qualifier='"'):
 	return result[0]
 
 def parse(stream, column_names=None, separator=",", qualifier='"'):
-	rows = []
+	return list(parse_gen(stream, column_names, separator, qualifier))
+
+def parse_gen(stream, column_names=None, separator=",", qualifier='"'):
 	fields = []
 	buff = ''
 	qualified = False
@@ -129,7 +131,7 @@ def parse(stream, column_names=None, separator=",", qualifier='"'):
 				if(column_names):
 					fields = util.OrderedDict(zip(column_names, fields))
 				if(fields):
-					rows.append(fields)
+					yield fields
 				
 				qualified = False
 				fields = []
@@ -149,8 +151,6 @@ def parse(stream, column_names=None, separator=",", qualifier='"'):
 	if(column_names):
 		fields = util.OrderedDict(zip(column_names, fields))
 	if(fields):
-		rows.append(fields)
-	fields = []
-	buff = ''
+		yield fields
 	
-	return rows
+	return
