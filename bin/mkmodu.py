@@ -31,11 +31,11 @@ class Options(usage.Options):
 	"""
 	Implement usage parsing for the mkmodu script.
 	"""
-	optParameters = [["longname", "l", None, "The descriptive name for the new project."],
-					 ["author", "a", None, "Name of copyright holder."]
+	optParameters = [["longname", "l", None, "The descriptive name for the project."],
+					 ["author", "a", None, "The name of the copyright holder."]
 					]
 	
-	synopsis = 'Usage: mkmodu.py project [options]'
+	synopsis = 'Usage: mkmodu.py [options] name'
 	
 	def parseArgs(self, shortname):
 		"""
