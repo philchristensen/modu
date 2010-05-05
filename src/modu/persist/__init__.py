@@ -335,7 +335,7 @@ class Store(object):
 			return new_id
 		return id
 	
-	def iterate(self, factory_id, limit_start=0, limit_end=None):
+	def iterate(self, factory_id, limit_start=0, limit_end=None, **kwargs):
 		"""
 		Returns a generator that efficiently iterates through all records in a table.
 		
@@ -359,7 +359,7 @@ class Store(object):
 			if(limit == limit_end):
 				sys.stderr.write('$')
 				return
-			item = self.load_one(factory_id, __limit='%d,1' % limit)
+			item = self.load_one(factory_id, __limit='%d,1' % limit, **kwargs)
 			if(item is None):
 				return
 			else:
