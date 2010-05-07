@@ -12,8 +12,6 @@ Support for the HopToad error tracking service.
 
 import httplib, urllib2, re
 
-from modu.util.url import urlparse
-
 from arm import site 
 
 RE_TRACEBACK_FILE = re.compile(r'\s*File "(?P<file>[^"]+)", line (?P<number>\d+), in (?P<method>\w+)')

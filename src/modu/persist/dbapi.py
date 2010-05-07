@@ -14,7 +14,7 @@ import threading, random, sys, time
 
 from twisted.enterprise import adbapi
 
-from modu.util import url
+from modu.util.url import urlparse
 
 debug = False
 debug_stream = sys.stderr
@@ -106,7 +106,7 @@ def get_dsn(db_url):
 	so it may be passed as **kwargs to the DB-API connect()
 	function.
 	"""
-	dsn = url.urlparse(db_url)
+	dsn = urlparse(db_url)
 	
 	for key in dsn.keys():
 		if(dsn[key] is None):
