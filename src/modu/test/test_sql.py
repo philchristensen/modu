@@ -22,9 +22,9 @@ class SQLTestCase(unittest.TestCase):
 		expecting = "SELECT * FROM some_table WHERE a = %s AND b = %s" % (1, repr('something'))
 		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 	
-	def test_interp_args_2(self):
-		query = sql.interp("SELECT * FROM some_table WHERE a = %s AND b = %s", [1, 'something'])
-		expecting = "SELECT * FROM some_table WHERE a = %s AND b = %s" % (1, repr('something'))
+	def test_interp_args_list(self):
+		query = sql.interp("SELECT * FROM some_table WHERE a IN %s AND b = %s", [1,2,3], 'something')
+		expecting = "SELECT * FROM some_table WHERE a IN (1,2,3) AND b = 'something'"
 		self.failUnlessEqual(query, expecting, 'Got "%s" when expecting "%s"' % (sql, expecting))
 	
 	def test_build_delete(self):
