@@ -48,7 +48,7 @@ class ForeignLabelField(define.definition):
 			args = []
 		
 		foreign_label_query = "SELECT %s, %s FROM %s %s" % (q(value), q(label), q(table), where)
-		foreign_label_query = sql.interp(foreign_label_query, args)
+		foreign_label_query = sql.interp(foreign_label_query, *args)
 		
 		results = store.pool.runQuery(foreign_label_query)
 		frm = form.FormNode(self.name)
