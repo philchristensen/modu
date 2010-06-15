@@ -154,6 +154,8 @@ class Tag(object):
 			for child in self.children:
 				if(isinstance(child, unicode)):
 					output += child
+				elif(isinstance(child, Tag)):
+					output += unicode(child)
 				else:
 					output += child.decode('utf-8')
 			if not(self.attributes.get('_no_close', False)):
