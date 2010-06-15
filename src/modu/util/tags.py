@@ -136,40 +136,30 @@ class Tag(object):
 		"""
 		Render as ASCII.
 		"""
-		output = u''
-		output += u'<' + self.tag
-		fragments = u''
+		output = stringtype()
+		output += '<' + self.tag
+		fragments = ''
 		keys = self.attributes.keys()
 		keys.sort()
 		for key in keys:
 			if not(key.startswith('_')):
 				value = self.attributes[key]
 				if(value is None):
-					fragments += u' %s' % key
+					fragments += ' %s' % key
 				else:
-					output += u' %s="%s"' % (key, quote(value))
+					output += ' %s="%s"' % (key, quote(value))
 		output += fragments
 		if(self.children):
-			output += u'>'
+			output += '>'
 			for child in self.children:
-				if(isinstance(child, str)):
-					output += child.decode('utf-8')
-				elif(isinstance(child, unicode)):
-					output += child
-				elif(isinstance(child, Tag)):
-					output += unicode(child)
-				else:
-					output += unicode(str(child))
+				output += stringtype(child)
 			if not(self.attributes.get('_no_close', False)):
-				output += u'</%s>' % self.tag
+				output += '</%s>' % self.tag
 		else:
 			if(self.attributes.get('_no_close', False)):
-				output += u'>'
+				output += '>'
 			else:
-				output += u' />'
-		
-		if(stringtype is str):
-			output = output.encode('utf-8')
+				output += ' />'
 		
 		return output
 	
