@@ -25,7 +25,7 @@ def process_dsn(dsn):
 	dsn['cursorclass'] = cursors.SSDictCursor
 	
 	# I'm just not sure whether these make things worse or better
-	# dsn['use_unicode'] = True
+	dsn['use_unicode'] = True
 	# dsn['charset'] = 'utf8'
 	return [], dsn
 

@@ -402,7 +402,7 @@ conversions = {
 	list: lambda s,d: '(%s)' % ','.join([escape_item(x, conversions) for x in s]),
 	tuple: lambda s,d: '(%s)' % ','.join([escape_item(x, conversions) for x in s]),
     str: lambda o,d: string_literal(o, d), # default
-    unicode: lambda s,d: string_literal(s.encode(), d),
+    unicode: lambda s,d: string_literal(s.encode('utf-8'), d),
     bool: lambda s,d: str(int(s)),
     datetime.date: lambda d,c: string_literal(date.strftime(d, "%Y-%m-%d"), c),
     datetime.datetime: lambda d,c: string_literal(date.strftime(d, "%Y-%m-%d %H:%M:%S"), c),
