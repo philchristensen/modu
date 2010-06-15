@@ -136,7 +136,7 @@ class Tag(object):
 		"""
 		Render as ASCII.
 		"""
-		output = unicode()
+		output = u''
 		output += u'<' + self.tag
 		fragments = u''
 		keys = self.attributes.keys()
@@ -152,7 +152,10 @@ class Tag(object):
 		if(self.children):
 			output += u'>'
 			for child in self.children:
-				output += unicode(child)
+				if(isinstance(child, unicode)):
+					output += child
+				else:
+					output += child.decode('utf-8')
 			if not(self.attributes.get('_no_close', False)):
 				output += u'</%s>' % self.tag
 		else:
