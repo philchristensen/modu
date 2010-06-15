@@ -152,7 +152,7 @@ class Tag(object):
 		if(self.children):
 			output += u'>'
 			for child in self.children:
-				output += stringtype(child)
+				output += unicode(child)
 			if not(self.attributes.get('_no_close', False)):
 				output += u'</%s>' % self.tag
 		else:
