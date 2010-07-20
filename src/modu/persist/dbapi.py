@@ -34,6 +34,7 @@ def sql_debug(query, args, kwargs):
 								('', repr(kwargs))[bool(kwargs)],
 							)
 		
+		global debug_syntax_highlighting
 		if(debug_syntax_highlighting):
 			command = 'source-highlight -s sql -f esc'
 			sub = subprocess.Popen(command,
@@ -46,7 +47,6 @@ def sql_debug(query, args, kwargs):
 			output, error = sub.communicate(input=query)
 			if(sub.returncode):
 				if('command not found' in error):
-					global debug_syntax_highlighting
 					debug_syntax_highlighting = False
 				print >>debug_stream, error.strip()
 			else:
