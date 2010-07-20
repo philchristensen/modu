@@ -27,6 +27,7 @@ pools_lock = threading.BoundedSemaphore()
 RE_WS = re.compile(r'(\s+)?\t+(\s+)?')
 
 def sql_debug(query, args, kwargs):
+	original_query = query
 	if(debug):
 		query = '%s%s%s%s' % (re.sub(RE_WS, ' ', query),
 								('', '\n')[bool(args or kwargs)],
@@ -54,7 +55,7 @@ def sql_debug(query, args, kwargs):
 	
 	if(debug is True):
 		print >>debug_stream, query
-	elif(debug and not query.lower().startswith('select')):
+	elif(debug and not original_query.lower().startswith('select')):
 		print >>debug_stream, query
 
 def activate_pool(req):
