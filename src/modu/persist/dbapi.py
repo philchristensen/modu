@@ -10,7 +10,7 @@
 Provides synchronous access to the Twisted adbapi DB layer.
 """
 
-import threading, random, sys, time
+import threading, random, sys, time, re, subprocess
 
 from twisted.enterprise import adbapi
 
@@ -18,16 +18,44 @@ from modu.util.url import urlparse
 
 debug = False
 debug_stream = sys.stderr
+debug_syntax_highlighting = True
 
 pools = {}
 async_pools = {}
 pools_lock = threading.BoundedSemaphore()
 
+RE_WS = re.compile(r'(\s+)?\t+(\s+)?')
+
 def sql_debug(query, args, kwargs):
+	if(debug):
+		query = '%s%s%s%s' % (re.sub(RE_WS, ' ', query),
+								('', '\n')[bool(args or kwargs)],
+								('', repr(args))[bool(args)],
+								('', repr(kwargs))[bool(kwargs)],
+							)
+		
+		if(debug_syntax_highlighting):
+			command = 'source-highlight -s sql -f esc'
+			sub = subprocess.Popen(command,
+				stdin	= subprocess.PIPE,
+				stdout	= subprocess.PIPE,
+				stderr	= subprocess.PIPE,
+				shell	= True,
+				universal_newlines = True
+			)
+			output, error = sub.communicate(input=query)
+			if(sub.returncode):
+				if('command not found' in error):
+					global debug_syntax_highlighting
+					debug_syntax_highlighting = False
+				print >>debug_stream, error.strip()
+			else:
+				query = output
+	
 	if(debug is True):
-		print >>debug_stream, (query, args, kwargs)
+		print >>debug_stream, query
 	elif(debug and not query.lower().startswith('select')):
-		print >>debug_stream, (query, args, kwargs)
+		print >>debug_stream, query
 
 def activate_pool(req):
 	"""
@@ -133,6 +161,20 @@ class TimeoutConnectionPool(adbapi.ConnectionPool):
 		self.timeout = kwargs.pop('timeout', 21600)
 		self.conn_lasttime = {}
 		adbapi.ConnectionPool.__init__(self, *args, **kwargs)
+	
+	def runOperation(self, query, *args, **kwargs):
+		"""
+		Trivial override to provide debugging support.
+		"""
+		sql_debug(query, args, kwargs)
+		return adbapi.ConnectionPool.runOperation(self, query, *args, **kwargs)
+	
+	def runQuery(self, query, *args, **kwargs):
+		"""
+		Trivial override to provide debugging support.
+		"""
+		sql_debug(query, args, kwargs)
+		return adbapi.ConnectionPool.runQuery(self, query, *args, **kwargs)
 	
 	def connect(self, *args, **kwargs):
 		# ask ConnectionPool for a connection
@@ -296,22 +338,8 @@ class SynchronousConnectionPool(TimeoutConnectionPool):
 		if(self.startID):
 			reactor.removeSystemEventTrigger(self.startID)
 	
-	def runOperation(self, query, *args, **kwargs):
-		"""
-		Trivial override to provide debugging support.
-		"""
-		sql_debug(query, args, kwargs)
-		return TimeoutConnectionPool.runOperation(self, query, *args, **kwargs)
-	
 	def _runOperation(self, trans, *args, **kw):
 		return trans.execute(*args, **kw)
-	
-	def runQuery(self, query, *args, **kwargs):
-		"""
-		Trivial override to provide debugging support.
-		"""
-		sql_debug(query, args, kwargs)
-		return TimeoutConnectionPool.runQuery(self, query, *args, **kwargs)
 	
 	def runInteraction(self, interaction, *args, **kw):
 		"""
