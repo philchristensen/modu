@@ -45,11 +45,16 @@ def sql_debug(query, args, kwargs):
 				shell	= True,
 				universal_newlines = True
 			)
-			output, error = sub.communicate(input=query)
-			if(sub.returncode):
-				if('command not found' in error):
-					debug_syntax_highlighting = False
-				print >>debug_stream, error.strip()
+			
+			error = ''
+			try:
+				output, error = sub.communicate(input=query)
+				if(sub.returncode):
+					raise RuntimeError("syntax highlighter subprocess returned %s" % sub.returncode)
+			except:
+				debug_syntax_highlighting = False
+				if(error):
+					print >>debug_stream, error.strip()
 			else:
 				query = output
 	
