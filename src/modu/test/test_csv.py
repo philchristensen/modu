@@ -33,6 +33,10 @@ known_bad_1 = '"LCD1066"\t"Take Your Time"\t\t\t"LCD1066-4"\t"Letter From Home, 
 
 multiline = '"one","two","three"%s"one","two","three"%s"one","two","three"%s"one","two","three"%s"one","two","three"'
 
+tab_quote_bug = "EIN010\tZeena Parkins: The Opium War\tEIN010-01W\tOpium War\tEIN010-02\tOpium War: II. The butcher shop. Next morning.\t4m16s\tEinstein Records\tParkins, Zeena\tMaleczech, Ruth (Performer (voice) \"Amailia\"); Mori, Ikue (Performer (drum machine)); Parkins, Zeena (Performer (electric harp)); Trump, Joe (Performer (percussion)); Shea, David (Performer (turntables)); Olive, D.J. (Performer (turntables)); Arazia, J. Ed (Performer (voice) \"Louie\"); Cochrane, Chris (Performer (voice)); Parkins, Zeena (Performer (sampler)); Tenko (Performer (voice)); Parkins, Margaret (Performer (cello)); Pashalinski, Lola (Performer (voice) \"Dr. Stein\"); Dorveillier, D.D. (Performer (voice)); Webster, Jeff (Performer (voice) \"Manuel\"); Vidal, Lisa (Performer (voice) \"Mariana\"); Shultz, Mary (Performer (voice) \"Evelyn Harding\"); Sanchez, K.J. (Performer (voice) \"Mariana\"); Bepler, Jonathan (Performer (voice)); Cochrane, Chris (Performer (guitar)); Chapman, Linda (Performer (director))\t1997\t1997\t\t\t0\t\t\t0\t\t"
+
+openoffice_tsv = '"col1"\t"col2"\t"col3"'
+
 class CSVTestCase(unittest.TestCase):
 	def test_multiline_r(self):
 		io = StringIO.StringIO(multiline % ('\r', '\r', '\r', '\r'))
@@ -121,3 +125,14 @@ class CSVTestCase(unittest.TestCase):
 		got = csv.parse_line(tabs_oo, separator='\t')
 		self.failUnlessEqual(got, expected, 'Got %s when expecting %s' % (got, expected))
 	
+	def test_tab_quote_bug(self):
+		result = csv.parse_line(tab_quote_bug, separator='\t', qualifier=None)
+		self.failUnless('"Mariana"' in result[9], result[9])
+		result = csv.parse_line(tab_quote_bug, separator='\t')
+		self.failUnless('"Mariana"' in result[9], result[9])
+	
+	def test_openoffice_tsv(self):
+		result = csv.parse_line(openoffice_tsv, separator='\t')
+		self.failUnlessEqual('col1', result[0])
+		self.failUnlessEqual('col2', result[1])
+		self.failUnlessEqual('col3', result[2])

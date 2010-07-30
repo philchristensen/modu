@@ -108,12 +108,17 @@ def parse_gen(stream, column_names=None, separator=",", qualifier='"'):
 					qualified = False
 					continue
 			else:
+				# if we're not at the beginning, keep the qualifier
+				# in the output. this allows use of OpenOffice TSV,
+				# which has double quotes around field content, as well
+				# as standard TSV with tabs but no quotes.
+				if(len(buff)):
+					buff += c
 				qualified = True
 		elif(c == separator):
 			if(qualified):
 				buff += c
 			else:
-				qualified = False
 				if(buff and buff[-1] == qualifier):
 					buff = buff[0:-1]
 				fields.append(buff)
