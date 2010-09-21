@@ -153,6 +153,12 @@ class CheetahModuTemplate(CheetahTemplate):
 		template directory.
 	@type moduTemplateDirectory: str
 	"""
+	@classmethod
+	def compile(cls, *args, **kwargs):
+		if('baseclass' not in kwargs):
+			kwargs['baseclass'] = CheetahModuTemplate
+		return CheetahTemplate.compile(*args, **kwargs)
+	
 	def serverSidePath(self, path=None, normpath=os.path.normpath, abspath=os.path.abspath):
 		"""
 		Return the proper template directory, if set by the user.
@@ -166,4 +172,6 @@ class CheetahModuTemplate(CheetahTemplate):
 				templatePath = os.path.join(templateDirectory, path)
 				return normpath(abspath(templatePath))
 		return super(CheetahModuTemplate, self).serverSidePath(path, normpath, abspath)
-
+	
+	def _getTemplateAPIClassForIncludeDirectiveCompilation(self, source, file):
+		return CheetahModuTemplate

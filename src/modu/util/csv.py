@@ -17,17 +17,17 @@ except ImportError, e:
 
 from modu import util
 
-def generate_csv(rows, le='\n'):
-	return list(generate_csv_gen(rows, le))
+def generate_csv(rows, le='\n', print_headers=True):
+	return list(generate_csv_gen(rows, le, print_headers))
 
-def generate_csv_gen(rows, le='\n'):
+def generate_csv_gen(rows, le='\n', print_headers=True):
 	"""
 	Generate comma-separated value output from a list of dicts.
 	
 	The keys of the dict will be used as column headings, and
 	are assumed to be identical for all rows.
 	"""
-	header_string = None
+	header_string = None if print_headers else ''
 	
 	for row in rows:
 		headers = []
