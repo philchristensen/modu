@@ -38,13 +38,14 @@ from modu.persist import dbapi, storable
 
 from twisted import plugin
 from twisted.web import server, util, html
-from twisted.python import failure
+from twisted.python import failure, log
 from zope import interface
 
 host_tree = {}
 host_tree_lock = threading.BoundedSemaphore()
 
 mimetypes_init = False
+debug_site_scan = False
 
 def handler(env, start_response):
 	"""
@@ -55,6 +56,7 @@ def handler(env, start_response):
 	# this lets the error pages add headers to the request response
 	req = Request()
 	application = None
+	
 	try:
 		try:
 			application = get_application(env)
@@ -289,15 +291,19 @@ def get_application(env):
 	
 	host_tree_lock.acquire()
 	try:
+		if(debug_site_scan):
+			env['wsgi.errors'].write('Looking for host %r\n' % (host,))
 		if not(host in host_tree):
+			if(debug_site_scan):
+				env['wsgi.errors'].write('Not found, scanning...\n')
 			_scan_sites(env)
 		if not(host in host_tree):
 			return None
 		
 		host_node = host_tree[host]
 		
-		if not(host_node.has_path(env['REQUEST_URI'])):
-			_scan_sites(env)
+		if(debug_site_scan):
+			env['wsgi.errors'].write('Found host %r\n' % (host,))
 		
 		app = host_node.get_data_at(env['REQUEST_URI'])
 	finally:
@@ -402,7 +408,7 @@ def _scan_sites(env):
 	
 	Register any found objects with the internal structures.
 	"""
-	global host_tree
+	global host_tree, debug_site_scan
 	
 	import modu.sites
 	reload(modu.sites)
@@ -410,6 +416,8 @@ def _scan_sites(env):
 	plugins = plugin.getPlugins(ISite, modu.sites)
 	
 	for site_plugin in plugins:
+		if(debug_site_scan):
+			env['wsgi.errors'].write('Found %r\n' % (site_plugin,))
 		site = site_plugin()
 		app = Application(site)
 		
@@ -426,6 +434,8 @@ def _scan_sites(env):
 		if not(base_path):
 			base_path = '/'
 		
+		if(debug_site_scan):
+			env['wsgi.errors'].write('Loaded %r for %r\n' % (site_plugin, domain))
 		host_node.register(base_path, app, clobber=True)
 
 
