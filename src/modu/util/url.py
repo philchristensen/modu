@@ -17,6 +17,8 @@ URL_RE = re.compile(URL_REGEXP, re.IGNORECASE)
 
 def urlparse(url):
 	match = URL_RE.match(url)
+	if not(match):
+		return {}
 	return match.groupdict()
 
 class URLNode(object):
