@@ -336,7 +336,7 @@ class ForeignMultipleSelectField(define.definition):
 			if not(isinstance(values, list)):
 				values = [values]
 			data = [{self['ntof_n_id']:item_id, self['ntof_f_id']:getattr(val, 'value', val)} for val in values]
-			insert_query = sql.build_insert(self['ntof'], data)
+			insert_query = sql.build_insert(self['ntof'], data, **self.get('ntof_extras', {}))
 			store.pool.runOperation(insert_query)
 		elif(self.get('required', False)):
 			# A conundrum...

@@ -33,6 +33,7 @@ def build_insert(table, data=None, **kwargs):
 	"""
 	if(data is None and kwargs):
 		data = kwargs
+		kwargs = dict()
 	
 	if not(data):
 		raise ValueError("`data` argument to build_insert() is empty.")
@@ -40,13 +41,14 @@ def build_insert(table, data=None, **kwargs):
 		data = [data]
 	
 	table = escape_dot_syntax(table)
-	keys = data[0].keys()
+	keys = data[0].keys() + kwargs.keys()
 	keys.sort()
 	
 	values = []
 	query = 'INSERT INTO %s (`%s`) VALUES ' % (table, '`, `'.join(keys))
 	for index in range(len(data)):
 		row = data[index]
+		row.update(kwargs)
 		values.extend([row[key] for key in keys])
 		query += '(' + ', '.join(['%s'] * len(row)) + ')'
 		if(index < len(data) - 1):
