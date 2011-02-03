@@ -167,7 +167,9 @@ def configure_request(env, application):
 	return a Request object that encapsulates this thread's data.
 	"""
 	if('wsgi.file_wrapper' not in env):
-		def _file_wrapper(filelike):
+		def _file_wrapper(filelike, *args, **kwargs):
+			if(args or kwargs):
+				env['wsgi.errors'].write('extra args found for file wrapper: %s' % ((args, kwargs),))
 			return iter(lambda: filelike.read(8192), '')
 		env['wsgi.file_wrapper'] = _file_wrapper
 	
