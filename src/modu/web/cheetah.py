@@ -25,7 +25,7 @@ def render(template, template_type, template_data, **params):
 			options['file'] = TemplateStream(rsrc_file)
 		else:
 			template_path = os.path.join(template_root, template)
-			module_name = re.sub(r'\W+', '_', template).strip('_')
+			module_name = re.sub(r'\W+', '_', template)
 			
 			options['file'] = open(template_path)
 	elif(template_type == 'str'):
