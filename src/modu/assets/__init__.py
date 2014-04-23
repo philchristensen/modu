@@ -8,34 +8,11 @@
 
 from modu.util import tags
 
-DEFAULT_JQUERY_VERSION = '1.4'
-DEFAULT_JQUERY_UI_VERSION = '1.7.1'
-DEFAULT_JQUERY_MIN = False
-DEFAULT_JQUERY_UI_MIN = True
-
-def activate_google_jsapi(req):
-	req.content.report('header', tags.script(type="text/javascript", src="http://www.google.com/jsapi")[''])
+DEFAULT_JQUERY_VERSION = '1.11.0'
+DEFAULT_JQUERY_UI_VERSION = '1.9.2'
 
 def activate_jquery(req):
-	activate_google_jsapi(req)
-	
-	version = req.app.config.get('jquery_version', DEFAULT_JQUERY_VERSION)
-	uncompressed = not req.app.config.get('jquery_compressed', DEFAULT_JQUERY_MIN)
-	
-	uncompressed = str(uncompressed).lower()
-	
-	req.content.report('header', tags.script(type="text/javascript")[
-		'google.load("jquery","%s",{uncompressed:%s});' % (version, uncompressed)
-	])
+	req.content.report('header', tags.script(type="text/javascript", src="//ajax.googleapis.com/ajax/libs/jquery/%s/jquery.min.js" % DEFAULT_JQUERY_VERSION)[''])
 
 def activate_jquery_ui(req):
-	activate_jquery(req)
-	
-	version = req.app.config.get('jquery_ui_version', DEFAULT_JQUERY_UI_VERSION)
-	uncompressed = not req.app.config.get('jquery_ui_compressed', DEFAULT_JQUERY_UI_MIN)
-	
-	uncompressed = str(uncompressed).lower()
-	
-	req.content.report('header', tags.script(type="text/javascript")[
-		'google.load("jqueryui", "%s", {uncompressed:%s});' % (version, uncompressed)
-	])
+	req.content.report('header', tags.script(type="text/javascript", src="//ajax.googleapis.com/ajax/libs/jqueryui/%s/jquery-ui.min.js" % DEFAULT_JQUERY_UI_VERSION)[''])
