@@ -1,0 +1,5 @@
+*.pyc
+*.egg-info
+dropin.cache
+/src/modu/assets/fckeditor/
+

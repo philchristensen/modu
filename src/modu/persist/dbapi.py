@@ -104,6 +104,9 @@ def connect(db_urls=None, async=False, *args, **kwargs):
 		args = list(args)
 		args.extend(dargs)
 		
+		if('override_driver' in dkwargs):
+			dbapiName = dkwargs.pop('override_driver')
+		
 		global pools, async_pools, pools_lock
 		pools_lock.acquire()
 		try:
@@ -150,6 +153,9 @@ def get_dsn(db_url):
 	
 	dsn['db'] = dsn['path'][1:]
 	del dsn['path']
+	
+	if('port' in dsn):
+		dsn['port'] = int(dsn['port'])
 	
 	dsn['cp_reconnect'] = True
 	dsn['cp_noisy'] = False
