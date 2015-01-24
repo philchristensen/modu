@@ -191,7 +191,7 @@ class TimeoutConnectionPool(adbapi.ConnectionPool):
 		# ask ConnectionPool for a connection
 		conn = adbapi.ConnectionPool.connect(self, *args, **kwargs)
 		
-		if(self.timeout > 3600):
+		if(self.timeout != None):
 			tid = self.threadID()
 			lasttime = self.conn_lasttime.get(tid, 0)
 			now = time.time()
