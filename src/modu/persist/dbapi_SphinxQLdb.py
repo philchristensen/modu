@@ -22,6 +22,9 @@ def process_dsn(dsn):
 	from MySQLdb import cursors
 	dsn['cursorclass'] = cursors.SSDictCursor
 	dsn['override_driver'] = 'MySQLdb'
+	dsn['cp_min'] = 1
+	dsn['cp_max'] = 1
+	dsn['timeout'] = 0
 	
 	# I'm just not sure whether these make things worse or better
 	# dsn['use_unicode'] = True
