@@ -121,6 +121,7 @@ jQuery.rpc = function(url, dataType, onLoadCallback, version) {
 				"dataType": dataType,
 				"type": "POST",
 				"data": data,
+				"xhrFields": {"withCredentials": true},
 				"success": function(inp) {
 					//console.log(inp);
 					if(dataType == "xml") {
