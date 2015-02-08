@@ -121,6 +121,7 @@ jQuery.rpc = function(url, dataType, onLoadCallback, version) {
 				"dataType": dataType,
 				"type": "POST",
 				"data": data,
+				"crossDomain": true,
 				"xhrFields": {"withCredentials": true},
 				"success": function(inp) {
 					//console.log(inp);
