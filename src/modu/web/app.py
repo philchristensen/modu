@@ -601,8 +601,9 @@ class Request(dict):
 			result = ''
 		
 		domain = env.get('HTTP_X_FORWARDED_SERVER', env.get('HTTP_HOST', env['modu.app'].base_domain))
-		
-		prefix = '%s://%s' % (env['wsgi.url_scheme'], domain)
+		scheme = env.get('HTTP_X_FORWARDED_PROTO', env['wsgi.url_scheme'])
+        
+		prefix = '%s://%s' % (scheme, domain)
 		if('HTTP_X_FORWARDED_SERVER' not in env):
 			if(domain.find(':') == -1 and env.get('SERVER_PORT', '80') not in ('80','443')):
 				prefix += ':' + env['SERVER_PORT']
